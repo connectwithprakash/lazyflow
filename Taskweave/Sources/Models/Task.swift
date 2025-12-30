@@ -1,7 +1,9 @@
 import Foundation
+import UniformTypeIdentifiers
+import CoreTransferable
 
 /// Domain model representing a task
-struct Task: Identifiable, Codable, Equatable, Hashable {
+struct Task: Identifiable, Codable, Equatable, Hashable, Transferable {
     let id: UUID
     var title: String
     var notes: String?
@@ -172,6 +174,19 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
 
         copy.updatedAt = Date()
         return copy
+    }
+}
+
+// MARK: - Transferable
+extension Task {
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(for: Task.self, contentType: .task)
+    }
+}
+
+extension UTType {
+    static var task: UTType {
+        UTType(exportedAs: "com.connectwithprakash.taskweave.task")
     }
 }
 

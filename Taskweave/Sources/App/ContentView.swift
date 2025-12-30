@@ -8,6 +8,7 @@ struct ContentView: View {
 
     enum Tab: String, CaseIterable {
         case today = "Today"
+        case calendar = "Calendar"
         case upcoming = "Upcoming"
         case lists = "Lists"
         case settings = "Settings"
@@ -15,7 +16,8 @@ struct ContentView: View {
         var icon: String {
             switch self {
             case .today: return "star.fill"
-            case .upcoming: return "calendar"
+            case .calendar: return "calendar"
+            case .upcoming: return "calendar.badge.clock"
             case .lists: return "folder.fill"
             case .settings: return "gear"
             }
@@ -29,6 +31,12 @@ struct ContentView: View {
                     Label(Tab.today.rawValue, systemImage: Tab.today.icon)
                 }
                 .tag(Tab.today)
+
+            CalendarView()
+                .tabItem {
+                    Label(Tab.calendar.rawValue, systemImage: Tab.calendar.icon)
+                }
+                .tag(Tab.calendar)
 
             UpcomingView()
                 .tabItem {
@@ -66,6 +74,8 @@ struct ContentView: View {
         switch host {
         case "today":
             selectedTab = .today
+        case "calendar":
+            selectedTab = .calendar
         case "upcoming":
             selectedTab = .upcoming
         case "lists":

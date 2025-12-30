@@ -375,6 +375,104 @@ Edit Task --> List Picker
 
 ---
 
+### 8. Calendar Navigation (v0.2.0)
+
+**Goal**: View calendar events and find time slots for tasks
+
+```
+[Tab Bar]
+    |
+    +-> Tap Calendar tab
+        |
+        +-> [Calendar View]
+            |
+            +-- View Mode Picker: [Day] [Week]
+            +-- Date Navigation: < [Date Range] >
+            |
+            +-> [Week View - Default]
+                |
+                +-- 7 day columns with events
+                +-- Tap day header to select
+                |
+                +-> Switch to Day view
+                    |
+                    +-> [Day View]
+                        |
+                        +-- Hourly grid (6 AM - 10 PM)
+                        +-- Event blocks with calendar colors
+                        +-- Task time blocks
+```
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Week view default | Overview helps planning |
+| Day/Week only (no month) | Focus on actionable time frames |
+| Today button in nav bar | Quick return to current date |
+| Color-coded events | Match Apple Calendar for familiarity |
+
+---
+
+### 9. Schedule Task to Calendar (v0.2.0)
+
+**Goal**: Block time on calendar for a task
+
+```
+[Today View - Task Row]
+    |
+    +-> Long press and drag task
+        |
+        +-> [Drag to Calendar Tab]
+            |
+            +-> [Calendar View with Drop Indicator]
+                |
+                +-- Hour row highlights on hover
+                +-- Drop indicator shows target time
+                |
+                +-> Release drag
+                    |
+                    +-> [Time Block Sheet]
+                        |
+                        +-- Task info (title, notes)
+                        +-- Start time picker (pre-filled)
+                        +-- Duration picker (15min - 4hr)
+                        +-- End time display
+                        +-- Preview section
+                        |
+                        +-> Tap "Create"
+                            |
+                            +-> [Event created in Apple Calendar]
+                            +-> [Task linked to event]
+                            +-> [Sheet dismisses]
+                            +-> [Event visible in Calendar view]
+```
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Drag-and-drop | Natural gesture for scheduling |
+| Pre-fill duration | Use task's estimated duration if available |
+| Show preview | Confirm before creating calendar event |
+| Link task to event | Bidirectional sync |
+
+**Permission Flow**:
+```
+[First calendar operation - Not authorized]
+    |
+    +-> Calendar Access Banner appears
+        |
+        +-> Tap "Enable"
+            |
+            +-> System permission dialog
+                |
+                +-> If granted: Banner dismisses, calendar loads
+                +-> If denied: Show full-screen "Access Required" view
+```
+
+---
+
 ## Empty States
 
 ### No Tasks Today

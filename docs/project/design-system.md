@@ -349,6 +349,106 @@ Position: Bottom-right, 24pt from edges
 
 ---
 
+## Calendar View Components (v0.2.0)
+
+### View Mode Picker
+
+```
++-----------------------------+
+|    [ Day ]  [ Week ]        |  Segmented control
++-----------------------------+  Position: Top, below nav bar
+                                  Padding: 16pt horizontal, 8pt vertical
+```
+
+### Date Navigation Bar
+
+```
++-------------------------------------+
+|  <     December 29 - January 4    > |  Height: 44pt
++-------------------------------------+  Padding: 16pt horizontal
+                                         Arrows: 44pt touch target
+                                         Date: Headline weight
+```
+
+### Day View (Hour Grid)
+
+```
++-----------------------------------------+
+| 9 AM |----------------------------------|
+|      |  [Meeting Block]                 |  Hour height: 60pt
+| 10 AM|----------------------------------| Start hour: 6 AM
+|      |        |                         |  End hour: 10 PM
+| 11 AM|----------------------------------| Time label width: 50pt
+|      |  [Task Time Block]               |
+| 12 PM|----------------------------------|
+|      |                                  |
++-----------------------------------------+
+```
+
+### Event Block
+
+```
++--------------------------------+
+| Meeting Title                  |  Height: Calculated from duration
+| 10:00 AM - 11:00 AM            |  Min height: 20pt
++--------------------------------+  Radius: 6pt
+                                    Background: Calendar color @ 80%
+                                    Text: White, Caption 1
+                                    Padding: 8pt horizontal, 4pt vertical
+```
+
+### Week View (Day Columns)
+
+```
++--+--+--+--+--+--+--+
+|SU|MO|TU|WE|TH|FR|SA|  Day headers
+|29|30|31| 1| 2| 3| 4|
++--+--+--+--+--+--+--+
+|  |  |  |  |  |  |  |
+|* |* |  |* |  |* |  |  Compact event dots
+|* |  |  |  |  |  |  |
+|  |  |  |  |  |  |  |  Column min height: 150pt
++--+--+--+--+--+--+--+
+```
+
+### Time Block Sheet
+
+```
++------------------------------------+
+|  Schedule Time Block        Cancel |
+|------------------------------------|
+|  [Task Info Section]               |
+|    Task Title                      |
+|    Task description...             |
+|------------------------------------|
+|  [Schedule Section]                |
+|    Start Time:    Dec 31, 9:00 AM  |
+|    Duration:      [1 hour v]       |
+|    End Time:      10:00 AM         |
+|------------------------------------|
+|           [ Create ]               |
++------------------------------------+
+
+Presentation: Sheet, medium/large detents
+Duration options: 15min, 30min, 45min, 1hr, 1.5hr, 2hr, 3hr, 4hr
+```
+
+### Calendar Access Banner
+
+```
++---------------------------------------------+
+| [!] Calendar access needed     [ Enable ]   |
++---------------------------------------------+
+
+Background: Orange @ 10%
+Icon: calendar.badge.exclamationmark, Orange
+Text: Subheadline
+Button: Subheadline, Semibold
+Position: Below view mode picker
+```
+
+---
+
 ## Iconography
 
 ### Icon Style
