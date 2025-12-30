@@ -216,6 +216,26 @@ struct DueDateBadge: View {
     }
 }
 
+struct CategoryBadge: View {
+    let category: TaskCategory
+
+    var body: some View {
+        if category != .uncategorized {
+            HStack(spacing: 4) {
+                Image(systemName: category.iconName)
+                    .font(.caption2)
+                Text(category.displayName)
+                    .font(DesignSystem.Typography.caption2)
+            }
+            .foregroundColor(category.color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(category.color.opacity(0.15))
+            .cornerRadius(DesignSystem.CornerRadius.small)
+        }
+    }
+}
+
 struct ListColorDot: View {
     let colorHex: String
 

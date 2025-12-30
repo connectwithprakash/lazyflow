@@ -5,11 +5,17 @@ struct AddTaskView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: TaskViewModel
     @StateObject private var listService = TaskListService()
+    @StateObject private var llmService = LLMService.shared
     @FocusState private var isTitleFocused: Bool
+
+    @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
 
     @State private var showDatePicker = false
     @State private var showPriorityPicker = false
     @State private var showListPicker = false
+    @State private var showAISuggestions = false
+    @State private var aiAnalysis: TaskAnalysis?
+    @State private var isAnalyzing = false
 
     init(defaultDueDate: Date? = nil, defaultListID: UUID? = nil) {
         let vm = TaskViewModel()
@@ -28,13 +34,29 @@ struct AddTaskView: View {
             VStack(spacing: 0) {
                 // Main input area
                 VStack(spacing: DesignSystem.Spacing.md) {
-                    // Title field
-                    TextField("What do you need to do?", text: $viewModel.title, axis: .vertical)
-                        .font(DesignSystem.Typography.title3)
-                        .focused($isTitleFocused)
-                        .lineLimit(1...3)
-                        .padding(.horizontal)
-                        .padding(.top)
+                    // Title field with AI button
+                    HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
+                        TextField("What do you need to do?", text: $viewModel.title, axis: .vertical)
+                            .font(DesignSystem.Typography.title3)
+                            .focused($isTitleFocused)
+                            .lineLimit(1...3)
+
+                        // AI Suggest button (contextual, next to title)
+                        if llmService.isReady && aiAutoSuggest && !viewModel.title.isEmpty {
+                            Button {
+                                analyzeTask()
+                            } label: {
+                                Image(systemName: isAnalyzing ? "sparkles" : "wand.and.stars")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(isAnalyzing ? Color.purple.opacity(0.5) : Color.purple)
+                                    .symbolEffect(.pulse, isActive: isAnalyzing)
+                            }
+                            .disabled(isAnalyzing)
+                            .accessibilityLabel("AI Suggest")
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
 
                     // Notes field
                     TextField("Add notes", text: $viewModel.notes, axis: .vertical)
@@ -46,16 +68,24 @@ struct AddTaskView: View {
                     Divider()
                         .padding(.horizontal)
 
-                    // Quick action buttons
-                    quickActionsBar
+                    // Quick action buttons (2-row grid, no horizontal scroll)
+                    quickActionsGrid
                         .padding(.horizontal)
 
                     // Selected options display
                     if hasSelectedOptions {
-                        selectedOptionsView
-                            .padding(.horizontal)
+                        VStack(spacing: 0) {
+                            Divider()
+                                .padding(.horizontal)
+                                .padding(.top, DesignSystem.Spacing.md)
+
+                            selectedOptionsView
+                                .padding(.horizontal)
+                                .padding(.top, DesignSystem.Spacing.md)
+                        }
                     }
                 }
+                .padding(.bottom, DesignSystem.Spacing.lg)
                 .background(Color.adaptiveSurface)
 
                 Spacer()
@@ -98,25 +128,50 @@ struct AddTaskView: View {
                 )
                 .presentationDetents([.medium])
             }
+            .sheet(isPresented: $showAISuggestions) {
+                if let analysis = aiAnalysis {
+                    AISuggestionsSheet(
+                        analysis: analysis,
+                        currentTitle: viewModel.title,
+                        onApplyDuration: { minutes in
+                            viewModel.estimatedDuration = TimeInterval(minutes * 60)
+                        },
+                        onApplyPriority: { priority in
+                            viewModel.priority = priority
+                        },
+                        onApplyCategory: { category in
+                            viewModel.category = category
+                        },
+                        onApplyTitle: { title in
+                            viewModel.title = title
+                        },
+                        onApplyDescription: { description in
+                            viewModel.notes = description
+                        }
+                    )
+                    .presentationDetents([.medium, .large])
+                }
+            }
         }
     }
 
-    // MARK: - Quick Actions Bar
+    // MARK: - Quick Actions Grid (2-row layout, no scroll)
 
-    private var quickActionsBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+    private var quickActionsGrid: some View {
+        VStack(spacing: DesignSystem.Spacing.sm) {
+            // Row 1: Date options
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Due Date
+                // Due Date picker - shows actual date format to avoid confusion
                 QuickActionButton(
                     icon: "calendar",
-                    title: viewModel.hasDueDate ? (viewModel.dueDate?.relativeFormatted ?? "Date") : "Date",
+                    title: viewModel.hasDueDate ? (viewModel.dueDate?.shortFormatted ?? "Date") : "Date",
                     isSelected: viewModel.hasDueDate,
                     color: Color.Taskweave.accent
                 ) {
                     showDatePicker = true
                 }
 
-                // Quick date options
+                // Today quick action
                 QuickActionButton(
                     icon: "star",
                     title: "Today",
@@ -126,6 +181,7 @@ struct AddTaskView: View {
                     viewModel.setDueToday()
                 }
 
+                // Tomorrow quick action
                 QuickActionButton(
                     icon: "sunrise",
                     title: "Tomorrow",
@@ -134,7 +190,10 @@ struct AddTaskView: View {
                 ) {
                     viewModel.setDueTomorrow()
                 }
+            }
 
+            // Row 2: Other options
+            HStack(spacing: DesignSystem.Spacing.sm) {
                 // Priority
                 Menu {
                     ForEach(Priority.allCases) { priority in
@@ -179,6 +238,47 @@ struct AddTaskView: View {
         }
     }
 
+    private func analyzeTask() {
+        guard !viewModel.title.isEmpty else { return }
+        isAnalyzing = true
+
+        _Concurrency.Task {
+            do {
+                // Create a temporary task for analysis
+                let tempTask = Task(
+                    id: UUID(),
+                    title: viewModel.title,
+                    notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
+                    dueDate: viewModel.hasDueDate ? viewModel.dueDate : nil,
+                    dueTime: viewModel.hasDueTime ? viewModel.dueTime : nil,
+                    reminderDate: nil,
+                    isCompleted: false,
+                    isArchived: false,
+                    priority: viewModel.priority,
+                    listID: viewModel.selectedListID,
+                    linkedEventID: nil,
+                    estimatedDuration: nil,
+                    completedAt: nil,
+                    createdAt: Date(),
+                    updatedAt: Date(),
+                    recurringRule: nil
+                )
+
+                let analysis = try await llmService.analyzeTask(tempTask)
+
+                await MainActor.run {
+                    aiAnalysis = analysis
+                    showAISuggestions = true
+                    isAnalyzing = false
+                }
+            } catch {
+                await MainActor.run {
+                    isAnalyzing = false
+                }
+            }
+        }
+    }
+
     private var selectedListName: String {
         if let listID = viewModel.selectedListID,
            let list = listService.lists.first(where: { $0.id == listID }) {
@@ -190,39 +290,73 @@ struct AddTaskView: View {
     // MARK: - Selected Options
 
     private var hasSelectedOptions: Bool {
-        viewModel.hasDueDate || viewModel.priority != .none || viewModel.hasReminder
+        viewModel.hasDueDate || viewModel.priority != .none || viewModel.hasReminder ||
+        viewModel.category != .uncategorized || viewModel.estimatedDuration != nil
     }
 
     private var selectedOptionsView: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            if viewModel.hasDueDate, let date = viewModel.dueDate {
-                SelectedOptionChip(
-                    icon: "calendar",
-                    title: date.relativeFormatted,
-                    color: date.isPast ? Color.Taskweave.error : Color.Taskweave.accent,
-                    onRemove: { viewModel.clearDueDate() }
-                )
-            }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if viewModel.hasDueDate, let date = viewModel.dueDate {
+                    SelectedOptionChip(
+                        icon: "calendar",
+                        title: date.relativeFormatted,
+                        color: date.isPast ? Color.Taskweave.error : Color.Taskweave.accent,
+                        onRemove: { viewModel.clearDueDate() }
+                    )
+                }
 
-            if viewModel.priority != .none {
-                SelectedOptionChip(
-                    icon: viewModel.priority.iconName,
-                    title: viewModel.priority.displayName,
-                    color: viewModel.priority.color,
-                    onRemove: { viewModel.priority = .none }
-                )
-            }
+                if viewModel.priority != .none {
+                    SelectedOptionChip(
+                        icon: viewModel.priority.iconName,
+                        title: viewModel.priority.displayName,
+                        color: viewModel.priority.color,
+                        onRemove: { viewModel.priority = .none }
+                    )
+                }
 
-            if viewModel.hasReminder {
-                SelectedOptionChip(
-                    icon: "bell.fill",
-                    title: "Reminder",
-                    color: Color.Taskweave.info,
-                    onRemove: { viewModel.hasReminder = false }
-                )
-            }
+                if viewModel.category != .uncategorized {
+                    SelectedOptionChip(
+                        icon: viewModel.category.iconName,
+                        title: viewModel.category.displayName,
+                        color: viewModel.category.color,
+                        onRemove: { viewModel.category = .uncategorized }
+                    )
+                }
 
-            Spacer()
+                if let duration = viewModel.estimatedDuration {
+                    SelectedOptionChip(
+                        icon: "clock",
+                        title: formatDuration(duration),
+                        color: Color.Taskweave.accent,
+                        onRemove: { viewModel.estimatedDuration = nil }
+                    )
+                }
+
+                if viewModel.hasReminder {
+                    SelectedOptionChip(
+                        icon: "bell.fill",
+                        title: "Reminder",
+                        color: Color.Taskweave.info,
+                        onRemove: { viewModel.hasReminder = false }
+                    )
+                }
+            }
+        }
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let minutes = Int(seconds / 60)
+        if minutes < 60 {
+            return "\(minutes)m"
+        } else {
+            let hours = minutes / 60
+            let remainingMinutes = minutes % 60
+            if remainingMinutes == 0 {
+                return "\(hours)h"
+            } else {
+                return "\(hours)h \(remainingMinutes)m"
+            }
         }
     }
 }
@@ -256,16 +390,18 @@ struct QuickActionButtonContent: View {
                 .font(.system(size: 14))
             Text(title)
                 .font(DesignSystem.Typography.subheadline)
+                .lineLimit(1)
         }
+        .frame(maxWidth: .infinity)
         .foregroundColor(isSelected ? color : Color.Taskweave.textSecondary)
-        .padding(.horizontal, DesignSystem.Spacing.md)
+        .padding(.horizontal, DesignSystem.Spacing.sm)
         .padding(.vertical, DesignSystem.Spacing.sm)
         .background(
             isSelected
                 ? color.opacity(0.15)
                 : Color.secondary.opacity(0.1)
         )
-        .cornerRadius(DesignSystem.CornerRadius.full)
+        .cornerRadius(DesignSystem.CornerRadius.medium)
     }
 }
 
@@ -283,6 +419,8 @@ struct SelectedOptionChip: View {
                 .font(.system(size: 12))
             Text(title)
                 .font(DesignSystem.Typography.caption1)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
             Button(action: onRemove) {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .bold))
@@ -293,6 +431,7 @@ struct SelectedOptionChip: View {
         .padding(.vertical, 6)
         .background(color.opacity(0.15))
         .cornerRadius(DesignSystem.CornerRadius.full)
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
@@ -455,6 +594,355 @@ struct ListPickerSheet: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - AI Suggestions Sheet
+
+struct AISuggestionsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let analysis: TaskAnalysis
+    let currentTitle: String
+    let onApplyDuration: (Int) -> Void
+    let onApplyPriority: (Priority) -> Void
+    let onApplyCategory: (TaskCategory) -> Void
+    let onApplyTitle: (String) -> Void
+    let onApplyDescription: (String) -> Void
+
+    @State private var titleApplied = false
+    @State private var descriptionApplied = false
+    @State private var categoryApplied = false
+    @State private var durationApplied = false
+    @State private var priorityApplied = false
+
+    private var hasTitleSuggestion: Bool {
+        if let title = analysis.refinedTitle, !title.isEmpty, title != currentTitle {
+            return true
+        }
+        return false
+    }
+
+    private var hasDescriptionSuggestion: Bool {
+        if let desc = analysis.suggestedDescription, !desc.isEmpty {
+            return true
+        }
+        return false
+    }
+
+    private var allApplied: Bool {
+        let titleDone = !hasTitleSuggestion || titleApplied
+        let descDone = !hasDescriptionSuggestion || descriptionApplied
+        let categoryDone = analysis.suggestedCategory == .uncategorized || categoryApplied
+        return titleDone && descDone && categoryDone && durationApplied && priorityApplied
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: DesignSystem.Spacing.lg) {
+                    // Header
+                    VStack(spacing: DesignSystem.Spacing.sm) {
+                        Image(systemName: "wand.and.stars")
+                            .font(.system(size: 40))
+                            .foregroundColor(.purple)
+
+                        Text("AI Analysis")
+                            .font(DesignSystem.Typography.title2)
+                            .fontWeight(.bold)
+
+                        Text("Tap Apply on suggestions you want to use")
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Taskweave.textSecondary)
+                    }
+                    .padding(.top)
+
+                    // Apply All Button
+                    if !allApplied {
+                        Button {
+                            applyAll()
+                        } label: {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Apply All Suggestions")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.purple)
+                            .foregroundColor(.white)
+                            .cornerRadius(DesignSystem.CornerRadius.medium)
+                        }
+                        .padding(.horizontal)
+                    }
+
+                    // Title Suggestion
+                    if hasTitleSuggestion, let refinedTitle = analysis.refinedTitle {
+                        SuggestionCard(
+                            icon: "textformat",
+                            title: "Refined Title",
+                            value: refinedTitle,
+                            color: Color.purple
+                        ) {
+                            ApplyButton(
+                                isApplied: titleApplied,
+                                color: Color.purple
+                            ) {
+                                onApplyTitle(refinedTitle)
+                                titleApplied = true
+                            }
+                        }
+                    }
+
+                    // Description Suggestion
+                    if hasDescriptionSuggestion, let description = analysis.suggestedDescription {
+                        SuggestionCard(
+                            icon: "text.alignleft",
+                            title: "Suggested Description",
+                            value: description,
+                            color: Color.Taskweave.info
+                        ) {
+                            ApplyButton(
+                                isApplied: descriptionApplied,
+                                color: Color.Taskweave.info
+                            ) {
+                                onApplyDescription(description)
+                                descriptionApplied = true
+                            }
+                        }
+                    }
+
+                    // Category Suggestion
+                    if analysis.suggestedCategory != .uncategorized {
+                        SuggestionCard(
+                            icon: analysis.suggestedCategory.iconName,
+                            title: "Category",
+                            value: analysis.suggestedCategory.displayName,
+                            color: analysis.suggestedCategory.color
+                        ) {
+                            ApplyButton(
+                                isApplied: categoryApplied,
+                                color: analysis.suggestedCategory.color
+                            ) {
+                                onApplyCategory(analysis.suggestedCategory)
+                                categoryApplied = true
+                            }
+                        }
+                    }
+
+                    // Duration Suggestion
+                    SuggestionCard(
+                        icon: "clock",
+                        title: "Estimated Duration",
+                        value: formatDuration(analysis.estimatedMinutes),
+                        color: Color.Taskweave.accent
+                    ) {
+                        ApplyButton(
+                            isApplied: durationApplied,
+                            color: Color.Taskweave.accent
+                        ) {
+                            onApplyDuration(analysis.estimatedMinutes)
+                            durationApplied = true
+                        }
+                    }
+
+                    // Priority Suggestion
+                    SuggestionCard(
+                        icon: analysis.suggestedPriority.iconName,
+                        title: "Suggested Priority",
+                        value: analysis.suggestedPriority.displayName,
+                        color: analysis.suggestedPriority.color
+                    ) {
+                        ApplyButton(
+                            isApplied: priorityApplied,
+                            color: analysis.suggestedPriority.color
+                        ) {
+                            onApplyPriority(analysis.suggestedPriority)
+                            priorityApplied = true
+                        }
+                    }
+
+                    // Best Time
+                    SuggestionCard(
+                        icon: bestTimeIcon,
+                        title: "Best Time to Work",
+                        value: analysis.bestTime.rawValue,
+                        color: Color.Taskweave.info
+                    ) {
+                        EmptyView()
+                    }
+
+                    // Subtasks (if any)
+                    if !analysis.subtasks.isEmpty {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                            Label("Suggested Subtasks", systemImage: "list.bullet")
+                                .font(DesignSystem.Typography.headline)
+                                .foregroundColor(Color.Taskweave.textPrimary)
+
+                            ForEach(analysis.subtasks, id: \.self) { subtask in
+                                HStack(spacing: DesignSystem.Spacing.sm) {
+                                    Image(systemName: "circle")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(Color.Taskweave.textTertiary)
+
+                                    Text(subtask)
+                                        .font(DesignSystem.Typography.body)
+                                        .foregroundColor(Color.Taskweave.textSecondary)
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color.secondary.opacity(0.1))
+                        .cornerRadius(DesignSystem.CornerRadius.medium)
+                        .padding(.horizontal)
+                    }
+
+                    // Tips
+                    if !analysis.tips.isEmpty {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                            Label("Productivity Tip", systemImage: "lightbulb")
+                                .font(DesignSystem.Typography.headline)
+                                .foregroundColor(Color.Taskweave.warning)
+
+                            Text(analysis.tips)
+                                .font(DesignSystem.Typography.body)
+                                .foregroundColor(Color.Taskweave.textSecondary)
+                        }
+                        .padding()
+                        .background(Color.Taskweave.warning.opacity(0.1))
+                        .cornerRadius(DesignSystem.CornerRadius.medium)
+                        .padding(.horizontal)
+                    }
+
+                    Spacer(minLength: DesignSystem.Spacing.xxl)
+                }
+            }
+            .navigationTitle("AI Suggestions")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func applyAll() {
+        // Apply title if available
+        if hasTitleSuggestion, let title = analysis.refinedTitle {
+            onApplyTitle(title)
+            titleApplied = true
+        }
+
+        // Apply description if available
+        if hasDescriptionSuggestion, let desc = analysis.suggestedDescription {
+            onApplyDescription(desc)
+            descriptionApplied = true
+        }
+
+        // Apply category if not uncategorized
+        if analysis.suggestedCategory != .uncategorized {
+            onApplyCategory(analysis.suggestedCategory)
+            categoryApplied = true
+        }
+
+        // Apply duration and priority
+        onApplyDuration(analysis.estimatedMinutes)
+        durationApplied = true
+
+        onApplyPriority(analysis.suggestedPriority)
+        priorityApplied = true
+    }
+
+    private var bestTimeIcon: String {
+        switch analysis.bestTime {
+        case .morning: return "sunrise"
+        case .afternoon: return "sun.max"
+        case .evening: return "moon"
+        case .anytime: return "clock"
+        }
+    }
+
+    private func formatDuration(_ minutes: Int) -> String {
+        if minutes < 60 {
+            return "\(minutes) min"
+        } else {
+            let hours = minutes / 60
+            let remainingMinutes = minutes % 60
+            if remainingMinutes == 0 {
+                return "\(hours)h"
+            } else {
+                return "\(hours)h \(remainingMinutes)m"
+            }
+        }
+    }
+}
+
+struct SuggestionCard<Action: View>: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+    @ViewBuilder let action: () -> Action
+
+    var body: some View {
+        HStack {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Image(systemName: icon)
+                    .font(.system(size: 24))
+                    .foregroundColor(color)
+                    .frame(width: 32)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Taskweave.textSecondary)
+
+                    Text(value)
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundColor(Color.Taskweave.textPrimary)
+                }
+            }
+
+            Spacer()
+
+            action()
+        }
+        .padding()
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Apply Button
+
+struct ApplyButton: View {
+    let isApplied: Bool
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                if isApplied {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                }
+                Text(isApplied ? "Applied" : "Apply")
+                    .font(DesignSystem.Typography.subheadline)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(isApplied ? .white : color)
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+            .background(isApplied ? color : color.opacity(0.15))
+            .cornerRadius(DesignSystem.CornerRadius.small)
+        }
+        .disabled(isApplied)
+        .animation(.easeInOut(duration: 0.2), value: isApplied)
+        .accessibilityIdentifier(isApplied ? "Applied" : "Apply")
     }
 }
 

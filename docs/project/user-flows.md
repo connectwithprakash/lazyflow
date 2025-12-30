@@ -473,6 +473,86 @@ Edit Task --> List Picker
 
 ---
 
+### 10. AI Task Analysis (v0.3.0)
+
+**Goal**: Get AI-powered suggestions for task prioritization and scheduling
+
+```
+[Add Task View - After entering title]
+    |
+    +-> AI auto-categorizes task
+        |
+        +-- Category badge appears (Work, Personal, etc.)
+        |
+        +-> Tap "Get AI Suggestions" (sparkles icon)
+            |
+            +-> [Loading state]
+                |
+                +-> [AI Suggestions Card]
+                    |
+                    +-- Suggested Priority
+                    +-- Estimated Duration
+                    +-- Best Time of Day
+                    +-- Refined Title (if applicable)
+                    +-- Suggested Subtasks
+                    |
+                    +-> Tap "Apply"
+                        |
+                        +-> Fields populated with suggestions
+                    |
+                    +-> Tap "Dismiss"
+                        |
+                        +-> Card dismisses, keep manual values
+```
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Auto-categorize | Reduce friction, show intelligence immediately |
+| Optional suggestions | User stays in control |
+| Apply/Dismiss options | Non-destructive, user chooses what to keep |
+| Show reasoning | Build trust in AI recommendations |
+
+---
+
+### 11. Configure AI Provider (v0.3.0)
+
+**Goal**: Choose and configure LLM provider for AI features
+
+```
+[Settings View]
+    |
+    +-> Tap "AI Provider"
+        |
+        +-> [AI Provider Selection]
+            |
+            +-- Apple Intelligence (default if available)
+            |   +-- Free, on-device
+            |   +-- No API key needed
+            |
+            +-- Anthropic Claude
+            |   +-- Requires API key
+            |   +-> Tap to configure
+            |       +-> [API Key Entry Sheet]
+            |
+            +-- OpenAI GPT
+                +-- Requires API key
+                +-> Tap to configure
+                    +-> [API Key Entry Sheet]
+```
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Apple Intelligence default | Free, private, no setup |
+| BYOK model | User controls costs, no subscription |
+| Multiple providers | Flexibility and choice |
+| Secure key storage | Keys stored in Keychain |
+
+---
+
 ## Empty States
 
 ### No Tasks Today

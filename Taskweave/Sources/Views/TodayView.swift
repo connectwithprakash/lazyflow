@@ -4,6 +4,7 @@ import SwiftUI
 struct TodayView: View {
     @StateObject private var viewModel = TodayViewModel()
     @State private var showAddTask = false
+    @State private var taskToSchedule: Task?
 
     var body: some View {
         NavigationStack {
@@ -38,9 +39,43 @@ struct TodayView: View {
             .sheet(item: $viewModel.selectedTask) { task in
                 TaskDetailView(task: task)
             }
+            .sheet(item: $taskToSchedule) { task in
+                TimeBlockSheet(
+                    task: task,
+                    startTime: defaultScheduleTime(),
+                    onConfirm: { startTime, duration in
+                        scheduleTask(task, startTime: startTime, duration: duration)
+                    }
+                )
+            }
             .refreshable {
                 viewModel.refreshTasks()
             }
+        }
+    }
+
+    // MARK: - Scheduling
+
+    private func scheduleTaskAction(_ task: Task) {
+        taskToSchedule = task
+    }
+
+    private func defaultScheduleTime() -> Date {
+        let calendar = Calendar.current
+        let now = Date()
+        // Default to next hour
+        let components = calendar.dateComponents([.year, .month, .day, .hour], from: now)
+        if let nextHour = calendar.date(from: components)?.addingTimeInterval(3600) {
+            return nextHour
+        }
+        return now
+    }
+
+    private func scheduleTask(_ task: Task, startTime: Date, duration: TimeInterval) {
+        do {
+            _ = try CalendarService.shared.createTimeBlock(for: task, startDate: startTime, duration: duration)
+        } catch {
+            print("Failed to create time block: \(error)")
         }
     }
 
@@ -132,7 +167,8 @@ struct TodayView: View {
                 TaskRowView(
                     task: task,
                     onToggle: { viewModel.toggleTaskCompletion(task) },
-                    onTap: { viewModel.selectedTask = task }
+                    onTap: { viewModel.selectedTask = task },
+                    onSchedule: { scheduleTaskAction($0) }
                 )
                 .padding(.horizontal)
             }
@@ -164,7 +200,8 @@ struct TodayView: View {
                 TaskRowView(
                     task: task,
                     onToggle: { viewModel.toggleTaskCompletion(task) },
-                    onTap: { viewModel.selectedTask = task }
+                    onTap: { viewModel.selectedTask = task },
+                    onSchedule: nil // Completed tasks don't need scheduling
                 )
                 .padding(.horizontal)
             }

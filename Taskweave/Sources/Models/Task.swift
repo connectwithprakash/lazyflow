@@ -3,7 +3,7 @@ import UniformTypeIdentifiers
 import CoreTransferable
 
 /// Domain model representing a task
-struct Task: Identifiable, Codable, Equatable, Hashable, Transferable {
+struct Task: Identifiable, Codable, Equatable, Hashable {
     let id: UUID
     var title: String
     var notes: String?
@@ -13,6 +13,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable, Transferable {
     var isCompleted: Bool
     var isArchived: Bool
     var priority: Priority
+    var category: TaskCategory
     var listID: UUID?
     var linkedEventID: String?
     var estimatedDuration: TimeInterval?
@@ -31,6 +32,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable, Transferable {
         isCompleted: Bool = false,
         isArchived: Bool = false,
         priority: Priority = .none,
+        category: TaskCategory = .uncategorized,
         listID: UUID? = nil,
         linkedEventID: String? = nil,
         estimatedDuration: TimeInterval? = nil,
@@ -48,6 +50,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable, Transferable {
         self.isCompleted = isCompleted
         self.isArchived = isArchived
         self.priority = priority
+        self.category = category
         self.listID = listID
         self.linkedEventID = linkedEventID
         self.estimatedDuration = estimatedDuration
@@ -156,6 +159,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable, Transferable {
         dueTime: Date?? = nil,
         reminderDate: Date?? = nil,
         priority: Priority? = nil,
+        category: TaskCategory? = nil,
         listID: UUID?? = nil,
         estimatedDuration: TimeInterval?? = nil,
         recurringRule: RecurringRule?? = nil
@@ -168,25 +172,13 @@ struct Task: Identifiable, Codable, Equatable, Hashable, Transferable {
         if let dueTime = dueTime { copy.dueTime = dueTime }
         if let reminderDate = reminderDate { copy.reminderDate = reminderDate }
         if let priority = priority { copy.priority = priority }
+        if let category = category { copy.category = category }
         if let listID = listID { copy.listID = listID }
         if let estimatedDuration = estimatedDuration { copy.estimatedDuration = estimatedDuration }
         if let recurringRule = recurringRule { copy.recurringRule = recurringRule }
 
         copy.updatedAt = Date()
         return copy
-    }
-}
-
-// MARK: - Transferable
-extension Task {
-    static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(for: Task.self, contentType: .task)
-    }
-}
-
-extension UTType {
-    static var task: UTType {
-        UTType(exportedAs: "com.connectwithprakash.taskweave.task")
     }
 }
 
@@ -207,4 +199,18 @@ extension Task {
         Task(title: "Write unit tests", priority: .medium),
         Task(title: "Fix bug in login flow", dueDate: Date(), isCompleted: true, priority: .urgent)
     ]
+}
+
+// MARK: - Transferable (Drag & Drop)
+extension Task: Transferable {
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(for: Task.self, contentType: .task)
+    }
+}
+
+// MARK: - UTType Extension
+extension UTType {
+    static var task: UTType {
+        UTType(exportedAs: "com.taskweave.task")
+    }
 }

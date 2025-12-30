@@ -5,6 +5,8 @@ struct TaskRowView: View {
     let task: Task
     let onToggle: () -> Void
     let onTap: () -> Void
+    var isDraggable: Bool = true
+    var onSchedule: ((Task) -> Void)?
 
     @State private var isPressed = false
 
@@ -79,16 +81,27 @@ struct TaskRowView: View {
             }
             .tint(Color.Taskweave.success)
         }
+        .if(isDraggable) { view in
+            view.draggable(task) {
+                // Drag preview
+                TaskDragPreview(task: task)
+            }
+        }
     }
 
     // MARK: - Metadata
 
     private var hasMetadata: Bool {
-        task.dueDate != nil || task.priority != .none || task.notes != nil || task.estimatedDuration != nil
+        task.dueDate != nil || task.priority != .none || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil
     }
 
     private var metadataRow: some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
+            // Category
+            if task.category != .uncategorized && !task.isCompleted {
+                CategoryBadge(category: task.category)
+            }
+
             // Due date
             if let dueDate = task.dueDate {
                 DueDateBadge(date: dueDate, isOverdue: task.isOverdue)
@@ -177,6 +190,15 @@ struct TaskRowView: View {
             Label("Due Date", systemImage: "calendar")
         }
 
+        // Schedule to Calendar
+        if !task.isCompleted {
+            Button {
+                onSchedule?(task)
+            } label: {
+                Label("Schedule to Calendar", systemImage: "calendar.badge.plus")
+            }
+        }
+
         Divider()
 
         Button(role: .destructive) {
@@ -227,6 +249,51 @@ struct CompactTaskRowView: View {
     }
 }
 
+// MARK: - Drag Preview
+
+struct TaskDragPreview: View {
+    let task: Task
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Image(systemName: "calendar.badge.plus")
+                .foregroundColor(Color.Taskweave.accent)
+
+            Text(task.title)
+                .font(DesignSystem.Typography.subheadline)
+                .fontWeight(.medium)
+                .lineLimit(1)
+
+            if let duration = task.formattedDuration {
+                Text("• \(duration)")
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, DesignSystem.Spacing.md)
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color.Taskweave.accent.opacity(0.1))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                .stroke(Color.Taskweave.accent, lineWidth: 2)
+        )
+    }
+}
+
+// MARK: - Conditional View Modifier
+
+extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Task Row") {
@@ -256,4 +323,9 @@ struct CompactTaskRowView: View {
     }
     .padding()
     .background(Color.adaptiveBackground)
+}
+
+#Preview("Drag Preview") {
+    TaskDragPreview(task: Task.sample)
+        .padding()
 }

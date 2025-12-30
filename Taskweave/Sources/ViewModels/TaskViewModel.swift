@@ -13,6 +13,7 @@ final class TaskViewModel: ObservableObject {
     @Published var reminderDate: Date?
     @Published var hasReminder: Bool = false
     @Published var priority: Priority = .none
+    @Published var category: TaskCategory = .uncategorized
     @Published var selectedListID: UUID?
     @Published var estimatedDuration: TimeInterval?
     @Published var isRecurring: Bool = false
@@ -49,6 +50,7 @@ final class TaskViewModel: ObservableObject {
         reminderDate = task.reminderDate
         hasReminder = task.reminderDate != nil
         priority = task.priority
+        category = task.category
         selectedListID = task.listID
         estimatedDuration = task.estimatedDuration
 
@@ -95,6 +97,7 @@ final class TaskViewModel: ObservableObject {
                 dueTime: hasDueTime ? dueTime : nil,
                 reminderDate: hasReminder ? reminderDate : nil,
                 priority: priority,
+                category: category,
                 listID: selectedListID,
                 estimatedDuration: estimatedDuration,
                 recurringRule: recurringRule
@@ -102,6 +105,11 @@ final class TaskViewModel: ObservableObject {
             taskService.updateTask(existing)
             return existing
         } else {
+            // Auto-detect category if uncategorized
+            let resolvedCategory = category == .uncategorized
+                ? TaskCategory.detect(from: trimmedTitle, notes: trimmedNotes)
+                : category
+
             return taskService.createTask(
                 title: trimmedTitle,
                 notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
@@ -109,6 +117,7 @@ final class TaskViewModel: ObservableObject {
                 dueTime: hasDueTime ? dueTime : nil,
                 reminderDate: hasReminder ? reminderDate : nil,
                 priority: priority,
+                category: resolvedCategory,
                 listID: selectedListID,
                 estimatedDuration: estimatedDuration,
                 recurringRule: recurringRule

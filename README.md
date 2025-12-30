@@ -21,6 +21,12 @@ Taskweave combines task management with intelligent calendar integration. Schedu
 - View calendar events alongside tasks
 - Schedule tasks as time blocks
 
+### AI-Powered Features
+- Multi-provider LLM support (Apple Intelligence, Anthropic Claude, OpenAI)
+- AI task analysis and suggestions
+- Automatic task categorization with ML
+- Color-coded category badges
+
 ### Views
 - **Today**: Focus on overdue and today's tasks
 - **Upcoming**: Plan ahead with future tasks

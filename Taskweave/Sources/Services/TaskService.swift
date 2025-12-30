@@ -4,8 +4,11 @@ import Combine
 
 /// Service responsible for all Task-related CRUD operations
 final class TaskService: ObservableObject {
+    static let shared = TaskService()
+
     private let persistenceController: PersistenceController
     private let notificationService: NotificationService
+    private let calendarService: CalendarService
 
     @Published private(set) var tasks: [Task] = []
     @Published private(set) var isLoading: Bool = false
@@ -15,10 +18,12 @@ final class TaskService: ObservableObject {
 
     init(
         persistenceController: PersistenceController = .shared,
-        notificationService: NotificationService = .shared
+        notificationService: NotificationService = .shared,
+        calendarService: CalendarService = .shared
     ) {
         self.persistenceController = persistenceController
         self.notificationService = notificationService
+        self.calendarService = calendarService
         setupObservers()
         fetchAllTasks()
     }
@@ -128,11 +133,15 @@ final class TaskService: ObservableObject {
         dueTime: Date? = nil,
         reminderDate: Date? = nil,
         priority: Priority = .none,
+        category: TaskCategory? = nil,
         listID: UUID? = nil,
         estimatedDuration: TimeInterval? = nil,
         recurringRule: RecurringRule? = nil
     ) -> Task {
         let context = persistenceController.viewContext
+
+        // Auto-detect category if not provided
+        let resolvedCategory = category ?? TaskCategory.detect(from: title, notes: notes)
 
         let entity = TaskEntity(context: context)
         entity.id = UUID()
@@ -142,6 +151,7 @@ final class TaskService: ObservableObject {
         entity.dueTime = dueTime
         entity.reminderDate = reminderDate
         entity.priorityRaw = priority.rawValue
+        entity.categoryRaw = resolvedCategory.rawValue
         entity.isCompleted = false
         entity.isArchived = false
         entity.estimatedDuration = estimatedDuration ?? 0
@@ -201,6 +211,7 @@ final class TaskService: ObservableObject {
             entity.dueTime = task.dueTime
             entity.reminderDate = task.reminderDate
             entity.priorityRaw = task.priority.rawValue
+            entity.categoryRaw = task.category.rawValue
             entity.isCompleted = task.isCompleted
             entity.isArchived = task.isArchived
             entity.completedAt = task.completedAt
@@ -252,10 +263,24 @@ final class TaskService: ObservableObject {
                 )
             }
 
+            // Sync to calendar if linked
+            syncTaskToCalendar(task)
+
             fetchAllTasks()
         } catch {
             self.error = error
             print("Failed to update task: \(error)")
+        }
+    }
+
+    /// Sync task changes to linked calendar event
+    private func syncTaskToCalendar(_ task: Task) {
+        guard task.linkedEventID != nil else { return }
+
+        do {
+            try calendarService.syncTaskToEvent(task)
+        } catch {
+            print("Failed to sync task to calendar: \(error)")
         }
     }
 
@@ -295,10 +320,36 @@ final class TaskService: ObservableObject {
         updateTask(updatedTask)
     }
 
+    // MARK: - Calendar Integration
+
+    /// Link a task to a calendar event
+    func linkTaskToEvent(_ task: Task, eventID: String) {
+        var updatedTask = task
+        updatedTask.linkedEventID = eventID
+        updateTask(updatedTask)
+    }
+
+    /// Unlink a task from its calendar event
+    func unlinkTaskFromEvent(_ task: Task) {
+        var updatedTask = task
+        updatedTask.linkedEventID = nil
+        updateTask(updatedTask)
+    }
+
+    /// Create a calendar event from a task
+    func createCalendarEvent(for task: Task, startDate: Date, duration: TimeInterval) {
+        do {
+            let event = try calendarService.createTimeBlock(for: task, startDate: startDate, duration: duration)
+            linkTaskToEvent(task, eventID: event.eventIdentifier)
+        } catch {
+            print("Failed to create calendar event: \(error)")
+        }
+    }
+
     // MARK: - Delete Operations
 
     /// Delete a task
-    func deleteTask(_ task: Task) {
+    func deleteTask(_ task: Task, deleteLinkedEvent: Bool = false) {
         let context = persistenceController.viewContext
         let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
@@ -311,10 +362,26 @@ final class TaskService: ObservableObject {
             // Cancel any scheduled notifications
             notificationService.cancelTaskReminder(taskID: task.id)
 
+            // Delete linked calendar event if requested
+            if deleteLinkedEvent {
+                deleteLinkedCalendarEvent(for: task)
+            }
+
             fetchAllTasks()
         } catch {
             self.error = error
             print("Failed to delete task: \(error)")
+        }
+    }
+
+    /// Delete linked calendar event for a task
+    private func deleteLinkedCalendarEvent(for task: Task) {
+        guard task.linkedEventID != nil else { return }
+
+        do {
+            try calendarService.deleteLinkedEvent(for: task)
+        } catch {
+            print("Failed to delete linked calendar event: \(error)")
         }
     }
 
@@ -360,6 +427,7 @@ extension TaskEntity {
             isCompleted: isCompleted,
             isArchived: isArchived,
             priority: Priority(rawValue: priorityRaw) ?? .none,
+            category: TaskCategory(rawValue: categoryRaw) ?? .uncategorized,
             listID: list?.id,
             linkedEventID: linkedEventID,
             estimatedDuration: estimatedDuration > 0 ? estimatedDuration : nil,

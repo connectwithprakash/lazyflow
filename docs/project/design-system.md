@@ -449,6 +449,68 @@ Position: Below view mode picker
 
 ---
 
+## AI Components (v0.3.0)
+
+### Category Badge
+
+```
++------------------+
+| [icon] Category  |  Auto-detected task category
++------------------+  Background: Category color @ 15%
+                      Text: Category color
+                      Icon: Category-specific SF Symbol
+                      Radius: small
+```
+
+**Category Colors**:
+| Category | Color | Icon |
+|----------|-------|------|
+| Work | Blue | briefcase.fill |
+| Personal | Purple | person.fill |
+| Health | Green | heart.fill |
+| Finance | Mint | dollarsign.circle.fill |
+| Shopping | Orange | cart.fill |
+| Errands | Yellow | figure.walk |
+| Learning | Cyan | book.fill |
+| Home | Brown | house.fill |
+
+### AI Suggestions Card
+
+```
++------------------------------------+
+| [sparkles] AI Suggestions          |
+|------------------------------------|
+|  Suggested Priority: High          |
+|  Estimated Duration: 30 min        |
+|  Best Time: Morning                |
+|  Category: Work                    |
+|------------------------------------|
+|  [ Apply ]  [ Dismiss ]            |
++------------------------------------+
+
+Background: Surface
+Border: 1pt, Accent @ 30%
+Radius: medium
+Icon: sparkles, Accent color
+```
+
+### LLM Provider Picker
+
+```
++------------------------------------+
+|  AI Provider                       |
+|------------------------------------|
+|  (*) Apple Intelligence            |  Free, on-device
+|  ( ) Anthropic Claude              |  API key required
+|  ( ) OpenAI GPT                    |  API key required
++------------------------------------+
+
+Style: List with radio selection
+Subtitle: Provider description
+```
+
+---
+
 ## Iconography
 
 ### Icon Style
