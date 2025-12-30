@@ -6,10 +6,43 @@ A free, open-source, calendar-first todo app for iOS.
 
 Taskweave combines task management with intelligent calendar integration. Schedule tasks directly on your calendar, get AI-powered prioritization, and stay organized across all your Apple devices.
 
-## Status
+## Features
 
-Under active development. See [CHANGELOG.md](CHANGELOG.md) for version history.
+### Task Management
+- Create, edit, and delete tasks
+- Task lists for organization
+- Due dates and reminders
+- Recurring tasks (daily, weekly, monthly, yearly)
+- Priority levels (urgent, high, medium, low)
+
+### Views
+- **Today**: Focus on overdue and today's tasks
+- **Upcoming**: Plan ahead with future tasks
+- **Lists**: Organize tasks by project or category
+- **Settings**: Customize appearance and preferences
+
+### Technical
+- Offline-first with Core Data
+- iCloud sync via CloudKit
+- Native SwiftUI interface
+- Light and dark mode
+- VoiceOver accessibility
+
+## Requirements
+
+- iOS 17.0+
+- Xcode 15.0+
+
+## Getting Started
+
+1. Clone the repository
+2. Open `Taskweave.xcodeproj` in Xcode
+3. Build and run on simulator or device
 
 ## License
 
 [MIT](LICENSE)
+
+---
+
+Built with [Claude Code](https://claude.com/claude-code)

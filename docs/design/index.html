@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskweave Design System</title>
+    <style>
+        :root {
+            --accent: #218A8D;
+            --accent-light: #2BA5A8;
+            --bg-light: #F5F5F5;
+            --bg-dark: #1F2121;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--bg-dark);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: rgba(255,255,255,0.7);
+            font-size: 1.1rem;
+        }
+
+        .accent-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+        }
+
+        nav {
+            background: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        section {
+            margin-bottom: 80px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            max-width: 700px;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .screenshot-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .screenshot-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid #eee;
+        }
+
+        .screenshot-info {
+            padding: 20px;
+        }
+
+        .screenshot-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .screenshot-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            padding: 10px 24px;
+            border: 2px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: rgba(33, 138, 141, 0.1);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .color-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .color-swatch {
+            height: 80px;
+        }
+
+        .color-info {
+            padding: 15px;
+        }
+
+        .color-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .color-info code {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            nav ul {
+                gap: 15px;
+            }
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background: var(--bg-dark);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 80px;
+        }
+
+        footer a {
+            color: var(--accent-light);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Taskweave Design System</h1>
+        <p>Visual documentation for the calendar-first task management app</p>
+    </header>
+    <div class="accent-bar"></div>
+
+    <nav>
+        <ul>
+            <li><a href="#screens">Screens</a></li>
+            <li><a href="#colors">Colors</a></li>
+            <li><a href="#components">Components</a></li>
+            <li><a href="#comparison">Light vs Dark</a></li>
+            <li><a href="../">Back to Home</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <a href="../" class="back-link">← Back to Taskweave</a>
+
+        <section id="screens">
+            <h2>App Screens</h2>
+            <p class="section-desc">
+                Complete visual reference for all screens in Taskweave. Toggle between dark and light mode to see both appearances.
+            </p>
+
+            <div class="mode-toggle">
+                <button class="mode-btn active" onclick="showMode('dark')">Dark Mode</button>
+                <button class="mode-btn" onclick="showMode('light')">Light Mode</button>
+            </div>
+
+            <div class="screenshot-grid" id="dark-screenshots">
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/01-today-empty.png" alt="Today Empty State">
+                    <div class="screenshot-info">
+                        <h3>Today - Empty State</h3>
+                        <p>Celebratory empty state when all tasks are complete</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/02-add-task-sheet.png" alt="Add Task Sheet">
+                    <div class="screenshot-info">
+                        <h3>Add Task Sheet</h3>
+                        <p>Quick task entry with date chips and options</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/03-add-task-with-content.png" alt="Add Task with Content">
+                    <div class="screenshot-info">
+                        <h3>Add Task - Filled</h3>
+                        <p>Task entry with AI-powered suggestions</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/05-today-multiple-tasks.png" alt="Today with Tasks">
+                    <div class="screenshot-info">
+                        <h3>Today - With Tasks</h3>
+                        <p>Task list with auto-categorization tags</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/06-calendar-view.png" alt="Calendar View">
+                    <div class="screenshot-info">
+                        <h3>Calendar View</h3>
+                        <p>Week view with permission request state</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/07-upcoming-view.png" alt="Upcoming View">
+                    <div class="screenshot-info">
+                        <h3>Upcoming - Empty</h3>
+                        <p>Future tasks organized by date</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/08-lists-view.png" alt="Lists View">
+                    <div class="screenshot-info">
+                        <h3>Lists</h3>
+                        <p>Smart lists and custom project organization</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/09-settings-view.png" alt="Settings View">
+                    <div class="screenshot-info">
+                        <h3>Settings</h3>
+                        <p>App preferences with AI provider selection</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/10-task-detail.png" alt="Task Detail">
+                    <div class="screenshot-info">
+                        <h3>Task Detail</h3>
+                        <p>Full task editing with duration estimates</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screenshot-grid" id="light-screenshots" style="display: none;">
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/01-today-empty.png" alt="Today Empty State Light">
+                    <div class="screenshot-info">
+                        <h3>Today - Empty State</h3>
+                        <p>All tasks complete celebration</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/02-add-task-sheet.png" alt="Add Task Sheet Light">
+                    <div class="screenshot-info">
+                        <h3>Add Task Sheet</h3>
+                        <p>Quick task entry in light mode</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/03-add-task-with-content.png" alt="Add Task Filled Light">
+                    <div class="screenshot-info">
+                        <h3>Add Task - Filled</h3>
+                        <p>Task entry with AI suggestions</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/04-today-with-task.png" alt="Today With Task Light">
+                    <div class="screenshot-info">
+                        <h3>Today - Single Task</h3>
+                        <p>Today view with one task</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/05-today-multiple-tasks.png" alt="Today Light">
+                    <div class="screenshot-info">
+                        <h3>Today - With Tasks</h3>
+                        <p>Task list in light mode</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/06-calendar-view.png" alt="Calendar Light">
+                    <div class="screenshot-info">
+                        <h3>Calendar View</h3>
+                        <p>Calendar in light mode</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/07-upcoming-view.png" alt="Upcoming Light">
+                    <div class="screenshot-info">
+                        <h3>Upcoming</h3>
+                        <p>Upcoming view in light mode</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/08-lists-view.png" alt="Lists Light">
+                    <div class="screenshot-info">
+                        <h3>Lists</h3>
+                        <p>Lists view in light mode</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/09-settings-view.png" alt="Settings Light">
+                    <div class="screenshot-info">
+                        <h3>Settings</h3>
+                        <p>Settings in light mode</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/10-task-detail.png" alt="Task Detail Light">
+                    <div class="screenshot-info">
+                        <h3>Task Detail</h3>
+                        <p>Task editing in light mode</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="colors">
+            <h2>Color Palette</h2>
+            <p class="section-desc">
+                The Taskweave color system is designed for accessibility and visual clarity across light and dark modes.
+            </p>
+
+            <h3 style="margin: 30px 0 15px; font-size: 1.2rem;">Primary Colors</h3>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #218A8D;"></div>
+                    <div class="color-info">
+                        <h4>Accent</h4>
+                        <code>#218A8D</code>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #2BA5A8;"></div>
+                    <div class="color-info">
+                        <h4>Accent Light</h4>
+                        <code>#2BA5A8</code>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1A6E70;"></div>
+                    <div class="color-info">
+                        <h4>Accent Dark</h4>
+                        <code>#1A6E70</code>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px; font-size: 1.2rem;">Semantic Colors</h3>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #34C759;"></div>
+                    <div class="color-info">
+                        <h4>Success</h4>
+                        <code>#34C759</code>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FF9500;"></div>
+                    <div class="color-info">
+                        <h4>Warning</h4>
+                        <code>#FF9500</code>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FF3B30;"></div>
+                    <div class="color-info">
+                        <h4>Error</h4>
+                        <code>#FF3B30</code>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px; font-size: 1.2rem;">Background Colors</h3>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FFFFFF; border: 1px solid #eee;"></div>
+                    <div class="color-info">
+                        <h4>Light Background</h4>
+                        <code>#FFFFFF</code>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F5F5F5;"></div>
+                    <div class="color-info">
+                        <h4>Light Surface</h4>
+                        <code>#F5F5F5</code>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1F2121;"></div>
+                    <div class="color-info">
+                        <h4>Dark Background</h4>
+                        <code>#1F2121</code>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #2C2C2E;"></div>
+                    <div class="color-info">
+                        <h4>Dark Surface</h4>
+                        <code>#2C2C2E</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="components">
+            <h2>Components</h2>
+            <p class="section-desc">
+                Key UI components following Apple's Human Interface Guidelines with Taskweave's teal accent.
+            </p>
+
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/02-add-task-sheet.png" alt="Sheet Component">
+                    <div class="screenshot-info">
+                        <h3>Bottom Sheet</h3>
+                        <p>Medium detent sheet for quick task entry</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/05-today-multiple-tasks.png" alt="Task List">
+                    <div class="screenshot-info">
+                        <h3>Task List</h3>
+                        <p>Task rows with checkbox, title, and metadata tags</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/08-lists-view.png" alt="List Navigation">
+                    <div class="screenshot-info">
+                        <h3>List Navigation</h3>
+                        <p>Grouped list with smart lists and custom lists</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison">
+            <h2>Light vs Dark Mode</h2>
+            <p class="section-desc">
+                Side-by-side comparison showing how the interface adapts between light and dark appearances.
+            </p>
+
+            <div class="comparison">
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/05-today-multiple-tasks.png" alt="Light Mode">
+                    <div class="screenshot-info">
+                        <h3>Light Mode</h3>
+                        <p>Clean, bright interface for daytime use</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/dark/05-today-multiple-tasks.png" alt="Dark Mode">
+                    <div class="screenshot-info">
+                        <h3>Dark Mode</h3>
+                        <p>OLED-friendly dark theme for night use</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Taskweave Design System v0.1.0</p>
+        <p style="margin-top: 10px;">
+            <a href="../project/design-system.md">View Full Documentation</a> |
+            <a href="https://github.com/connectwithprakash/taskweave">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        function showMode(mode) {
+            const darkGrid = document.getElementById('dark-screenshots');
+            const lightGrid = document.getElementById('light-screenshots');
+            const buttons = document.querySelectorAll('.mode-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            if (mode === 'dark') {
+                darkGrid.style.display = 'grid';
+                lightGrid.style.display = 'none';
+                buttons[0].classList.add('active');
+            } else {
+                darkGrid.style.display = 'none';
+                lightGrid.style.display = 'grid';
+                buttons[1].classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

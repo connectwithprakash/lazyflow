@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2BA4A8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A7275;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="clockGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E8F5F5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bgGradient)"/>
+
+  <!-- Clock circle (outer) -->
+  <circle cx="512" cy="512" r="320" fill="url(#clockGradient)" opacity="0.95"/>
+
+  <!-- Clock circle (inner accent) -->
+  <circle cx="512" cy="512" r="280" fill="none" stroke="#218A8D" stroke-width="8" opacity="0.3"/>
+
+  <!-- Hour markers -->
+  <g fill="#218A8D" opacity="0.6">
+    <!-- 12 o'clock -->
+    <rect x="500" y="220" width="24" height="60" rx="12"/>
+    <!-- 3 o'clock -->
+    <rect x="744" y="500" width="60" height="24" rx="12"/>
+    <!-- 6 o'clock -->
+    <rect x="500" y="744" width="24" height="60" rx="12"/>
+    <!-- 9 o'clock -->
+    <rect x="220" y="500" width="60" height="24" rx="12"/>
+  </g>
+
+  <!-- Small hour markers -->
+  <g fill="#218A8D" opacity="0.3">
+    <!-- 1 o'clock -->
+    <circle cx="632" cy="272" r="12"/>
+    <!-- 2 o'clock -->
+    <circle cx="752" cy="392" r="12"/>
+    <!-- 4 o'clock -->
+    <circle cx="752" cy="632" r="12"/>
+    <!-- 5 o'clock -->
+    <circle cx="632" cy="752" r="12"/>
+    <!-- 7 o'clock -->
+    <circle cx="392" cy="752" r="12"/>
+    <!-- 8 o'clock -->
+    <circle cx="272" cy="632" r="12"/>
+    <!-- 10 o'clock -->
+    <circle cx="272" cy="392" r="12"/>
+    <!-- 11 o'clock -->
+    <circle cx="392" cy="272" r="12"/>
+  </g>
+
+  <!-- Clock hands -->
+  <!-- Hour hand -->
+  <rect x="496" y="340" width="32" height="200" rx="16" fill="#218A8D" transform="rotate(30 512 512)"/>
+
+  <!-- Minute hand -->
+  <rect x="500" y="260" width="24" height="280" rx="12" fill="#1A7275" transform="rotate(-45 512 512)"/>
+
+  <!-- Center dot -->
+  <circle cx="512" cy="512" r="24" fill="#218A8D"/>
+  <circle cx="512" cy="512" r="12" fill="#FFFFFF"/>
+
+  <!-- Checkmark overlay (bottom right) -->
+  <g transform="translate(680, 680)">
+    <circle cx="80" cy="80" r="100" fill="#218A8D"/>
+    <circle cx="80" cy="80" r="85" fill="#FFFFFF" opacity="0.15"/>
+    <path d="M40 80 L70 110 L130 50" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>

@@ -4,3 +4,22 @@ All notable changes to Taskweave will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.1.0] - 2025-12-29
+
+### Added
+- Core task management with CRUD operations
+- Task lists for organization
+- Due dates and time-based reminders
+- Recurring tasks (daily, weekly, monthly, yearly)
+- Priority levels (urgent, high, medium, low, none)
+- Core Data persistence for offline-first experience
+- CloudKit sync for iCloud backup
+- Today view with overdue and today's tasks
+- Upcoming view for future tasks
+- Lists view for task organization
+- Settings view with appearance options
+- Light and dark mode support
+- Tab bar navigation
+- SwiftUI native interface
+- VoiceOver accessibility support

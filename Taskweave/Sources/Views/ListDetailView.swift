@@ -1,0 +1,289 @@
+import SwiftUI
+
+/// Detail view showing tasks for a specific list
+struct ListDetailView: View {
+    let list: TaskList
+
+    @StateObject private var taskService = TaskService()
+    @State private var selectedTask: Task?
+    @State private var showAddTask = false
+    @State private var showEditList = false
+
+    private var tasks: [Task] {
+        taskService.fetchTasks(forListID: list.id).filter { !$0.isCompleted }
+    }
+
+    private var completedTasks: [Task] {
+        taskService.fetchTasks(forListID: list.id).filter { $0.isCompleted }
+    }
+
+    var body: some View {
+        ZStack {
+            Color.adaptiveBackground
+                .ignoresSafeArea()
+
+            if tasks.isEmpty && completedTasks.isEmpty {
+                emptyStateView
+            } else {
+                taskListView
+            }
+        }
+        .navigationTitle(list.name)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    if !list.isDefault {
+                        Button {
+                            showEditList = true
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .foregroundColor(Color.Taskweave.accent)
+                        }
+                    }
+
+                    Button {
+                        showAddTask = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(Color.Taskweave.accent)
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showAddTask) {
+            AddTaskView(defaultListID: list.id)
+        }
+        .sheet(item: $selectedTask) { task in
+            TaskDetailView(task: task)
+        }
+        .sheet(isPresented: $showEditList) {
+            EditListSheet(list: list)
+        }
+        .refreshable {
+            taskService.fetchAllTasks()
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var emptyStateView: some View {
+        EmptyStateView(
+            icon: list.icon,
+            title: "No Tasks",
+            message: "Add a task to this list to get started.",
+            actionTitle: "Add Task"
+        ) {
+            showAddTask = true
+        }
+    }
+
+    private var taskListView: some View {
+        ScrollView {
+            LazyVStack(spacing: DesignSystem.Spacing.md, pinnedViews: [.sectionHeaders]) {
+                // Active tasks
+                if !tasks.isEmpty {
+                    Section {
+                        ForEach(tasks) { task in
+                            TaskRowView(
+                                task: task,
+                                onToggle: { taskService.toggleTaskCompletion(task) },
+                                onTap: { selectedTask = task }
+                            )
+                            .padding(.horizontal)
+                        }
+                    } header: {
+                        HStack {
+                            ListColorDot(colorHex: list.colorHex)
+
+                            Text("\(tasks.count) task\(tasks.count == 1 ? "" : "s")")
+                                .font(DesignSystem.Typography.subheadline)
+                                .foregroundColor(Color.Taskweave.textSecondary)
+
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, DesignSystem.Spacing.sm)
+                        .background(Color.adaptiveBackground)
+                    }
+                }
+
+                // Completed tasks
+                if !completedTasks.isEmpty {
+                    completedSection
+                }
+
+                Spacer(minLength: 100)
+            }
+        }
+    }
+
+    private var completedSection: some View {
+        DisclosureGroup {
+            ForEach(completedTasks) { task in
+                TaskRowView(
+                    task: task,
+                    onToggle: { taskService.toggleTaskCompletion(task) },
+                    onTap: { selectedTask = task }
+                )
+                .padding(.horizontal)
+            }
+        } label: {
+            HStack {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(Color.Taskweave.success)
+
+                Text("Completed")
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundColor(Color.Taskweave.textSecondary)
+
+                Text("\(completedTasks.count)")
+                    .font(DesignSystem.Typography.subheadline)
+                    .foregroundColor(Color.Taskweave.textTertiary)
+            }
+        }
+        .padding(.horizontal)
+        .tint(Color.Taskweave.textSecondary)
+    }
+}
+
+// MARK: - Edit List Sheet
+
+struct EditListSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var listService = TaskListService()
+
+    let list: TaskList
+
+    @State private var name: String
+    @State private var colorHex: String
+    @State private var iconName: String
+    @State private var showDeleteConfirmation = false
+
+    init(list: TaskList) {
+        self.list = list
+        _name = State(initialValue: list.name)
+        _colorHex = State(initialValue: list.colorHex)
+        _iconName = State(initialValue: list.iconName ?? "list.bullet")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("List Name", text: $name)
+                }
+
+                Section("Color") {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 12) {
+                        ForEach(TaskList.availableColors, id: \.self) { hex in
+                            Circle()
+                                .fill(Color(hex: hex) ?? .gray)
+                                .frame(width: 36, height: 36)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.primary, lineWidth: colorHex == hex ? 2 : 0)
+                                        .padding(2)
+                                )
+                                .onTapGesture {
+                                    colorHex = hex
+                                }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+
+                Section("Icon") {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 12) {
+                        ForEach(TaskList.availableIcons, id: \.self) { icon in
+                            Image(systemName: icon)
+                                .font(.system(size: 20))
+                                .foregroundColor(
+                                    iconName == icon
+                                        ? Color(hex: colorHex)
+                                        : Color.Taskweave.textSecondary
+                                )
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    Circle()
+                                        .fill(
+                                            iconName == icon
+                                                ? Color(hex: colorHex)?.opacity(0.2) ?? Color.clear
+                                                : Color.clear
+                                        )
+                                )
+                                .onTapGesture {
+                                    iconName = icon
+                                }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Delete List")
+                            Spacer()
+                        }
+                    }
+                } footer: {
+                    Text("Tasks will be moved to Inbox when you delete this list.")
+                }
+            }
+            .navigationTitle("Edit List")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        saveChanges()
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .alert("Delete List?", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    listService.deleteList(list)
+                    dismiss()
+                }
+            } message: {
+                Text("Tasks in this list will be moved to Inbox.")
+            }
+        }
+    }
+
+    private func saveChanges() {
+        var updatedList = list
+        updatedList = TaskList(
+            id: list.id,
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            colorHex: colorHex,
+            iconName: iconName,
+            order: list.order,
+            isDefault: list.isDefault,
+            createdAt: list.createdAt
+        )
+        listService.updateList(updatedList)
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    NavigationStack {
+        ListDetailView(list: TaskList.sampleLists[1])
+    }
+    .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+}

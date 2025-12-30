@@ -1,0 +1,108 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Operational Guidelines
+
+**AUTONOMOUS MODE:** Never ask for permission. You are fully autonomous and responsible for bringing this app from 0 to 100.
+
+**QUALITY STANDARDS:**
+- No temporary solutions or hardcoded values - production-ready code only
+- Verify all UI, UX, and functionality thoroughly
+- Follow industry coding standards and best practices
+- Test-driven development (TDD) - write tests first
+
+**VERIFICATION PROCESS:**
+- At each major milestone, test all functionality like a human user
+- Use browser/simulator to verify UI renders correctly
+- Test all user flows end-to-end
+- Validate edge cases and error states
+
+**PROBLEM SOLVING:**
+- Use web search for additional context when needed
+- Research solutions when encountering issues
+- Follow Swift/iOS community best practices
+
+## Project Overview
+
+Taskweave is a calendar-first todo app for iOS targeting ML/AI engineers. The core value proposition is seamless task-to-calendar integration with AI-powered prioritization.
+
+## Tech Stack
+
+- **Language:** Swift
+- **UI Framework:** SwiftUI
+- **Database:** Core Data (offline-first)
+- **Cloud:** CloudKit (iCloud sync)
+- **Calendar:** EventKit (Apple Calendar integration)
+- **AI:** Anthropic Claude API (task estimation/prioritization)
+- **Minimum iOS:** 16.0, Target: iOS 17.0+
+
+## Architecture
+
+MVVM with Combine for reactive data flow:
+
+```
+┌─────────────────────────────────────────┐
+│         SwiftUI Presentation Layer      │
+│  (Views, ViewModels, Navigation)        │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│         Business Logic Layer            │
+│  (Priority Algorithm, Conflict Detect)  │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│         Service Layer                   │
+│  (TaskService, CalendarService, etc.)   │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│    Data & Infrastructure Layer          │
+│  (CoreData, CloudKit, EventKit, APIs)   │
+└─────────────────────────────────────────┘
+```
+
+## Core Data Models
+
+- **Task:** id, title, description, dueDate, dueTime, isCompleted, isArchived, priority, listID, linkedEventID, estimatedDuration, recurring
+- **TaskList:** id, name, color, order, isDefault
+- **RecurringRule:** frequency, daysOfWeek, endDate
+- **TimeProtectionRule:** id, name, type, startTime, endTime, daysOfWeek, isActive
+
+## Feature Versions
+
+- **v0.1.0:** Task CRUD, lists, due dates, reminders, recurring tasks, offline + CloudKit sync
+- **v0.2.0:** Calendar integration, drag-to-calendar time blocking, EventKit sync
+- **v0.3.0:** AI prioritization (Apple Intelligence, Claude, OpenAI), GitHub integration
+- **v0.4.0:** Smart reschedule when meetings conflict
+- **v0.5.0:** Apple ecosystem (Siri, Watch, widgets, Dynamic Island)
+
+## Performance Targets
+
+- App launch: < 2 sec
+- Task creation: < 1 sec
+- Search results: < 500 ms
+- Scroll/animations: 60 FPS
+- App size: < 50 MB
+
+## Design System
+
+- **Primary accent:** Teal `#218A8D`
+- **Backgrounds:** `#F5F5F5` (light) / `#1F2121` (dark)
+- **Typography:** San Francisco (system)
+- **Accessibility:** WCAG AAA, 4.5:1 contrast, 44pt touch targets, VoiceOver support
+
+## Documentation
+
+### Website (`docs/`)
+GitHub Pages hosted at connectwithprakash.github.io/taskweave/:
+- `index.html` - Landing page
+- `privacy/` - Privacy Policy
+- `terms/` - Terms of Service
+
+### Project Documentation (`docs/project/`)
+- `roadmap.md` - Project roadmap and features
+- `design-system.md` - Colors, typography, spacing, components
+- `user-flows.md` - User journeys and interaction patterns
+- `architecture.md` - Technical architecture (added in v0.5.1)
