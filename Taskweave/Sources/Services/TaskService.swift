@@ -173,7 +173,7 @@ final class TaskService: ObservableObject {
             ruleEntity.id = rule.id
             ruleEntity.frequencyRaw = rule.frequency.rawValue
             ruleEntity.interval = Int16(rule.interval)
-            ruleEntity.daysOfWeek = rule.daysOfWeek
+            ruleEntity.daysOfWeekArray = rule.daysOfWeek
             ruleEntity.endDate = rule.endDate
             entity.recurringRule = ruleEntity
         }
@@ -233,14 +233,14 @@ final class TaskService: ObservableObject {
                 if let existingRule = entity.recurringRule {
                     existingRule.frequencyRaw = rule.frequency.rawValue
                     existingRule.interval = Int16(rule.interval)
-                    existingRule.daysOfWeek = rule.daysOfWeek
+                    existingRule.daysOfWeekArray = rule.daysOfWeek
                     existingRule.endDate = rule.endDate
                 } else {
                     let ruleEntity = RecurringRuleEntity(context: context)
                     ruleEntity.id = rule.id
                     ruleEntity.frequencyRaw = rule.frequency.rawValue
                     ruleEntity.interval = Int16(rule.interval)
-                    ruleEntity.daysOfWeek = rule.daysOfWeek
+                    ruleEntity.daysOfWeekArray = rule.daysOfWeek
                     ruleEntity.endDate = rule.endDate
                     entity.recurringRule = ruleEntity
                 }
@@ -412,7 +412,7 @@ extension TaskEntity {
                 id: ruleEntity.id ?? UUID(),
                 frequency: RecurringFrequency(rawValue: ruleEntity.frequencyRaw) ?? .daily,
                 interval: Int(ruleEntity.interval),
-                daysOfWeek: ruleEntity.daysOfWeek,
+                daysOfWeek: ruleEntity.daysOfWeekArray,
                 endDate: ruleEntity.endDate
             )
         }

@@ -115,7 +115,7 @@ final class SmartRescheduleService: ObservableObject {
     /// Generate reschedule suggestions for multiple conflicts (batch)
     func suggestBatchReschedule(for conflicts: [TaskConflict]) -> BatchRescheduleSuggestion {
         var suggestions: [RescheduleSuggestion] = []
-        var totalConflicts = conflicts.count
+        let totalConflicts = conflicts.count
 
         // Sort conflicts by priority of the task (higher priority first)
         let sortedConflicts = conflicts.sorted { conflict1, conflict2 in
@@ -224,14 +224,6 @@ final class SmartRescheduleService: ObservableObject {
     // MARK: - Private Helpers
 
     private func findEarlierSlot(before time: Date, duration: TimeInterval) -> Date? {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: time)
-
-        // Start from 7 AM
-        guard let workStart = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: startOfDay) else {
-            return nil
-        }
-
         let slots = calendarService.findAvailableSlots(on: time, duration: duration, workingHoursStart: 7, workingHoursEnd: 22)
 
         // Find a slot that ends before the conflict time

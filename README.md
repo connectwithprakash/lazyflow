@@ -29,6 +29,11 @@ Taskweave combines task management with intelligent calendar integration. Schedu
 - Smart rescheduling with conflict detection
 - "What should I do next?" prioritization
 
+### Siri Shortcuts
+- "Add a task in Taskweave" - Create new tasks hands-free
+- "Complete my next task" - Mark your top priority task done
+- "What's on my agenda" - Hear your tasks for today
+
 ### Views
 - **Today**: Focus on overdue and today's tasks
 - **Upcoming**: Plan ahead with future tasks

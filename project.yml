@@ -12,7 +12,7 @@ settings:
     SWIFT_VERSION: "5.0"
     GENERATE_INFOPLIST_FILE: YES
     CURRENT_PROJECT_VERSION: 1
-    MARKETING_VERSION: 0.4.0
+    MARKETING_VERSION: 0.5.0
 
 targets:
   Taskweave:
@@ -21,6 +21,13 @@ targets:
     sources:
       - path: Taskweave/Sources
       - path: Taskweave/Resources
+    info:
+      path: Taskweave/Resources/Info.plist
+      properties:
+        INAlternativeAppNames:
+          - INAlternativeAppName: Task Weave
+          - INAlternativeAppName: Task weave
+          - INAlternativeAppName: Tasks
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.taskweave.app
@@ -35,6 +42,7 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
         ENABLE_PREVIEWS: YES
+        INFOPLIST_KEY_NSSiriUsageDescription: "Taskweave uses Siri to create tasks and check your agenda"
     scheme:
       testTargets:
         - TaskweaveTests

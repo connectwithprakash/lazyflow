@@ -5,6 +5,15 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-12-31
+
+### Added
+- Siri Shortcuts integration via App Intents
+- "Create Task" shortcut for hands-free task creation
+- "Complete Next Task" shortcut to mark tasks done
+- "Get Today's Tasks" shortcut to hear your agenda
+- Shortcuts appear automatically in the Shortcuts app
+
 ## [0.4.0] - 2025-12-31
 
 ### Added
