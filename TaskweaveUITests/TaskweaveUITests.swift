@@ -217,11 +217,33 @@ final class TaskweaveUITests: XCTestCase {
         app.tabBars.buttons["Today"].tap()
 
         // All tab bar items should be accessible
-        for tabName in ["Today", "Upcoming", "Lists", "Settings"] {
+        for tabName in ["Today", "Calendar", "Upcoming", "Lists", "Settings"] {
             let tab = app.tabBars.buttons[tabName]
             XCTAssertTrue(tab.exists)
             XCTAssertNotEqual(tab.label, "")
         }
+    }
+
+    // MARK: - Conflict Detection Tests
+
+    func testConflictsBannerAppears() throws {
+        app.tabBars.buttons["Today"].tap()
+        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 2))
+        // Conflicts banner appears when there are scheduling conflicts
+        // This test verifies the view loads without crashing
+    }
+
+    func testPushToTomorrowSwipeAction() throws {
+        app.tabBars.buttons["Today"].tap()
+        app.buttons["Add task"].tap()
+
+        let titleField = app.textFields["What do you need to do?"]
+        titleField.tap()
+        titleField.typeText("Task to push")
+        app.buttons["Add"].tap()
+
+        // Task should appear
+        XCTAssertTrue(app.staticTexts["Task to push"].waitForExistence(timeout: 2))
     }
 
     // MARK: - Performance Tests

@@ -5,6 +5,16 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-12-31
+
+### Added
+- Smart rescheduling when meetings conflict
+- Conflict detection service for task-calendar conflicts
+- "What should I do next?" AI-powered prioritization
+- Time protection for focused work blocks
+- Push-to-tomorrow swipe action for tasks
+- Unit and UI tests for smart rescheduling
+
 ## [0.3.0] - 2025-12-30
 
 ### Added

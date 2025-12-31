@@ -157,4 +157,28 @@ final class TaskweaveTests: XCTestCase {
             }
         }
     }
+
+    // MARK: - Time Protection Tests
+
+    func testTimeProtectionRuleCreation() throws {
+        let rule = TimeProtectionRule(
+            name: "Lunch Break",
+            type: .lunch,
+            startHour: 12,
+            startMinute: 0,
+            endHour: 13,
+            endMinute: 0,
+            daysOfWeek: [2, 3, 4, 5, 6],
+            isActive: true
+        )
+
+        XCTAssertEqual(rule.name, "Lunch Break")
+        XCTAssertEqual(rule.type, .lunch)
+        XCTAssertTrue(rule.isActive)
+    }
+
+    func testConflictSeverityComparison() throws {
+        XCTAssertTrue(ConflictSeverity.high.rawValue > ConflictSeverity.medium.rawValue)
+        XCTAssertTrue(ConflictSeverity.medium.rawValue > ConflictSeverity.low.rawValue)
+    }
 }

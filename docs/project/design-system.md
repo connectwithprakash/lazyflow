@@ -831,4 +831,5 @@ VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
 | v0.1.0 | Initial design system |
 | v0.2.0 | Calendar view components |
 | v0.3.0 | AI feature styling |
+| v0.4.0 | Smart reschedule UI, conflict banners |
 | v0.5.0 | Widget and Watch designs |

@@ -7,6 +7,7 @@ struct TaskRowView: View {
     let onTap: () -> Void
     var isDraggable: Bool = true
     var onSchedule: ((Task) -> Void)?
+    var onPushToTomorrow: ((Task) -> Void)?
 
     @State private var isPressed = false
 
@@ -63,11 +64,21 @@ struct TaskRowView: View {
         .contextMenu {
             contextMenuContent
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
                 // Delete will be handled by parent
             } label: {
                 Label("Delete", systemImage: "trash")
+            }
+
+            if !task.isCompleted {
+                Button {
+                    onPushToTomorrow?(task)
+                } label: {
+                    Label("Tomorrow", systemImage: "arrow.right.to.line")
+                }
+                .tint(.orange)
+                .accessibilityIdentifier("PushToTomorrowSwipe")
             }
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -196,6 +207,12 @@ struct TaskRowView: View {
                 onSchedule?(task)
             } label: {
                 Label("Schedule to Calendar", systemImage: "calendar.badge.plus")
+            }
+
+            Button {
+                onPushToTomorrow?(task)
+            } label: {
+                Label("Push to Tomorrow", systemImage: "arrow.right.to.line")
             }
         }
 

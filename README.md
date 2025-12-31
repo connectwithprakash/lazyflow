@@ -26,6 +26,8 @@ Taskweave combines task management with intelligent calendar integration. Schedu
 - AI task analysis and suggestions
 - Automatic task categorization with ML
 - Color-coded category badges
+- Smart rescheduling with conflict detection
+- "What should I do next?" prioritization
 
 ### Views
 - **Today**: Focus on overdue and today's tasks
