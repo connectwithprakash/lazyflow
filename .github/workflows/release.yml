@@ -15,18 +15,41 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       version: ${{ steps.release.outputs.version }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - id: release
         uses: googleapis/release-please-action@v4
         with:
           release-type: simple
 
-  update-ios-version:
+  post-release:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update release title
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ needs.release-please.outputs.version }}
+          TAG=${{ needs.release-please.outputs.tag_name }}
+
+          # Get release body and extract first feature description
+          BODY=$(gh release view "$TAG" --json body -q '.body')
+
+          # Extract first feat line, clean it up for title
+          SUBTITLE=$(echo "$BODY" | grep -m1 '\* \*\*' | sed 's/.*\*\*.*:\*\* //' | sed 's/ \[.*$//' | head -c 50)
+
+          if [ -n "$SUBTITLE" ]; then
+            NEW_TITLE="$TAG - $SUBTITLE"
+          else
+            NEW_TITLE="$TAG"
+          fi
+
+          gh release edit "$TAG" --title "$NEW_TITLE"
+          echo "Updated release title to: $NEW_TITLE"
 
       - name: Update iOS version in Xcode project
         run: |
