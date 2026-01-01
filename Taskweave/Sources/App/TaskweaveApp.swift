@@ -5,10 +5,7 @@ import WatchConnectivity
 /// Main entry point for the Taskweave app
 @main
 struct TaskweaveApp: App {
-    let persistenceController = PersistenceController.shared
-
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var taskService = TaskService()
 
     init() {
         // Configure appearance (lightweight, OK on main thread)
@@ -17,16 +14,7 @@ struct TaskweaveApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, persistenceController.viewContext)
-                .onAppear {
-                    // Configure Watch connectivity
-                    WatchConnectivityService.shared.configure(with: taskService)
-                }
-                .task {
-                    // Defer heavy initialization to after UI appears
-                    persistenceController.createDefaultListsIfNeeded()
-                }
+            RootView()
         }
         .commands {
             // Keyboard shortcuts for iPad

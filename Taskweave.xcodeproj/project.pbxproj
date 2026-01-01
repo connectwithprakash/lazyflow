@@ -94,6 +94,7 @@
 		F6B66482323556DC1843EEE0 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3295E36A41D180A3D0E9DA4B /* SearchView.swift */; };
 		F96E3F362C44485C5C35A2C8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751D60DB44ED6F070A0B42EA /* ContentView.swift */; };
 		FC9544F1BAA698EA4127635A /* Notification+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECD280716254E849E7546A7 /* Notification+Extensions.swift */; };
+		FD1234567890ABCD12345679 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1234567890ABCD12345679 /* RootView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -245,6 +246,7 @@
 		F702C9B1F11E722B45F0A0ED /* TaskweaveWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskweaveWidget.swift; sourceTree = "<group>"; };
 		F970C9D8C8571D12DA3516C4 /* ListsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewModel.swift; sourceTree = "<group>"; };
 		FBCA0FA9E06FCD309828CC12 /* WatchEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchEmptyStateView.swift; sourceTree = "<group>"; };
+		FE1234567890ABCD12345679 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -346,6 +348,7 @@
 				A02B96740C9B26528CA1981D /* ListsView.swift */,
 				3295E36A41D180A3D0E9DA4B /* SearchView.swift */,
 				45B38F1755E8984C7F33C03E /* SettingsView.swift */,
+				FE1234567890ABCD12345679 /* RootView.swift */,
 				DB9710240F152BBE69A5E1FE /* TaskDetailView.swift */,
 				A380CC7D24FE9C1F03B7C6FA /* TaskRowView.swift */,
 				EC899FB65BE98D4AFC6F7EA9 /* TodayView.swift */,
@@ -804,6 +807,7 @@
 				E705219AF6F82E51212A912F /* TodayView.swift in Sources */,
 				AC5F99407535185AD22C3B7C /* TodayViewModel.swift in Sources */,
 				961B6C465F7CEFD244839D6B /* UpcomingView.swift in Sources */,
+				FD1234567890ABCD12345679 /* RootView.swift in Sources */,
 				5BFABA8679D40781B6B204C7 /* WatchConnectivityService.swift in Sources */,
 				119EEDF8B8C7440BD56D362E /* WidgetDataStore.swift in Sources */,
 			);
@@ -884,6 +888,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1023,6 +1028,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

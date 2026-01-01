@@ -6,8 +6,24 @@ final class PersistenceController: @unchecked Sendable {
     /// App Group identifier for sharing data with widgets
     private static let appGroupIdentifier = "group.com.taskweave.shared"
 
-    /// Shared singleton instance
-    static let shared = PersistenceController()
+    /// Shared singleton instance (lazy initialization)
+    private static var _shared: PersistenceController?
+    static var shared: PersistenceController {
+        if let existing = _shared {
+            return existing
+        }
+        let controller = PersistenceController()
+        _shared = controller
+        return controller
+    }
+
+    /// Whether Core Data has finished loading
+    private(set) var isLoaded = false
+
+    /// Set the shared instance (used for async initialization)
+    static func setShared(_ controller: PersistenceController) {
+        _shared = controller
+    }
 
     /// Preview instance for SwiftUI previews
     static var preview: PersistenceController = {
@@ -88,7 +104,8 @@ final class PersistenceController: @unchecked Sendable {
         container.viewContext
     }
 
-    /// Initialize the persistence controller
+    /// Initialize the persistence controller (synchronous)
+    /// Used by widgets, intents, and direct `.shared` access
     /// - Parameter inMemory: If true, uses in-memory store (for testing/previews)
     init(inMemory: Bool = false) {
         container = NSPersistentContainer(name: "Taskweave")
@@ -107,21 +124,39 @@ final class PersistenceController: @unchecked Sendable {
             }
         }
 
-        container.loadPersistentStores { [weak self] description, error in
+        container.loadPersistentStores { [weak self] _, error in
             if let error = error as NSError? {
                 self?.initializationError = error
                 print("Critical: Failed to load Core Data store: \(error), \(error.userInfo)")
-                // Note: App functionality will be limited without Core Data
             }
         }
 
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
 
-        // Enable CloudKit sync
         if !inMemory {
             setupCloudKitSync()
         }
+
+        isLoaded = true
+    }
+
+    /// Create and initialize persistence controller asynchronously
+    /// Used by main app to show loading UI while Core Data initializes
+    static func createAsync() async -> PersistenceController {
+        // Run synchronous init on background thread to not block UI
+        let controller = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let controller = PersistenceController()
+                continuation.resume(returning: controller)
+            }
+        }
+
+        await MainActor.run {
+            setShared(controller)
+        }
+
+        return controller
     }
 
     /// Configure CloudKit synchronization
