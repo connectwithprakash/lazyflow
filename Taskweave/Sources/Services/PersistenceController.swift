@@ -3,6 +3,9 @@ import Foundation
 
 /// Core Data persistence controller managing the Core Data stack
 final class PersistenceController: @unchecked Sendable {
+    /// App Group identifier for sharing data with widgets
+    private static let appGroupIdentifier = "group.com.taskweave.shared"
+
     /// Shared singleton instance
     static let shared = PersistenceController()
 
@@ -89,6 +92,16 @@ final class PersistenceController: @unchecked Sendable {
 
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+        } else {
+            // Use shared App Groups container for widget access
+            if let storeURL = FileManager.default
+                .containerURL(forSecurityApplicationGroupIdentifier: Self.appGroupIdentifier)?
+                .appendingPathComponent("Taskweave.sqlite") {
+                let description = NSPersistentStoreDescription(url: storeURL)
+                description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+                description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+                container.persistentStoreDescriptions = [description]
+            }
         }
 
         container.loadPersistentStores { description, error in

@@ -56,10 +56,18 @@ final class TaskService: ObservableObject {
         do {
             let entities = try context.fetch(request)
             tasks = entities.map { $0.toDomainModel() }
+            // Sync tasks to widget
+            syncTasksToWidget()
         } catch {
             self.error = error
             print("Failed to fetch tasks: \(error)")
         }
+    }
+
+    /// Sync tasks to widget via shared UserDefaults
+    private func syncTasksToWidget() {
+        let widgetData = tasks.map { $0.toWidgetData() }
+        WidgetDataStore.saveTasks(widgetData)
     }
 
     /// Fetch tasks due today

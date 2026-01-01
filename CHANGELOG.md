@@ -5,6 +5,16 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-12-31
+
+### Added
+- iOS Home Screen Widgets via WidgetKit
+- Small widget showing task count and completion progress
+- Medium widget displaying today's task list with priorities
+- Large widget with overdue, today, and upcoming sections
+- App Groups for shared data between app and widgets
+- Widget refresh on task changes
+
 ## [0.5.0] - 2025-12-31
 
 ### Added

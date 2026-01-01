@@ -50,10 +50,20 @@ Calendar and tasks finally work together. Taskweave is where you protect deep wo
 - Time protection rules (e.g., no tasks after 6 PM)
 - Auto-apply option with user review
 
-### v0.5.0 - Apple Ecosystem
-- Siri shortcuts support
+### v0.5.0 - Siri Integration
+- Siri shortcuts support via App Intents
+- "Add a task" voice command
+- "Complete next task" voice command
+- "What's on my agenda" voice command
+
+### v0.6.0 - Home Screen Widgets
+- Small widget: circular progress ring with task count
+- Medium widget: today's task list with priority indicators
+- Large widget: sectioned view (overdue, today, upcoming)
+- App Groups for shared data between app and widget
+
+### v0.7.0 - Apple Watch (Planned)
 - Apple Watch app with complications
-- Home Screen widgets
 - Dynamic Island / Live Activities
 
 ### Future Considerations

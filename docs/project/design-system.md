@@ -511,6 +511,117 @@ Subtitle: Provider description
 
 ---
 
+## Widget Components (v0.6.0)
+
+### Design Principles
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Glanceable** | Key info visible in < 2 seconds |
+| **Consistent** | Uses app's teal accent and design tokens |
+| **Adaptive** | Works in light/dark mode |
+| **Focused** | Shows only actionable tasks |
+
+### Widget Sizes
+
+| Size | Dimensions | Content |
+|------|------------|---------|
+| Small | 2x2 | Task count + progress ring |
+| Medium | 4x2 | Today's task list (4 items) |
+| Large | 4x4 | Sectioned view with cards |
+
+### Small Widget
+
+```
++-------------------+
+| [*] Taskweave     |
+|                   |
+|    +------+       |   Progress ring: 6pt stroke
+|    |  3   |       |   Teal accent color
+|    | tasks|       |   Center: count + label
+|    +------+       |
+|                   |
+|   [*] 2/5         |   Footer: completed count
++-------------------+
+```
+
+### Medium Widget
+
+```
++---------------------------------------+
+| Today                           (O)   |  Header: title + progress ring
+| 2 overdue                             |  Overdue badge (red, if any)
+|---------------------------------------|
+| |  O  Review project            [*]   |  Priority bar (3pt, left edge)
+| |  O  Team meeting              [*]   |  Checkbox circle (16pt)
+| |  O  Send report               [ ]   |  Task title
+| +2 more                               |  Remaining count
++---------------------------------------+
+```
+
+### Large Widget
+
+```
++---------------------------------------+
+| [*] Taskweave                   2/5 O |  Header with app name
+|---------------------------------------|
+| [!] Overdue (2)                       |  Section header (red)
+| +-----------------------------------+ |
+| | *  O  Submit report               | |  Card background
+| |----O  Pay bills                   | |  Dividers between tasks
+| +-----------------------------------+ |
+|                                       |
+| [=] Today (3)                         |  Section header (teal)
+| +-----------------------------------+ |
+| | *  O  Team meeting                | |
+| |----O  Code review                 | |
+| | +1 more                           | |
+| +-----------------------------------+ |
++---------------------------------------+
+```
+
+### Widget Colors
+
+| Element | Color | Usage |
+|---------|-------|-------|
+| Accent | `#218A8D` | Progress rings, Today header |
+| Urgent | `#E53935` | Overdue section, urgent priority |
+| High | `#F58424` | High priority indicator |
+| Medium | `#F6C032` | Medium priority indicator |
+| Low | `#417ADE` | Low priority indicator |
+| Card BG | `secondarySystemBackground` | Task list cards |
+
+### Priority Indicators
+
+| Priority | Visual | Color |
+|----------|--------|-------|
+| Urgent | Filled circle (8pt) | Red `#E53935` |
+| High | Filled circle (8pt) | Orange `#F58424` |
+| Medium | Filled circle (8pt) | Yellow `#F6C032` |
+| Low | Filled circle (8pt) | Blue `#417ADE` |
+| None | Filled circle (8pt) | Gray 40% opacity |
+
+### Empty State
+
+```
++-------------------+
+|                   |
+|    [sparkles]     |   Icon: sparkles, teal
+|    All clear!     |   Title: semibold
+|  No tasks today   |   Subtitle: secondary
+|                   |
++-------------------+
+```
+
+### Technical Notes
+
+- **No ScrollView**: Widgets don't support scrolling
+- **Data sharing**: UserDefaults via App Groups
+- **Refresh**: Every 15 minutes + on task change
+- **Background**: `containerBackground` API for iOS 17+
+
+---
+
 ## Iconography
 
 ### Icon Style
@@ -832,4 +943,5 @@ VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
 | v0.2.0 | Calendar view components |
 | v0.3.0 | AI feature styling |
 | v0.4.0 | Smart reschedule UI, conflict banners |
-| v0.5.0 | Widget and Watch designs |
+| v0.5.0 | Siri Shortcuts integration |
+| v0.6.0 | Home Screen Widget components |

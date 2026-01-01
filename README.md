@@ -34,6 +34,11 @@ Taskweave combines task management with intelligent calendar integration. Schedu
 - "Complete my next task" - Mark your top priority task done
 - "What's on my agenda" - Hear your tasks for today
 
+### Home Screen Widgets
+- **Small Widget**: Task count and completion progress
+- **Medium Widget**: Today's task list with priorities
+- **Large Widget**: Overdue, today, and upcoming sections
+
 ### Views
 - **Today**: Focus on overdue and today's tasks
 - **Upcoming**: Plan ahead with future tasks

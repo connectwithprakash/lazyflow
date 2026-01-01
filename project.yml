@@ -12,7 +12,7 @@ settings:
     SWIFT_VERSION: "5.0"
     GENERATE_INFOPLIST_FILE: YES
     CURRENT_PROJECT_VERSION: 1
-    MARKETING_VERSION: 0.5.0
+    MARKETING_VERSION: 0.6.0
 
 targets:
   Taskweave:
@@ -41,12 +41,39 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: Taskweave/Taskweave.entitlements
         ENABLE_PREVIEWS: YES
         INFOPLIST_KEY_NSSiriUsageDescription: "Taskweave uses Siri to create tasks and check your agenda"
+    dependencies:
+      - target: TaskweaveWidget
+        embed: true
     scheme:
       testTargets:
         - TaskweaveTests
         - TaskweaveUITests
+
+  TaskweaveWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: TaskweaveWidget
+        excludes:
+          - "**/*.xcassets"
+      - path: TaskweaveWidget/Assets.xcassets
+    info:
+      path: TaskweaveWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Taskweave Widget
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.taskweave.app.widget
+        ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: TaskweaveWidget/TaskweaveWidget.entitlements
+        SKIP_INSTALL: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
 
   TaskweaveTests:
     type: bundle.unit-test
