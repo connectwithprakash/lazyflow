@@ -68,6 +68,11 @@ final class TaskService: ObservableObject {
     private func syncTasksToWidget() {
         let widgetData = tasks.map { $0.toWidgetData() }
         WidgetDataStore.saveTasks(widgetData)
+
+        // Update Live Activity if active
+        _Concurrency.Task { @MainActor in
+            await LiveActivityManager.shared.updateFromTasks(tasks)
+        }
     }
 
     /// Fetch tasks due today

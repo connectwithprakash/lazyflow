@@ -622,6 +622,80 @@ Subtitle: Provider description
 
 ---
 
+## Live Activity Components (v0.7.0)
+
+Live Activities display task progress on Lock Screen and Dynamic Island (iPhone 14+).
+
+### Lock Screen View
+
+```
++-------------------------------------------+
+|  [checkmark] Taskweave           [O] 2/5  |  Header: 14pt semibold
+|  -----------------------------------------|
+|                                           |
+|  | O  Review pull request                 |  Priority bar: 3pt
+|  | O  Call dentist                        |  Task: 13pt medium
+|                                           |
+|  Next: Buy groceries               ...    |  Footer: 11pt secondary
++-------------------------------------------+
+    |
+    +-- Height: ~160pt, Padding: 14pt
+```
+
+### Dynamic Island - Compact
+
+```
++----------------------------------------+
+|  [check] 2/5  |  [NOTCH]  |  Review... |
++----------------------------------------+
+       |                          |
+       +-- Teal accent            +-- 11pt, truncated
+```
+
+### Dynamic Island - Expanded
+
+```
++----------------------------------------+
+|                                        |
+|    [check]    [NOTCH]         2 of 5   |   Leading icon, trailing stats
+|                                        |
+|  --------------------------------------|
+|  | Review pull request            [*]  |   Priority bar + dot
+|                                        |
+|  ========================o        40%  |   Progress bar
+|                                        |
+|  Next: Call dentist                    |   11pt secondary
++----------------------------------------+
+```
+
+### Dynamic Island - Minimal
+
+```
++--------+
+| [O]    |   Progress ring with checkmark
+| 2/5    |   Count below
++--------+
+```
+
+### Design Tokens
+
+| Element | Value | Notes |
+|---------|-------|-------|
+| Accent | `#218A8D` (Teal) | Checkmark, progress |
+| Progress Ring | 3pt stroke | Round cap |
+| Priority Bar | 3pt width | Left edge indicator |
+| Typography | SF Pro | Same as widgets |
+| Background | `activityBackgroundTint` | System blur |
+
+### Technical Notes
+
+- **Framework**: ActivityKit (iOS 16.1+)
+- **Updates**: Automatically on task completion
+- **Duration**: Until all tasks complete or manual stop
+- **Settings**: Toggle in Settings > Live Activity
+
+---
+
 ## Iconography
 
 ### Icon Style

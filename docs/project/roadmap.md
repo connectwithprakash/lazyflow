@@ -62,9 +62,17 @@ Calendar and tasks finally work together. Taskweave is where you protect deep wo
 - Large widget: sectioned view (overdue, today, upcoming)
 - App Groups for shared data between app and widget
 
-### v0.7.0 - Apple Watch (Planned)
+### v0.7.0 - Live Activities & Dynamic Island
+- Lock Screen Live Activity with task progress
+- Dynamic Island compact view (task count + current task)
+- Dynamic Island expanded view (progress bar, next task)
+- Settings toggle to enable/disable tracking
+- Auto-updates when tasks are completed
+
+### v0.8.0 - Apple Watch (Planned)
 - Apple Watch app with complications
-- Dynamic Island / Live Activities
+- Task list on wrist
+- Quick task completion
 
 ### Future Considerations
 - iPad optimization

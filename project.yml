@@ -12,7 +12,7 @@ settings:
     SWIFT_VERSION: "5.0"
     GENERATE_INFOPLIST_FILE: YES
     CURRENT_PROJECT_VERSION: 1
-    MARKETING_VERSION: 0.6.0
+    MARKETING_VERSION: 0.7.0
 
 targets:
   Taskweave:
@@ -21,9 +21,11 @@ targets:
     sources:
       - path: Taskweave/Sources
       - path: Taskweave/Resources
+      - path: TaskweaveWidget/LiveActivity/TaskActivityAttributes.swift
     info:
       path: Taskweave/Resources/Info.plist
       properties:
+        NSSupportsLiveActivities: YES
         INAlternativeAppNames:
           - INAlternativeAppName: Task Weave
           - INAlternativeAppName: Task weave

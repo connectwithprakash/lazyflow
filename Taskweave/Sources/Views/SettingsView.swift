@@ -50,6 +50,15 @@ struct SettingsView: View {
                     }
                 }
 
+                // Live Activity
+                Section {
+                    LiveActivityToggle()
+                } header: {
+                    Text("Live Activity")
+                } footer: {
+                    Text("Shows task progress on Lock Screen and Dynamic Island (iPhone 14+)")
+                }
+
                 // Accessibility
                 Section("Accessibility") {
                     Toggle("Haptic Feedback", isOn: $hapticFeedback)
@@ -670,6 +679,68 @@ struct AISettingsView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Live Activity Toggle
+
+struct LiveActivityToggle: View {
+    @StateObject private var liveActivityManager = LiveActivityManager.shared
+    @State private var isEnabled = false
+
+    var body: some View {
+        Toggle(isOn: $isEnabled) {
+            HStack {
+                Image(systemName: "rectangle.badge.checkmark")
+                    .foregroundColor(Color.Taskweave.accent)
+                    .frame(width: 24)
+                Text("Track Today's Progress")
+            }
+        }
+        .onChange(of: isEnabled) { _, newValue in
+            _Concurrency.Task {
+                if newValue {
+                    await startLiveActivity()
+                } else {
+                    await liveActivityManager.stopTracking()
+                }
+            }
+        }
+        .onAppear {
+            isEnabled = liveActivityManager.isTrackingActive
+        }
+        .disabled(!liveActivityManager.areActivitiesSupported)
+    }
+
+    private func startLiveActivity() async {
+        let tasks = TaskService.shared.tasks
+        let todayTasks = tasks.filter { $0.isDueToday || $0.isOverdue }
+        let completedCount = todayTasks.filter { $0.isCompleted }.count
+        let totalCount = todayTasks.count
+
+        guard totalCount > 0 else { return }
+
+        let incompleteTasks = todayTasks.filter { !$0.isCompleted }
+            .sorted { task1, task2 in
+                if task1.priority != task2.priority {
+                    return task1.priority.rawValue > task2.priority.rawValue
+                }
+                if let date1 = task1.dueDate, let date2 = task2.dueDate {
+                    return date1 < date2
+                }
+                return task1.dueDate != nil
+            }
+
+        let currentTask = incompleteTasks.first
+        let nextTask = incompleteTasks.dropFirst().first
+
+        await liveActivityManager.startTracking(
+            completedCount: completedCount,
+            totalCount: totalCount,
+            currentTask: currentTask?.title,
+            currentPriority: currentTask?.priority.rawValue ?? 0,
+            nextTask: nextTask?.title
+        )
     }
 }
 
