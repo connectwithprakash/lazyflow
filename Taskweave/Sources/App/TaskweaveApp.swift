@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import WatchConnectivity
 
 /// Main entry point for the Taskweave app
 @main
@@ -7,6 +8,7 @@ struct TaskweaveApp: App {
     let persistenceController = PersistenceController.shared
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var taskService = TaskService()
 
     init() {
         // Configure appearance
@@ -20,6 +22,10 @@ struct TaskweaveApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.viewContext)
+                .onAppear {
+                    // Configure Watch connectivity
+                    WatchConnectivityService.shared.configure(with: taskService)
+                }
         }
     }
 

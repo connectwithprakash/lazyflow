@@ -69,10 +69,12 @@ Calendar and tasks finally work together. Taskweave is where you protect deep wo
 - Settings toggle to enable/disable tracking
 - Auto-updates when tasks are completed
 
-### v0.8.0 - Apple Watch (Planned)
-- Apple Watch app with complications
-- Task list on wrist
-- Quick task completion
+### v0.8.0 - Apple Watch
+- Apple Watch app with SwiftUI
+- Task list on wrist (today's tasks)
+- Quick task completion via tap
+- WatchConnectivity for real-time sync
+- Complications: circular progress, inline count, rectangular preview
 
 ### Future Considerations
 - iPad optimization

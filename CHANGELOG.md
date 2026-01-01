@@ -5,6 +5,16 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-12-31
+
+### Added
+- Apple Watch app with SwiftUI for watchOS 10+
+- Today's task list view with progress ring header
+- Tap-to-complete task interaction
+- WatchConnectivity for real-time iPhone ↔ Watch sync
+- Watch complications (circular, corner, inline, rectangular)
+- WatchDataStore for offline task caching via App Groups
+
 ## [0.7.0] - 2025-12-31
 
 ### Added
