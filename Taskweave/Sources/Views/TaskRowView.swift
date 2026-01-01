@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Reusable task row component
 struct TaskRowView: View {
@@ -8,11 +9,17 @@ struct TaskRowView: View {
     var isDraggable: Bool = true
     var onSchedule: ((Task) -> Void)?
     var onPushToTomorrow: ((Task) -> Void)?
+    var onMoveToToday: ((Task) -> Void)?
     var onPriorityChange: ((Task, Priority) -> Void)?
     var onDueDateChange: ((Task, Date?) -> Void)?
     var onDelete: ((Task) -> Void)?
 
     @State private var isPressed = false
+
+    // MARK: - Haptic Feedback
+    private let impactLight = UIImpactFeedbackGenerator(style: .light)
+    private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
+    private let notificationFeedback = UINotificationFeedbackGenerator()
 
     var body: some View {
         Button(action: onTap) {
@@ -79,31 +86,52 @@ struct TaskRowView: View {
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
-                // Delete will be handled by parent
+                notificationFeedback.notificationOccurred(.warning)
+                onDelete?(task)
             } label: {
                 Label("Delete", systemImage: "trash")
             }
 
             if !task.isCompleted {
-                Button {
-                    onPushToTomorrow?(task)
-                } label: {
-                    Label("Tomorrow", systemImage: "arrow.right.to.line")
+                if task.isOverdue || (!task.isDueToday && task.dueDate != nil) {
+                    Button {
+                        impactMedium.impactOccurred()
+                        onMoveToToday?(task)
+                    } label: {
+                        Label("Today", systemImage: "star.fill")
+                    }
+                    .tint(.blue)
                 }
-                .tint(.orange)
-                .accessibilityIdentifier("PushToTomorrowSwipe")
+
+                if task.isDueToday || task.isOverdue {
+                    Button {
+                        impactMedium.impactOccurred()
+                        onPushToTomorrow?(task)
+                    } label: {
+                        Label("Tomorrow", systemImage: "arrow.right.to.line")
+                    }
+                    .tint(.orange)
+                }
             }
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button {
+                notificationFeedback.notificationOccurred(.success)
                 onToggle()
             } label: {
-                Label(
-                    task.isCompleted ? "Uncomplete" : "Complete",
-                    systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark"
-                )
+                Label(task.isCompleted ? "Undo" : "Done", systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark")
             }
             .tint(Color.Taskweave.success)
+
+            if !task.isCompleted {
+                Button {
+                    impactLight.impactOccurred()
+                    onSchedule?(task)
+                } label: {
+                    Label("Schedule", systemImage: "calendar.badge.plus")
+                }
+                .tint(Color.Taskweave.accent)
+            }
         }
         .if(isDraggable) { view in
             view.draggable(task) {
@@ -215,6 +243,15 @@ struct TaskRowView: View {
                 onSchedule?(task)
             } label: {
                 Label("Schedule to Calendar", systemImage: "calendar.badge.plus")
+            }
+
+            // Move to Today (for overdue or upcoming tasks)
+            if task.isOverdue || (!task.isDueToday && task.dueDate != nil) {
+                Button {
+                    onMoveToToday?(task)
+                } label: {
+                    Label("Move to Today", systemImage: "star.fill")
+                }
             }
 
             Button {

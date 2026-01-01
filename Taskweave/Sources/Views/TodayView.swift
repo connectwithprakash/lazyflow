@@ -14,6 +14,8 @@ struct TodayView: View {
     @State private var showConflictSheet = false
     @State private var selectedConflict: TaskConflict?
     @State private var showBatchReschedule = false
+    @State private var undoAction: UndoAction?
+    @State private var undoSnapshot: Task?
 
     var body: some View {
         Group {
@@ -78,6 +80,48 @@ struct TodayView: View {
                 }
             )
         }
+        .undoToast(action: $undoAction) { action in
+            handleUndo(action)
+        }
+    }
+
+    // MARK: - Undo Handling
+
+    private func handleUndo(_ action: UndoAction) {
+        guard let snapshot = undoSnapshot else { return }
+        let taskService = TaskService.shared
+
+        switch action {
+        case .completed:
+            // Restore to uncompleted state
+            var restoredTask = snapshot
+            restoredTask.isCompleted = false
+            taskService.updateTask(restoredTask)
+        case .deleted:
+            // Re-add the deleted task
+            taskService.createTask(
+                title: snapshot.title,
+                notes: snapshot.notes,
+                dueDate: snapshot.dueDate,
+                dueTime: snapshot.dueTime,
+                reminderDate: snapshot.reminderDate,
+                priority: snapshot.priority,
+                category: snapshot.category,
+                listID: snapshot.listID,
+                estimatedDuration: snapshot.estimatedDuration,
+                recurringRule: snapshot.recurringRule
+            )
+        case .movedToToday, .pushedToTomorrow:
+            // Restore original due date
+            taskService.updateTask(snapshot)
+        }
+        undoSnapshot = nil
+        viewModel.refreshTasks()
+    }
+
+    private func showUndoToast(_ action: UndoAction, snapshot: Task) {
+        undoSnapshot = snapshot
+        undoAction = action
     }
 
     @ToolbarContentBuilder
@@ -127,6 +171,11 @@ struct TodayView: View {
 
     private func pushToTomorrow(_ task: Task) {
         _ = rescheduleService.pushTaskToTomorrow(task, taskService: TaskService.shared)
+        scanForConflicts()
+    }
+
+    private func moveToToday(_ task: Task) {
+        viewModel.updateTaskDueDate(task, dueDate: Date())
         scanForConflicts()
     }
 
@@ -220,51 +269,61 @@ struct TodayView: View {
     }
 
     private var taskListView: some View {
-        ScrollView {
-            LazyVStack(spacing: DesignSystem.Spacing.md, pinnedViews: [.sectionHeaders]) {
-                // Progress header
+        List {
+            // Progress header
+            Section {
                 progressHeader
-                    .padding(.horizontal)
-                    .padding(.top, DesignSystem.Spacing.sm)
+            }
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .listRowBackground(Color.adaptiveBackground)
+            .listRowSeparator(.hidden)
 
-                // Conflicts banner
-                if !conflictService.detectedConflicts.isEmpty {
+            // Conflicts banner
+            if !conflictService.detectedConflicts.isEmpty {
+                Section {
                     conflictsBanner
-                        .padding(.horizontal)
                 }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.adaptiveBackground)
+                .listRowSeparator(.hidden)
+            }
 
-                // What should I do next?
-                if let suggestedTask = prioritizationService.suggestedNextTask {
+            // What should I do next?
+            if let suggestedTask = prioritizationService.suggestedNextTask {
+                Section {
                     nextTaskSuggestionCard(suggestedTask)
-                        .padding(.horizontal)
                 }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.adaptiveBackground)
+                .listRowSeparator(.hidden)
+            }
 
-                // Overdue section
-                if !viewModel.overdueTasks.isEmpty {
-                    taskSection(
-                        title: "Overdue",
-                        tasks: viewModel.overdueTasks,
-                        accentColor: Color.Taskweave.error
-                    )
-                }
+            // Overdue section
+            if !viewModel.overdueTasks.isEmpty {
+                taskSection(
+                    title: "Overdue",
+                    tasks: viewModel.overdueTasks,
+                    accentColor: Color.Taskweave.error
+                )
+            }
 
-                // Today section
-                if !viewModel.todayTasks.isEmpty {
-                    taskSection(
-                        title: "Today",
-                        tasks: viewModel.todayTasks,
-                        accentColor: Color.Taskweave.accent
-                    )
-                }
+            // Today section
+            if !viewModel.todayTasks.isEmpty {
+                taskSection(
+                    title: "Today",
+                    tasks: viewModel.todayTasks,
+                    accentColor: Color.Taskweave.accent
+                )
+            }
 
-                // Completed section
-                if !viewModel.completedTodayTasks.isEmpty {
-                    completedSection
-                }
-
-                Spacer(minLength: 100)
+            // Completed section
+            if !viewModel.completedTodayTasks.isEmpty {
+                completedSection
             }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color.adaptiveBackground)
     }
 
     // MARK: - Next Task Suggestion Card
@@ -390,15 +449,30 @@ struct TodayView: View {
             ForEach(tasks) { task in
                 TaskRowView(
                     task: task,
-                    onToggle: { viewModel.toggleTaskCompletion(task) },
+                    onToggle: {
+                        showUndoToast(.completed(task), snapshot: task)
+                        viewModel.toggleTaskCompletion(task)
+                    },
                     onTap: { viewModel.selectedTask = task },
                     onSchedule: { scheduleTaskAction($0) },
-                    onPushToTomorrow: { pushToTomorrow($0) },
+                    onPushToTomorrow: { task in
+                        showUndoToast(.pushedToTomorrow(task), snapshot: task)
+                        pushToTomorrow(task)
+                    },
+                    onMoveToToday: { task in
+                        showUndoToast(.movedToToday(task), snapshot: task)
+                        moveToToday(task)
+                    },
                     onPriorityChange: { viewModel.updateTaskPriority($0, priority: $1) },
                     onDueDateChange: { viewModel.updateTaskDueDate($0, dueDate: $1) },
-                    onDelete: { viewModel.deleteTask($0) }
+                    onDelete: { task in
+                        showUndoToast(.deleted(task), snapshot: task)
+                        viewModel.deleteTask(task)
+                    }
                 )
-                .padding(.horizontal)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.adaptiveBackground)
+                .listRowSeparator(.hidden)
             }
         } header: {
             HStack {
@@ -416,28 +490,27 @@ struct TodayView: View {
 
                 Spacer()
             }
-            .padding(.horizontal)
-            .padding(.vertical, DesignSystem.Spacing.sm)
-            .background(Color.adaptiveBackground)
         }
     }
 
     private var completedSection: some View {
-        DisclosureGroup {
+        Section {
             ForEach(viewModel.completedTodayTasks) { task in
                 TaskRowView(
                     task: task,
                     onToggle: { viewModel.toggleTaskCompletion(task) },
                     onTap: { viewModel.selectedTask = task },
-                    onSchedule: nil, // Completed tasks don't need scheduling
+                    onSchedule: nil,
                     onPushToTomorrow: nil,
                     onPriorityChange: { viewModel.updateTaskPriority($0, priority: $1) },
                     onDueDateChange: { viewModel.updateTaskDueDate($0, dueDate: $1) },
                     onDelete: { viewModel.deleteTask($0) }
                 )
-                .padding(.horizontal)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.adaptiveBackground)
+                .listRowSeparator(.hidden)
             }
-        } label: {
+        } header: {
             HStack {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(Color.Taskweave.success)
@@ -449,10 +522,10 @@ struct TodayView: View {
                 Text("\(viewModel.completedTodayTasks.count)")
                     .font(DesignSystem.Typography.subheadline)
                     .foregroundColor(Color.Taskweave.textTertiary)
+
+                Spacer()
             }
         }
-        .padding(.horizontal)
-        .tint(Color.Taskweave.textSecondary)
     }
 
 }

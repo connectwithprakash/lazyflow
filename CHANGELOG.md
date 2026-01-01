@@ -5,6 +5,20 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-01-01
+
+### Added
+- Native swipe actions on task rows
+  - Swipe left: Delete, Move to Today, Push to Tomorrow (contextual)
+  - Swipe right: Complete/Undo (full swipe), Schedule to Calendar
+- Haptic feedback on swipe actions
+- Undo toast notification for task actions (complete, delete, reschedule)
+- Move to Today action for overdue and upcoming tasks
+
+### Changed
+- TodayView converted from ScrollView to List for native swipe support
+- List styled with plain style and hidden separators to match existing design
+
 ## [0.10.0] - 2025-12-31
 
 ### Changed

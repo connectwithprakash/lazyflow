@@ -90,6 +90,7 @@ struct ListDetailView: View {
                                 onToggle: { taskService.toggleTaskCompletion(task) },
                                 onTap: { selectedTask = task },
                                 onPushToTomorrow: { pushToTomorrow($0) },
+                                onMoveToToday: { moveToToday($0) },
                                 onPriorityChange: { updateTaskPriority($0, priority: $1) },
                                 onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
                                 onDelete: { taskService.deleteTask($0) }
@@ -130,6 +131,7 @@ struct ListDetailView: View {
                     onToggle: { taskService.toggleTaskCompletion(task) },
                     onTap: { selectedTask = task },
                     onPushToTomorrow: { pushToTomorrow($0) },
+                    onMoveToToday: { moveToToday($0) },
                     onPriorityChange: { updateTaskPriority($0, priority: $1) },
                     onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
                     onDelete: { taskService.deleteTask($0) }
@@ -171,6 +173,10 @@ struct ListDetailView: View {
     private func pushToTomorrow(_ task: Task) {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
         updateTaskDueDate(task, dueDate: tomorrow)
+    }
+
+    private func moveToToday(_ task: Task) {
+        updateTaskDueDate(task, dueDate: Date())
     }
 }
 
