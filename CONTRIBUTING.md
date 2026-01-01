@@ -2,13 +2,60 @@
 
 Thank you for your interest in contributing to Taskweave!
 
+## Development Workflow
+
+### 1. Create an Issue
+
+Before starting work, create a GitHub issue:
+- **Bug**: Use the bug report template
+- **Feature**: Use the feature request template
+- **Other**: Create a blank issue with clear description
+
+### 2. Create a Branch
+
+Create a branch from `main` following this convention:
+
+```
+<type>/<issue-number>-<short-description>
+```
+
+| Type | Use for |
+|------|---------|
+| `feature` | New features |
+| `fix` | Bug fixes |
+| `docs` | Documentation |
+| `refactor` | Code restructure |
+| `chore` | Maintenance |
+
+Examples:
+- `feature/23-add-dark-mode`
+- `fix/45-login-crash`
+- `docs/12-update-readme`
+
+### 3. Make Changes
+
+- Write code following project conventions
+- Use conventional commits (see below)
+- Keep commits focused and atomic
+
+### 4. Create a Pull Request
+
+- Link to the related issue
+- Fill out the PR template
+- Request review when ready
+
+### 5. Review & Merge
+
+- Address review feedback
+- Squash merge to main
+- Delete the branch after merge
+
 ## Development Setup
 
 ### Prerequisites
 
 - macOS 14.0 or later
 - Xcode 15.0 or later
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 
 ### Getting Started
 
@@ -18,20 +65,12 @@ Thank you for your interest in contributing to Taskweave!
    cd taskweave
    ```
 
-2. Install XcodeGen:
-   ```bash
-   brew install xcodegen
-   ```
-
-3. Generate the Xcode project:
-   ```bash
-   xcodegen generate
-   ```
-
-4. Open the project:
+2. Open the project:
    ```bash
    open Taskweave.xcodeproj
    ```
+
+3. Build and run in Xcode (Cmd+R)
 
 ## Commit Message Convention
 
@@ -41,26 +80,33 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) format:
 <type>(<scope>): <description>
 ```
 
-| Type | Use for |
-|------|---------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation |
-| `refactor` | Code restructure |
-| `test` | Tests |
-| `chore` | Maintenance |
+| Type | Use for | Version Bump |
+|------|---------|--------------|
+| `feat` | New feature | Minor (0.1.0) |
+| `fix` | Bug fix | Patch (0.0.1) |
+| `feat!` | Breaking change | Major (1.0.0) |
+| `docs` | Documentation | None |
+| `refactor` | Code restructure | None |
+| `test` | Tests | None |
+| `chore` | Maintenance | None |
+| `ci` | CI/CD changes | None |
+
+**Breaking Changes:** Add `!` after type (e.g., `feat!:`) or include `BREAKING CHANGE:` in commit body.
 
 Examples:
 - `feat(tasks): add recurring task support`
 - `fix(calendar): resolve sync conflict on iOS 17`
 - `docs(readme): update installation instructions`
 
-## Pull Requests
+## Release Process
 
-1. Create a feature branch from `main`
-2. Make your changes
-3. Ensure all tests pass
-4. Submit a pull request with a clear description
+We use [release-please](https://github.com/googleapis/release-please) for automated releases:
+
+1. `feat:` and `fix:` commits on `main` update a release PR
+2. Merging the release PR creates a GitHub release
+3. iOS version is automatically updated in Xcode project
+
+No manual version bumping required.
 
 ## License
 
