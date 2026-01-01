@@ -79,7 +79,9 @@ final class TaskService: ObservableObject {
     func fetchTodayTasks() -> [Task] {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return []
+        }
 
         return tasks.filter { task in
             guard let dueDate = task.dueDate else { return false }
@@ -100,8 +102,10 @@ final class TaskService: ObservableObject {
     /// Fetch upcoming tasks (next 7 days, excluding today)
     func fetchUpcomingTasks() -> [Task] {
         let calendar = Calendar.current
-        let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date()))!
-        let endOfWeek = calendar.date(byAdding: .day, value: 7, to: startOfTomorrow)!
+        guard let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())),
+              let endOfWeek = calendar.date(byAdding: .day, value: 7, to: startOfTomorrow) else {
+            return []
+        }
 
         return tasks.filter { task in
             guard let dueDate = task.dueDate else { return false }
@@ -194,9 +198,9 @@ final class TaskService: ObservableObject {
         persistenceController.save()
 
         // Schedule notification if reminder is set
-        if let reminderDate = reminderDate {
+        if let reminderDate = reminderDate, let taskID = entity.id {
             notificationService.scheduleTaskReminder(
-                taskID: entity.id!,
+                taskID: taskID,
                 title: title,
                 reminderDate: reminderDate
             )

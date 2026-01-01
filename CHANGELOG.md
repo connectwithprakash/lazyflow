@@ -5,6 +5,25 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-01-01
+
+### Added
+- Branded launch screen with app background color for smoother visual transition
+- VoiceOver accessibility labels on task rows (status, title, priority, due date, category)
+- UTType declaration for task drag & drop support
+
+### Changed
+- UpcomingView converted from ScrollView to List for native swipe action support
+- ListDetailView converted from ScrollView to List for native swipe action support
+- Defer heavy initialization to after UI appears for faster perceived startup
+
+### Fixed
+- Remove fatalError in PersistenceController (graceful error handling instead)
+- Fix force unwraps in TaskService date calculations
+- Fix force unwraps in CalendarView week/hour calculations
+- Fix force unwraps in SmartRescheduleService tomorrow calculation
+- Fix force unwraps in Date+Extensions (isWithinNextWeek, endOfDay, currentWeekDates)
+
 ## [0.11.0] - 2026-01-01
 
 ### Added

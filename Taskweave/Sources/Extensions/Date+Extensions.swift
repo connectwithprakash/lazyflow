@@ -29,7 +29,9 @@ extension Date {
     /// Check if date is within the next 7 days
     var isWithinNextWeek: Bool {
         let today = Calendar.current.startOfDay(for: Date())
-        let weekFromNow = Calendar.current.date(byAdding: .day, value: 7, to: today)!
+        guard let weekFromNow = Calendar.current.date(byAdding: .day, value: 7, to: today) else {
+            return false
+        }
         return self >= today && self <= weekFromNow
     }
 
@@ -43,7 +45,7 @@ extension Date {
         var components = DateComponents()
         components.day = 1
         components.second = -1
-        return Calendar.current.date(byAdding: components, to: startOfDay)!
+        return Calendar.current.date(byAdding: components, to: startOfDay) ?? self
     }
 
     /// Formatted relative date string
@@ -172,7 +174,9 @@ extension Date {
         let calendar = Calendar.current
         let today = Date()
         let weekday = calendar.component(.weekday, from: today)
-        let startOfWeek = calendar.date(byAdding: .day, value: -(weekday - 1), to: today)!
+        guard let startOfWeek = calendar.date(byAdding: .day, value: -(weekday - 1), to: today) else {
+            return [today]
+        }
 
         return (0..<7).compactMap { day in
             calendar.date(byAdding: .day, value: day, to: startOfWeek)

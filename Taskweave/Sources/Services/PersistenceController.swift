@@ -80,6 +80,9 @@ final class PersistenceController: @unchecked Sendable {
     /// The persistent container
     let container: NSPersistentContainer
 
+    /// Error that occurred during Core Data initialization
+    private(set) var initializationError: Error?
+
     /// The main view context
     var viewContext: NSManagedObjectContext {
         container.viewContext
@@ -104,9 +107,11 @@ final class PersistenceController: @unchecked Sendable {
             }
         }
 
-        container.loadPersistentStores { description, error in
+        container.loadPersistentStores { [weak self] description, error in
             if let error = error as NSError? {
-                fatalError("Failed to load Core Data store: \(error), \(error.userInfo)")
+                self?.initializationError = error
+                print("Critical: Failed to load Core Data store: \(error), \(error.userInfo)")
+                // Note: App functionality will be limited without Core Data
             }
         }
 

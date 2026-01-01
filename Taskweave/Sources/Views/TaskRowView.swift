@@ -29,6 +29,7 @@ struct TaskRowView: View {
                     Rectangle()
                         .fill(task.priority.color)
                         .frame(width: 4)
+                        .accessibilityHidden(true) // Color info is conveyed via label
                 }
 
                 HStack(spacing: DesignSystem.Spacing.md) {
@@ -78,6 +79,8 @@ struct TaskRowView: View {
             .animation(DesignSystem.Animation.quick, value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Double tap to view details")
         .onLongPressGesture(minimumDuration: 0.1, pressing: { pressing in
             isPressed = pressing
         }, perform: {})
@@ -139,6 +142,41 @@ struct TaskRowView: View {
                 TaskDragPreview(task: task)
             }
         }
+    }
+
+    // MARK: - Accessibility
+
+    private var accessibilityDescription: String {
+        var components: [String] = []
+
+        // Status
+        if task.isCompleted {
+            components.append("Completed")
+        }
+
+        // Title
+        components.append(task.title)
+
+        // Priority
+        if task.priority != .none && !task.isCompleted {
+            components.append("\(task.priority.displayName) priority")
+        }
+
+        // Due date
+        if let dueDate = task.dueDate {
+            if task.isOverdue {
+                components.append("Overdue, was due \(dueDate.relativeFormatted)")
+            } else {
+                components.append("Due \(dueDate.relativeFormatted)")
+            }
+        }
+
+        // Category
+        if task.category != .uncategorized {
+            components.append(task.category.displayName)
+        }
+
+        return components.joined(separator: ", ")
     }
 
     // MARK: - Metadata

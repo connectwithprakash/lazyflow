@@ -85,41 +85,56 @@ struct UpcomingView: View {
     }
 
     private var taskListView: some View {
-        ScrollView {
-            LazyVStack(spacing: DesignSystem.Spacing.md, pinnedViews: [.sectionHeaders]) {
-                // Date sections
-                ForEach(groupedTasks, id: \.0) { date, tasks in
-                    dateSection(date: date, tasks: tasks)
+        List {
+            // Date sections
+            ForEach(groupedTasks, id: \.0) { date, tasks in
+                Section {
+                    ForEach(tasks) { task in
+                        TaskRowView(
+                            task: task,
+                            onToggle: { taskService.toggleTaskCompletion(task) },
+                            onTap: { selectedTask = task },
+                            onPushToTomorrow: { pushToTomorrow($0) },
+                            onMoveToToday: { moveToToday($0) },
+                            onPriorityChange: { updateTaskPriority($0, priority: $1) },
+                            onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
+                            onDelete: { taskService.deleteTask($0) }
+                        )
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.adaptiveBackground)
+                        .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    dateSectionHeader(date: date, taskCount: tasks.count)
                 }
+            }
 
-                // Someday section (no due date)
-                if !tasksWithoutDate.isEmpty {
-                    somedaySection
+            // Someday section (no due date)
+            if !tasksWithoutDate.isEmpty {
+                Section {
+                    ForEach(tasksWithoutDate) { task in
+                        TaskRowView(
+                            task: task,
+                            onToggle: { taskService.toggleTaskCompletion(task) },
+                            onTap: { selectedTask = task },
+                            onPushToTomorrow: { pushToTomorrow($0) },
+                            onMoveToToday: { moveToToday($0) },
+                            onPriorityChange: { updateTaskPriority($0, priority: $1) },
+                            onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
+                            onDelete: { taskService.deleteTask($0) }
+                        )
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.adaptiveBackground)
+                        .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    somedaySectionHeader
                 }
-
-                Spacer(minLength: 100)
             }
         }
-    }
-
-    private func dateSection(date: Date, tasks: [Task]) -> some View {
-        Section {
-            ForEach(tasks) { task in
-                TaskRowView(
-                    task: task,
-                    onToggle: { taskService.toggleTaskCompletion(task) },
-                    onTap: { selectedTask = task },
-                    onPushToTomorrow: { pushToTomorrow($0) },
-                    onMoveToToday: { moveToToday($0) },
-                    onPriorityChange: { updateTaskPriority($0, priority: $1) },
-                    onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
-                    onDelete: { taskService.deleteTask($0) }
-                )
-                .padding(.horizontal)
-            }
-        } header: {
-            dateSectionHeader(date: date, taskCount: tasks.count)
-        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color.adaptiveBackground)
     }
 
     private func dateSectionHeader(date: Date, taskCount: Int) -> some View {
@@ -148,45 +163,25 @@ struct UpcomingView: View {
 
             Spacer()
         }
-        .padding(.horizontal)
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .background(Color.adaptiveBackground)
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 
-    private var somedaySection: some View {
-        Section {
-            ForEach(tasksWithoutDate) { task in
-                TaskRowView(
-                    task: task,
-                    onToggle: { taskService.toggleTaskCompletion(task) },
-                    onTap: { selectedTask = task },
-                    onPushToTomorrow: { pushToTomorrow($0) },
-                    onMoveToToday: { moveToToday($0) },
-                    onPriorityChange: { updateTaskPriority($0, priority: $1) },
-                    onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
-                    onDelete: { taskService.deleteTask($0) }
-                )
-                .padding(.horizontal)
-            }
-        } header: {
-            HStack {
-                Image(systemName: "tray")
-                    .foregroundColor(Color.Taskweave.textTertiary)
+    private var somedaySectionHeader: some View {
+        HStack {
+            Image(systemName: "tray")
+                .foregroundColor(Color.Taskweave.textTertiary)
 
-                Text("Someday")
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundColor(Color.Taskweave.textSecondary)
+            Text("Someday")
+                .font(DesignSystem.Typography.headline)
+                .foregroundColor(Color.Taskweave.textSecondary)
 
-                Text("\(tasksWithoutDate.count)")
-                    .font(DesignSystem.Typography.subheadline)
-                    .foregroundColor(Color.Taskweave.textTertiary)
+            Text("\(tasksWithoutDate.count)")
+                .font(DesignSystem.Typography.subheadline)
+                .foregroundColor(Color.Taskweave.textTertiary)
 
-                Spacer()
-            }
-            .padding(.horizontal)
-            .padding(.vertical, DesignSystem.Spacing.sm)
-            .background(Color.adaptiveBackground)
+            Spacer()
         }
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 
     // MARK: - Actions

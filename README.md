@@ -14,6 +14,7 @@ Taskweave combines task management with intelligent calendar integration. Schedu
 - Due dates and reminders
 - Recurring tasks (daily, weekly, monthly, yearly)
 - Priority levels (urgent, high, medium, low)
+- Swipe actions (complete, delete, reschedule, schedule to calendar)
 
 ### Calendar Integration
 - Native Apple Calendar integration via EventKit

@@ -241,7 +241,7 @@ struct CalendarView: View {
             return formatter.string(from: selectedDate)
         case .week:
             let weekStart = viewModel.weekStart(for: selectedDate)
-            let weekEnd = Calendar.current.date(byAdding: .day, value: 6, to: weekStart)!
+            let weekEnd = Calendar.current.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
             formatter.dateFormat = "MMM d"
             let startStr = formatter.string(from: weekStart)
             let endStr = formatter.string(from: weekEnd)
@@ -423,7 +423,9 @@ struct HourRow: View {
     private var hourString: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "h a"
-        let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!
+        guard let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) else {
+            return "\(hour):00"
+        }
         return formatter.string(from: date)
     }
 }
@@ -501,12 +503,13 @@ struct WeekView: View {
                 // Day headers
                 HStack(spacing: 0) {
                     ForEach(0..<7, id: \.self) { dayOffset in
-                        let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate)!
-                        DayHeader(date: date, isToday: calendar.isDateInToday(date))
-                            .frame(maxWidth: .infinity)
-                            .onTapGesture {
-                                onDateSelected(date)
-                            }
+                        if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
+                            DayHeader(date: date, isToday: calendar.isDateInToday(date))
+                                .frame(maxWidth: .infinity)
+                                .onTapGesture {
+                                    onDateSelected(date)
+                                }
+                        }
                     }
                 }
                 .padding(.vertical, DesignSystem.Spacing.sm)
@@ -516,23 +519,24 @@ struct WeekView: View {
                 // Day columns with events
                 HStack(alignment: .top, spacing: 1) {
                     ForEach(0..<7, id: \.self) { dayOffset in
-                        let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate)!
-                        let dayEvents = events[calendar.startOfDay(for: date)] ?? []
+                        if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
+                            let dayEvents = events[calendar.startOfDay(for: date)] ?? []
 
-                        DayColumn(
-                            date: date,
-                            events: dayEvents,
-                            isDropTarget: highlightedDay == dayOffset,
-                            onCreateTaskFromEvent: onCreateTaskFromEvent
-                        )
-                        .frame(maxWidth: .infinity)
-                        .dropDestination(for: Task.self) { tasks, _ in
-                            guard let task = tasks.first else { return false }
-                            onTaskDropped?(task, date)
-                            highlightedDay = nil
-                            return true
-                        } isTargeted: { isTargeted in
-                            highlightedDay = isTargeted ? dayOffset : nil
+                            DayColumn(
+                                date: date,
+                                events: dayEvents,
+                                isDropTarget: highlightedDay == dayOffset,
+                                onCreateTaskFromEvent: onCreateTaskFromEvent
+                            )
+                            .frame(maxWidth: .infinity)
+                            .dropDestination(for: Task.self) { tasks, _ in
+                                guard let task = tasks.first else { return false }
+                                onTaskDropped?(task, date)
+                                highlightedDay = nil
+                                return true
+                            } isTargeted: { isTargeted in
+                                highlightedDay = isTargeted ? dayOffset : nil
+                            }
                         }
                     }
                 }

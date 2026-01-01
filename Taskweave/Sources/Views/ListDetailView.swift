@@ -79,12 +79,44 @@ struct ListDetailView: View {
     }
 
     private var taskListView: some View {
-        ScrollView {
-            LazyVStack(spacing: DesignSystem.Spacing.md, pinnedViews: [.sectionHeaders]) {
-                // Active tasks
-                if !tasks.isEmpty {
-                    Section {
-                        ForEach(tasks) { task in
+        List {
+            // Active tasks
+            if !tasks.isEmpty {
+                Section {
+                    ForEach(tasks) { task in
+                        TaskRowView(
+                            task: task,
+                            onToggle: { taskService.toggleTaskCompletion(task) },
+                            onTap: { selectedTask = task },
+                            onPushToTomorrow: { pushToTomorrow($0) },
+                            onMoveToToday: { moveToToday($0) },
+                            onPriorityChange: { updateTaskPriority($0, priority: $1) },
+                            onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
+                            onDelete: { taskService.deleteTask($0) }
+                        )
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.adaptiveBackground)
+                        .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    HStack {
+                        ListColorDot(colorHex: list.colorHex)
+
+                        Text("\(tasks.count) task\(tasks.count == 1 ? "" : "s")")
+                            .font(DesignSystem.Typography.subheadline)
+                            .foregroundColor(Color.Taskweave.textSecondary)
+
+                        Spacer()
+                    }
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                }
+            }
+
+            // Completed tasks
+            if !completedTasks.isEmpty {
+                Section {
+                    DisclosureGroup {
+                        ForEach(completedTasks) { task in
                             TaskRowView(
                                 task: task,
                                 onToggle: { taskService.toggleTaskCompletion(task) },
@@ -95,65 +127,34 @@ struct ListDetailView: View {
                                 onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
                                 onDelete: { taskService.deleteTask($0) }
                             )
-                            .padding(.horizontal)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                            .listRowBackground(Color.adaptiveBackground)
+                            .listRowSeparator(.hidden)
                         }
-                    } header: {
+                    } label: {
                         HStack {
-                            ListColorDot(colorHex: list.colorHex)
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(Color.Taskweave.success)
 
-                            Text("\(tasks.count) task\(tasks.count == 1 ? "" : "s")")
-                                .font(DesignSystem.Typography.subheadline)
+                            Text("Completed")
+                                .font(DesignSystem.Typography.headline)
                                 .foregroundColor(Color.Taskweave.textSecondary)
 
-                            Spacer()
+                            Text("\(completedTasks.count)")
+                                .font(DesignSystem.Typography.subheadline)
+                                .foregroundColor(Color.Taskweave.textTertiary)
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, DesignSystem.Spacing.sm)
-                        .background(Color.adaptiveBackground)
                     }
+                    .tint(Color.Taskweave.textSecondary)
                 }
-
-                // Completed tasks
-                if !completedTasks.isEmpty {
-                    completedSection
-                }
-
-                Spacer(minLength: 100)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.adaptiveBackground)
+                .listRowSeparator(.hidden)
             }
         }
-    }
-
-    private var completedSection: some View {
-        DisclosureGroup {
-            ForEach(completedTasks) { task in
-                TaskRowView(
-                    task: task,
-                    onToggle: { taskService.toggleTaskCompletion(task) },
-                    onTap: { selectedTask = task },
-                    onPushToTomorrow: { pushToTomorrow($0) },
-                    onMoveToToday: { moveToToday($0) },
-                    onPriorityChange: { updateTaskPriority($0, priority: $1) },
-                    onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
-                    onDelete: { taskService.deleteTask($0) }
-                )
-                .padding(.horizontal)
-            }
-        } label: {
-            HStack {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Color.Taskweave.success)
-
-                Text("Completed")
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundColor(Color.Taskweave.textSecondary)
-
-                Text("\(completedTasks.count)")
-                    .font(DesignSystem.Typography.subheadline)
-                    .foregroundColor(Color.Taskweave.textTertiary)
-            }
-        }
-        .padding(.horizontal)
-        .tint(Color.Taskweave.textSecondary)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color.adaptiveBackground)
     }
 
     // MARK: - Actions

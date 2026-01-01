@@ -209,9 +209,9 @@ final class SmartRescheduleService: ObservableObject {
 
         // Update linked calendar event
         if let linkedID = task.linkedEventID,
-           let event = calendarService.event(withIdentifier: linkedID) {
+           let event = calendarService.event(withIdentifier: linkedID),
+           let newStart = updatedTask.dueTime ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow) {
             let duration = task.estimatedDuration ?? event.endDate.timeIntervalSince(event.startDate)
-            let newStart = updatedTask.dueTime ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow)!
             event.startDate = newStart
             event.endDate = newStart.addingTimeInterval(duration)
             try? calendarService.updateEvent(event)

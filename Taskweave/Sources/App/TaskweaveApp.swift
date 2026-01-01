@@ -11,11 +11,8 @@ struct TaskweaveApp: App {
     @StateObject private var taskService = TaskService()
 
     init() {
-        // Configure appearance
+        // Configure appearance (lightweight, OK on main thread)
         configureAppearance()
-
-        // Create default lists if needed
-        persistenceController.createDefaultListsIfNeeded()
     }
 
     var body: some Scene {
@@ -25,6 +22,10 @@ struct TaskweaveApp: App {
                 .onAppear {
                     // Configure Watch connectivity
                     WatchConnectivityService.shared.configure(with: taskService)
+                }
+                .task {
+                    // Defer heavy initialization to after UI appears
+                    persistenceController.createDefaultListsIfNeeded()
                 }
         }
         .commands {
