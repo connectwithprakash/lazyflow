@@ -2,43 +2,67 @@ import SwiftUI
 
 /// View showing all task lists and smart lists
 struct ListsView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var viewModel = ListsViewModel()
     @State private var showAddList = false
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.adaptiveBackground
-                    .ignoresSafeArea()
-
-                ScrollView {
-                    LazyVStack(spacing: DesignSystem.Spacing.lg) {
-                        // Smart Lists
-                        smartListsSection
-
-                        // Custom Lists
-                        customListsSection
-
-                        Spacer(minLength: 100)
+        if horizontalSizeClass == .regular {
+            // iPad: No NavigationStack (provided by split view)
+            listsContent
+                .navigationTitle("Lists")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        addListButton
                     }
-                    .padding(.top)
                 }
-            }
-            .navigationTitle("Lists")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showAddList = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(Color.Taskweave.accent)
+                .sheet(isPresented: $showAddList) {
+                    AddListSheet(viewModel: viewModel)
+                }
+        } else {
+            // iPhone: Full NavigationStack
+            NavigationStack {
+                listsContent
+                    .navigationTitle("Lists")
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            addListButton
+                        }
                     }
-                    .accessibilityLabel("Add list")
-                }
+                    .sheet(isPresented: $showAddList) {
+                        AddListSheet(viewModel: viewModel)
+                    }
             }
-            .sheet(isPresented: $showAddList) {
-                AddListSheet(viewModel: viewModel)
+        }
+    }
+
+    private var addListButton: some View {
+        Button {
+            showAddList = true
+        } label: {
+            Image(systemName: "plus.circle.fill")
+                .font(.title2)
+                .foregroundColor(Color.Taskweave.accent)
+        }
+        .accessibilityLabel("Add list")
+    }
+
+    private var listsContent: some View {
+        ZStack {
+            Color.adaptiveBackground
+                .ignoresSafeArea()
+
+            ScrollView {
+                LazyVStack(spacing: DesignSystem.Spacing.lg) {
+                    // Smart Lists
+                    smartListsSection
+
+                    // Custom Lists
+                    customListsSection
+
+                    Spacer(minLength: 100)
+                }
+                .padding(.top)
             }
         }
     }

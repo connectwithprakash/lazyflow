@@ -39,6 +39,23 @@ Taskweave combines task management with intelligent calendar integration. Schedu
 - **Medium Widget**: Today's task list with priorities
 - **Large Widget**: Overdue, today, and upcoming sections
 
+### Live Activities & Dynamic Island
+- Lock Screen Live Activity with task progress
+- Dynamic Island compact view with progress ring
+- Dynamic Island expanded view with current task
+- Auto-updates when tasks are completed
+
+### Apple Watch
+- Today's tasks on your wrist
+- Tap to complete tasks
+- Real-time sync with iPhone
+- Watch complications (progress ring, task count)
+
+### iPad Support
+- NavigationSplitView with sidebar navigation
+- Adaptive layout for all screen sizes
+- Keyboard shortcuts (Cmd+N, Cmd+F, Cmd+1-5)
+
 ### Views
 - **Today**: Focus on overdue and today's tasks
 - **Upcoming**: Plan ahead with future tasks

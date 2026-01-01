@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Main Today view showing overdue and today's tasks
 struct TodayView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var viewModel = TodayViewModel()
     @StateObject private var prioritizationService = PrioritizationService.shared
     @StateObject private var conflictService = ConflictDetectionService.shared
@@ -15,85 +16,100 @@ struct TodayView: View {
     @State private var showBatchReschedule = false
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.adaptiveBackground
-                    .ignoresSafeArea()
-
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if viewModel.totalTaskCount == 0 && viewModel.completedTaskCount == 0 {
-                    emptyStateView
-                } else {
-                    taskListView
+        Group {
+            if horizontalSizeClass == .regular {
+                // iPad: No NavigationStack (provided by split view)
+                todayContent
+                    .navigationTitle("Today")
+                    .toolbar { addTaskToolbar }
+            } else {
+                // iPhone: Full NavigationStack
+                NavigationStack {
+                    todayContent
+                        .navigationTitle("Today")
+                        .toolbar { addTaskToolbar }
                 }
             }
-            .navigationTitle("Today")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showAddTask = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(Color.Taskweave.accent)
-                    }
-                    .accessibilityLabel("Add task")
+        }
+        .onAppear { scanForConflicts() }
+        .sheet(isPresented: $showAddTask) {
+            AddTaskView(defaultDueDate: Date())
+        }
+        .sheet(item: $viewModel.selectedTask) { task in
+            TaskDetailView(task: task)
+        }
+        .sheet(item: $taskToSchedule) { task in
+            TimeBlockSheet(
+                task: task,
+                startTime: defaultScheduleTime(),
+                onConfirm: { startTime, duration in
+                    scheduleTask(task, startTime: startTime, duration: duration)
                 }
-            }
-            .sheet(isPresented: $showAddTask) {
-                AddTaskView(defaultDueDate: Date())
-            }
-            .sheet(item: $viewModel.selectedTask) { task in
-                TaskDetailView(task: task)
-            }
-            .sheet(item: $taskToSchedule) { task in
-                TimeBlockSheet(
-                    task: task,
-                    startTime: defaultScheduleTime(),
-                    onConfirm: { startTime, duration in
-                        scheduleTask(task, startTime: startTime, duration: duration)
-                    }
-                )
-            }
-            .refreshable {
-                viewModel.refreshTasks()
-                scanForConflicts()
-            }
-            .sheet(isPresented: $showConflictSheet) {
-                if let conflict = selectedConflict {
-                    ConflictResolutionSheet(
-                        conflict: conflict,
-                        onReschedule: { option in
-                            applyReschedule(option: option, to: conflict.task)
-                            showConflictSheet = false
-                        },
-                        onPushToTomorrow: {
-                            pushToTomorrow(conflict.task)
-                            showConflictSheet = false
-                        },
-                        onDismiss: {
-                            showConflictSheet = false
-                        }
-                    )
-                }
-            }
-            .sheet(isPresented: $showBatchReschedule) {
-                BatchRescheduleSheet(
-                    conflicts: conflictService.detectedConflicts,
-                    onResolveAll: { batch in
-                        _ = rescheduleService.applyBatchReschedule(batch: batch, taskService: TaskService.shared)
-                        showBatchReschedule = false
-                        scanForConflicts()
+            )
+        }
+        .sheet(isPresented: $showConflictSheet) {
+            if let conflict = selectedConflict {
+                ConflictResolutionSheet(
+                    conflict: conflict,
+                    onReschedule: { option in
+                        applyReschedule(option: option, to: conflict.task)
+                        showConflictSheet = false
+                    },
+                    onPushToTomorrow: {
+                        pushToTomorrow(conflict.task)
+                        showConflictSheet = false
                     },
                     onDismiss: {
-                        showBatchReschedule = false
+                        showConflictSheet = false
                     }
                 )
             }
-            .onAppear {
-                scanForConflicts()
+        }
+        .sheet(isPresented: $showBatchReschedule) {
+            BatchRescheduleSheet(
+                conflicts: conflictService.detectedConflicts,
+                onResolveAll: { batch in
+                    _ = rescheduleService.applyBatchReschedule(batch: batch, taskService: TaskService.shared)
+                    showBatchReschedule = false
+                    scanForConflicts()
+                },
+                onDismiss: {
+                    showBatchReschedule = false
+                }
+            )
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var addTaskToolbar: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button {
+                showAddTask = true
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(Color.Taskweave.accent)
             }
+            .accessibilityLabel("Add task")
+        }
+    }
+
+    private var todayContent: some View {
+        ZStack {
+            Color.adaptiveBackground
+                .ignoresSafeArea()
+
+            if viewModel.isLoading {
+                ProgressView()
+            } else if viewModel.totalTaskCount == 0 && viewModel.completedTaskCount == 0 {
+                emptyStateView
+            } else {
+                taskListView
+            }
+        }
+        .refreshable {
+            viewModel.refreshTasks()
+            scanForConflicts()
         }
     }
 
@@ -432,6 +448,7 @@ struct TodayView: View {
         .padding(.horizontal)
         .tint(Color.Taskweave.textSecondary)
     }
+
 }
 
 // MARK: - Next Task Suggestion Sheet

@@ -714,7 +714,7 @@ Available on: Today, Upcoming, Lists, Calendar
 
 ## Navigation Patterns
 
-### Tab Bar
+### Tab Bar (iPhone)
 
 | Version | Tabs |
 |---------|------|
@@ -724,6 +724,21 @@ Available on: Today, Upcoming, Lists, Calendar
 - Selected tab: accent color icon + label
 - Unselected: secondary color icon only
 - Badge on Today tab: overdue count (red)
+
+### Sidebar (iPad - v0.9.0)
+
+iPad uses NavigationSplitView with a sidebar instead of TabView:
+
+| Section | Items |
+|---------|-------|
+| Tasks | Today, Calendar, Upcoming |
+| Organize | Lists |
+| System | Settings |
+
+- Selected item: system selection highlight
+- Sidebar width: 260pt
+- Collapsible with toggle button
+- Toolbar: Add task (+), Search (magnifying glass)
 
 ### Sheet Presentation
 
@@ -814,10 +829,4 @@ When `UIAccessibility.isReduceMotionEnabled`:
 
 ## Version History
 
-| Version | Flow Changes |
-|---------|--------------|
-| v0.1.0 | Initial flows: task CRUD, lists, search |
-| v0.2.0 | Calendar view, drag-to-schedule |
-| v0.3.0 | AI suggestions flow, "What should I do next?" |
-| v0.4.0 | Conflict detection, reschedule flow |
-| v0.5.0 | Siri shortcuts, widget interactions |
+See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.

@@ -73,10 +73,14 @@ MVVM with Combine for reactive data flow:
 ## Feature Versions
 
 - **v0.1.0:** Task CRUD, lists, due dates, reminders, recurring tasks, offline + CloudKit sync
-- **v0.2.0:** Calendar integration, drag-to-calendar time blocking, EventKit sync
-- **v0.3.0:** AI prioritization (Apple Intelligence, Claude, OpenAI), GitHub integration
-- **v0.4.0:** Smart reschedule when meetings conflict
-- **v0.5.0:** Apple ecosystem (Siri, Watch, widgets, Dynamic Island)
+- **v0.2.0:** Calendar integration, time blocking, EventKit sync
+- **v0.3.0:** AI prioritization (Apple Intelligence, Claude, OpenAI), ML categorization
+- **v0.4.0:** Smart reschedule when meetings conflict, conflict detection
+- **v0.5.0:** Siri Shortcuts via App Intents
+- **v0.6.0:** Home Screen Widgets (small, medium, large)
+- **v0.7.0:** Live Activities & Dynamic Island
+- **v0.8.0:** Apple Watch app with WatchConnectivity
+- **v0.9.0:** iPad optimization with NavigationSplitView sidebar
 
 ## Performance Targets
 

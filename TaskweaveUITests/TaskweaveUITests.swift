@@ -255,4 +255,126 @@ final class TaskweaveUITests: XCTestCase {
             }
         }
     }
+
+    // MARK: - v0.9.0 iPad Optimization Tests
+
+    func testAdaptiveNavigationExists() throws {
+        // Test that navigation exists (either sidebar on iPad or tab bar on iPhone)
+        let isIPad = UIDevice.current.userInterfaceIdiom == .pad
+
+        if isIPad {
+            // iPad should show sidebar navigation
+            // Look for sidebar elements
+            let sidebar = app.otherElements["Sidebar"]
+            let hasSidebar = sidebar.waitForExistence(timeout: 3)
+
+            // Also check for navigation split view behavior
+            let todayButton = app.buttons["Today"]
+            let hasNavigation = todayButton.waitForExistence(timeout: 3)
+
+            XCTAssertTrue(hasSidebar || hasNavigation, "iPad should have sidebar navigation")
+        } else {
+            // iPhone should show tab bar
+            XCTAssertTrue(app.tabBars.firstMatch.exists, "iPhone should have tab bar")
+        }
+    }
+
+    func testIPadSidebarSections() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("This test only runs on iPad")
+        }
+
+        // Verify sidebar section headers exist
+        let tasksHeader = app.staticTexts["Tasks"]
+        let organizeHeader = app.staticTexts["Organize"]
+        let systemHeader = app.staticTexts["System"]
+
+        // At least one section should be visible
+        let hasAnySectionHeader = tasksHeader.waitForExistence(timeout: 3) ||
+                                  organizeHeader.exists ||
+                                  systemHeader.exists
+
+        XCTAssertTrue(hasAnySectionHeader, "iPad sidebar should have section headers")
+    }
+
+    func testIPadSidebarNavigation() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("This test only runs on iPad")
+        }
+
+        // Test tapping Calendar in sidebar
+        let calendarButton = app.buttons["Calendar"]
+        if calendarButton.waitForExistence(timeout: 3) && calendarButton.isHittable {
+            calendarButton.tap()
+
+            // Verify Calendar view is shown
+            let calendarNav = app.navigationBars["Calendar"]
+            XCTAssertTrue(calendarNav.waitForExistence(timeout: 3))
+        }
+
+        // Test tapping Settings in sidebar
+        let settingsButton = app.buttons["Settings"]
+        if settingsButton.waitForExistence(timeout: 2) && settingsButton.isHittable {
+            settingsButton.tap()
+
+            // Verify Settings view is shown
+            let settingsNav = app.navigationBars["Settings"]
+            XCTAssertTrue(settingsNav.waitForExistence(timeout: 3))
+        }
+    }
+
+    func testIPadToolbarButtons() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("This test only runs on iPad")
+        }
+
+        // iPad sidebar should have toolbar buttons for add and search
+        let addButton = app.buttons["Add task"]
+        let searchButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'magnifyingglass'")).firstMatch
+
+        // At least the add button should exist
+        XCTAssertTrue(addButton.waitForExistence(timeout: 3) || searchButton.exists,
+                      "iPad should have toolbar buttons")
+    }
+
+    func testIPhoneTabBarStillWorks() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        // Verify tab bar exists and all tabs are present
+        XCTAssertTrue(app.tabBars.firstMatch.exists, "iPhone should have tab bar")
+        XCTAssertTrue(app.tabBars.buttons["Today"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Upcoming"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Lists"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
+
+        // Test tab navigation still works
+        app.tabBars.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
+
+        app.tabBars.buttons["Today"].tap()
+        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 2))
+    }
+
+    func testNavigationConsistency() throws {
+        // Regardless of device, tapping on a view should show correct content
+        let isIPad = UIDevice.current.userInterfaceIdiom == .pad
+
+        if isIPad {
+            // Try to navigate using sidebar
+            let listsButton = app.buttons["Lists"]
+            if listsButton.waitForExistence(timeout: 3) && listsButton.isHittable {
+                listsButton.tap()
+            }
+        } else {
+            // Use tab bar
+            app.tabBars.buttons["Lists"].tap()
+        }
+
+        // Either way, Lists view should be shown
+        let listsNav = app.navigationBars["Lists"]
+        XCTAssertTrue(listsNav.waitForExistence(timeout: 3), "Lists view should be accessible")
+    }
 }

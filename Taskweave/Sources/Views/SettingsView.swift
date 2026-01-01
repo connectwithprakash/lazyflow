@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Settings view for app configuration
 struct SettingsView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
     @AppStorage("defaultReminderTime") private var defaultReminderTime: Int = 9
     @AppStorage("showCompletedTasks") private var showCompletedTasks: Bool = true
@@ -12,8 +13,29 @@ struct SettingsView: View {
     @State private var showAISettings = false
 
     var body: some View {
-        NavigationStack {
-            Form {
+        if horizontalSizeClass == .regular {
+            // iPad: No NavigationStack (provided by split view), centered form
+            settingsForm
+                .frame(maxWidth: 700)
+                .frame(maxWidth: .infinity)
+                .navigationTitle("Settings")
+                .sheet(isPresented: $showAbout) { AboutView() }
+                .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
+                .sheet(isPresented: $showAISettings) { AISettingsView() }
+        } else {
+            // iPhone: Full NavigationStack
+            NavigationStack {
+                settingsForm
+                    .navigationTitle("Settings")
+                    .sheet(isPresented: $showAbout) { AboutView() }
+                    .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
+                    .sheet(isPresented: $showAISettings) { AISettingsView() }
+            }
+        }
+    }
+
+    private var settingsForm: some View {
+        Form {
                 // Appearance
                 Section("Appearance") {
                     Picker("Theme", selection: $appearanceMode) {
@@ -125,17 +147,6 @@ struct SettingsView: View {
                     }
                 }
             }
-            .navigationTitle("Settings")
-            .sheet(isPresented: $showAbout) {
-                AboutView()
-            }
-            .sheet(isPresented: $showNotificationSettings) {
-                NotificationSettingsView()
-            }
-            .sheet(isPresented: $showAISettings) {
-                AISettingsView()
-            }
-        }
     }
 
     private func formatHour(_ hour: Int) -> String {

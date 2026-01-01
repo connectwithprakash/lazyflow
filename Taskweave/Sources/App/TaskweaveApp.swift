@@ -27,6 +27,49 @@ struct TaskweaveApp: App {
                     WatchConnectivityService.shared.configure(with: taskService)
                 }
         }
+        .commands {
+            // Keyboard shortcuts for iPad
+            CommandGroup(replacing: .newItem) {
+                Button("New Task") {
+                    NotificationCenter.default.post(name: .newTaskShortcut, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: .command)
+            }
+
+            CommandMenu("Navigate") {
+                Button("Today") {
+                    NotificationCenter.default.post(name: .navigateToTab, object: "today")
+                }
+                .keyboardShortcut("1", modifiers: .command)
+
+                Button("Calendar") {
+                    NotificationCenter.default.post(name: .navigateToTab, object: "calendar")
+                }
+                .keyboardShortcut("2", modifiers: .command)
+
+                Button("Upcoming") {
+                    NotificationCenter.default.post(name: .navigateToTab, object: "upcoming")
+                }
+                .keyboardShortcut("3", modifiers: .command)
+
+                Button("Lists") {
+                    NotificationCenter.default.post(name: .navigateToTab, object: "lists")
+                }
+                .keyboardShortcut("4", modifiers: .command)
+
+                Button("Settings") {
+                    NotificationCenter.default.post(name: .navigateToTab, object: "settings")
+                }
+                .keyboardShortcut("5", modifiers: .command)
+
+                Divider()
+
+                Button("Search") {
+                    NotificationCenter.default.post(name: .searchShortcut, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+        }
     }
 
     private func configureAppearance() {

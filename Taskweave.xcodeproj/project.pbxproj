@@ -92,6 +92,7 @@
 		F5C4EF964B179EB50E6B6F80 /* TaskCategoryClassifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = C237114E70156B207647FB7A /* TaskCategoryClassifier.mlmodel */; };
 		F6B66482323556DC1843EEE0 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3295E36A41D180A3D0E9DA4B /* SearchView.swift */; };
 		F96E3F362C44485C5C35A2C8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751D60DB44ED6F070A0B42EA /* ContentView.swift */; };
+		FC9544F1BAA698EA4127635A /* Notification+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECD280716254E849E7546A7 /* Notification+Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -179,6 +180,7 @@
 		4D94F979184A916BF8FABE8A /* DynamicIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicIslandView.swift; sourceTree = "<group>"; };
 		4E6AF34E7827B47CE9BDBF11 /* TaskweaveWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaskweaveWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EAE0A926B43FBBB6875469A /* AddTaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskView.swift; sourceTree = "<group>"; };
+		4ECD280716254E849E7546A7 /* Notification+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Notification+Extensions.swift"; sourceTree = "<group>"; };
 		529BF321423098D7DEFC2084 /* Taskweave.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Taskweave.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		536294DECB2738D812829539 /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
 		58C2746788E2B53379FE262D /* Priority.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Priority.swift; sourceTree = "<group>"; };
@@ -448,6 +450,7 @@
 			children = (
 				E078854739C26414361644F0 /* Color+Extensions.swift */,
 				A9917772AD38E94637F2B604 /* Date+Extensions.swift */,
+				4ECD280716254E849E7546A7 /* Notification+Extensions.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -768,6 +771,7 @@
 				6E9BC371190ADB462BBCBB0F /* ListsView.swift in Sources */,
 				74CC47E52DF46C7576DC80B3 /* ListsViewModel.swift in Sources */,
 				0F20EA0E0E9F7DB4D734C422 /* LiveActivityManager.swift in Sources */,
+				FC9544F1BAA698EA4127635A /* Notification+Extensions.swift in Sources */,
 				246B9334F27B9E9A32587A71 /* NotificationService.swift in Sources */,
 				3E16005FD0ED5DFA801F33EF /* OpenAIProvider.swift in Sources */,
 				729F4ACD5D5A737DFB214550 /* PersistenceController.swift in Sources */,
@@ -1090,7 +1094,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1155,7 +1159,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.8.0;
+				MARKETING_VERSION = 0.9.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

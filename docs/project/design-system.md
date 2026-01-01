@@ -1009,13 +1009,66 @@ VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
 
 ---
 
+## iPad Layout (v0.9.0)
+
+### Adaptive Navigation
+
+| Device | Size Class | Navigation |
+|--------|------------|------------|
+| iPhone | Compact | TabView (bottom tabs) |
+| iPad Portrait | Regular | NavigationSplitView (sidebar) |
+| iPad Landscape | Regular | NavigationSplitView (sidebar) |
+
+### Sidebar Design
+
+```
++------------------+
+| [+] [Q] [≡]      |   Toolbar: Add, Search, Toggle
+|------------------|
+| Taskweave        |   Title: Large Title
+|------------------|
+| TASKS            |   Section header
+|   ★ Today        |   Selected: accent background
+|   ⊞ Calendar     |
+|   ⊟ Upcoming     |
+|------------------|
+| ORGANIZE         |   Section header
+|   ▢ Lists        |
+|------------------|
+| SYSTEM           |   Section header
+|   ⚙ Settings     |
++------------------+
+    Width: 260pt
+```
+
+### Size Class Detection
+
+```swift
+@Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+var body: some View {
+    if horizontalSizeClass == .regular {
+        // iPad: NavigationSplitView
+    } else {
+        // iPhone: TabView
+    }
+}
+```
+
+### Keyboard Shortcuts (Mac Catalyst)
+
+| Shortcut | Action |
+|----------|--------|
+| ⌘N | New task |
+| ⌘F | Search |
+| ⌘1 | Today |
+| ⌘2 | Calendar |
+| ⌘3 | Upcoming |
+| ⌘4 | Lists |
+| ⌘5 | Settings |
+
+---
+
 ## Version History
 
-| Version | Changes |
-|---------|---------|
-| v0.1.0 | Initial design system |
-| v0.2.0 | Calendar view components |
-| v0.3.0 | AI feature styling |
-| v0.4.0 | Smart reschedule UI, conflict banners |
-| v0.5.0 | Siri Shortcuts integration |
-| v0.6.0 | Home Screen Widget components |
+See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.

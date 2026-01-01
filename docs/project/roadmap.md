@@ -76,8 +76,14 @@ Calendar and tasks finally work together. Taskweave is where you protect deep wo
 - WatchConnectivity for real-time sync
 - Complications: circular progress, inline count, rectangular preview
 
+### v0.9.0 - iPad Optimization ✅ Current
+- NavigationSplitView with sidebar for iPad
+- Adaptive layout (sidebar on iPad, TabView on iPhone)
+- Size class detection across all views
+- Keyboard shortcuts (Cmd+N, Cmd+F, Cmd+1-5) for Mac Catalyst
+- Proper iOS List selection binding
+
 ### Future Considerations
-- iPad optimization
 - Mac Catalyst app
 - Team collaboration features
 - Additional calendar integrations (Google, Outlook)

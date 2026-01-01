@@ -2,6 +2,7 @@ import SwiftUI
 import EventKit
 
 struct CalendarView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var viewModel = CalendarViewModel()
     @StateObject private var taskService = TaskService()
     @State private var selectedDate = Date()
@@ -13,8 +14,67 @@ struct CalendarView: View {
     @State private var eventToConvert: CalendarEvent?
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
+        if horizontalSizeClass == .regular {
+            // iPad: No NavigationStack (provided by split view)
+            calendarContent
+                .navigationTitle("Calendar")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { todayToolbar }
+                .task { await viewModel.requestAccessIfNeeded() }
+                .sheet(isPresented: $showingTimeBlockSheet) {
+                    if let task = pendingTask, let dropTime = pendingDropTime {
+                        TimeBlockSheet(task: task, startTime: dropTime) { startTime, duration in
+                            createTimeBlock(for: task, startTime: startTime, duration: duration)
+                        }
+                    }
+                }
+                .sheet(isPresented: $showingCreateTaskSheet) {
+                    if let event = eventToConvert {
+                        CreateTaskFromEventSheet(event: event) { task in
+                            createTaskFromEvent(task)
+                        }
+                    }
+                }
+        } else {
+            // iPhone: Full NavigationStack
+            NavigationStack {
+                calendarContent
+                    .navigationTitle("Calendar")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { todayToolbar }
+                    .task { await viewModel.requestAccessIfNeeded() }
+                    .sheet(isPresented: $showingTimeBlockSheet) {
+                        if let task = pendingTask, let dropTime = pendingDropTime {
+                            TimeBlockSheet(task: task, startTime: dropTime) { startTime, duration in
+                                createTimeBlock(for: task, startTime: startTime, duration: duration)
+                            }
+                        }
+                    }
+                    .sheet(isPresented: $showingCreateTaskSheet) {
+                        if let event = eventToConvert {
+                            CreateTaskFromEventSheet(event: event) { task in
+                                createTaskFromEvent(task)
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var todayToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                selectedDate = Date()
+            } label: {
+                Text("Today")
+                    .font(DesignSystem.Typography.callout)
+            }
+        }
+    }
+
+    private var calendarContent: some View {
+        VStack(spacing: 0) {
                 // Calendar access banner if needed
                 if !viewModel.hasAccess {
                     calendarAccessBanner
@@ -69,21 +129,13 @@ struct CalendarView: View {
                     noAccessView
                 }
             }
-            .navigationTitle("Calendar")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        selectedDate = Date()
-                    } label: {
-                        Text("Today")
-                            .font(DesignSystem.Typography.callout)
-                    }
-                }
-            }
-            .task {
-                await viewModel.requestAccessIfNeeded()
-            }
+    }
+
+    // MARK: - Sheets Modifier
+
+    @ViewBuilder
+    var calendarSheets: some View {
+        self
             .sheet(isPresented: $showingTimeBlockSheet) {
                 if let task = pendingTask, let dropTime = pendingDropTime {
                     TimeBlockSheet(
@@ -105,7 +157,6 @@ struct CalendarView: View {
                     )
                 }
             }
-        }
     }
 
     private func createTaskFromEvent(_ task: Task) {

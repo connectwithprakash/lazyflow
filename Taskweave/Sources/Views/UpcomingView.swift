@@ -2,6 +2,7 @@ import SwiftUI
 
 /// View showing upcoming tasks grouped by date
 struct UpcomingView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var taskService = TaskService()
     @State private var selectedTask: Task?
     @State private var showAddTask = false
@@ -21,39 +22,52 @@ struct UpcomingView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.adaptiveBackground
-                    .ignoresSafeArea()
+        if horizontalSizeClass == .regular {
+            // iPad: No NavigationStack (provided by split view)
+            upcomingContent
+                .navigationTitle("Upcoming")
+                .toolbar { addTaskToolbar }
+                .sheet(isPresented: $showAddTask) { AddTaskView() }
+                .sheet(item: $selectedTask) { task in TaskDetailView(task: task) }
+        } else {
+            // iPhone: Full NavigationStack
+            NavigationStack {
+                upcomingContent
+                    .navigationTitle("Upcoming")
+                    .toolbar { addTaskToolbar }
+                    .sheet(isPresented: $showAddTask) { AddTaskView() }
+                    .sheet(item: $selectedTask) { task in TaskDetailView(task: task) }
+            }
+        }
+    }
 
-                if groupedTasks.isEmpty && tasksWithoutDate.isEmpty {
-                    emptyStateView
-                } else {
-                    taskListView
-                }
+    @ToolbarContentBuilder
+    private var addTaskToolbar: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button {
+                showAddTask = true
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(Color.Taskweave.accent)
             }
-            .navigationTitle("Upcoming")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showAddTask = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(Color.Taskweave.accent)
-                    }
-                    .accessibilityLabel("Add task")
-                }
+            .accessibilityLabel("Add task")
+        }
+    }
+
+    private var upcomingContent: some View {
+        ZStack {
+            Color.adaptiveBackground
+                .ignoresSafeArea()
+
+            if groupedTasks.isEmpty && tasksWithoutDate.isEmpty {
+                emptyStateView
+            } else {
+                taskListView
             }
-            .sheet(isPresented: $showAddTask) {
-                AddTaskView()
-            }
-            .sheet(item: $selectedTask) { task in
-                TaskDetailView(task: task)
-            }
-            .refreshable {
-                taskService.fetchAllTasks()
-            }
+        }
+        .refreshable {
+            taskService.fetchAllTasks()
         }
     }
 

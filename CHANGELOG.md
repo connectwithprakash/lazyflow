@@ -5,6 +5,20 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-12-31
+
+### Added
+- iPad-optimized UI with NavigationSplitView sidebar navigation
+- Adaptive layout: Sidebar for iPad (regular size class), TabView for iPhone (compact)
+- Keyboard shortcuts for iPad: Cmd+N (new task), Cmd+F (search), Cmd+1-5 (navigate tabs)
+- Proper iOS List selection binding for sidebar navigation
+- Size class detection across all views (TodayView, CalendarView, UpcomingView, ListsView, SettingsView)
+- Conditional NavigationStack wrapping based on device type
+
+### Changed
+- ContentView refactored to support both NavigationSplitView and TabView
+- Views now detect horizontalSizeClass to adapt layout
+
 ## [0.8.0] - 2025-12-31
 
 ### Added

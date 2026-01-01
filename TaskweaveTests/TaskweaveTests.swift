@@ -181,4 +181,52 @@ final class TaskweaveTests: XCTestCase {
         XCTAssertTrue(ConflictSeverity.high.rawValue > ConflictSeverity.medium.rawValue)
         XCTAssertTrue(ConflictSeverity.medium.rawValue > ConflictSeverity.low.rawValue)
     }
+
+    // MARK: - v0.9.0 iPad Optimization Tests
+
+    func testNotificationNamesExist() throws {
+        // Test that notification names for keyboard shortcuts are defined
+        XCTAssertEqual(Notification.Name.newTaskShortcut.rawValue, "newTaskShortcut")
+        XCTAssertEqual(Notification.Name.searchShortcut.rawValue, "searchShortcut")
+        XCTAssertEqual(Notification.Name.navigateToTab.rawValue, "navigateToTab")
+    }
+
+    func testNotificationPosting() throws {
+        // Test that notifications can be posted without crashing
+        let expectation = XCTestExpectation(description: "Notification received")
+
+        let observer = NotificationCenter.default.addObserver(
+            forName: .newTaskShortcut,
+            object: nil,
+            queue: .main
+        ) { _ in
+            expectation.fulfill()
+        }
+
+        NotificationCenter.default.post(name: .newTaskShortcut, object: nil)
+
+        wait(for: [expectation], timeout: 1.0)
+        NotificationCenter.default.removeObserver(observer)
+    }
+
+    func testNavigateToTabNotification() throws {
+        // Test that navigate to tab notification works with payload
+        let expectation = XCTestExpectation(description: "Tab navigation notification received")
+        var receivedTab: String?
+
+        let observer = NotificationCenter.default.addObserver(
+            forName: .navigateToTab,
+            object: nil,
+            queue: .main
+        ) { notification in
+            receivedTab = notification.object as? String
+            expectation.fulfill()
+        }
+
+        NotificationCenter.default.post(name: .navigateToTab, object: "calendar")
+
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(receivedTab, "calendar")
+        NotificationCenter.default.removeObserver(observer)
+    }
 }
