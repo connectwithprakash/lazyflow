@@ -8,52 +8,65 @@ struct TaskRowView: View {
     var isDraggable: Bool = true
     var onSchedule: ((Task) -> Void)?
     var onPushToTomorrow: ((Task) -> Void)?
+    var onPriorityChange: ((Task, Priority) -> Void)?
+    var onDueDateChange: ((Task, Date?) -> Void)?
+    var onDelete: ((Task) -> Void)?
 
     @State private var isPressed = false
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: DesignSystem.Spacing.md) {
-                // Checkbox
-                TaskCheckbox(
-                    isCompleted: task.isCompleted,
-                    priority: task.priority,
-                    action: onToggle
-                )
+            HStack(spacing: 0) {
+                // Priority edge strip
+                if task.priority != .none && !task.isCompleted {
+                    Rectangle()
+                        .fill(task.priority.color)
+                        .frame(width: 4)
+                }
 
-                // Content
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                    // Title
-                    Text(task.title)
-                        .font(DesignSystem.Typography.body)
-                        .foregroundColor(
-                            task.isCompleted
-                                ? Color.Taskweave.textTertiary
-                                : Color.Taskweave.textPrimary
-                        )
-                        .strikethrough(task.isCompleted, color: Color.Taskweave.textTertiary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
+                HStack(spacing: DesignSystem.Spacing.md) {
+                    // Checkbox
+                    TaskCheckbox(
+                        isCompleted: task.isCompleted,
+                        priority: task.priority,
+                        action: onToggle
+                    )
 
-                    // Metadata row
-                    if hasMetadata {
-                        metadataRow
+                    // Content
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        // Title
+                        Text(task.title)
+                            .font(DesignSystem.Typography.body)
+                            .foregroundColor(
+                                task.isCompleted
+                                    ? Color.Taskweave.textTertiary
+                                    : Color.Taskweave.textPrimary
+                            )
+                            .strikethrough(task.isCompleted, color: Color.Taskweave.textTertiary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+
+                        // Metadata row
+                        if hasMetadata {
+                            metadataRow
+                        }
+                    }
+
+                    Spacer()
+
+                    // Recurring indicator
+                    if task.isRecurring {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color.Taskweave.textTertiary)
                     }
                 }
-
-                Spacer()
-
-                // Recurring indicator
-                if task.isRecurring {
-                    Image(systemName: "repeat")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color.Taskweave.textTertiary)
-                }
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .padding(.horizontal, DesignSystem.Spacing.md)
             }
-            .padding(.vertical, DesignSystem.Spacing.sm)
-            .padding(.horizontal, DesignSystem.Spacing.md)
             .background(Color.adaptiveSurface)
             .cornerRadius(DesignSystem.CornerRadius.medium)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(DesignSystem.Animation.quick, value: isPressed)
         }
@@ -103,7 +116,7 @@ struct TaskRowView: View {
     // MARK: - Metadata
 
     private var hasMetadata: Bool {
-        task.dueDate != nil || task.priority != .none || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil
+        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil
     }
 
     private var metadataRow: some View {
@@ -116,11 +129,6 @@ struct TaskRowView: View {
             // Due date
             if let dueDate = task.dueDate {
                 DueDateBadge(date: dueDate, isOverdue: task.isOverdue)
-            }
-
-            // Priority
-            if task.priority != .none && !task.isCompleted {
-                PriorityBadge(priority: task.priority)
             }
 
             // Duration
@@ -161,7 +169,7 @@ struct TaskRowView: View {
         Menu {
             ForEach(Priority.allCases) { priority in
                 Button {
-                    // Priority change handled by parent
+                    onPriorityChange?(task, priority)
                 } label: {
                     Label(priority.displayName, systemImage: priority.iconName)
                 }
@@ -172,19 +180,19 @@ struct TaskRowView: View {
 
         Menu {
             Button {
-                // Set due today
+                onDueDateChange?(task, Date())
             } label: {
                 Label("Today", systemImage: "star")
             }
 
             Button {
-                // Set due tomorrow
+                onDueDateChange?(task, Date().addingDays(1))
             } label: {
                 Label("Tomorrow", systemImage: "sunrise")
             }
 
             Button {
-                // Set due next week
+                onDueDateChange?(task, Date().addingDays(7))
             } label: {
                 Label("Next Week", systemImage: "calendar")
             }
@@ -192,7 +200,7 @@ struct TaskRowView: View {
             if task.dueDate != nil {
                 Divider()
                 Button(role: .destructive) {
-                    // Remove due date
+                    onDueDateChange?(task, nil)
                 } label: {
                     Label("Remove Date", systemImage: "xmark")
                 }
@@ -219,7 +227,7 @@ struct TaskRowView: View {
         Divider()
 
         Button(role: .destructive) {
-            // Delete handled by parent
+            onDelete?(task)
         } label: {
             Label("Delete", systemImage: "trash")
         }
@@ -233,34 +241,44 @@ struct CompactTaskRowView: View {
     let onToggle: () -> Void
 
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            TaskCheckbox(
-                isCompleted: task.isCompleted,
-                priority: task.priority,
-                action: onToggle
-            )
-
-            Text(task.title)
-                .font(DesignSystem.Typography.subheadline)
-                .foregroundColor(
-                    task.isCompleted
-                        ? Color.Taskweave.textTertiary
-                        : Color.Taskweave.textPrimary
-                )
-                .strikethrough(task.isCompleted)
-                .lineLimit(1)
-
-            Spacer()
-
-            if let date = task.dueDate {
-                Text(date.shortFormatted)
-                    .font(DesignSystem.Typography.caption2)
-                    .foregroundColor(
-                        task.isOverdue
-                            ? Color.Taskweave.error
-                            : Color.Taskweave.textTertiary
-                    )
+        HStack(spacing: 0) {
+            // Priority edge strip
+            if task.priority != .none && !task.isCompleted {
+                Rectangle()
+                    .fill(task.priority.color)
+                    .frame(width: 3)
             }
+
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                TaskCheckbox(
+                    isCompleted: task.isCompleted,
+                    priority: task.priority,
+                    action: onToggle
+                )
+
+                Text(task.title)
+                    .font(DesignSystem.Typography.subheadline)
+                    .foregroundColor(
+                        task.isCompleted
+                            ? Color.Taskweave.textTertiary
+                            : Color.Taskweave.textPrimary
+                    )
+                    .strikethrough(task.isCompleted)
+                    .lineLimit(1)
+
+                Spacer()
+
+                if let date = task.dueDate {
+                    Text(date.shortFormatted)
+                        .font(DesignSystem.Typography.caption2)
+                        .foregroundColor(
+                            task.isOverdue
+                                ? Color.Taskweave.error
+                                : Color.Taskweave.textTertiary
+                        )
+                }
+            }
+            .padding(.leading, task.priority != .none && !task.isCompleted ? DesignSystem.Spacing.sm : 0)
         }
         .padding(.vertical, DesignSystem.Spacing.xs)
     }

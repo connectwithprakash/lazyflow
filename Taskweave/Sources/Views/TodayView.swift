@@ -393,7 +393,10 @@ struct TodayView: View {
                     onToggle: { viewModel.toggleTaskCompletion(task) },
                     onTap: { viewModel.selectedTask = task },
                     onSchedule: { scheduleTaskAction($0) },
-                    onPushToTomorrow: { pushToTomorrow($0) }
+                    onPushToTomorrow: { pushToTomorrow($0) },
+                    onPriorityChange: { viewModel.updateTaskPriority($0, priority: $1) },
+                    onDueDateChange: { viewModel.updateTaskDueDate($0, dueDate: $1) },
+                    onDelete: { viewModel.deleteTask($0) }
                 )
                 .padding(.horizontal)
             }
@@ -427,7 +430,10 @@ struct TodayView: View {
                     onToggle: { viewModel.toggleTaskCompletion(task) },
                     onTap: { viewModel.selectedTask = task },
                     onSchedule: nil, // Completed tasks don't need scheduling
-                    onPushToTomorrow: nil
+                    onPushToTomorrow: nil,
+                    onPriorityChange: { viewModel.updateTaskPriority($0, priority: $1) },
+                    onDueDateChange: { viewModel.updateTaskDueDate($0, dueDate: $1) },
+                    onDelete: { viewModel.deleteTask($0) }
                 )
                 .padding(.horizontal)
             }

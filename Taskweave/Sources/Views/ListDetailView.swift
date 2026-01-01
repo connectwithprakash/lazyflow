@@ -88,7 +88,11 @@ struct ListDetailView: View {
                             TaskRowView(
                                 task: task,
                                 onToggle: { taskService.toggleTaskCompletion(task) },
-                                onTap: { selectedTask = task }
+                                onTap: { selectedTask = task },
+                                onPushToTomorrow: { pushToTomorrow($0) },
+                                onPriorityChange: { updateTaskPriority($0, priority: $1) },
+                                onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
+                                onDelete: { taskService.deleteTask($0) }
                             )
                             .padding(.horizontal)
                         }
@@ -124,7 +128,11 @@ struct ListDetailView: View {
                 TaskRowView(
                     task: task,
                     onToggle: { taskService.toggleTaskCompletion(task) },
-                    onTap: { selectedTask = task }
+                    onTap: { selectedTask = task },
+                    onPushToTomorrow: { pushToTomorrow($0) },
+                    onPriorityChange: { updateTaskPriority($0, priority: $1) },
+                    onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
+                    onDelete: { taskService.deleteTask($0) }
                 )
                 .padding(.horizontal)
             }
@@ -144,6 +152,25 @@ struct ListDetailView: View {
         }
         .padding(.horizontal)
         .tint(Color.Taskweave.textSecondary)
+    }
+
+    // MARK: - Actions
+
+    private func updateTaskPriority(_ task: Task, priority: Priority) {
+        var updatedTask = task
+        updatedTask.priority = priority
+        taskService.updateTask(updatedTask)
+    }
+
+    private func updateTaskDueDate(_ task: Task, dueDate: Date?) {
+        var updatedTask = task
+        updatedTask.dueDate = dueDate
+        taskService.updateTask(updatedTask)
+    }
+
+    private func pushToTomorrow(_ task: Task) {
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        updateTaskDueDate(task, dueDate: tomorrow)
     }
 }
 

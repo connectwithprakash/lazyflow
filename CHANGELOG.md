@@ -5,6 +5,18 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2025-12-31
+
+### Changed
+- Replace priority badges with left edge color strips for cleaner visual hierarchy
+- Priority colors: Urgent (red), High (orange), Medium (yellow), Low (blue)
+- Keep checkbox ring color as secondary priority signal
+
+### Fixed
+- Wire up context menu actions for priority, due date, and delete
+- Fix badge text wrapping with lineLimit and fixedSize
+- Clip task rows with RoundedRectangle for proper corner radius
+
 ## [0.9.0] - 2025-12-31
 
 ### Added

@@ -77,6 +77,18 @@ final class TodayViewModel: ObservableObject {
         taskService.deleteTask(task)
     }
 
+    func updateTaskPriority(_ task: Task, priority: Priority) {
+        var updatedTask = task
+        updatedTask.priority = priority
+        taskService.updateTask(updatedTask)
+    }
+
+    func updateTaskDueDate(_ task: Task, dueDate: Date?) {
+        var updatedTask = task
+        updatedTask.dueDate = dueDate
+        taskService.updateTask(updatedTask)
+    }
+
     func createTask(title: String, priority: Priority = .none) {
         taskService.createTask(
             title: title,

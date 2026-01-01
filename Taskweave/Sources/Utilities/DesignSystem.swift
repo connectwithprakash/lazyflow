@@ -183,12 +183,14 @@ struct PriorityBadge: View {
                     .font(.caption2)
                 Text(priority.displayName)
                     .font(DesignSystem.Typography.caption2)
+                    .lineLimit(1)
             }
             .foregroundColor(priority.color)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(priority.color.opacity(0.15))
             .cornerRadius(DesignSystem.CornerRadius.small)
+            .fixedSize()
         }
     }
 }
@@ -203,6 +205,7 @@ struct DueDateBadge: View {
                 .font(.caption2)
             Text(date.relativeFormatted)
                 .font(DesignSystem.Typography.caption2)
+                .lineLimit(1)
         }
         .foregroundColor(isOverdue ? Color.Taskweave.error : Color.Taskweave.textTertiary)
         .padding(.horizontal, 8)
@@ -213,6 +216,7 @@ struct DueDateBadge: View {
                 : Color.secondary.opacity(0.1)
         )
         .cornerRadius(DesignSystem.CornerRadius.small)
+        .fixedSize()
     }
 }
 
@@ -226,12 +230,14 @@ struct CategoryBadge: View {
                     .font(.caption2)
                 Text(category.displayName)
                     .font(DesignSystem.Typography.caption2)
+                    .lineLimit(1)
             }
             .foregroundColor(category.color)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(category.color.opacity(0.15))
             .cornerRadius(DesignSystem.CornerRadius.small)
+            .fixedSize()
         }
     }
 }
