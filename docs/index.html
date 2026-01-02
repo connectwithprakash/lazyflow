@@ -3,35 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taskweave</title>
+    <title>Taskweave - Calendar-First Todo App for iOS</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; color: #333; }
-        h1 { color: #218A8D; }
-        a { color: #218A8D; }
-        .links { margin-top: 40px; }
-        .links a { display: inline-block; margin-right: 20px; }
+        :root {
+            --accent: #218A8D;
+            --accent-light: #2BA5A8;
+            --bg: #F5F5F5;
+            --text: #333;
+            --text-light: #666;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+        }
+        header {
+            background: linear-gradient(135deg, #1F2121 0%, #2d3436 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        header p { color: rgba(255,255,255,0.8); font-size: 1.2rem; max-width: 600px; margin: 0 auto; }
+        .version {
+            display: inline-block;
+            background: var(--accent);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+
+        .screenshots {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: -80px auto 40px;
+            padding: 0 20px;
+        }
+        .screenshots img {
+            width: 180px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        h2 { color: var(--accent); margin-bottom: 20px; font-size: 1.8rem; }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        .feature {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .feature h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .feature ul {
+            list-style: none;
+            color: var(--text-light);
+        }
+        .feature li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .feature li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        .cta {
+            text-align: center;
+            padding: 50px 20px;
+            background: white;
+            margin: 40px 0;
+            border-radius: 12px;
+        }
+        .cta a {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+        .cta a:hover { background: var(--accent-light); }
+
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            padding: 30px 0;
+        }
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .links a:hover { text-decoration: underline; }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            .screenshots img { width: 140px; }
+        }
     </style>
 </head>
 <body>
-    <h1>Taskweave</h1>
-    <p>A calendar-first todo app for iOS that makes task scheduling as natural as writing a todo.</p>
+    <header>
+        <h1>Taskweave</h1>
+        <p>A free, open-source, calendar-first todo app that makes task scheduling as natural as writing a todo.</p>
+        <span class="version">v0.13.0</span>
+    </header>
 
-    <h2>Features</h2>
-    <ul>
-        <li>Task management with lists, due dates, and reminders</li>
-        <li>Apple Calendar integration with drag-to-calendar time blocking</li>
-        <li>AI-powered task prioritization (bring your own API key)</li>
-        <li>Smart rescheduling when meetings conflict</li>
-        <li>Siri shortcuts, Apple Watch, and widgets</li>
-    </ul>
-
-    <div class="links">
-        <a href="https://github.com/connectwithprakash/taskweave">GitHub</a>
-        <a href="design/">Design System</a>
-        <a href="privacy/">Privacy Policy</a>
-        <a href="terms/">Terms of Service</a>
+    <div class="screenshots">
+        <img src="assets/screenshots/light/05-today-multiple-tasks.png" alt="Today View">
+        <img src="assets/screenshots/light/06-calendar-view.png" alt="Calendar View">
+        <img src="assets/screenshots/light/11-ai-suggestions.png" alt="AI Analysis">
+        <img src="assets/screenshots/light/09-settings-view.png" alt="Settings">
     </div>
 
-    <p><small>Open source under MIT License</small></p>
+    <div class="container">
+        <section class="features">
+            <div class="feature">
+                <h3>📋 Task Management</h3>
+                <ul>
+                    <li>Create, edit, and organize tasks</li>
+                    <li>Task lists for projects</li>
+                    <li>Due dates and reminders</li>
+                    <li>Recurring tasks</li>
+                    <li>Priority levels with color coding</li>
+                    <li>Swipe actions for quick edits</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>📅 Calendar Integration</h3>
+                <ul>
+                    <li>Native Apple Calendar sync</li>
+                    <li>Day and week calendar views</li>
+                    <li>See events alongside tasks</li>
+                    <li>Schedule tasks as time blocks</li>
+                    <li>Conflict detection</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>🤖 AI-Powered</h3>
+                <ul>
+                    <li>Multi-provider LLM support</li>
+                    <li>Apple Intelligence, Claude, OpenAI</li>
+                    <li>Smart task suggestions</li>
+                    <li>Automatic categorization</li>
+                    <li>"What should I do next?"</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>🗣️ Siri Shortcuts</h3>
+                <ul>
+                    <li>"Add a task in Taskweave"</li>
+                    <li>"Complete my next task"</li>
+                    <li>"What's on my agenda"</li>
+                    <li>Hands-free task management</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>📱 Widgets & Live Activities</h3>
+                <ul>
+                    <li>Home Screen widgets (S/M/L)</li>
+                    <li>Lock Screen Live Activity</li>
+                    <li>Dynamic Island support</li>
+                    <li>Real-time progress updates</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>⌚ Apple Watch</h3>
+                <ul>
+                    <li>Today's tasks on your wrist</li>
+                    <li>Tap to complete tasks</li>
+                    <li>Real-time sync with iPhone</li>
+                    <li>Watch complications</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>💻 iPad Support</h3>
+                <ul>
+                    <li>Sidebar navigation</li>
+                    <li>Adaptive layouts</li>
+                    <li>Keyboard shortcuts</li>
+                    <li>Split view multitasking</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>🔒 Privacy First</h3>
+                <ul>
+                    <li>All data stored locally</li>
+                    <li>Optional iCloud sync</li>
+                    <li>No tracking or analytics</li>
+                    <li>Bring your own API keys</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="cta">
+            <h2>Open Source</h2>
+            <p style="margin-bottom: 20px; color: var(--text-light);">
+                Taskweave is free and open source under the MIT License.
+            </p>
+            <a href="https://github.com/connectwithprakash/taskweave">View on GitHub</a>
+        </div>
+
+        <div class="links">
+            <a href="design/">Design System</a>
+            <a href="privacy/">Privacy Policy</a>
+            <a href="terms/">Terms of Service</a>
+            <a href="https://github.com/connectwithprakash/taskweave/blob/main/CONTRIBUTING.md">Contributing</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Built with <a href="https://claude.com/claude-code" style="color: var(--accent);">Claude Code</a></p>
+        <p style="margin-top: 10px;">MIT License &copy; 2025</p>
+    </footer>
 </body>
 </html>

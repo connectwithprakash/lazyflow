@@ -1,6 +1,18 @@
 # Taskweave
 
+[![Version](https://img.shields.io/badge/version-0.13.0-blue.svg)](https://github.com/connectwithprakash/taskweave/releases)
+[![iOS](https://img.shields.io/badge/iOS-17.0+-000000.svg?logo=apple)](https://developer.apple.com/ios/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?logo=swift)](https://swift.org)
+
 A free, open-source, calendar-first todo app for iOS.
+
+<p align="center">
+  <img src="docs/assets/screenshots/light/05-today-multiple-tasks.png" width="180" alt="Today View">
+  <img src="docs/assets/screenshots/light/06-calendar-view.png" width="180" alt="Calendar View">
+  <img src="docs/assets/screenshots/light/11-ai-suggestions.png" width="180" alt="AI Analysis">
+  <img src="docs/assets/screenshots/light/09-settings-view.png" width="180" alt="Settings">
+</p>
 
 ## Overview
 
@@ -78,8 +90,15 @@ Taskweave combines task management with intelligent calendar integration. Schedu
 ## Getting Started
 
 1. Clone the repository
+   ```bash
+   git clone https://github.com/connectwithprakash/taskweave.git
+   ```
 2. Open `Taskweave.xcodeproj` in Xcode
 3. Build and run on simulator or device
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, commit conventions, and how to submit pull requests.
 
 ## License
 

@@ -44,7 +44,7 @@ iOSInjectionProject/
 Secrets.swift
 
 # Screenshots (local testing, not committed)
-screenshots/
+/screenshots/
 
 # OS files
 .DS_Store
