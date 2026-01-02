@@ -6,6 +6,7 @@ import Combine
 final class CalendarViewModel: ObservableObject {
     @Published private(set) var calendarEvents: [CalendarEvent] = []
     @Published private(set) var hasAccess = false
+    @Published private(set) var isDenied = false
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
@@ -24,8 +25,10 @@ final class CalendarViewModel: ObservableObject {
             .sink { [weak self] status in
                 if #available(iOS 17.0, *) {
                     self?.hasAccess = status == .fullAccess
+                    self?.isDenied = status == .denied
                 } else {
                     self?.hasAccess = status == .authorized
+                    self?.isDenied = status == .denied
                 }
             }
             .store(in: &cancellables)
@@ -33,6 +36,7 @@ final class CalendarViewModel: ObservableObject {
 
     private func checkAccess() {
         hasAccess = calendarService.hasCalendarAccess
+        isDenied = calendarService.authorizationStatus == .denied
     }
 
     // MARK: - Access
