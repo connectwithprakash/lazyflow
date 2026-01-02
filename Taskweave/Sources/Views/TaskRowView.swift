@@ -32,50 +32,51 @@ struct TaskRowView: View {
             }
 
             HStack(spacing: DesignSystem.Spacing.md) {
-                // Checkbox - independently tappable with high priority gesture
-                checkboxView
-                    .highPriorityGesture(
-                        TapGesture()
-                            .onEnded {
-                                notificationFeedback.notificationOccurred(.success)
-                                onToggle()
-                            }
-                    )
+                // Checkbox - independently tappable
+                Button {
+                    notificationFeedback.notificationOccurred(.success)
+                    onToggle()
+                } label: {
+                    checkboxView
+                }
+                .buttonStyle(.plain)
 
                 // Content - tappable area for edit
-                HStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                        // Title
-                        Text(task.title)
-                            .font(DesignSystem.Typography.body)
-                            .foregroundColor(
-                                task.isCompleted
-                                    ? Color.Taskweave.textTertiary
-                                    : Color.Taskweave.textPrimary
-                            )
-                            .strikethrough(task.isCompleted, color: Color.Taskweave.textTertiary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
+                Button {
+                    onTap()
+                } label: {
+                    HStack(spacing: 0) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            // Title
+                            Text(task.title)
+                                .font(DesignSystem.Typography.body)
+                                .foregroundColor(
+                                    task.isCompleted
+                                        ? Color.Taskweave.textTertiary
+                                        : Color.Taskweave.textPrimary
+                                )
+                                .strikethrough(task.isCompleted, color: Color.Taskweave.textTertiary)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
 
-                        // Metadata row
-                        if hasMetadata {
-                            metadataRow
+                            // Metadata row
+                            if hasMetadata {
+                                metadataRow
+                            }
+                        }
+
+                        Spacer()
+
+                        // Recurring indicator
+                        if task.isRecurring {
+                            Image(systemName: "repeat")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color.Taskweave.textTertiary)
                         }
                     }
-
-                    Spacer()
-
-                    // Recurring indicator
-                    if task.isRecurring {
-                        Image(systemName: "repeat")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color.Taskweave.textTertiary)
-                    }
+                    .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    onTap()
-                }
+                .buttonStyle(.plain)
             }
             .padding(.vertical, DesignSystem.Spacing.sm)
             .padding(.horizontal, DesignSystem.Spacing.md)
@@ -87,11 +88,9 @@ struct TaskRowView: View {
         .animation(DesignSystem.Animation.quick, value: isPressed)
         .accessibilityLabel(accessibilityDescription)
         .accessibilityHint("Double tap to view details")
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: 0.1)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
+        .onLongPressGesture(minimumDuration: 0.1, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
         .contextMenu {
             contextMenuContent
         }
