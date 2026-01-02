@@ -5,6 +5,16 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1](https://github.com/connectwithprakash/taskweave/compare/v0.13.0...v0.13.1) (2026-01-02)
+
+
+### Bug Fixes
+
+* Enable Calendar Access button not responding ([#18](https://github.com/connectwithprakash/taskweave/issues/18)) ([#26](https://github.com/connectwithprakash/taskweave/issues/26)) ([a08323f](https://github.com/connectwithprakash/taskweave/commit/a08323f804facd36c85b3a52159ff19df1c5934a))
+* **launch:** Replace black screen with elegant branded launch experience ([#23](https://github.com/connectwithprakash/taskweave/issues/23)) ([983667c](https://github.com/connectwithprakash/taskweave/commit/983667c2d20a8096db0c549eecc069486a301925)), closes [#22](https://github.com/connectwithprakash/taskweave/issues/22)
+* **suggestions:** Show content immediately on suggestion card tap ([#25](https://github.com/connectwithprakash/taskweave/issues/25)) ([b482332](https://github.com/connectwithprakash/taskweave/commit/b4823321f71c31a448d25ce9f3f333889e1b6a69)), closes [#19](https://github.com/connectwithprakash/taskweave/issues/19)
+* **ui:** Make task checkbox independently tappable ([#27](https://github.com/connectwithprakash/taskweave/issues/27)) ([8d7bdd1](https://github.com/connectwithprakash/taskweave/commit/8d7bdd17354b2c16d2315bf71b0927d4a4360893)), closes [#15](https://github.com/connectwithprakash/taskweave/issues/15)
+
 ## [0.13.0](https://github.com/connectwithprakash/taskweave/compare/v0.12.0...v0.13.0) (2026-01-01)
 
 
