@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.2](https://github.com/connectwithprakash/taskweave/compare/v0.13.1...v0.13.2) (2026-01-02)
+
+
+### Bug Fixes
+
+* **ui:** Restore swipe actions while keeping checkbox tappable ([#28](https://github.com/connectwithprakash/taskweave/issues/28)) ([690b0c2](https://github.com/connectwithprakash/taskweave/commit/690b0c22dfeca9a919c111cb0c602f36f0203730))
+
 ## [0.13.1](https://github.com/connectwithprakash/taskweave/compare/v0.13.0...v0.13.1) (2026-01-02)
 
 
