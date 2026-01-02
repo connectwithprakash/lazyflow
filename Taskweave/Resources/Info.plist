@@ -35,6 +35,10 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Taskweave needs calendar access to display your events and schedule tasks as time blocks.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Taskweave needs calendar access to create time blocks for your tasks.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UTExportedTypeDeclarations</key>

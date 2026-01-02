@@ -12,6 +12,7 @@ struct CalendarView: View {
     @State private var pendingDropTime: Date?
     @State private var showingCreateTaskSheet = false
     @State private var eventToConvert: CalendarEvent?
+    @State private var showingDeniedAlert = false
 
     var body: some View {
         if horizontalSizeClass == .regular {
@@ -35,6 +36,16 @@ struct CalendarView: View {
                         }
                     }
                 }
+                .alert("Calendar Access Denied", isPresented: $showingDeniedAlert) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Open Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                } message: {
+                    Text("Calendar access was previously denied. Please enable it in Settings to use this feature.")
+                }
         } else {
             // iPhone: Full NavigationStack
             NavigationStack {
@@ -56,6 +67,16 @@ struct CalendarView: View {
                                 createTaskFromEvent(task)
                             }
                         }
+                    }
+                    .alert("Calendar Access Denied", isPresented: $showingDeniedAlert) {
+                        Button("Cancel", role: .cancel) { }
+                        Button("Open Settings") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                    } message: {
+                        Text("Calendar access was previously denied. Please enable it in Settings to use this feature.")
                     }
             }
         }
@@ -194,8 +215,12 @@ struct CalendarView: View {
             Spacer()
 
             Button("Enable") {
-                _Concurrency.Task {
-                    await viewModel.requestAccess()
+                if viewModel.isDenied {
+                    showingDeniedAlert = true
+                } else {
+                    _Concurrency.Task {
+                        await viewModel.requestAccess()
+                    }
                 }
             }
             .font(DesignSystem.Typography.subheadline)
@@ -270,18 +295,24 @@ struct CalendarView: View {
             Text("Calendar Access Required")
                 .font(DesignSystem.Typography.title2)
 
-            Text("Enable calendar access to view your events and schedule tasks as time blocks.")
+            Text(viewModel.isDenied
+                ? "Calendar access was denied. Please enable it in Settings to view your events."
+                : "Enable calendar access to view your events and schedule tasks as time blocks.")
                 .font(DesignSystem.Typography.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DesignSystem.Spacing.xl)
 
             Button {
-                _Concurrency.Task {
-                    await viewModel.requestAccess()
+                if viewModel.isDenied {
+                    showingDeniedAlert = true
+                } else {
+                    _Concurrency.Task {
+                        await viewModel.requestAccess()
+                    }
                 }
             } label: {
-                Text("Enable Calendar Access")
+                Text(viewModel.isDenied ? "Open Settings" : "Enable Calendar Access")
                     .font(DesignSystem.Typography.headline)
                     .foregroundStyle(.white)
                     .padding()
