@@ -29,9 +29,10 @@ A comprehensive design system for building consistent, accessible, and beautiful
 7. [Components](#components)
 8. [Iconography](#iconography)
 9. [Motion & Animation](#motion--animation)
-10. [Accessibility](#accessibility)
-11. [Dark Mode](#dark-mode)
-12. [Implementation](#implementation)
+10. [Launch Experience](#launch-experience)
+11. [Accessibility](#accessibility)
+12. [Dark Mode](#dark-mode)
+13. [Implementation](#implementation)
 
 ---
 
@@ -779,6 +780,125 @@ Always respect user accessibility settings:
 
 .animation(reduceMotion ? .none : .spring(), value: animatedValue)
 ```
+
+---
+
+## Launch Experience
+
+A polished launch experience creates a strong first impression and reassures users the app is loading.
+
+### Design Goals
+
+| Goal | Implementation |
+|------|----------------|
+| **Instant feedback** | Native launch screen appears immediately |
+| **Brand recognition** | App logo prominently displayed |
+| **Progress indication** | Loading text and spinner show activity |
+| **Seamless transition** | Phases flow smoothly into content |
+
+### Launch Phases
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Phase 1: Native Launch Screen (LaunchScreen.storyboard)         │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │                                                             │ │
+│ │                      [App Logo]                             │ │
+│ │                      120×120pt                              │ │
+│ │                      centered                               │ │
+│ │                                                             │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ Background: LaunchBackground (white/dark)                       │
+│ Duration: iOS-controlled (~100-500ms)                           │
+├─────────────────────────────────────────────────────────────────┤
+│ Phase 2a: LoadingView Initial                                   │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │                                                             │ │
+│ │                      [App Logo]                             │ │
+│ │                      centered                               │ │
+│ │                                                             │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ Matches Phase 1 exactly for seamless transition                 │
+│ Duration: 300ms                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ Phase 2b: LoadingView Revealing                                 │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │                                                             │ │
+│ │                      [App Logo]                             │ │
+│ │                      ↑ moves up 40pt                        │ │
+│ │                      + shadow appears                       │ │
+│ │                                                             │ │
+│ │                     "Taskweave"                             │ │
+│ │                      fades in                               │ │
+│ │                                                             │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ Animation: spring(response: 0.6, dampingFraction: 0.8)          │
+│ Duration: 400ms                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ Phase 2c: LoadingView Loading                                   │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │                                                             │ │
+│ │                      [App Logo]                             │ │
+│ │                                                             │ │
+│ │                     "Taskweave"                             │ │
+│ │                                                             │ │
+│ │                "Loading your tasks..."                      │ │
+│ │                      [spinner]                              │ │
+│ │                                                             │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ Animation: easeOut(duration: 0.4)                               │
+│ Duration: Until Core Data loads                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ Phase 3: Content Transition                                     │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │                                                             │ │
+│ │               LoadingView fades out                         │ │
+│ │               ContentView fades in + scales                 │ │
+│ │                                                             │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ Animation: spring(response: 0.5, dampingFraction: 0.8)          │
+│ ContentView scale: 0.98 → 1.0                                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Visual Specifications
+
+| Element | Specification |
+|---------|---------------|
+| **Logo size** | 120×120pt |
+| **Logo corner radius** | 24pt (continuous) |
+| **Logo shadow** | 0 10pt 20pt rgba(0,0,0,0.15) |
+| **App name font** | Title, Bold |
+| **Loading text font** | Subheadline |
+| **Loading text color** | Secondary |
+| **Spinner tint** | AccentColor (#218A8D) |
+| **Spinner scale** | 1.1× |
+
+### Color Adaptation
+
+| Mode | LaunchBackground | Text |
+|------|------------------|------|
+| **Light** | `#FFFFFF` (white) | Primary (black) |
+| **Dark** | `#1F2121` (near black) | Primary (white) |
+
+### Accessibility
+
+The launch experience respects `accessibilityReduceMotion`:
+
+```swift
+@Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+// When reduceMotion is enabled:
+// - Logo scale animation is disabled
+// - Phase transitions are instant
+// - Spinner continues (essential feedback)
+```
+
+### Screenshots
+
+| Phase 2b: Revealing | Phase 2c: Loading | Phase 3: Content |
+|---------------------|-------------------|------------------|
+| ![Revealing](../assets/screenshots/launch/phase2b-revealing.png) | ![Loading](../assets/screenshots/launch/phase2c-loading.png) | ![Content](../assets/screenshots/launch/phase3-content.png) |
 
 ---
 

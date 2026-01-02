@@ -50,3 +50,6 @@ Secrets.swift
 .DS_Store
 *.swp
 *~.nib
+
+# MCP configuration (local)
+.mcp.json

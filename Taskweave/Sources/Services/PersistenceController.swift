@@ -106,8 +106,10 @@ final class PersistenceController: @unchecked Sendable {
 
     /// Initialize the persistence controller (synchronous)
     /// Used by widgets, intents, and direct `.shared` access
-    /// - Parameter inMemory: If true, uses in-memory store (for testing/previews)
-    init(inMemory: Bool = false) {
+    /// - Parameters:
+    ///   - inMemory: If true, uses in-memory store (for testing/previews)
+    ///   - configureViewContext: If true, configures viewContext immediately (requires main thread)
+    init(inMemory: Bool = false, configureViewContext: Bool = true) {
         container = NSPersistentContainer(name: "Taskweave")
 
         if inMemory {
@@ -131,8 +133,10 @@ final class PersistenceController: @unchecked Sendable {
             }
         }
 
-        container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Configure viewContext only if requested (must be on main thread)
+        if configureViewContext {
+            self.configureViewContext()
+        }
 
         if !inMemory {
             setupCloudKitSync()
@@ -141,18 +145,26 @@ final class PersistenceController: @unchecked Sendable {
         isLoaded = true
     }
 
+    /// Configure the viewContext settings (must be called on main thread)
+    func configureViewContext() {
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+    }
+
     /// Create and initialize persistence controller asynchronously
     /// Used by main app to show loading UI while Core Data initializes
     static func createAsync() async -> PersistenceController {
-        // Run synchronous init on background thread to not block UI
+        // Create container on background thread
         let controller = await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                let controller = PersistenceController()
+                let controller = PersistenceController(configureViewContext: false)
                 continuation.resume(returning: controller)
             }
         }
 
+        // Configure viewContext on main thread (required by Core Data)
         await MainActor.run {
+            controller.configureViewContext()
             setShared(controller)
         }
 
