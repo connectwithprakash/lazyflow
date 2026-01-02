@@ -113,6 +113,14 @@ struct TaskDetailView: View {
                             }
                         }
 
+                        if viewModel.recurringFrequency == .custom {
+                            Stepper(
+                                "Every \(viewModel.recurringInterval) day\(viewModel.recurringInterval == 1 ? "" : "s")",
+                                value: $viewModel.recurringInterval,
+                                in: 1...365
+                            )
+                        }
+
                         if viewModel.recurringFrequency == .weekly {
                             weekdayPicker
                         }

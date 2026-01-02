@@ -229,6 +229,7 @@ final class TaskService: ObservableObject {
             entity.reminderDate = task.reminderDate
             entity.priorityRaw = task.priority.rawValue
             entity.categoryRaw = task.category.rawValue
+            entity.statusRaw = task.status.rawValue
             entity.isCompleted = task.isCompleted
             entity.isArchived = task.isArchived
             entity.completedAt = task.completedAt
@@ -337,6 +338,32 @@ final class TaskService: ObservableObject {
         updateTask(updatedTask)
     }
 
+    // MARK: - In Progress Management
+
+    /// Get the currently in-progress task (only one allowed at a time)
+    func getInProgressTask() -> Task? {
+        return tasks.first { $0.isInProgress }
+    }
+
+    /// Start working on a task (stops any other in-progress task)
+    func startWorking(on task: Task) {
+        // First, stop any currently in-progress task
+        if let currentInProgress = getInProgressTask(), currentInProgress.id != task.id {
+            let stopped = currentInProgress.stopProgress()
+            updateTask(stopped)
+        }
+
+        // Then start working on the new task
+        let inProgressTask = task.inProgress()
+        updateTask(inProgressTask)
+    }
+
+    /// Stop working on a task
+    func stopWorking(on task: Task) {
+        let stoppedTask = task.stopProgress()
+        updateTask(stoppedTask)
+    }
+
     // MARK: - Calendar Integration
 
     /// Link a task to a calendar event
@@ -434,6 +461,18 @@ extension TaskEntity {
             )
         }
 
+        // Handle status with backward compatibility for legacy isCompleted field
+        let status: TaskStatus
+        if let rawStatus = TaskStatus(rawValue: statusRaw), rawStatus != .pending {
+            // Use statusRaw if it's explicitly set to non-pending
+            status = rawStatus
+        } else if isCompleted {
+            // Legacy migration: if isCompleted is true but statusRaw is pending, use completed
+            status = .completed
+        } else {
+            status = TaskStatus(rawValue: statusRaw) ?? .pending
+        }
+
         return Task(
             id: id ?? UUID(),
             title: title ?? "",
@@ -441,7 +480,7 @@ extension TaskEntity {
             dueDate: dueDate,
             dueTime: dueTime,
             reminderDate: reminderDate,
-            isCompleted: isCompleted,
+            status: status,
             isArchived: isArchived,
             priority: Priority(rawValue: priorityRaw) ?? .none,
             category: TaskCategory(rawValue: categoryRaw) ?? .uncategorized,

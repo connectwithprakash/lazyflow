@@ -2,6 +2,21 @@ import Foundation
 import UniformTypeIdentifiers
 import CoreTransferable
 
+/// Task status representing the current state
+enum TaskStatus: Int16, Codable, CaseIterable {
+    case pending = 0      // Default - not started
+    case inProgress = 1   // Actively working on
+    case completed = 2    // Done
+
+    var displayName: String {
+        switch self {
+        case .pending: return "Pending"
+        case .inProgress: return "In Progress"
+        case .completed: return "Completed"
+        }
+    }
+}
+
 /// Domain model representing a task
 struct Task: Identifiable, Codable, Equatable, Hashable {
     let id: UUID
@@ -10,8 +25,19 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var dueDate: Date?
     var dueTime: Date?
     var reminderDate: Date?
-    var isCompleted: Bool
+    var status: TaskStatus
     var isArchived: Bool
+
+    /// Computed property for backward compatibility
+    var isCompleted: Bool {
+        get { status == .completed }
+        set { status = newValue ? .completed : .pending }
+    }
+
+    /// Check if task is currently in progress
+    var isInProgress: Bool {
+        status == .inProgress
+    }
     var priority: Priority
     var category: TaskCategory
     var listID: UUID?
@@ -29,7 +55,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         dueDate: Date? = nil,
         dueTime: Date? = nil,
         reminderDate: Date? = nil,
-        isCompleted: Bool = false,
+        status: TaskStatus = .pending,
         isArchived: Bool = false,
         priority: Priority = .none,
         category: TaskCategory = .uncategorized,
@@ -47,7 +73,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.dueDate = dueDate
         self.dueTime = dueTime
         self.reminderDate = reminderDate
-        self.isCompleted = isCompleted
+        self.status = status
         self.isArchived = isArchived
         self.priority = priority
         self.category = category
@@ -58,6 +84,47 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.recurringRule = recurringRule
+    }
+
+    /// Convenience initializer for backward compatibility with isCompleted
+    init(
+        id: UUID = UUID(),
+        title: String,
+        notes: String? = nil,
+        dueDate: Date? = nil,
+        dueTime: Date? = nil,
+        reminderDate: Date? = nil,
+        isCompleted: Bool,
+        isArchived: Bool = false,
+        priority: Priority = .none,
+        category: TaskCategory = .uncategorized,
+        listID: UUID? = nil,
+        linkedEventID: String? = nil,
+        estimatedDuration: TimeInterval? = nil,
+        completedAt: Date? = nil,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date(),
+        recurringRule: RecurringRule? = nil
+    ) {
+        self.init(
+            id: id,
+            title: title,
+            notes: notes,
+            dueDate: dueDate,
+            dueTime: dueTime,
+            reminderDate: reminderDate,
+            status: isCompleted ? .completed : .pending,
+            isArchived: isArchived,
+            priority: priority,
+            category: category,
+            listID: listID,
+            linkedEventID: linkedEventID,
+            estimatedDuration: estimatedDuration,
+            completedAt: completedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            recurringRule: recurringRule
+        )
     }
 
     /// Check if task is due today
@@ -136,7 +203,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     /// Create a completed copy of this task
     func completed() -> Task {
         var copy = self
-        copy.isCompleted = true
+        copy.status = .completed
         copy.completedAt = Date()
         copy.updatedAt = Date()
         return copy
@@ -145,8 +212,24 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     /// Create an uncompleted copy of this task
     func uncompleted() -> Task {
         var copy = self
-        copy.isCompleted = false
+        copy.status = .pending
         copy.completedAt = nil
+        copy.updatedAt = Date()
+        return copy
+    }
+
+    /// Create an in-progress copy of this task
+    func inProgress() -> Task {
+        var copy = self
+        copy.status = .inProgress
+        copy.updatedAt = Date()
+        return copy
+    }
+
+    /// Create a pending copy of this task (stop progress)
+    func stopProgress() -> Task {
+        var copy = self
+        copy.status = .pending
         copy.updatedAt = Date()
         return copy
     }

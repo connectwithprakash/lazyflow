@@ -136,6 +136,27 @@ struct RecurringRule: Codable, Equatable, Hashable {
         return description
     }
 
+    /// Compact format for display in task cards (e.g., "1d", "1w", "3/wk")
+    var compactDisplayFormat: String {
+        switch frequency {
+        case .daily:
+            return interval == 1 ? "1d" : "\(interval)d"
+        case .weekly:
+            if let days = daysOfWeek, !days.isEmpty {
+                return "\(days.count)/wk"
+            }
+            return interval == 1 ? "1w" : "\(interval)w"
+        case .biweekly:
+            return "2w"
+        case .monthly:
+            return interval == 1 ? "1mo" : "\(interval)mo"
+        case .yearly:
+            return interval == 1 ? "1y" : "\(interval)y"
+        case .custom:
+            return "\(interval)d"
+        }
+    }
+
     private var frequencyUnit: String {
         switch frequency {
         case .daily: return interval == 1 ? "day" : "days"

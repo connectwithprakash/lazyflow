@@ -13,8 +13,11 @@ struct TaskRowView: View {
     var onPriorityChange: ((Task, Priority) -> Void)?
     var onDueDateChange: ((Task, Date?) -> Void)?
     var onDelete: ((Task) -> Void)?
+    var onStartWorking: ((Task) -> Void)?
+    var onStopWorking: ((Task) -> Void)?
 
     @State private var isPressed = false
+    @State private var isPulsing = false
 
     // MARK: - Haptic Feedback
     private let impactLight = UIImpactFeedbackGenerator(style: .light)
@@ -67,11 +70,17 @@ struct TaskRowView: View {
 
                         Spacer()
 
-                        // Recurring indicator
+                        // Recurring indicator with frequency
                         if task.isRecurring {
-                            Image(systemName: "repeat")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color.Taskweave.textTertiary)
+                            HStack(spacing: 2) {
+                                Image(systemName: "repeat")
+                                    .font(.system(size: 12))
+                                if let rule = task.recurringRule {
+                                    Text(rule.compactDisplayFormat)
+                                        .font(.system(size: 11))
+                                }
+                            }
+                            .foregroundColor(Color.Taskweave.textTertiary)
                         }
                     }
                     .contentShape(Rectangle())
@@ -134,13 +143,32 @@ struct TaskRowView: View {
             .tint(Color.Taskweave.success)
 
             if !task.isCompleted {
+                // Start/Stop Working action
+                if task.isInProgress {
+                    Button {
+                        impactMedium.impactOccurred()
+                        onStopWorking?(task)
+                    } label: {
+                        Label("Pause", systemImage: "pause.fill")
+                    }
+                    .tint(.orange)
+                } else {
+                    Button {
+                        impactMedium.impactOccurred()
+                        onStartWorking?(task)
+                    } label: {
+                        Label("Start", systemImage: "play.fill")
+                    }
+                    .tint(Color.Taskweave.accent)
+                }
+
                 Button {
                     impactLight.impactOccurred()
                     onSchedule?(task)
                 } label: {
                     Label("Schedule", systemImage: "calendar.badge.plus")
                 }
-                .tint(Color.Taskweave.accent)
+                .tint(.purple)
             }
         }
         .if(isDraggable) { view in
@@ -192,7 +220,9 @@ struct TaskRowView: View {
         ZStack {
             Circle()
                 .strokeBorder(
-                    task.isCompleted ? Color.Taskweave.success : task.priority.color,
+                    task.isCompleted ? Color.Taskweave.success :
+                    task.isInProgress ? Color.Taskweave.accent :
+                    task.priority.color,
                     lineWidth: 2
                 )
                 .frame(width: 24, height: 24)
@@ -205,11 +235,38 @@ struct TaskRowView: View {
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white)
+            } else if task.isInProgress {
+                // Filled dot indicator - universal "active/current" state
+                Circle()
+                    .fill(Color.Taskweave.accent)
+                    .frame(width: 12, height: 12)
+                    .scaleEffect(isPulsing ? 1.0 : 0.85)
+                    .opacity(isPulsing ? 1.0 : 0.7)
             }
         }
         .frame(minWidth: DesignSystem.TouchTarget.minimum, minHeight: DesignSystem.TouchTarget.minimum)
         .contentShape(Rectangle())
-        .accessibilityLabel(task.isCompleted ? "Mark incomplete" : "Mark complete")
+        .accessibilityLabel(
+            task.isCompleted ? "Mark incomplete" :
+            task.isInProgress ? "Stop working" :
+            "Mark complete"
+        )
+        .onAppear {
+            if task.isInProgress {
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isPulsing = true
+                }
+            }
+        }
+        .onChange(of: task.isInProgress) { _, newValue in
+            if newValue {
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isPulsing = true
+                }
+            } else {
+                isPulsing = false
+            }
+        }
     }
 
     // MARK: - Metadata
@@ -261,6 +318,23 @@ struct TaskRowView: View {
                 task.isCompleted ? "Mark Incomplete" : "Mark Complete",
                 systemImage: task.isCompleted ? "circle" : "checkmark.circle"
             )
+        }
+
+        // Start/Stop Working
+        if !task.isCompleted {
+            if task.isInProgress {
+                Button {
+                    onStopWorking?(task)
+                } label: {
+                    Label("Pause Working", systemImage: "pause.fill")
+                }
+            } else {
+                Button {
+                    onStartWorking?(task)
+                } label: {
+                    Label("Start Working", systemImage: "play.fill")
+                }
+            }
         }
 
         Divider()

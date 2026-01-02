@@ -89,6 +89,14 @@ final class TodayViewModel: ObservableObject {
         taskService.updateTask(updatedTask)
     }
 
+    func startWorking(on task: Task) {
+        taskService.startWorking(on: task)
+    }
+
+    func stopWorking(on task: Task) {
+        taskService.stopWorking(on: task)
+    }
+
     func createTask(title: String, priority: Priority = .none) {
         taskService.createTask(
             title: title,

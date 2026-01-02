@@ -464,7 +464,9 @@ struct TodayView: View {
                     onDelete: { task in
                         showUndoToast(.deleted(task), snapshot: task)
                         viewModel.deleteTask(task)
-                    }
+                    },
+                    onStartWorking: { viewModel.startWorking(on: $0) },
+                    onStopWorking: { viewModel.stopWorking(on: $0) }
                 )
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 .listRowBackground(Color.adaptiveBackground)
@@ -500,7 +502,9 @@ struct TodayView: View {
                     onPushToTomorrow: nil,
                     onPriorityChange: { viewModel.updateTaskPriority($0, priority: $1) },
                     onDueDateChange: { viewModel.updateTaskDueDate($0, dueDate: $1) },
-                    onDelete: { viewModel.deleteTask($0) }
+                    onDelete: { viewModel.deleteTask($0) },
+                    onStartWorking: nil,
+                    onStopWorking: nil
                 )
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 .listRowBackground(Color.adaptiveBackground)
