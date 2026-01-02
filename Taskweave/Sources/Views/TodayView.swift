@@ -9,7 +9,6 @@ struct TodayView: View {
     @StateObject private var rescheduleService = SmartRescheduleService.shared
     @State private var showAddTask = false
     @State private var taskToSchedule: Task?
-    @State private var showNextTaskSuggestion = false
     @State private var taskSuggestion: TaskSuggestion?
     @State private var showConflictSheet = false
     @State private var selectedConflict: TaskConflict?
@@ -384,18 +383,16 @@ struct TodayView: View {
             )
         }
         .buttonStyle(.plain)
-        .sheet(isPresented: $showNextTaskSuggestion) {
-            if let suggestion = taskSuggestion {
-                NextTaskSuggestionSheet(suggestion: suggestion) {
-                    viewModel.selectedTask = suggestion.task
-                    showNextTaskSuggestion = false
-                } onSchedule: {
-                    taskToSchedule = suggestion.task
-                    showNextTaskSuggestion = false
-                } onStart: {
-                    // Mark as started / start timer
-                    showNextTaskSuggestion = false
-                }
+        .sheet(item: $taskSuggestion) { suggestion in
+            NextTaskSuggestionSheet(suggestion: suggestion) {
+                viewModel.selectedTask = suggestion.task
+                taskSuggestion = nil
+            } onSchedule: {
+                taskToSchedule = suggestion.task
+                taskSuggestion = nil
+            } onStart: {
+                // Mark as started / start timer
+                taskSuggestion = nil
             }
         }
     }
@@ -405,7 +402,6 @@ struct TodayView: View {
             if let suggestion = await prioritizationService.getNextTaskSuggestion() {
                 await MainActor.run {
                     taskSuggestion = suggestion
-                    showNextTaskSuggestion = true
                 }
             }
         }

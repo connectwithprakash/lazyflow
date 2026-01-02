@@ -408,7 +408,8 @@ final class PrioritizationService: ObservableObject {
 
 // MARK: - Supporting Types
 
-struct TaskSuggestion {
+struct TaskSuggestion: Identifiable {
+    var id: UUID { task.id }
     let task: Task
     let score: Double
     let reasons: [String]
