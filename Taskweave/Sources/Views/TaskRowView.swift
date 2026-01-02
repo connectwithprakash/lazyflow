@@ -22,25 +22,28 @@ struct TaskRowView: View {
     private let notificationFeedback = UINotificationFeedbackGenerator()
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 0) {
-                // Priority edge strip
-                if task.priority != .none && !task.isCompleted {
-                    Rectangle()
-                        .fill(task.priority.color)
-                        .frame(width: 4)
-                        .accessibilityHidden(true) // Color info is conveyed via label
-                }
+        HStack(spacing: 0) {
+            // Priority edge strip
+            if task.priority != .none && !task.isCompleted {
+                Rectangle()
+                    .fill(task.priority.color)
+                    .frame(width: 4)
+                    .accessibilityHidden(true) // Color info is conveyed via label
+            }
 
-                HStack(spacing: DesignSystem.Spacing.md) {
-                    // Checkbox
-                    TaskCheckbox(
-                        isCompleted: task.isCompleted,
-                        priority: task.priority,
-                        action: onToggle
+            HStack(spacing: DesignSystem.Spacing.md) {
+                // Checkbox - independently tappable with high priority gesture
+                checkboxView
+                    .highPriorityGesture(
+                        TapGesture()
+                            .onEnded {
+                                notificationFeedback.notificationOccurred(.success)
+                                onToggle()
+                            }
                     )
 
-                    // Content
+                // Content - tappable area for edit
+                HStack(spacing: 0) {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                         // Title
                         Text(task.title)
@@ -69,21 +72,26 @@ struct TaskRowView: View {
                             .foregroundColor(Color.Taskweave.textTertiary)
                     }
                 }
-                .padding(.vertical, DesignSystem.Spacing.sm)
-                .padding(.horizontal, DesignSystem.Spacing.md)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onTap()
+                }
             }
-            .background(Color.adaptiveSurface)
-            .cornerRadius(DesignSystem.CornerRadius.medium)
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(DesignSystem.Animation.quick, value: isPressed)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+            .padding(.horizontal, DesignSystem.Spacing.md)
         }
-        .buttonStyle(PlainButtonStyle())
+        .background(Color.adaptiveSurface)
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(DesignSystem.Animation.quick, value: isPressed)
         .accessibilityLabel(accessibilityDescription)
         .accessibilityHint("Double tap to view details")
-        .onLongPressGesture(minimumDuration: 0.1, pressing: { pressing in
-            isPressed = pressing
-        }, perform: {})
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.1)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
         .contextMenu {
             contextMenuContent
         }
@@ -177,6 +185,32 @@ struct TaskRowView: View {
         }
 
         return components.joined(separator: ", ")
+    }
+
+    // MARK: - Checkbox View
+
+    private var checkboxView: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(
+                    task.isCompleted ? Color.Taskweave.success : task.priority.color,
+                    lineWidth: 2
+                )
+                .frame(width: 24, height: 24)
+
+            if task.isCompleted {
+                Circle()
+                    .fill(Color.Taskweave.success)
+                    .frame(width: 24, height: 24)
+
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.white)
+            }
+        }
+        .frame(minWidth: DesignSystem.TouchTarget.minimum, minHeight: DesignSystem.TouchTarget.minimum)
+        .contentShape(Rectangle())
+        .accessibilityLabel(task.isCompleted ? "Mark incomplete" : "Mark complete")
     }
 
     // MARK: - Metadata
