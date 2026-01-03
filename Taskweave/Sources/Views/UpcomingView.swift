@@ -6,6 +6,7 @@ struct UpcomingView: View {
     @StateObject private var taskService = TaskService()
     @State private var selectedTask: Task?
     @State private var showAddTask = false
+    @State private var taskToSchedule: Task?
 
     private var groupedTasks: [(Date, [Task])] {
         let upcoming = taskService.fetchUpcomingTasks()
@@ -29,6 +30,15 @@ struct UpcomingView: View {
                 .toolbar { addTaskToolbar }
                 .sheet(isPresented: $showAddTask) { AddTaskView() }
                 .sheet(item: $selectedTask) { task in TaskDetailView(task: task) }
+                .sheet(item: $taskToSchedule) { task in
+                    TimeBlockSheet(
+                        task: task,
+                        startTime: defaultScheduleTime(),
+                        onConfirm: { startTime, duration in
+                            scheduleTask(task, startTime: startTime, duration: duration)
+                        }
+                    )
+                }
         } else {
             // iPhone: Full NavigationStack
             NavigationStack {
@@ -37,6 +47,15 @@ struct UpcomingView: View {
                     .toolbar { addTaskToolbar }
                     .sheet(isPresented: $showAddTask) { AddTaskView() }
                     .sheet(item: $selectedTask) { task in TaskDetailView(task: task) }
+                    .sheet(item: $taskToSchedule) { task in
+                        TimeBlockSheet(
+                            task: task,
+                            startTime: defaultScheduleTime(),
+                            onConfirm: { startTime, duration in
+                                scheduleTask(task, startTime: startTime, duration: duration)
+                            }
+                        )
+                    }
             }
         }
     }
@@ -94,6 +113,7 @@ struct UpcomingView: View {
                             task: task,
                             onToggle: { taskService.toggleTaskCompletion(task) },
                             onTap: { selectedTask = task },
+                            onSchedule: { taskToSchedule = $0 },
                             onPushToTomorrow: { pushToTomorrow($0) },
                             onMoveToToday: { moveToToday($0) },
                             onPriorityChange: { updateTaskPriority($0, priority: $1) },
@@ -119,6 +139,7 @@ struct UpcomingView: View {
                             task: task,
                             onToggle: { taskService.toggleTaskCompletion(task) },
                             onTap: { selectedTask = task },
+                            onSchedule: { taskToSchedule = $0 },
                             onPushToTomorrow: { pushToTomorrow($0) },
                             onMoveToToday: { moveToToday($0) },
                             onPriorityChange: { updateTaskPriority($0, priority: $1) },
@@ -209,6 +230,27 @@ struct UpcomingView: View {
 
     private func moveToToday(_ task: Task) {
         updateTaskDueDate(task, dueDate: Date())
+    }
+
+    // MARK: - Scheduling
+
+    private func defaultScheduleTime() -> Date {
+        let calendar = Calendar.current
+        let now = Date()
+        // Default to next hour
+        let components = calendar.dateComponents([.year, .month, .day, .hour], from: now)
+        if let nextHour = calendar.date(from: components)?.addingTimeInterval(3600) {
+            return nextHour
+        }
+        return now
+    }
+
+    private func scheduleTask(_ task: Task, startTime: Date, duration: TimeInterval) {
+        do {
+            _ = try CalendarService.shared.createTimeBlock(for: task, startDate: startTime, duration: duration)
+        } catch {
+            print("Failed to create time block: \(error)")
+        }
     }
 }
 
