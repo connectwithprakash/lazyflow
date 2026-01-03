@@ -6,6 +6,7 @@ struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
     @StateObject private var taskService = TaskService()
     @State private var selectedDate = Date()
+    @State private var currentWeekStart = Calendar.current.startOfWeek(for: Date())
     @State private var viewMode: CalendarViewMode = .week
     @State private var showingTimeBlockSheet = false
     @State private var pendingTask: Task?
@@ -113,8 +114,8 @@ struct CalendarView: View {
                     switch viewMode {
                     case .day:
                         DayView(
-                            date: selectedDate,
-                            events: viewModel.events(for: selectedDate),
+                            currentDate: $selectedDate,
+                            eventsProvider: { viewModel.events(for: $0) },
                             onTaskDropped: { task, time in
                                 pendingTask = task
                                 pendingDropTime = time
@@ -126,8 +127,8 @@ struct CalendarView: View {
                         )
                     case .week:
                         WeekView(
-                            startDate: viewModel.weekStart(for: selectedDate),
-                            events: viewModel.eventsForWeek(containing: selectedDate),
+                            currentWeekStart: $currentWeekStart,
+                            eventsProvider: { viewModel.eventsForWeek(containing: $0) },
                             onDateSelected: { selectedDate = $0 },
                             onTaskDropped: { task, date in
                                 pendingTask = task
@@ -138,6 +139,9 @@ struct CalendarView: View {
                                 eventToConvert = event
                             }
                         )
+                        .onChange(of: currentWeekStart) { _, newValue in
+                            selectedDate = newValue
+                        }
                     }
                 } else {
                     noAccessView
@@ -256,10 +260,9 @@ struct CalendarView: View {
             formatter.dateFormat = "EEEE, MMM d"
             return formatter.string(from: selectedDate)
         case .week:
-            let weekStart = viewModel.weekStart(for: selectedDate)
-            let weekEnd = Calendar.current.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
+            let weekEnd = Calendar.current.date(byAdding: .day, value: 6, to: currentWeekStart) ?? currentWeekStart
             formatter.dateFormat = "MMM d"
-            let startStr = formatter.string(from: weekStart)
+            let startStr = formatter.string(from: currentWeekStart)
             let endStr = formatter.string(from: weekEnd)
             return "\(startStr) - \(endStr)"
         }
@@ -271,7 +274,7 @@ struct CalendarView: View {
         case .day:
             selectedDate = calendar.date(byAdding: .day, value: value, to: selectedDate) ?? selectedDate
         case .week:
-            selectedDate = calendar.date(byAdding: .weekOfYear, value: value, to: selectedDate) ?? selectedDate
+            currentWeekStart = calendar.date(byAdding: .weekOfYear, value: value, to: currentWeekStart) ?? currentWeekStart
         }
     }
 
@@ -328,6 +331,69 @@ enum CalendarViewMode {
 // MARK: - Day View
 
 struct DayView: View {
+    @Binding var currentDate: Date
+    let eventsProvider: (Date) -> [CalendarEvent]
+    var onTaskDropped: ((Task, Date) -> Void)?
+    var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+
+    private let calendar = Calendar.current
+    @State private var scrollPosition: Date?
+    @State private var isInitialized = false
+
+    // Pre-generate dates: 1 year back and forward from today
+    // This is the standard approach - pre-generate a reasonable range
+    // rather than trying to dynamically manage scroll position
+    private var dates: [Date] {
+        let today = calendar.startOfDay(for: Date())
+        return (-365...365).compactMap { offset in
+            calendar.date(byAdding: .day, value: offset, to: today)
+        }
+    }
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 0) {
+                ForEach(dates, id: \.self) { date in
+                    DayContentView(
+                        date: date,
+                        events: eventsProvider(date),
+                        onTaskDropped: onTaskDropped,
+                        onCreateTaskFromEvent: onCreateTaskFromEvent
+                    )
+                    .containerRelativeFrame(.horizontal)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.paging)
+        .scrollPosition(id: $scrollPosition)
+        .onChange(of: scrollPosition) { _, newDate in
+            // Update currentDate when user scrolls
+            if let newDate, isInitialized {
+                currentDate = newDate
+            }
+        }
+        .onChange(of: currentDate) { _, newDate in
+            // Respond to external changes (chevron buttons, "Today" button)
+            let normalizedDate = calendar.startOfDay(for: newDate)
+            if scrollPosition != normalizedDate {
+                scrollPosition = normalizedDate
+            }
+        }
+        .onAppear {
+            // Set initial position without triggering onChange
+            if !isInitialized {
+                scrollPosition = calendar.startOfDay(for: currentDate)
+                // Delay setting initialized to avoid initial onChange trigger
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isInitialized = true
+                }
+            }
+        }
+    }
+}
+
+struct DayContentView: View {
     let date: Date
     let events: [CalendarEvent]
     var onTaskDropped: ((Task, Date) -> Void)?
@@ -510,35 +576,106 @@ struct EventBlock: View {
 // MARK: - Week View
 
 struct WeekView: View {
-    let startDate: Date
-    let events: [Date: [CalendarEvent]]
+    @Binding var currentWeekStart: Date
+    let eventsProvider: (Date) -> [Date: [CalendarEvent]]
     let onDateSelected: (Date) -> Void
     var onTaskDropped: ((Task, Date) -> Void)?
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
 
     private let calendar = Calendar.current
     @State private var highlightedDay: Int?
+    @State private var scrollPosition: Date?
+    @State private var isInitialized = false
+
+    // Pre-generate week start dates: ~1 year back and forward
+    // Using week starts to ensure consistent alignment
+    private var weekStarts: [Date] {
+        let today = Date()
+        // Get the start of the current week
+        let currentWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) ?? today
+        return (-52...52).compactMap { offset in
+            calendar.date(byAdding: .weekOfYear, value: offset, to: currentWeek)
+        }
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // Day headers
-                HStack(spacing: 0) {
-                    ForEach(0..<7, id: \.self) { dayOffset in
-                        if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
-                            DayHeader(date: date, isToday: calendar.isDateInToday(date))
-                                .frame(maxWidth: .infinity)
-                                .onTapGesture {
-                                    onDateSelected(date)
-                                }
-                        }
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 0) {
+                ForEach(weekStarts, id: \.self) { weekStart in
+                    WeekContentView(
+                        startDate: weekStart,
+                        events: eventsProvider(weekStart),
+                        highlightedDay: scrollPosition == weekStart ? highlightedDay : nil,
+                        onDateSelected: onDateSelected,
+                        onTaskDropped: onTaskDropped,
+                        onCreateTaskFromEvent: onCreateTaskFromEvent,
+                        onHighlightChanged: { highlightedDay = $0 }
+                    )
+                    .containerRelativeFrame(.horizontal)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.paging)
+        .scrollPosition(id: $scrollPosition)
+        .onChange(of: scrollPosition) { _, newWeekStart in
+            // Update currentWeekStart when user scrolls
+            if let newWeekStart, isInitialized {
+                currentWeekStart = newWeekStart
+            }
+        }
+        .onChange(of: currentWeekStart) { _, newWeekStart in
+            // Respond to external changes (chevron buttons, "Today" button)
+            let normalizedWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: newWeekStart)) ?? newWeekStart
+            if scrollPosition != normalizedWeek {
+                scrollPosition = normalizedWeek
+            }
+        }
+        .onAppear {
+            // Set initial position without triggering onChange
+            if !isInitialized {
+                let normalizedWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: currentWeekStart)) ?? currentWeekStart
+                scrollPosition = normalizedWeek
+                // Delay setting initialized to avoid initial onChange trigger
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isInitialized = true
+                }
+            }
+        }
+    }
+}
+
+struct WeekContentView: View {
+    let startDate: Date
+    let events: [Date: [CalendarEvent]]
+    let highlightedDay: Int?
+    let onDateSelected: (Date) -> Void
+    var onTaskDropped: ((Task, Date) -> Void)?
+    var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+    var onHighlightChanged: ((Int?) -> Void)?
+
+    private let calendar = Calendar.current
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Day headers
+            HStack(spacing: 0) {
+                ForEach(0..<7, id: \.self) { dayOffset in
+                    if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
+                        DayHeader(date: date, isToday: calendar.isDateInToday(date))
+                            .frame(maxWidth: .infinity)
+                            .onTapGesture {
+                                onDateSelected(date)
+                            }
                     }
                 }
-                .padding(.vertical, DesignSystem.Spacing.sm)
+            }
+            .padding(.vertical, DesignSystem.Spacing.sm)
 
-                Divider()
+            Divider()
 
-                // Day columns with events
+            // Day columns with events
+            ScrollView {
                 HStack(alignment: .top, spacing: 1) {
                     ForEach(0..<7, id: \.self) { dayOffset in
                         if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
@@ -554,10 +691,10 @@ struct WeekView: View {
                             .dropDestination(for: Task.self) { tasks, _ in
                                 guard let task = tasks.first else { return false }
                                 onTaskDropped?(task, date)
-                                highlightedDay = nil
+                                onHighlightChanged?(nil)
                                 return true
                             } isTargeted: { isTargeted in
-                                highlightedDay = isTargeted ? dayOffset : nil
+                                onHighlightChanged?(isTargeted ? dayOffset : nil)
                             }
                         }
                     }
@@ -606,9 +743,11 @@ struct DayColumn: View {
     var isDropTarget: Bool = false
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
 
+    private var maxEventsToShow: Int { 4 }
+
     var body: some View {
-        VStack(spacing: DesignSystem.Spacing.xxs) {
-            ForEach(events.prefix(5)) { event in
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(events.prefix(maxEventsToShow)) { event in
                 CompactEventView(event: event)
                     .contextMenu {
                         Button {
@@ -619,27 +758,29 @@ struct DayColumn: View {
                     }
             }
 
-            if events.count > 5 {
-                Text("+\(events.count - 5) more")
-                    .font(DesignSystem.Typography.caption2)
+            if events.count > maxEventsToShow {
+                Text("+\(events.count - maxEventsToShow)")
+                    .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
+                    .padding(.leading, 2)
             }
 
             if isDropTarget {
-                HStack(spacing: 4) {
+                HStack(spacing: 2) {
                     Image(systemName: "plus.circle.fill")
-                        .font(.caption)
-                    Text("Drop to schedule")
-                        .font(DesignSystem.Typography.caption2)
+                        .font(.system(size: 10))
+                    Text("Drop")
+                        .font(.system(size: 9))
                 }
                 .foregroundColor(Color.Taskweave.accent)
-                .padding(.vertical, DesignSystem.Spacing.xs)
+                .padding(.top, 2)
             }
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .frame(minHeight: 150)
+        .padding(.horizontal, 2)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .frame(minHeight: 120)
         .background(isDropTarget ? Color.Taskweave.accent.opacity(0.1) : .clear)
         .cornerRadius(DesignSystem.CornerRadius.small)
         .overlay(
@@ -974,6 +1115,15 @@ struct CreateTaskFromEventSheet: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: dueDate)
+    }
+}
+
+// MARK: - Calendar Extension
+
+extension Calendar {
+    func startOfWeek(for date: Date) -> Date {
+        let components = dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        return self.date(from: components) ?? date
     }
 }
 
