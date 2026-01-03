@@ -463,6 +463,32 @@ struct CompactTaskRowView: View {
             .padding(.leading, task.priority != .none && !task.isCompleted ? DesignSystem.Spacing.sm : 0)
         }
         .padding(.vertical, DesignSystem.Spacing.xs)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Double tap to toggle completion")
+    }
+
+    private var accessibilityDescription: String {
+        var components: [String] = []
+
+        if task.isCompleted {
+            components.append("Completed")
+        }
+
+        components.append(task.title)
+
+        if task.priority != .none && !task.isCompleted {
+            components.append("\(task.priority.displayName) priority")
+        }
+
+        if let date = task.dueDate {
+            if task.isOverdue {
+                components.append("Overdue")
+            } else {
+                components.append("Due \(date.shortFormatted)")
+            }
+        }
+
+        return components.joined(separator: ", ")
     }
 }
 

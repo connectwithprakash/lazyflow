@@ -41,6 +41,46 @@ struct WatchTaskRowView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Double tap to mark as \(task.isCompleted ? "incomplete" : "complete")")
+    }
+
+    // MARK: - Accessibility
+
+    private var accessibilityDescription: String {
+        var components: [String] = []
+
+        // Status
+        if task.isCompleted {
+            components.append("Completed")
+        }
+
+        // Title
+        components.append(task.title)
+
+        // Priority
+        if task.priority > 1 {
+            components.append("\(priorityName) priority")
+        }
+
+        // Due time
+        if task.isOverdue {
+            components.append("Overdue")
+        } else if task.dueTime != nil {
+            components.append("Due today")
+        }
+
+        return components.joined(separator: ", ")
+    }
+
+    private var priorityName: String {
+        switch task.priority {
+        case 4: return "Urgent"
+        case 3: return "High"
+        case 2: return "Medium"
+        case 1: return "Low"
+        default: return ""
+        }
     }
 
     private var checkboxView: some View {
