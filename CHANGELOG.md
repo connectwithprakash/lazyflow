@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0](https://github.com/connectwithprakash/taskweave/compare/v0.13.2...v0.14.0) (2026-01-03)
+
+
+### Features
+
+* **tasks:** Add 'In Progress' task state and improve repeat frequency display ([#32](https://github.com/connectwithprakash/taskweave/issues/32)) ([8ad9fa9](https://github.com/connectwithprakash/taskweave/commit/8ad9fa9165bf4a5b497519b61aed9732e6ab6e3b)), closes [#17](https://github.com/connectwithprakash/taskweave/issues/17)
+
 ## [0.13.2](https://github.com/connectwithprakash/taskweave/compare/v0.13.1...v0.13.2) (2026-01-02)
 
 
