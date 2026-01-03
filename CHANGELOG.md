@@ -5,6 +5,15 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.1](https://github.com/connectwithprakash/taskweave/compare/v0.14.0...v0.14.1) (2026-01-03)
+
+
+### Bug Fixes
+
+* **calendar:** Fix blank Create Task from Event sheet ([#40](https://github.com/connectwithprakash/taskweave/issues/40)) ([2ead489](https://github.com/connectwithprakash/taskweave/commit/2ead4896095912d6305b5c0c060ae93d46c59670)), closes [#38](https://github.com/connectwithprakash/taskweave/issues/38)
+* **notifications:** Request permission before scheduling reminders ([#34](https://github.com/connectwithprakash/taskweave/issues/34)) ([847f672](https://github.com/connectwithprakash/taskweave/commit/847f672a9ecbaf608b0ba5f960c10fe66ba50ab4)), closes [#31](https://github.com/connectwithprakash/taskweave/issues/31)
+* **upcoming:** Add Schedule swipe action to Upcoming tab ([#37](https://github.com/connectwithprakash/taskweave/issues/37)) ([0855689](https://github.com/connectwithprakash/taskweave/commit/085568960c5c45bcd7f3f37fc666373b6898d996)), closes [#36](https://github.com/connectwithprakash/taskweave/issues/36)
+
 ## [0.14.0](https://github.com/connectwithprakash/taskweave/compare/v0.13.2...v0.14.0) (2026-01-03)
 
 
