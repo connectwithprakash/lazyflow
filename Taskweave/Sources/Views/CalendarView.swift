@@ -508,8 +508,8 @@ struct DayContentView: View {
                             dropIndicator
                         }
                     }
-                    .padding(.leading, 50) // Space for time labels
                 }
+                .padding(.leading, 16)
             }
             .dropDestination(for: Task.self) { tasks, location in
                 guard let task = tasks.first else { return false }
