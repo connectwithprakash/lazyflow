@@ -458,42 +458,58 @@ struct DayContentView: View {
         return result
     }
 
+    /// All-day events for this date
+    private var allDayEvents: [CalendarEvent] {
+        events.filter { $0.isAllDay }
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                ZStack(alignment: .topLeading) {
-                    // Hour grid
-                    VStack(spacing: 0) {
-                        ForEach(startHour..<endHour, id: \.self) { hour in
-                            HourRow(hour: hour, isHighlighted: isHourHighlighted(hour))
-                                .frame(height: hourHeight)
-                        }
+                VStack(spacing: 0) {
+                    // All-day events section
+                    if !allDayEvents.isEmpty {
+                        AllDayEventsSection(
+                            events: allDayEvents,
+                            onCreateTaskFromEvent: onCreateTaskFromEvent
+                        )
                     }
 
-                    // Events overlay with overlap handling
-                    ForEach(eventLayout, id: \.event.id) { layout in
-                        EventBlock(
-                            event: layout.event,
-                            hourHeight: hourHeight,
-                            startHour: startHour,
-                            columnIndex: layout.column,
-                            totalColumns: layout.totalColumns
-                        )
-                        .contextMenu {
-                            Button {
-                                onCreateTaskFromEvent?(layout.event)
-                            } label: {
-                                Label("Create Task", systemImage: "checkmark.circle.badge.plus")
+                    // Time grid with timed events
+                    ZStack(alignment: .topLeading) {
+                        // Hour grid
+                        VStack(spacing: 0) {
+                            ForEach(startHour..<endHour, id: \.self) { hour in
+                                HourRow(hour: hour, isHighlighted: isHourHighlighted(hour))
+                                    .frame(height: hourHeight)
                             }
                         }
-                    }
 
-                    // Drop indicator
-                    if isDraggingOver {
-                        dropIndicator
+                        // Events overlay with overlap handling
+                        ForEach(eventLayout, id: \.event.id) { layout in
+                            EventBlock(
+                                event: layout.event,
+                                hourHeight: hourHeight,
+                                startHour: startHour,
+                                columnIndex: layout.column,
+                                totalColumns: layout.totalColumns
+                            )
+                            .contextMenu {
+                                Button {
+                                    onCreateTaskFromEvent?(layout.event)
+                                } label: {
+                                    Label("Create Task", systemImage: "checkmark.circle.badge.plus")
+                                }
+                            }
+                        }
+
+                        // Drop indicator
+                        if isDraggingOver {
+                            dropIndicator
+                        }
                     }
+                    .padding(.leading, 50) // Space for time labels
                 }
-                .padding(.leading, 50) // Space for time labels
             }
             .dropDestination(for: Task.self) { tasks, location in
                 guard let task = tasks.first else { return false }
@@ -572,6 +588,75 @@ struct HourRow: View {
             return "\(hour):00"
         }
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - All-Day Events Section
+
+struct AllDayEventsSection: View {
+    let events: [CalendarEvent]
+    var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            // Header row - matches HourRow layout
+            HStack(alignment: .center, spacing: DesignSystem.Spacing.sm) {
+                Text("All Day")
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 40, alignment: .trailing)
+
+                // All-day events as horizontal scroll
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        ForEach(events) { event in
+                            AllDayEventChip(event: event)
+                                .contextMenu {
+                                    Button {
+                                        onCreateTaskFromEvent?(event)
+                                    } label: {
+                                        Label("Create Task", systemImage: "checkmark.circle.badge.plus")
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color.adaptiveSurface.opacity(0.5))
+    }
+}
+
+struct AllDayEventChip: View {
+    let event: CalendarEvent
+
+    var body: some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(eventColor)
+                .frame(width: 4)
+
+            Text(event.title)
+                .font(DesignSystem.Typography.caption1)
+                .fontWeight(.medium)
+                .foregroundStyle(Color.Taskweave.textPrimary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .background(eventColor.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(event.title), all day event")
+        .accessibilityHint("Double tap to view event options")
+    }
+
+    private var eventColor: Color {
+        if let cgColor = event.calendarColor {
+            return Color(cgColor: cgColor)
+        }
+        return Color.Taskweave.accent
     }
 }
 

@@ -1,3 +1,4 @@
+#if os(watchOS)
 import WidgetKit
 import SwiftUI
 
@@ -227,3 +228,4 @@ struct RectangularComplicationView: View {
 } timeline: {
     TaskComplicationEntry.placeholder
 }
+#endif
