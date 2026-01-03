@@ -96,6 +96,7 @@
 		F96E3F362C44485C5C35A2C8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751D60DB44ED6F070A0B42EA /* ContentView.swift */; };
 		FC9544F1BAA698EA4127635A /* Notification+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECD280716254E849E7546A7 /* Notification+Extensions.swift */; };
 		FD1234567890ABCD12345679 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1234567890ABCD12345679 /* RootView.swift */; };
+		74E02FAFA3474326A4B13BBA /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5422C0354A3547D29987A46C /* OnboardingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -249,6 +250,7 @@
 		F970C9D8C8571D12DA3516C4 /* ListsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewModel.swift; sourceTree = "<group>"; };
 		FBCA0FA9E06FCD309828CC12 /* WatchEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchEmptyStateView.swift; sourceTree = "<group>"; };
 		FE1234567890ABCD12345679 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		5422C0354A3547D29987A46C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -350,6 +352,7 @@
 				E792CF309818E6413FAEA8E0 /* ListDetailView.swift */,
 				A02B96740C9B26528CA1981D /* ListsView.swift */,
 				3295E36A41D180A3D0E9DA4B /* SearchView.swift */,
+				5422C0354A3547D29987A46C /* OnboardingView.swift */,
 				45B38F1755E8984C7F33C03E /* SettingsView.swift */,
 				FE1234567890ABCD12345679 /* RootView.swift */,
 				DB9710240F152BBE69A5E1FE /* TaskDetailView.swift */,
@@ -769,6 +772,7 @@
 				608DB00EAEAA45A51D1A9899 /* CompleteTaskIntent.swift in Sources */,
 				407E19F80003AD5F28E97D2B /* ConflictDetectionService.swift in Sources */,
 				F96E3F362C44485C5C35A2C8 /* ContentView.swift in Sources */,
+				74E02FAFA3474326A4B13BBA /* OnboardingView.swift in Sources */,
 				28B504DD93A864BB789BAAA3 /* CreateTaskIntent.swift in Sources */,
 				6718A8DF9783D2257A96B7D5 /* Date+Extensions.swift in Sources */,
 				85F5AEDB30CBD2E06B5DB537 /* DesignSystem.swift in Sources */,

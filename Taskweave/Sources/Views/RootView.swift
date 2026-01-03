@@ -7,22 +7,28 @@ struct RootView: View {
     @State private var taskService: TaskService?
     @State private var isLoading = true
     @State private var showContent = false
+    @AppStorage("hasSeenOnboarding") private var hasCompletedOnboarding = false
 
     var body: some View {
         ZStack {
             if let controller = persistenceController,
                let service = taskService,
                showContent {
-                ContentView()
-                    .environment(\.managedObjectContext, controller.viewContext)
-                    .environmentObject(service)
-                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                    .onAppear {
-                        WatchConnectivityService.shared.configure(with: service)
-                    }
-                    .task {
-                        controller.createDefaultListsIfNeeded()
-                    }
+                if hasCompletedOnboarding {
+                    ContentView()
+                        .environment(\.managedObjectContext, controller.viewContext)
+                        .environmentObject(service)
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                        .onAppear {
+                            WatchConnectivityService.shared.configure(with: service)
+                        }
+                        .task {
+                            controller.createDefaultListsIfNeeded()
+                        }
+                } else {
+                    OnboardingView()
+                        .transition(.opacity)
+                }
             }
 
             if isLoading {
