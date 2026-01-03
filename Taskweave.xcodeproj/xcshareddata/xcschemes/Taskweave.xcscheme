@@ -20,6 +20,20 @@
                ReferencedContainer = "container:Taskweave.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "B8C47195269FCBBA629C5F7F"
+               BuildableName = "TaskweaveWidget.appex"
+               BlueprintName = "TaskweaveWidget"
+               ReferencedContainer = "container:Taskweave.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
