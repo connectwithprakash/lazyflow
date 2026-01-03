@@ -266,7 +266,7 @@ struct NotificationSettingsView: View {
                             Label("Notifications Disabled", systemImage: "xmark.circle.fill")
                                 .foregroundColor(Color.Taskweave.error)
 
-                            Text("Enable notifications in Settings to receive task reminders.")
+                            Text("Enable notifications in Settings to receive task reminders. Tap Open Settings, then tap Notifications.")
                                 .font(DesignSystem.Typography.footnote)
                                 .foregroundColor(Color.Taskweave.textSecondary)
 
@@ -303,8 +303,16 @@ struct NotificationSettingsView: View {
     }
 
     private func checkNotificationPermission() async {
-        let status = await NotificationService.shared.checkPermissionStatus()
-        notificationsEnabled = status == .authorized
+        var status = await NotificationService.shared.checkPermissionStatus()
+
+        // If permission hasn't been requested yet, request it now
+        // This ensures the Notifications option appears in iOS Settings
+        if status == .notDetermined {
+            let granted = await NotificationService.shared.requestPermission()
+            status = granted ? .authorized : .denied
+        }
+
+        notificationsEnabled = status == .authorized || status == .provisional || status == .ephemeral
         isCheckingPermission = false
     }
 }
