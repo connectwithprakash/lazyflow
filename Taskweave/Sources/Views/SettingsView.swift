@@ -704,7 +704,7 @@ struct AISettingsView: View {
 // MARK: - Live Activity Toggle
 
 struct LiveActivityToggle: View {
-    @StateObject private var liveActivityManager = LiveActivityManager.shared
+    @ObservedObject private var liveActivityManager = LiveActivityManager.shared
     @State private var isEnabled = false
 
     var body: some View {
@@ -728,7 +728,6 @@ struct LiveActivityToggle: View {
         .onAppear {
             isEnabled = liveActivityManager.isTrackingActive
         }
-        .disabled(!liveActivityManager.areActivitiesSupported)
     }
 
     private func startLiveActivity() async {
@@ -739,7 +738,10 @@ struct LiveActivityToggle: View {
 
         guard totalCount > 0 else { return }
 
-        let incompleteTasks = todayTasks.filter { !$0.isCompleted }
+        // Find in-progress task
+        let inProgressTask = todayTasks.first { $0.isInProgress }
+
+        let incompleteTasks = todayTasks.filter { !$0.isCompleted && !$0.isInProgress }
             .sorted { task1, task2 in
                 if task1.priority != task2.priority {
                     return task1.priority.rawValue > task2.priority.rawValue
@@ -758,7 +760,12 @@ struct LiveActivityToggle: View {
             totalCount: totalCount,
             currentTask: currentTask?.title,
             currentPriority: currentTask?.priority.rawValue ?? 0,
-            nextTask: nextTask?.title
+            nextTask: nextTask?.title,
+            nextPriority: nextTask?.priority.rawValue ?? 0,
+            inProgressTask: inProgressTask?.title,
+            inProgressStartedAt: inProgressTask?.updatedAt,
+            inProgressPriority: inProgressTask?.priority.rawValue ?? 0,
+            inProgressEstimatedDuration: inProgressTask?.estimatedDuration
         )
     }
 }
