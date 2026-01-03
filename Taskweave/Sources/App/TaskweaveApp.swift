@@ -15,6 +15,9 @@ struct TaskweaveApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .onOpenURL { url in
+                    handleDeepLink(url)
+                }
         }
         .commands {
             // Keyboard shortcuts for iPad
@@ -73,6 +76,13 @@ struct TaskweaveApp: App {
         navBarAppearance.configureWithDefaultBackground()
         UINavigationBar.appearance().standardAppearance = navBarAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "taskweave" else { return }
+        if url.host == "view", let path = url.pathComponents.last {
+            NotificationCenter.default.post(name: .navigateToTab, object: path)
+        }
     }
 }
 

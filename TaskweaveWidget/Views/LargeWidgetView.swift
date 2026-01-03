@@ -67,6 +67,7 @@ struct LargeWidgetView: View {
         .containerBackground(for: .widget) {
             Color(.systemBackground)
         }
+        .widgetURL(URL(string: "taskweave://view/today"))
     }
 }
 
