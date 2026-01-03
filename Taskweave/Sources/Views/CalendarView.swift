@@ -406,6 +406,58 @@ struct DayContentView: View {
     @State private var isDraggingOver = false
     @State private var dragLocation: CGPoint = .zero
 
+    /// Calculates column layout for overlapping events
+    private var eventLayout: [(event: CalendarEvent, column: Int, totalColumns: Int)] {
+        let timedEvents = events.filter { !$0.isAllDay }
+            .sorted { $0.startDate < $1.startDate }
+
+        guard !timedEvents.isEmpty else { return [] }
+
+        // Track column assignments: (event, columnIndex)
+        var columns: [[CalendarEvent]] = []
+        var result: [(event: CalendarEvent, column: Int, totalColumns: Int)] = []
+
+        for event in timedEvents {
+            // Find first column where this event doesn't overlap
+            var assignedColumn: Int?
+            for (index, column) in columns.enumerated() {
+                // Check if event overlaps with any event in this column
+                let overlaps = column.contains { existing in
+                    event.startDate < existing.endDate && event.endDate > existing.startDate
+                }
+                if !overlaps {
+                    assignedColumn = index
+                    columns[index].append(event)
+                    break
+                }
+            }
+
+            // If no column found, create new column
+            if assignedColumn == nil {
+                assignedColumn = columns.count
+                columns.append([event])
+            }
+
+            result.append((event: event, column: assignedColumn!, totalColumns: 0))
+        }
+
+        // Calculate total columns for each event based on overlapping group
+        for i in 0..<result.count {
+            let event = result[i].event
+            // Find max columns among events that overlap with this one
+            var maxColumns = result[i].column + 1
+            for j in 0..<result.count {
+                let other = result[j].event
+                if event.startDate < other.endDate && event.endDate > other.startDate {
+                    maxColumns = max(maxColumns, result[j].column + 1)
+                }
+            }
+            result[i].totalColumns = maxColumns
+        }
+
+        return result
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -418,17 +470,21 @@ struct DayContentView: View {
                         }
                     }
 
-                    // Events overlay
-                    ForEach(events) { event in
-                        if !event.isAllDay {
-                            EventBlock(event: event, hourHeight: hourHeight, startHour: startHour)
-                                .contextMenu {
-                                    Button {
-                                        onCreateTaskFromEvent?(event)
-                                    } label: {
-                                        Label("Create Task", systemImage: "checkmark.circle.badge.plus")
-                                    }
-                                }
+                    // Events overlay with overlap handling
+                    ForEach(eventLayout, id: \.event.id) { layout in
+                        EventBlock(
+                            event: layout.event,
+                            hourHeight: hourHeight,
+                            startHour: startHour,
+                            columnIndex: layout.column,
+                            totalColumns: layout.totalColumns
+                        )
+                        .contextMenu {
+                            Button {
+                                onCreateTaskFromEvent?(layout.event)
+                            } label: {
+                                Label("Create Task", systemImage: "checkmark.circle.badge.plus")
+                            }
                         }
                     }
 
@@ -523,34 +579,63 @@ struct EventBlock: View {
     let event: CalendarEvent
     let hourHeight: CGFloat
     let startHour: Int
+    var columnIndex: Int = 0
+    var totalColumns: Int = 1
 
     var body: some View {
         let yOffset = calculateYOffset()
         let height = calculateHeight()
 
-        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.small)
-            .fill(eventColor.opacity(0.8))
-            .frame(height: max(height, 20))
-            .overlay(
+        GeometryReader { geometry in
+            let availableWidth = geometry.size.width - DesignSystem.Spacing.md
+            let columnWidth = availableWidth / CGFloat(totalColumns)
+            let xOffset = CGFloat(columnIndex) * columnWidth + DesignSystem.Spacing.xs
+
+            HStack(spacing: 0) {
+                // Color indicator strip on left
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(eventColor)
+                    .frame(width: 4)
+
+                // Event content
                 VStack(alignment: .leading, spacing: 2) {
                     Text(event.title)
                         .font(DesignSystem.Typography.caption1)
                         .fontWeight(.semibold)
                         .foregroundStyle(.white)
-                        .lineLimit(1)
+                        .lineLimit(height > 40 ? 2 : 1)
 
-                    if height > 30 {
+                    if height > 35 {
                         Text(event.formattedTimeRange)
                             .font(DesignSystem.Typography.caption2)
-                            .foregroundStyle(.white.opacity(0.8))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+
+                    if height > 55, let location = event.location, !location.isEmpty {
+                        HStack(spacing: 2) {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 8))
+                            Text(location)
+                                .font(.system(size: 9))
+                        }
+                        .foregroundStyle(.white.opacity(0.75))
+                        .lineLimit(1)
                     }
                 }
-                .padding(.horizontal, DesignSystem.Spacing.sm)
-                .padding(.vertical, 4),
-                alignment: .topLeading
+                .padding(.horizontal, DesignSystem.Spacing.xs)
+                .padding(.vertical, 4)
+            }
+            .frame(width: columnWidth - DesignSystem.Spacing.xs, height: max(height, 24), alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.small)
+                    .fill(eventColor.opacity(0.85))
+                    .shadow(color: eventColor.opacity(0.3), radius: 2, x: 0, y: 1)
             )
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .offset(y: yOffset)
+            .position(x: xOffset + columnWidth / 2, y: yOffset + height / 2)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityDescription)
+            .accessibilityHint("Double tap to view event options")
+        }
     }
 
     private func calculateYOffset() -> CGFloat {
@@ -571,6 +656,14 @@ struct EventBlock: View {
             return Color(cgColor: cgColor)
         }
         return Color.Taskweave.accent
+    }
+
+    private var accessibilityDescription: String {
+        var description = "\(event.title), \(event.formattedTimeRange)"
+        if let location = event.location, !location.isEmpty {
+            description += ", at \(location)"
+        }
+        return description
     }
 }
 
@@ -796,17 +889,35 @@ struct CompactEventView: View {
     let event: CalendarEvent
 
     var body: some View {
-        HStack(spacing: 4) {
-            Circle()
+        HStack(spacing: 0) {
+            // Duration indicator bar on left edge
+            RoundedRectangle(cornerRadius: 1)
                 .fill(eventColor)
-                .frame(width: 6, height: 6)
+                .frame(width: 3)
 
-            Text(event.title)
-                .font(DesignSystem.Typography.caption2)
-                .lineLimit(1)
+            VStack(alignment: .leading, spacing: 1) {
+                // Event title
+                Text(event.title)
+                    .font(DesignSystem.Typography.caption2)
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.Taskweave.textPrimary)
+                    .lineLimit(1)
+
+                // Event time
+                Text(formattedTime)
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.Taskweave.textSecondary)
+            }
+            .padding(.leading, 4)
+            .padding(.vertical, 2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 4)
+        .frame(minHeight: eventHeight)
+        .background(eventColor.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(event.title), \(formattedTimeRange)")
+        .accessibilityHint("Double tap to view event options")
     }
 
     private var eventColor: Color {
@@ -814,6 +925,36 @@ struct CompactEventView: View {
             return Color(cgColor: cgColor)
         }
         return Color.Taskweave.accent
+    }
+
+    private var formattedTime: String {
+        if event.isAllDay {
+            return "All day"
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: event.startDate)
+    }
+
+    private var formattedTimeRange: String {
+        if event.isAllDay {
+            return "All day event"
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return "\(formatter.string(from: event.startDate)) to \(formatter.string(from: event.endDate))"
+    }
+
+    /// Proportional height based on event duration (15min = 24pt, 1hr = 32pt, 2hr+ = 40pt)
+    private var eventHeight: CGFloat {
+        let durationMinutes = event.duration / 60
+        if durationMinutes <= 30 {
+            return 28
+        } else if durationMinutes <= 60 {
+            return 32
+        } else {
+            return 38
+        }
     }
 }
 
