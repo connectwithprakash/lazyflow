@@ -125,47 +125,72 @@ final class PersistenceController: @unchecked Sendable {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         } else {
             // Use shared App Groups container for widget access
-            if let storeURL = FileManager.default
+            // Fall back to default location if App Groups not available
+            let storeURL: URL
+            if let appGroupURL = FileManager.default
                 .containerURL(forSecurityApplicationGroupIdentifier: Self.appGroupIdentifier)?
                 .appendingPathComponent("Taskweave.sqlite") {
-                let description = NSPersistentStoreDescription(url: storeURL)
-
-                // Enable persistent history tracking for CloudKit sync
-                description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-                description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-
-                // Configure CloudKit sync only if enabled and iCloud is available
-                if enableCloudKit && FileManager.default.ubiquityIdentityToken != nil {
-                    let cloudKitOptions = NSPersistentCloudKitContainerOptions(
-                        containerIdentifier: Self.cloudKitContainerIdentifier
-                    )
-                    description.cloudKitContainerOptions = cloudKitOptions
-                    print("CloudKit sync enabled")
-                } else {
-                    print("CloudKit sync disabled - iCloud not available or disabled")
-                }
-
-                container.persistentStoreDescriptions = [description]
+                storeURL = appGroupURL
+                print("Using App Groups container: \(appGroupURL.path)")
+            } else {
+                // Fallback to default Core Data location
+                let defaultURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                    .appendingPathComponent("Taskweave.sqlite")
+                storeURL = defaultURL
+                print("App Groups not available, using default location: \(defaultURL.path)")
             }
+
+            let description = NSPersistentStoreDescription(url: storeURL)
+
+            // Enable persistent history tracking for CloudKit sync
+            description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+            // Configure CloudKit sync only if enabled and iCloud is available
+            if enableCloudKit && FileManager.default.ubiquityIdentityToken != nil {
+                let cloudKitOptions = NSPersistentCloudKitContainerOptions(
+                    containerIdentifier: Self.cloudKitContainerIdentifier
+                )
+                description.cloudKitContainerOptions = cloudKitOptions
+                print("CloudKit sync enabled")
+            } else {
+                print("CloudKit sync disabled - iCloud not available or disabled")
+            }
+
+            container.persistentStoreDescriptions = [description]
         }
 
-        container.loadPersistentStores { [weak self] _, error in
+        // Use semaphore to wait for store to load (sync initialization)
+        let semaphore = DispatchSemaphore(value: 0)
+        var loadError: Error?
+
+        container.loadPersistentStores { [weak self] storeDescription, error in
             if let error = error as NSError? {
                 self?.initializationError = error
+                loadError = error
                 print("Critical: Failed to load Core Data store: \(error), \(error.userInfo)")
+            } else {
+                print("Successfully loaded persistent store: \(storeDescription.url?.path ?? "unknown")")
             }
+            semaphore.signal()
         }
 
-        // Configure viewContext only if requested (must be on main thread)
-        if configureViewContext {
+        // Wait for store to load (with timeout)
+        let timeout = DispatchTime.now() + .seconds(10)
+        if semaphore.wait(timeout: timeout) == .timedOut {
+            print("Warning: Persistent store loading timed out")
+        }
+
+        // Configure viewContext only if requested (must be on main thread) and no error
+        if configureViewContext && loadError == nil {
             self.configureViewContext()
         }
 
-        if !inMemory {
+        if !inMemory && loadError == nil {
             setupCloudKitSync()
         }
 
-        isLoaded = true
+        isLoaded = loadError == nil
     }
 
     /// Configure the viewContext settings (must be called on main thread)
@@ -208,8 +233,12 @@ final class PersistenceController: @unchecked Sendable {
     /// Handle remote changes from CloudKit sync
     private func handleRemoteStoreChange() {
         // Refresh the view context to pick up remote changes
-        container.viewContext.perform {
-            // Changes are automatically merged due to automaticallyMergesChangesFromParent = true
+        container.viewContext.perform { [weak self] in
+            guard let self = self else { return }
+
+            // Force refresh all objects to pick up remote changes
+            self.container.viewContext.refreshAllObjects()
+
             // Post notification for services to refresh their data
             NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
         }
@@ -217,6 +246,11 @@ final class PersistenceController: @unchecked Sendable {
 
     /// Save the view context if there are changes
     func save() {
+        guard isLoaded else {
+            print("Warning: Attempted to save before store was loaded")
+            return
+        }
+
         let context = container.viewContext
         guard context.hasChanges else { return }
 
@@ -261,6 +295,11 @@ final class PersistenceController: @unchecked Sendable {
 
     /// Create default lists if they don't exist
     func createDefaultListsIfNeeded() {
+        guard isLoaded else {
+            print("Warning: Attempted to create default lists before store was loaded")
+            return
+        }
+
         let context = viewContext
         let request: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
         request.predicate = NSPredicate(format: "isDefault == YES")
