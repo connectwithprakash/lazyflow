@@ -14,6 +14,7 @@
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="priorityRaw" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
         <attribute name="reminderDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="statusRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="title" attributeType="String"/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="list" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskListEntity" inverseName="tasks" inverseEntity="TaskListEntity"/>
