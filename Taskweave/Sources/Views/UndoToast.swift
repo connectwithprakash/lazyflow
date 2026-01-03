@@ -162,6 +162,108 @@ extension View {
     }
 }
 
+// MARK: - Error Toast
+
+/// Simple error toast for displaying failures
+struct ErrorToastView: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    @State private var isVisible = false
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(Color.Taskweave.error)
+                .font(.system(size: 18, weight: .semibold))
+
+            Text(message)
+                .font(DesignSystem.Typography.subheadline)
+                .foregroundColor(Color.Taskweave.textPrimary)
+                .lineLimit(2)
+
+            Spacer()
+
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color.Taskweave.textSecondary)
+            }
+        }
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+        .padding(.vertical, DesignSystem.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large)
+                .fill(Color.adaptiveSurface)
+                .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large)
+                .stroke(Color.Taskweave.error.opacity(0.3), lineWidth: 1)
+        )
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+        .padding(.bottom, DesignSystem.Spacing.xl)
+        .offset(y: isVisible ? 0 : 100)
+        .opacity(isVisible ? 1 : 0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isVisible)
+        .onAppear {
+            isVisible = true
+            // Auto-dismiss after 4 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                dismiss()
+            }
+        }
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.height > 20 {
+                        dismiss()
+                    }
+                }
+        )
+    }
+
+    private func dismiss() {
+        guard isVisible else { return }
+        withAnimation {
+            isVisible = false
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            onDismiss()
+        }
+    }
+}
+
+/// View modifier to add error toast capability to any view
+struct ErrorToastModifier: ViewModifier {
+    @Binding var errorMessage: String?
+
+    func body(content: Content) -> some View {
+        ZStack(alignment: .bottom) {
+            content
+
+            if let message = errorMessage {
+                ErrorToastView(
+                    message: message,
+                    onDismiss: {
+                        errorMessage = nil
+                    }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+    }
+}
+
+extension View {
+    /// Adds an error toast overlay to the view
+    func errorToast(message: Binding<String?>) -> some View {
+        modifier(ErrorToastModifier(errorMessage: message))
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Undo Toast") {
@@ -179,6 +281,26 @@ extension View {
             UndoToastView(
                 action: .completed(Task(title: "Buy groceries")),
                 onUndo: { print("Undo tapped") },
+                onDismiss: { print("Dismissed") }
+            )
+        }
+    }
+}
+
+#Preview("Error Toast") {
+    ZStack {
+        Color.adaptiveBackground
+            .ignoresSafeArea()
+
+        VStack {
+            Text("Main Content")
+            Spacer()
+        }
+
+        VStack {
+            Spacer()
+            ErrorToastView(
+                message: "Failed to sync task to calendar",
                 onDismiss: { print("Dismissed") }
             )
         }

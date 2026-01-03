@@ -147,6 +147,7 @@ struct CalendarView: View {
                     noAccessView
                 }
             }
+            .errorToast(message: $viewModel.errorMessage)
     }
 
     // MARK: - Sheets Modifier
