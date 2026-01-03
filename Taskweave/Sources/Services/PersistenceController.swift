@@ -1,3 +1,5 @@
+import CloudKit
+import Combine
 import CoreData
 import Foundation
 
@@ -5,6 +7,9 @@ import Foundation
 final class PersistenceController: @unchecked Sendable {
     /// App Group identifier for sharing data with widgets
     private static let appGroupIdentifier = "group.com.taskweave.shared"
+
+    /// CloudKit container identifier
+    private static let cloudKitContainerIdentifier = "iCloud.com.taskweave.app"
 
     /// Shared singleton instance (lazy initialization)
     private static var _shared: PersistenceController?
@@ -93,8 +98,11 @@ final class PersistenceController: @unchecked Sendable {
         return controller
     }()
 
-    /// The persistent container
-    let container: NSPersistentContainer
+    /// The persistent container with CloudKit sync support
+    let container: NSPersistentCloudKitContainer
+
+    /// Cancellables for Combine subscriptions
+    private var cancellables = Set<AnyCancellable>()
 
     /// Error that occurred during Core Data initialization
     private(set) var initializationError: Error?
@@ -109,8 +117,9 @@ final class PersistenceController: @unchecked Sendable {
     /// - Parameters:
     ///   - inMemory: If true, uses in-memory store (for testing/previews)
     ///   - configureViewContext: If true, configures viewContext immediately (requires main thread)
-    init(inMemory: Bool = false, configureViewContext: Bool = true) {
-        container = NSPersistentContainer(name: "Taskweave")
+    ///   - enableCloudKit: If true, enables CloudKit sync (default true, can disable for testing)
+    init(inMemory: Bool = false, configureViewContext: Bool = true, enableCloudKit: Bool = true) {
+        container = NSPersistentCloudKitContainer(name: "Taskweave")
 
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
@@ -120,8 +129,22 @@ final class PersistenceController: @unchecked Sendable {
                 .containerURL(forSecurityApplicationGroupIdentifier: Self.appGroupIdentifier)?
                 .appendingPathComponent("Taskweave.sqlite") {
                 let description = NSPersistentStoreDescription(url: storeURL)
+
+                // Enable persistent history tracking for CloudKit sync
                 description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
                 description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+                // Configure CloudKit sync only if enabled and iCloud is available
+                if enableCloudKit && FileManager.default.ubiquityIdentityToken != nil {
+                    let cloudKitOptions = NSPersistentCloudKitContainerOptions(
+                        containerIdentifier: Self.cloudKitContainerIdentifier
+                    )
+                    description.cloudKitContainerOptions = cloudKitOptions
+                    print("CloudKit sync enabled")
+                } else {
+                    print("CloudKit sync disabled - iCloud not available or disabled")
+                }
+
                 container.persistentStoreDescriptions = [description]
             }
         }
@@ -171,12 +194,25 @@ final class PersistenceController: @unchecked Sendable {
         return controller
     }
 
-    /// Configure CloudKit synchronization
+    /// Configure CloudKit synchronization and observers
     private func setupCloudKitSync() {
-        guard let description = container.persistentStoreDescriptions.first else { return }
+        // Listen for remote change notifications from CloudKit
+        NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange, object: container.persistentStoreCoordinator)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.handleRemoteStoreChange()
+            }
+            .store(in: &cancellables)
+    }
 
-        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+    /// Handle remote changes from CloudKit sync
+    private func handleRemoteStoreChange() {
+        // Refresh the view context to pick up remote changes
+        container.viewContext.perform {
+            // Changes are automatically merged due to automaticallyMergesChangesFromParent = true
+            // Post notification for services to refresh their data
+            NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
+        }
     }
 
     /// Save the view context if there are changes
@@ -248,4 +284,11 @@ final class PersistenceController: @unchecked Sendable {
             print("Failed to check for default lists: \(error)")
         }
     }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    /// Posted when CloudKit sync completes with remote changes
+    static let cloudKitSyncDidComplete = Notification.Name("cloudKitSyncDidComplete")
 }
