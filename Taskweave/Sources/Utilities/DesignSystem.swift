@@ -191,6 +191,7 @@ struct PriorityBadge: View {
             .background(priority.color.opacity(0.15))
             .cornerRadius(DesignSystem.CornerRadius.small)
             .fixedSize()
+            .accessibilityHidden(true) // Info conveyed via parent row label
         }
     }
 }
@@ -217,6 +218,7 @@ struct DueDateBadge: View {
         )
         .cornerRadius(DesignSystem.CornerRadius.small)
         .fixedSize()
+        .accessibilityHidden(true) // Info conveyed via parent row label
     }
 }
 
@@ -238,6 +240,7 @@ struct CategoryBadge: View {
             .background(category.color.opacity(0.15))
             .cornerRadius(DesignSystem.CornerRadius.small)
             .fixedSize()
+            .accessibilityHidden(true) // Info conveyed via parent row label
         }
     }
 }
@@ -249,6 +252,7 @@ struct ListColorDot: View {
         Circle()
             .fill(Color(hex: colorHex) ?? .gray)
             .frame(width: 12, height: 12)
+            .accessibilityHidden(true) // Decorative element
     }
 }
 
