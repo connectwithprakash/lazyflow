@@ -10,7 +10,6 @@ struct CalendarView: View {
     @State private var showingTimeBlockSheet = false
     @State private var pendingTask: Task?
     @State private var pendingDropTime: Date?
-    @State private var showingCreateTaskSheet = false
     @State private var eventToConvert: CalendarEvent?
     @State private var showingDeniedAlert = false
 
@@ -29,11 +28,9 @@ struct CalendarView: View {
                         }
                     }
                 }
-                .sheet(isPresented: $showingCreateTaskSheet) {
-                    if let event = eventToConvert {
-                        CreateTaskFromEventSheet(event: event) { task in
-                            createTaskFromEvent(task)
-                        }
+                .sheet(item: $eventToConvert) { event in
+                    CreateTaskFromEventSheet(event: event) { task in
+                        createTaskFromEvent(task)
                     }
                 }
                 .alert("Calendar Access Denied", isPresented: $showingDeniedAlert) {
@@ -61,11 +58,9 @@ struct CalendarView: View {
                             }
                         }
                     }
-                    .sheet(isPresented: $showingCreateTaskSheet) {
-                        if let event = eventToConvert {
-                            CreateTaskFromEventSheet(event: event) { task in
-                                createTaskFromEvent(task)
-                            }
+                    .sheet(item: $eventToConvert) { event in
+                        CreateTaskFromEventSheet(event: event) { task in
+                            createTaskFromEvent(task)
                         }
                     }
                     .alert("Calendar Access Denied", isPresented: $showingDeniedAlert) {
@@ -127,7 +122,6 @@ struct CalendarView: View {
                             },
                             onCreateTaskFromEvent: { event in
                                 eventToConvert = event
-                                showingCreateTaskSheet = true
                             }
                         )
                     case .week:
@@ -142,7 +136,6 @@ struct CalendarView: View {
                             },
                             onCreateTaskFromEvent: { event in
                                 eventToConvert = event
-                                showingCreateTaskSheet = true
                             }
                         )
                     }
@@ -168,15 +161,13 @@ struct CalendarView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showingCreateTaskSheet) {
-                if let event = eventToConvert {
-                    CreateTaskFromEventSheet(
-                        event: event,
-                        onConfirm: { task in
-                            createTaskFromEvent(task)
-                        }
-                    )
-                }
+            .sheet(item: $eventToConvert) { event in
+                CreateTaskFromEventSheet(
+                    event: event,
+                    onConfirm: { task in
+                        createTaskFromEvent(task)
+                    }
+                )
             }
     }
 
