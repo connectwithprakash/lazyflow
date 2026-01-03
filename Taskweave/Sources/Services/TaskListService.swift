@@ -22,7 +22,16 @@ final class TaskListService: ObservableObject {
     // MARK: - Setup
 
     private func setupObservers() {
+        // Listen for local Core Data saves
         NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.fetchAllLists()
+            }
+            .store(in: &cancellables)
+
+        // Listen for CloudKit sync completion (remote changes)
+        NotificationCenter.default.publisher(for: .cloudKitSyncDidComplete)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.fetchAllLists()
