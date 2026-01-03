@@ -30,12 +30,22 @@ final class LiveActivityManager: ObservableObject {
     ///   - currentTask: Title of the current task
     ///   - currentPriority: Priority of the current task
     ///   - nextTask: Title of the next task
+    ///   - nextPriority: Priority of the next task
+    ///   - inProgressTask: Title of task currently being worked on
+    ///   - inProgressStartedAt: When the in-progress task was started
+    ///   - inProgressPriority: Priority of the in-progress task
+    ///   - inProgressEstimatedDuration: Estimated duration of in-progress task
     func startTracking(
         completedCount: Int,
         totalCount: Int,
         currentTask: String?,
         currentPriority: Int16,
-        nextTask: String?
+        nextTask: String?,
+        nextPriority: Int16 = 0,
+        inProgressTask: String? = nil,
+        inProgressStartedAt: Date? = nil,
+        inProgressPriority: Int16 = 0,
+        inProgressEstimatedDuration: TimeInterval? = nil
     ) async {
         // Don't start if not supported or already tracking
         guard areActivitiesSupported else {
@@ -54,7 +64,12 @@ final class LiveActivityManager: ObservableObject {
             totalCount: totalCount,
             currentTaskTitle: currentTask,
             currentTaskPriority: currentPriority,
-            nextTaskTitle: nextTask
+            nextTaskTitle: nextTask,
+            nextTaskPriority: nextPriority,
+            inProgressTaskTitle: inProgressTask,
+            inProgressStartedAt: inProgressStartedAt,
+            inProgressPriority: inProgressPriority,
+            inProgressEstimatedDuration: inProgressEstimatedDuration
         )
 
         let content = ActivityContent(
@@ -82,12 +97,22 @@ final class LiveActivityManager: ObservableObject {
     ///   - currentTask: Title of the current task
     ///   - currentPriority: Priority of the current task
     ///   - nextTask: Title of the next task
+    ///   - nextPriority: Priority of the next task
+    ///   - inProgressTask: Title of task currently being worked on
+    ///   - inProgressStartedAt: When the in-progress task was started
+    ///   - inProgressPriority: Priority of the in-progress task
+    ///   - inProgressEstimatedDuration: Estimated duration of in-progress task
     func updateProgress(
         completedCount: Int,
         totalCount: Int,
         currentTask: String?,
         currentPriority: Int16,
-        nextTask: String?
+        nextTask: String?,
+        nextPriority: Int16 = 0,
+        inProgressTask: String? = nil,
+        inProgressStartedAt: Date? = nil,
+        inProgressPriority: Int16 = 0,
+        inProgressEstimatedDuration: TimeInterval? = nil
     ) async {
         guard let activity = currentActivity else { return }
 
@@ -96,7 +121,12 @@ final class LiveActivityManager: ObservableObject {
             totalCount: totalCount,
             currentTaskTitle: currentTask,
             currentTaskPriority: currentPriority,
-            nextTaskTitle: nextTask
+            nextTaskTitle: nextTask,
+            nextTaskPriority: nextPriority,
+            inProgressTaskTitle: inProgressTask,
+            inProgressStartedAt: inProgressStartedAt,
+            inProgressPriority: inProgressPriority,
+            inProgressEstimatedDuration: inProgressEstimatedDuration
         )
 
         let content = ActivityContent(
@@ -105,7 +135,7 @@ final class LiveActivityManager: ObservableObject {
         )
 
         await activity.update(content)
-        print("Live Activity updated: \(completedCount)/\(totalCount)")
+        print("Live Activity updated: \(completedCount)/\(totalCount)\(inProgressTask != nil ? " [In Progress: \(inProgressTask!)]" : "")")
     }
 
     /// Stop the current Live Activity
@@ -139,7 +169,11 @@ final class LiveActivityManager: ObservableObject {
         let completedCount = todayTasks.filter { $0.isCompleted }.count
         let totalCount = todayTasks.count
 
-        let incompleteTasks = todayTasks.filter { !$0.isCompleted }
+        // Find in-progress task (takes priority in display)
+        let inProgressTask = todayTasks.first { $0.isInProgress }
+
+        // Get incomplete tasks sorted by priority
+        let incompleteTasks = todayTasks.filter { !$0.isCompleted && !$0.isInProgress }
             .sorted { task1, task2 in
                 // Sort by priority (higher first), then by due date
                 if task1.priority != task2.priority {
@@ -161,13 +195,18 @@ final class LiveActivityManager: ObservableObject {
             // All done, show completion state
             await stopTracking(showFinalState: true)
         } else if isTrackingActive {
-            // Update existing activity
+            // Update existing activity with in-progress task info
             await updateProgress(
                 completedCount: completedCount,
                 totalCount: totalCount,
                 currentTask: currentTask?.title,
                 currentPriority: currentTask?.priority.rawValue ?? 0,
-                nextTask: nextTask?.title
+                nextTask: nextTask?.title,
+                nextPriority: nextTask?.priority.rawValue ?? 0,
+                inProgressTask: inProgressTask?.title,
+                inProgressStartedAt: inProgressTask?.updatedAt,  // Use updatedAt as proxy for when task went in-progress
+                inProgressPriority: inProgressTask?.priority.rawValue ?? 0,
+                inProgressEstimatedDuration: inProgressTask?.estimatedDuration
             )
         }
     }
