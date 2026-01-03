@@ -5,6 +5,18 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0](https://github.com/connectwithprakash/taskweave/compare/v0.15.0...v0.16.0) (2026-01-03)
+
+
+### Features
+
+* **sync:** add iCloud sync with CloudKit ([#50](https://github.com/connectwithprakash/taskweave/issues/50)) ([9b32d6c](https://github.com/connectwithprakash/taskweave/commit/9b32d6c8ca9e1a8911ef9a28024c4632d474c082)), closes [#30](https://github.com/connectwithprakash/taskweave/issues/30)
+
+
+### Bug Fixes
+
+* **sync:** improve CloudKit sync reliability and UI refresh ([#52](https://github.com/connectwithprakash/taskweave/issues/52)) ([6929210](https://github.com/connectwithprakash/taskweave/commit/692921084184cd16bafc718a1b762917776724e2))
+
 ## [0.15.0](https://github.com/connectwithprakash/taskweave/compare/v0.14.1...v0.15.0) (2026-01-03)
 
 
