@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0](https://github.com/connectwithprakash/taskweave/compare/v0.17.0...v0.18.0) (2026-01-03)
+
+
+### Features
+
+* **accessibility:** Add VoiceOver support for task rows and Watch app ([#55](https://github.com/connectwithprakash/taskweave/issues/55)) ([cfac79f](https://github.com/connectwithprakash/taskweave/commit/cfac79fb474e70b724b521f80eb5dbaa7312d2ff)), closes [#6](https://github.com/connectwithprakash/taskweave/issues/6)
+
 ## [0.17.0](https://github.com/connectwithprakash/taskweave/compare/v0.16.0...v0.17.0) (2026-01-03)
 
 
