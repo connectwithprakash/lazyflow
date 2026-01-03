@@ -5,6 +5,16 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0](https://github.com/connectwithprakash/taskweave/compare/v0.14.1...v0.15.0) (2026-01-03)
+
+
+### Features
+
+* **calendar:** Add error toast for calendar sync failures ([933996f](https://github.com/connectwithprakash/taskweave/commit/933996fbee002beec3373e0247de4657ca459205))
+* **calendar:** Add error toast for calendar sync failures ([4eba7f2](https://github.com/connectwithprakash/taskweave/commit/4eba7f2c25bff1fac7e35b8cd6fe1ff6bb33d4f6)), closes [#5](https://github.com/connectwithprakash/taskweave/issues/5)
+* **calendar:** Add swipe navigation for Day and Week views ([#44](https://github.com/connectwithprakash/taskweave/issues/44)) ([613e55f](https://github.com/connectwithprakash/taskweave/commit/613e55f784b58667067e881f1ea1d6cff67ab763)), closes [#39](https://github.com/connectwithprakash/taskweave/issues/39)
+* **widget:** Add deep linking for widget tap navigation ([#47](https://github.com/connectwithprakash/taskweave/issues/47)) ([2abfda2](https://github.com/connectwithprakash/taskweave/commit/2abfda2c00fdd22f44093e81004654f721f29f08)), closes [#20](https://github.com/connectwithprakash/taskweave/issues/20)
+
 ## [0.14.1](https://github.com/connectwithprakash/taskweave/compare/v0.14.0...v0.14.1) (2026-01-03)
 
 
