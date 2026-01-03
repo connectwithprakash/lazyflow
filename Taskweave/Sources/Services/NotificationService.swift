@@ -31,10 +31,36 @@ final class NotificationService: @unchecked Sendable {
     // MARK: - Schedule Notifications
 
     /// Schedule a reminder notification for a task
+    /// Automatically requests permission if not yet determined
     func scheduleTaskReminder(taskID: UUID, title: String, reminderDate: Date) {
         // Don't schedule if the date is in the past
         guard reminderDate > Date() else { return }
 
+        // Check permission and request if needed before scheduling
+        _Concurrency.Task {
+            let status = await checkPermissionStatus()
+
+            switch status {
+            case .notDetermined:
+                // Request permission first
+                let granted = await requestPermission()
+                if granted {
+                    await scheduleNotification(taskID: taskID, title: title, reminderDate: reminderDate)
+                } else {
+                    print("Notification permission denied by user")
+                }
+            case .authorized, .provisional, .ephemeral:
+                await scheduleNotification(taskID: taskID, title: title, reminderDate: reminderDate)
+            case .denied:
+                print("Notification permission denied. User needs to enable in Settings.")
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    /// Internal method to actually schedule the notification
+    private func scheduleNotification(taskID: UUID, title: String, reminderDate: Date) async {
         let content = UNMutableNotificationContent()
         content.title = "Task Reminder"
         content.body = title
@@ -55,10 +81,10 @@ final class NotificationService: @unchecked Sendable {
             trigger: trigger
         )
 
-        notificationCenter.add(request) { error in
-            if let error = error {
-                print("Failed to schedule notification: \(error)")
-            }
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            print("Failed to schedule notification: \(error)")
         }
     }
 
@@ -78,10 +104,43 @@ final class NotificationService: @unchecked Sendable {
     }
 
     /// Schedule a reminder before the task time (e.g., 15 minutes before)
+    /// Automatically requests permission if not yet determined
     func scheduleBeforeReminder(taskID: UUID, title: String, taskTime: Date, minutesBefore: Int = 15) {
         guard let reminderDate = Calendar.current.date(byAdding: .minute, value: -minutesBefore, to: taskTime),
               reminderDate > Date() else { return }
 
+        // Check permission and request if needed before scheduling
+        _Concurrency.Task {
+            let status = await checkPermissionStatus()
+
+            switch status {
+            case .notDetermined:
+                let granted = await requestPermission()
+                if granted {
+                    await scheduleBeforeNotification(
+                        taskID: taskID,
+                        title: title,
+                        minutesBefore: minutesBefore,
+                        reminderDate: reminderDate
+                    )
+                }
+            case .authorized, .provisional, .ephemeral:
+                await scheduleBeforeNotification(
+                    taskID: taskID,
+                    title: title,
+                    minutesBefore: minutesBefore,
+                    reminderDate: reminderDate
+                )
+            case .denied:
+                print("Notification permission denied. User needs to enable in Settings.")
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    /// Internal method to schedule the before notification
+    private func scheduleBeforeNotification(taskID: UUID, title: String, minutesBefore: Int, reminderDate: Date) async {
         let content = UNMutableNotificationContent()
         content.title = "Upcoming Task"
         content.body = "\(title) starts in \(minutesBefore) minutes"
@@ -101,10 +160,10 @@ final class NotificationService: @unchecked Sendable {
             trigger: trigger
         )
 
-        notificationCenter.add(request) { error in
-            if let error = error {
-                print("Failed to schedule before notification: \(error)")
-            }
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            print("Failed to schedule before notification: \(error)")
         }
     }
 
