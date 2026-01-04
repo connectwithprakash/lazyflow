@@ -21,16 +21,31 @@ struct DailySummaryView: View {
             .background(Color.adaptiveBackground)
             .navigationTitle("Daily Summary")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .toolbar(content: toolbarContent)
         }
         .task {
             await loadSummary()
+        }
+    }
+
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder
+    private func toolbarContent() -> some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button {
+                _Concurrency.Task {
+                    await refreshSummary()
+                }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+            .disabled(isLoading)
+        }
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Done") {
+                dismiss()
+            }
         }
     }
 
@@ -360,6 +375,13 @@ struct DailySummaryView: View {
         }
 
         // Generate new summary
+        summary = await summaryService.generateSummary(for: Date())
+        isLoading = false
+    }
+
+    private func refreshSummary() async {
+        isLoading = true
+        // Force regenerate - ignores cache
         summary = await summaryService.generateSummary(for: Date())
         isLoading = false
     }

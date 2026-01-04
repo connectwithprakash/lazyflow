@@ -7,6 +7,7 @@ struct SettingsView: View {
     @AppStorage("defaultReminderTime") private var defaultReminderTime: Int = 9
     @AppStorage("showCompletedTasks") private var showCompletedTasks: Bool = true
     @AppStorage("hapticFeedback") private var hapticFeedback: Bool = true
+    @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
 
     @State private var showAbout = false
     @State private var showNotificationSettings = false
@@ -101,10 +102,16 @@ struct SettingsView: View {
                     }
 
                     DailySummaryNotificationToggle()
+
+                    Picker("Show Prompt After", selection: $summaryPromptHour) {
+                        ForEach(12..<22, id: \.self) { hour in
+                            Text(formatHour(hour)).tag(hour)
+                        }
+                    }
                 } header: {
                     Text("Daily Summary")
                 } footer: {
-                    Text("Review your daily productivity and track your streak")
+                    Text("Review your daily productivity and track your streak. The prompt card appears in Today view after the selected time.")
                 }
 
                 // Live Activity

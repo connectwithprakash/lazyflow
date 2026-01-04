@@ -17,6 +17,7 @@ struct TodayView: View {
     @State private var undoSnapshot: Task?
     @State private var showDailySummary = false
     @StateObject private var summaryService = DailySummaryService.shared
+    @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
 
     var body: some View {
         Group {
@@ -91,10 +92,10 @@ struct TodayView: View {
 
     // MARK: - Daily Summary Prompt
 
-    /// Show summary prompt after 6 PM when tasks are completed
+    /// Show summary prompt after configured hour when tasks are completed
     private var shouldShowSummaryPrompt: Bool {
         let hour = Calendar.current.component(.hour, from: Date())
-        return hour >= 18 && viewModel.completedTaskCount > 0 && !summaryService.hasTodaySummary
+        return hour >= summaryPromptHour && viewModel.completedTaskCount > 0 && !summaryService.hasTodaySummary
     }
 
     // MARK: - Undo Handling
