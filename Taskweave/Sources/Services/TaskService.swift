@@ -132,6 +132,34 @@ final class TaskService: ObservableObject {
         return tasks.filter { $0.isCompleted && !$0.isArchived }
     }
 
+    /// Fetch tasks completed on a specific date (using completedAt field)
+    func fetchTasksCompletedOn(date: Date) -> [Task] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return []
+        }
+
+        return tasks.filter { task in
+            guard let completedAt = task.completedAt else { return false }
+            return completedAt >= startOfDay && completedAt < endOfDay
+        }
+    }
+
+    /// Fetch tasks that were due on a specific date (planned for that day)
+    func fetchTasksDueOn(date: Date) -> [Task] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return []
+        }
+
+        return tasks.filter { task in
+            guard let dueDate = task.dueDate else { return false }
+            return dueDate >= startOfDay && dueDate < endOfDay && !task.isArchived
+        }
+    }
+
     /// Fetch tasks without a due date
     func fetchTasksWithoutDueDate() -> [Task] {
         return tasks.filter { $0.dueDate == nil && !$0.isCompleted && !$0.isArchived }
