@@ -6,6 +6,7 @@ enum UndoAction: Equatable {
     case deleted(Task)
     case movedToToday(Task)
     case pushedToTomorrow(Task)
+    case createdFromEvent(Task)
 
     var message: String {
         switch self {
@@ -17,6 +18,8 @@ enum UndoAction: Equatable {
             return "'\(task.title)' moved to today"
         case .pushedToTomorrow(let task):
             return "'\(task.title)' moved to tomorrow"
+        case .createdFromEvent(let task):
+            return "Task created: \(task.title)"
         }
     }
 
@@ -30,6 +33,8 @@ enum UndoAction: Equatable {
             return "star.fill"
         case .pushedToTomorrow:
             return "arrow.right.circle.fill"
+        case .createdFromEvent:
+            return "checkmark.circle.badge.plus"
         }
     }
 
@@ -43,13 +48,16 @@ enum UndoAction: Equatable {
             return .blue
         case .pushedToTomorrow:
             return .orange
+        case .createdFromEvent:
+            return Color.Taskweave.accent
         }
     }
 
     var task: Task {
         switch self {
         case .completed(let task), .deleted(let task),
-             .movedToToday(let task), .pushedToTomorrow(let task):
+             .movedToToday(let task), .pushedToTomorrow(let task),
+             .createdFromEvent(let task):
             return task
         }
     }
