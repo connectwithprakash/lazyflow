@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0](https://github.com/connectwithprakash/taskweave/compare/v0.19.0...v0.20.0) (2026-01-04)
+
+
+### Features
+
+* **calendar:** Improve event rendering in Day and Week views ([#59](https://github.com/connectwithprakash/taskweave/issues/59)) ([36252e9](https://github.com/connectwithprakash/taskweave/commit/36252e98345960b851561c5bb9a88f4084a4571f))
+
 ## [0.19.0](https://github.com/connectwithprakash/taskweave/compare/v0.18.0...v0.19.0) (2026-01-03)
 
 
