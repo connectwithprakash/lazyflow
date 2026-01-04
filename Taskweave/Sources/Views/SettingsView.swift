@@ -377,11 +377,27 @@ struct DataManagementView: View {
     }
 }
 
+// MARK: - Batch Analysis Result Model
+
+struct BatchAnalysisResult: Identifiable {
+    let id = UUID()
+    let task: Task
+    let analysis: TaskAnalysis
+    var isSelected: Bool = true
+
+    /// Check if title was changed by AI
+    var hasTitleChange: Bool {
+        guard let refined = analysis.refinedTitle else { return false }
+        return refined != task.title
+    }
+}
+
 // MARK: - AI Settings View
 
 struct AISettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var llmService = LLMService.shared
+    @StateObject private var taskService = TaskService.shared
     @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
     @AppStorage("aiEstimateDuration") private var aiEstimateDuration: Bool = true
     @AppStorage("aiSuggestPriority") private var aiSuggestPriority: Bool = true
@@ -390,6 +406,11 @@ struct AISettingsView: View {
     @State private var openaiKeyInput: String = ""
     @State private var isTestingConnection = false
     @State private var connectionTestResult: ConnectionTestResult?
+    @State private var isBatchAnalyzing = false
+    @State private var batchAnalysisProgress: Int = 0
+    @State private var batchAnalysisTotal: Int = 0
+    @State private var showBatchReviewSheet = false
+    @State private var batchResults: [BatchAnalysisResult] = []
 
     enum ConnectionTestResult {
         case success
@@ -446,6 +467,50 @@ struct AISettingsView: View {
                 }
                 .disabled(!llmService.isReady)
 
+                // Batch Analysis Section
+                Section {
+                    Button {
+                        runBatchAnalysis()
+                    } label: {
+                        HStack {
+                            Image(systemName: "sparkles")
+                                .foregroundColor(Color.purple)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Analyze Uncategorized Tasks")
+                                    .foregroundColor(Color.Taskweave.textPrimary)
+                                Text("\(uncategorizedTaskCount) tasks need categorization")
+                                    .font(DesignSystem.Typography.caption1)
+                                    .foregroundColor(Color.Taskweave.textSecondary)
+                            }
+                            Spacer()
+                            if isBatchAnalyzing {
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(!llmService.isReady || isBatchAnalyzing || uncategorizedTaskCount == 0)
+
+                    if isBatchAnalyzing {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            HStack {
+                                Text("Analyzing...")
+                                    .font(DesignSystem.Typography.footnote)
+                                    .foregroundColor(Color.Taskweave.textSecondary)
+                                Spacer()
+                                Text("\(batchAnalysisProgress)/\(batchAnalysisTotal)")
+                                    .font(DesignSystem.Typography.footnote)
+                                    .foregroundColor(Color.Taskweave.textSecondary)
+                            }
+                            ProgressView(value: Double(batchAnalysisProgress), total: Double(batchAnalysisTotal))
+                                .tint(Color.purple)
+                        }
+                    }
+                } header: {
+                    Text("Batch Analysis")
+                } footer: {
+                    Text("Automatically categorize and estimate duration for tasks without a category.")
+                }
+
                 // Provider Info
                 Section("About \(llmService.selectedProvider.displayName)") {
                     providerInfoContent
@@ -460,7 +525,19 @@ struct AISettingsView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showBatchReviewSheet) {
+                BatchAnalysisReviewSheet(
+                    results: $batchResults,
+                    onApply: applyBatchResults
+                )
+            }
         }
+    }
+
+    // MARK: - Computed Properties
+
+    private var uncategorizedTaskCount: Int {
+        taskService.tasks.filter { $0.category == .uncategorized && !$0.isCompleted }.count
     }
 
     // MARK: - Provider Row
@@ -697,6 +774,220 @@ struct AISettingsView: View {
                     isTestingConnection = false
                 }
             }
+        }
+    }
+
+    private func runBatchAnalysis() {
+        let uncategorizedTasks = taskService.tasks.filter { $0.category == .uncategorized && !$0.isCompleted }
+        guard !uncategorizedTasks.isEmpty else { return }
+
+        isBatchAnalyzing = true
+        batchAnalysisProgress = 0
+        batchAnalysisTotal = uncategorizedTasks.count
+        batchResults = []
+
+        _Concurrency.Task {
+            var results: [BatchAnalysisResult] = []
+
+            for task in uncategorizedTasks {
+                do {
+                    let analysis = try await llmService.analyzeTask(task)
+
+                    // Collect the result for review (don't apply yet)
+                    await MainActor.run {
+                        results.append(BatchAnalysisResult(task: task, analysis: analysis))
+                        batchAnalysisProgress += 1
+                    }
+                } catch {
+                    await MainActor.run {
+                        batchAnalysisProgress += 1
+                    }
+                }
+
+                // Small delay to avoid rate limiting
+                try? await _Concurrency.Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            }
+
+            await MainActor.run {
+                isBatchAnalyzing = false
+                batchResults = results
+                if !results.isEmpty {
+                    showBatchReviewSheet = true
+                }
+            }
+        }
+    }
+
+    private func applyBatchResults() {
+        let selectedResults = batchResults.filter { $0.isSelected }
+
+        for result in selectedResults {
+            let updatedTask = result.task.updated(
+                title: result.analysis.refinedTitle,
+                notes: result.analysis.suggestedDescription,
+                priority: result.analysis.suggestedPriority,
+                category: result.analysis.suggestedCategory,
+                estimatedDuration: TimeInterval(result.analysis.estimatedMinutes * 60)
+            )
+            taskService.updateTask(updatedTask)
+        }
+
+        showBatchReviewSheet = false
+        batchResults = []
+    }
+}
+
+// MARK: - Batch Analysis Review Sheet
+
+struct BatchAnalysisReviewSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var results: [BatchAnalysisResult]
+    let onApply: () -> Void
+
+    private var selectedCount: Int {
+        results.filter { $0.isSelected }.count
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("\(results.count) task\(results.count == 1 ? "" : "s") analyzed")
+                        .font(DesignSystem.Typography.footnote)
+                        .foregroundColor(Color.Taskweave.textSecondary)
+                        .listRowBackground(Color.clear)
+                }
+
+                Section {
+                    ForEach($results) { $result in
+                        BatchAnalysisResultRow(result: $result)
+                    }
+                } header: {
+                    HStack {
+                        Text("Proposed Changes")
+                        Spacer()
+                        Button(selectedCount == results.count ? "Deselect All" : "Select All") {
+                            let newValue = selectedCount != results.count
+                            for i in results.indices {
+                                results[i].isSelected = newValue
+                            }
+                        }
+                        .font(DesignSystem.Typography.caption1)
+                    }
+                }
+            }
+            .navigationTitle("Review Changes")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Apply \(selectedCount)") {
+                        onApply()
+                    }
+                    .disabled(selectedCount == 0)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Batch Analysis Result Row
+
+struct BatchAnalysisResultRow: View {
+    @Binding var result: BatchAnalysisResult
+
+    var body: some View {
+        HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
+            // Checkbox
+            Button {
+                result.isSelected.toggle()
+            } label: {
+                Image(systemName: result.isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(result.isSelected ? Color.Taskweave.accent : Color.Taskweave.textTertiary)
+                    .font(.system(size: 22))
+            }
+            .buttonStyle(.plain)
+
+            // Task info
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                // Original title
+                Text(result.task.title)
+                    .font(DesignSystem.Typography.body)
+                    .foregroundColor(Color.Taskweave.textPrimary)
+
+                // Refined title (if different)
+                if result.hasTitleChange, let refinedTitle = result.analysis.refinedTitle {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "arrow.turn.down.right")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.Taskweave.textTertiary)
+                        Text(refinedTitle)
+                            .font(DesignSystem.Typography.footnote)
+                            .foregroundColor(Color.orange)
+                            .lineLimit(1)
+                    }
+                }
+
+                // Suggested changes
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    // Category
+                    Label {
+                        Text(result.analysis.suggestedCategory.displayName)
+                            .font(DesignSystem.Typography.caption2)
+                    } icon: {
+                        Image(systemName: result.analysis.suggestedCategory.iconName)
+                            .font(.system(size: 10))
+                    }
+                    .foregroundColor(result.analysis.suggestedCategory.color)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(result.analysis.suggestedCategory.color.opacity(0.15))
+                    .cornerRadius(4)
+
+                    // Priority (if not none)
+                    if result.analysis.suggestedPriority != .none {
+                        Label {
+                            Text(result.analysis.suggestedPriority.displayName)
+                                .font(DesignSystem.Typography.caption2)
+                        } icon: {
+                            Image(systemName: "flag.fill")
+                                .font(.system(size: 10))
+                        }
+                        .foregroundColor(result.analysis.suggestedPriority.color)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(result.analysis.suggestedPriority.color.opacity(0.15))
+                        .cornerRadius(4)
+                    }
+
+                    // Duration
+                    Label {
+                        Text("\(result.analysis.estimatedMinutes)m")
+                            .font(DesignSystem.Typography.caption2)
+                    } icon: {
+                        Image(systemName: "clock")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundColor(Color.Taskweave.textSecondary)
+                }
+
+                // Description preview (if any)
+                if let description = result.analysis.suggestedDescription, !description.isEmpty {
+                    Text(description)
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Taskweave.textTertiary)
+                        .lineLimit(2)
+                }
+            }
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            result.isSelected.toggle()
         }
     }
 }

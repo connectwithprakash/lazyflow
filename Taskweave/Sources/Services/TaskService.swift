@@ -159,15 +159,12 @@ final class TaskService: ObservableObject {
         dueTime: Date? = nil,
         reminderDate: Date? = nil,
         priority: Priority = .none,
-        category: TaskCategory? = nil,
+        category: TaskCategory = .uncategorized,
         listID: UUID? = nil,
         estimatedDuration: TimeInterval? = nil,
         recurringRule: RecurringRule? = nil
     ) -> Task {
         let context = persistenceController.viewContext
-
-        // Auto-detect category if not provided
-        let resolvedCategory = category ?? TaskCategory.detect(from: title, notes: notes)
 
         let entity = TaskEntity(context: context)
         entity.id = UUID()
@@ -177,7 +174,7 @@ final class TaskService: ObservableObject {
         entity.dueTime = dueTime
         entity.reminderDate = reminderDate
         entity.priorityRaw = priority.rawValue
-        entity.categoryRaw = resolvedCategory.rawValue
+        entity.categoryRaw = category.rawValue
         entity.isCompleted = false
         entity.isArchived = false
         entity.estimatedDuration = estimatedDuration ?? 0
