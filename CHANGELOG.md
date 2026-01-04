@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0](https://github.com/connectwithprakash/taskweave/compare/v0.20.0...v0.21.0) (2026-01-04)
+
+
+### Features
+
+* **calendar:** Add double-tap to create task from events ([#61](https://github.com/connectwithprakash/taskweave/issues/61)) ([5df941c](https://github.com/connectwithprakash/taskweave/commit/5df941c35b31420f8f81975d108197afdf6d7d7b))
+
 ## [0.20.0](https://github.com/connectwithprakash/taskweave/compare/v0.19.0...v0.20.0) (2026-01-04)
 
 
