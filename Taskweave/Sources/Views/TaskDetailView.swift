@@ -4,10 +4,20 @@ import SwiftUI
 struct TaskDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: TaskViewModel
+    @StateObject private var llmService = LLMService.shared
     @FocusState private var isTitleFocused: Bool
+
+    @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
+
+    @State private var showAISuggestions = false
+    @State private var aiAnalysis: TaskAnalysis?
+    @State private var isAnalyzing = false
+
+    private let originalTask: Task
 
     init(task: Task) {
         _viewModel = StateObject(wrappedValue: TaskViewModel(task: task))
+        self.originalTask = task
     }
 
     var body: some View {
@@ -15,9 +25,26 @@ struct TaskDetailView: View {
             Form {
                 // Title & Notes
                 Section {
-                    TextField("Task title", text: $viewModel.title)
-                        .font(DesignSystem.Typography.headline)
-                        .focused($isTitleFocused)
+                    HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
+                        TextField("Task title", text: $viewModel.title, axis: .vertical)
+                            .font(DesignSystem.Typography.headline)
+                            .focused($isTitleFocused)
+                            .lineLimit(1...3)
+
+                        // AI Suggest button
+                        if llmService.isReady && aiAutoSuggest && !viewModel.title.isEmpty {
+                            Button {
+                                analyzeTask()
+                            } label: {
+                                Image(systemName: isAnalyzing ? "sparkles" : "wand.and.stars")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(isAnalyzing ? Color.purple.opacity(0.5) : Color.purple)
+                                    .symbolEffect(.pulse, isActive: isAnalyzing)
+                            }
+                            .disabled(isAnalyzing)
+                            .accessibilityLabel("AI Suggest")
+                        }
+                    }
 
                     TextField("Notes", text: $viewModel.notes, axis: .vertical)
                         .font(DesignSystem.Typography.body)
@@ -173,6 +200,73 @@ struct TaskDetailView: View {
                     }
                     .fontWeight(.semibold)
                     .disabled(!viewModel.isValid)
+                }
+            }
+            .sheet(isPresented: $showAISuggestions) {
+                if let analysis = aiAnalysis {
+                    AISuggestionsSheet(
+                        analysis: analysis,
+                        currentTitle: viewModel.title,
+                        onApplyDuration: { minutes in
+                            viewModel.estimatedDuration = TimeInterval(minutes * 60)
+                        },
+                        onApplyPriority: { priority in
+                            viewModel.priority = priority
+                        },
+                        onApplyCategory: { category in
+                            viewModel.category = category
+                        },
+                        onApplyTitle: { title in
+                            viewModel.title = title
+                        },
+                        onApplyDescription: { description in
+                            viewModel.notes = description
+                        }
+                    )
+                    .presentationDetents([.medium, .large])
+                }
+            }
+        }
+    }
+
+    // MARK: - AI Analysis
+
+    private func analyzeTask() {
+        guard !viewModel.title.isEmpty else { return }
+        isAnalyzing = true
+
+        _Concurrency.Task {
+            do {
+                // Create a temporary task for analysis
+                let tempTask = Task(
+                    id: originalTask.id,
+                    title: viewModel.title,
+                    notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
+                    dueDate: viewModel.hasDueDate ? viewModel.dueDate : nil,
+                    dueTime: viewModel.hasDueTime ? viewModel.dueTime : nil,
+                    reminderDate: viewModel.hasReminder ? viewModel.reminderDate : nil,
+                    isCompleted: originalTask.isCompleted,
+                    isArchived: originalTask.isArchived,
+                    priority: viewModel.priority,
+                    listID: viewModel.selectedListID,
+                    linkedEventID: originalTask.linkedEventID,
+                    estimatedDuration: viewModel.estimatedDuration,
+                    completedAt: originalTask.completedAt,
+                    createdAt: originalTask.createdAt,
+                    updatedAt: Date(),
+                    recurringRule: nil
+                )
+
+                let analysis = try await llmService.analyzeTask(tempTask)
+
+                await MainActor.run {
+                    aiAnalysis = analysis
+                    showAISuggestions = true
+                    isAnalyzing = false
+                }
+            } catch {
+                await MainActor.run {
+                    isAnalyzing = false
                 }
             }
         }
