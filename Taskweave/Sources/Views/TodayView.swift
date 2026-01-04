@@ -113,6 +113,9 @@ struct TodayView: View {
         case .movedToToday, .pushedToTomorrow:
             // Restore original due date
             taskService.updateTask(snapshot)
+        case .createdFromEvent(let task):
+            // Delete the task that was created from event
+            taskService.deleteTask(task)
         }
         undoSnapshot = nil
         viewModel.refreshTasks()

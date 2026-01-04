@@ -13,6 +13,7 @@ struct CalendarView: View {
     @State private var pendingDropTime: Date?
     @State private var eventToConvert: CalendarEvent?
     @State private var showingDeniedAlert = false
+    @State private var undoAction: UndoAction?
 
     var body: some View {
         if horizontalSizeClass == .regular {
@@ -127,6 +128,9 @@ struct CalendarView: View {
                             },
                             onCreateTaskFromEvent: { event in
                                 eventToConvert = event
+                            },
+                            onCreateTaskInstantly: { event in
+                                createTaskInstantlyFromEvent(event)
                             }
                         )
                     case .week:
@@ -141,6 +145,9 @@ struct CalendarView: View {
                             },
                             onCreateTaskFromEvent: { event in
                                 eventToConvert = event
+                            },
+                            onCreateTaskInstantly: { event in
+                                createTaskInstantlyFromEvent(event)
                             }
                         )
                         .onChange(of: currentWeekStart) { _, newValue in
@@ -152,6 +159,10 @@ struct CalendarView: View {
                 }
             }
             .errorToast(message: $viewModel.errorMessage)
+            .undoToast(action: $undoAction) { action in
+                // Undo: delete the created task
+                taskService.deleteTask(action.task)
+            }
     }
 
     // MARK: - Sheets Modifier
@@ -193,6 +204,23 @@ struct CalendarView: View {
             estimatedDuration: task.estimatedDuration,
             recurringRule: task.recurringRule
         )
+    }
+
+    private func createTaskInstantlyFromEvent(_ event: CalendarEvent) {
+        // Create task with smart defaults
+        let task = taskService.createTask(
+            title: event.title,
+            dueDate: event.startDate,
+            dueTime: event.startDate,
+            priority: .medium,
+            estimatedDuration: event.duration
+        )
+
+        // Haptic feedback
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+
+        // Show toast with undo option
+        undoAction = .createdFromEvent(task)
     }
 
     private func createTimeBlock(for task: Task, startTime: Date, duration: TimeInterval) {
@@ -342,6 +370,7 @@ struct DayView: View {
     let eventsProvider: (Date) -> [CalendarEvent]
     var onTaskDropped: ((Task, Date) -> Void)?
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+    var onCreateTaskInstantly: ((CalendarEvent) -> Void)?
 
     private let calendar = Calendar.current
     @State private var scrollPosition: Date?
@@ -363,7 +392,8 @@ struct DayView: View {
                         date: date,
                         events: eventsProvider(date),
                         onTaskDropped: onTaskDropped,
-                        onCreateTaskFromEvent: onCreateTaskFromEvent
+                        onCreateTaskFromEvent: onCreateTaskFromEvent,
+                        onCreateTaskInstantly: onCreateTaskInstantly
                     )
                     .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 0)
                 }
@@ -402,6 +432,7 @@ struct DayContentView: View {
     let events: [CalendarEvent]
     var onTaskDropped: ((Task, Date) -> Void)?
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+    var onCreateTaskInstantly: ((CalendarEvent) -> Void)?
 
     private let hourHeight: CGFloat = 60
     private let startHour = 0
@@ -534,7 +565,10 @@ struct DayContentView: View {
                     hourHeight: hourHeight,
                     startHour: startHour,
                     width: columnWidth - 2,
-                    xOffset: xOffset
+                    xOffset: xOffset,
+                    onSwipeToCreateTask: {
+                        onCreateTaskInstantly?(layout.event)
+                    }
                 )
                 .contextMenu {
                     Button {
@@ -693,6 +727,7 @@ struct EventBlockView: View {
     let startHour: Int
     let width: CGFloat
     let xOffset: CGFloat
+    var onSwipeToCreateTask: (() -> Void)?
 
     private var yOffset: CGFloat {
         let calendar = Calendar.current
@@ -730,7 +765,7 @@ struct EventBlockView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            // Color indicator strip - explicitly set height to match event duration
+            // Color indicator strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(eventColor)
                 .frame(width: 4, height: height)
@@ -769,10 +804,18 @@ struct EventBlockView: View {
                 .fill(eventColor.opacity(0.85))
                 .shadow(color: eventColor.opacity(0.3), radius: 2, x: 0, y: 1)
         )
+        .contentShape(Rectangle())
         .offset(x: xOffset, y: yOffset)
+        .onTapGesture(count: 2) {
+            // Double tap to create task instantly
+            onSwipeToCreateTask?()
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(event.title), \(event.formattedTimeRange)")
-        .accessibilityHint("Double tap to view event options")
+        .accessibilityHint("Double tap to create task instantly, or long press for options")
+        .accessibilityAction(named: "Create Task") {
+            onSwipeToCreateTask?()
+        }
     }
 }
 
@@ -784,6 +827,7 @@ struct WeekView: View {
     let onDateSelected: (Date) -> Void
     var onTaskDropped: ((Task, Date) -> Void)?
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+    var onCreateTaskInstantly: ((CalendarEvent) -> Void)?
 
     private let calendar = Calendar.current
     @State private var highlightedDay: Int?
@@ -812,6 +856,7 @@ struct WeekView: View {
                         onDateSelected: onDateSelected,
                         onTaskDropped: onTaskDropped,
                         onCreateTaskFromEvent: onCreateTaskFromEvent,
+                        onCreateTaskInstantly: onCreateTaskInstantly,
                         onHighlightChanged: { highlightedDay = $0 }
                     )
                     .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 0)
@@ -853,6 +898,7 @@ struct WeekContentView: View {
     let onDateSelected: (Date) -> Void
     var onTaskDropped: ((Task, Date) -> Void)?
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+    var onCreateTaskInstantly: ((CalendarEvent) -> Void)?
     var onHighlightChanged: ((Int?) -> Void)?
 
     private let calendar = Calendar.current
@@ -912,7 +958,8 @@ struct WeekContentView: View {
                                 startHour: startHour,
                                 endHour: endHour,
                                 isDropTarget: highlightedDay == dayOffset,
-                                onCreateTaskFromEvent: onCreateTaskFromEvent
+                                onCreateTaskFromEvent: onCreateTaskFromEvent,
+                                onCreateTaskInstantly: onCreateTaskInstantly
                             )
                             .frame(maxWidth: .infinity)
                             .dropDestination(for: Task.self) { tasks, location in
@@ -965,6 +1012,7 @@ struct WeekDayColumn: View {
     let endHour: Int
     var isDropTarget: Bool = false
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+    var onCreateTaskInstantly: ((CalendarEvent) -> Void)?
 
     private var timedEvents: [CalendarEvent] {
         events.filter { !$0.isAllDay }
@@ -992,7 +1040,10 @@ struct WeekDayColumn: View {
                 WeekEventBlock(
                     event: event,
                     hourHeight: hourHeight,
-                    startHour: startHour
+                    startHour: startHour,
+                    onSwipeToCreateTask: {
+                        onCreateTaskInstantly?(event)
+                    }
                 )
                 .contextMenu {
                     Button {
@@ -1021,6 +1072,7 @@ struct WeekEventBlock: View {
     let event: CalendarEvent
     let hourHeight: CGFloat
     let startHour: Int
+    var onSwipeToCreateTask: (() -> Void)?
 
     private var yOffset: CGFloat {
         let calendar = Calendar.current
@@ -1063,8 +1115,19 @@ struct WeekEventBlock: View {
             RoundedRectangle(cornerRadius: 3)
                 .fill(eventColor.opacity(0.9))
         )
+        .contentShape(Rectangle())
         .padding(.horizontal, 1)
         .offset(y: yOffset)
+        .onTapGesture(count: 2) {
+            // Double tap to create task instantly
+            onSwipeToCreateTask?()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(event.title), \(formattedTime)")
+        .accessibilityHint("Double tap to create task instantly, or long press for options")
+        .accessibilityAction(named: "Create Task") {
+            onSwipeToCreateTask?()
+        }
     }
 
     private var formattedTime: String {
