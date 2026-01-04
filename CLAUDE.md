@@ -99,8 +99,8 @@ MVVM with Combine for reactive data flow:
 
 ## Documentation
 
-### Website (`docs/`)
-GitHub Pages hosted at connectwithprakash.github.io/taskweave/:
+### Website (`docs/site/`)
+Hosted on Netlify at taskweave.netlify.app:
 - `index.html` - Landing page
 - `privacy/` - Privacy Policy
 - `terms/` - Terms of Service
