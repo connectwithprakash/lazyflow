@@ -166,6 +166,137 @@ extension Date {
     }
 }
 
+// MARK: - Natural Language Date Parsing
+
+extension Date {
+    /// Result of parsing natural language date text
+    struct ParsedDateResult {
+        let date: Date
+        let time: Date?
+        let matchedRange: Range<String.Index>
+        let matchedText: String
+
+        /// The task title with the date portion removed
+        func cleanedTitle(from original: String) -> String {
+            var cleaned = original
+            cleaned.removeSubrange(matchedRange)
+            // Clean up extra whitespace
+            return cleaned.trimmingCharacters(in: .whitespaces)
+                .replacingOccurrences(of: "  ", with: " ")
+        }
+    }
+
+    /// Parse natural language date from text using NSDataDetector
+    /// Supports: "tomorrow", "next Friday", "3pm", "January 15", etc.
+    static func parse(from text: String) -> ParsedDateResult? {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue) else {
+            return nil
+        }
+
+        let range = NSRange(text.startIndex..., in: text)
+        let matches = detector.matches(in: text, options: [], range: range)
+
+        // Find the best match (prefer ones with actual dates over just times)
+        for match in matches {
+            guard let matchRange = Range(match.range, in: text),
+                  let date = match.date else { continue }
+
+            let matchedText = String(text[matchRange])
+            let calendar = Calendar.current
+
+            // Check if this is a time-only match (hours/minutes but same date as now)
+            let now = Date()
+            let isSameDay = calendar.isDate(date, inSameDayAs: now)
+            let hasTimeInfo = calendar.component(.hour, from: date) != 0 ||
+                              calendar.component(.minute, from: date) != 0
+
+            // If it's today with specific time, treat as time-only
+            if isSameDay && hasTimeInfo {
+                return ParsedDateResult(
+                    date: now,
+                    time: date,
+                    matchedRange: matchRange,
+                    matchedText: matchedText
+                )
+            }
+
+            // Has date info - return full result
+            return ParsedDateResult(
+                date: date,
+                time: hasTimeInfo ? date : nil,
+                matchedRange: matchRange,
+                matchedText: matchedText
+            )
+        }
+
+        // Try manual parsing for common phrases not caught by NSDataDetector
+        return parseCommonPhrases(from: text)
+    }
+
+    /// Parse common natural language phrases manually
+    private static func parseCommonPhrases(from text: String) -> ParsedDateResult? {
+        let lowercased = text.lowercased()
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Patterns to check with their date offsets
+        let patterns: [(pattern: String, dayOffset: Int)] = [
+            ("today", 0),
+            ("tonight", 0),
+            ("tomorrow", 1),
+            ("day after tomorrow", 2),
+            ("next week", 7),
+            ("in a week", 7),
+            ("end of week", calendar.component(.weekday, from: today) == 1 ? 0 :
+                           (8 - calendar.component(.weekday, from: today)))
+        ]
+
+        for (pattern, offset) in patterns {
+            if let range = lowercased.range(of: pattern) {
+                guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { continue }
+
+                // Convert range to original string's range
+                let start = text.index(text.startIndex, offsetBy: lowercased.distance(from: lowercased.startIndex, to: range.lowerBound))
+                let end = text.index(text.startIndex, offsetBy: lowercased.distance(from: lowercased.startIndex, to: range.upperBound))
+                let originalRange = start..<end
+
+                return ParsedDateResult(
+                    date: date,
+                    time: pattern == "tonight" ? calendar.date(bySettingHour: 20, minute: 0, second: 0, of: date) : nil,
+                    matchedRange: originalRange,
+                    matchedText: String(text[originalRange])
+                )
+            }
+        }
+
+        // Check for "next [weekday]" pattern
+        let weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+        for (index, weekday) in weekdays.enumerated() {
+            if let range = lowercased.range(of: "next \(weekday)") {
+                let targetWeekday = index + 1 // Calendar weekdays are 1-indexed
+                let currentWeekday = calendar.component(.weekday, from: today)
+                var daysToAdd = targetWeekday - currentWeekday
+                if daysToAdd <= 0 { daysToAdd += 7 }
+                daysToAdd += 7 // "next" means next week's occurrence
+
+                guard let date = calendar.date(byAdding: .day, value: daysToAdd, to: today) else { continue }
+
+                let start = text.index(text.startIndex, offsetBy: lowercased.distance(from: lowercased.startIndex, to: range.lowerBound))
+                let end = text.index(text.startIndex, offsetBy: lowercased.distance(from: lowercased.startIndex, to: range.upperBound))
+
+                return ParsedDateResult(
+                    date: date,
+                    time: nil,
+                    matchedRange: start..<end,
+                    matchedText: String(text[start..<end])
+                )
+            }
+        }
+
+        return nil
+    }
+}
+
 // MARK: - Date Range Helpers
 
 extension Date {

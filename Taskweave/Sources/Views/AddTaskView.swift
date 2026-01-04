@@ -16,6 +16,7 @@ struct AddTaskView: View {
     @State private var showAISuggestions = false
     @State private var aiAnalysis: TaskAnalysis?
     @State private var isAnalyzing = false
+    @State private var detectedDate: Date.ParsedDateResult?
 
     init(defaultDueDate: Date? = nil, defaultListID: UUID? = nil) {
         let vm = TaskViewModel()
@@ -40,6 +41,9 @@ struct AddTaskView: View {
                             .font(DesignSystem.Typography.title3)
                             .focused($isTitleFocused)
                             .lineLimit(1...3)
+                            .onChange(of: viewModel.title) { _, newValue in
+                                detectDateInTitle(newValue)
+                            }
 
                         // AI Suggest button (contextual, next to title)
                         if llmService.isReady && aiAutoSuggest && !viewModel.title.isEmpty {
@@ -57,6 +61,23 @@ struct AddTaskView: View {
                     }
                     .padding(.horizontal)
                     .padding(.top)
+
+                    // Detected date suggestion
+                    if let detected = detectedDate, !viewModel.hasDueDate {
+                        DetectedDateBanner(
+                            date: detected.date,
+                            time: detected.time,
+                            matchedText: detected.matchedText,
+                            onApply: {
+                                applyDetectedDate(detected)
+                            },
+                            onDismiss: {
+                                detectedDate = nil
+                            }
+                        )
+                        .padding(.horizontal)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
 
                     // Notes field
                     TextField("Add notes", text: $viewModel.notes, axis: .vertical)
@@ -276,6 +297,41 @@ struct AddTaskView: View {
                     isAnalyzing = false
                 }
             }
+        }
+    }
+
+    // MARK: - Natural Language Date Detection
+
+    private func detectDateInTitle(_ title: String) {
+        // Don't detect if already has a due date set
+        guard !viewModel.hasDueDate else {
+            detectedDate = nil
+            return
+        }
+
+        // Parse date from title
+        withAnimation(.easeInOut(duration: 0.2)) {
+            detectedDate = Date.parse(from: title)
+        }
+    }
+
+    private func applyDetectedDate(_ detected: Date.ParsedDateResult) {
+        withAnimation {
+            // Set the due date
+            viewModel.hasDueDate = true
+            viewModel.dueDate = detected.date
+
+            // Set time if detected
+            if let time = detected.time {
+                viewModel.hasDueTime = true
+                viewModel.dueTime = time
+            }
+
+            // Clean the title by removing the date portion
+            viewModel.title = detected.cleanedTitle(from: viewModel.title)
+
+            // Clear the detection
+            detectedDate = nil
         }
     }
 
@@ -943,6 +999,64 @@ struct ApplyButton: View {
         .disabled(isApplied)
         .animation(.easeInOut(duration: 0.2), value: isApplied)
         .accessibilityIdentifier(isApplied ? "Applied" : "Apply")
+    }
+}
+
+// MARK: - Detected Date Banner
+
+struct DetectedDateBanner: View {
+    let date: Date
+    let time: Date?
+    let matchedText: String
+    let onApply: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Image(systemName: "calendar.badge.clock")
+                .font(.system(size: 16))
+                .foregroundColor(Color.Taskweave.accent)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Date detected: \"\(matchedText)\"")
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundColor(Color.Taskweave.textSecondary)
+
+                HStack(spacing: 4) {
+                    Text(date.relativeFormatted)
+                        .font(DesignSystem.Typography.subheadline)
+                        .fontWeight(.medium)
+
+                    if let time = time {
+                        Text("at \(time.timeFormatted)")
+                            .font(DesignSystem.Typography.subheadline)
+                            .foregroundColor(Color.Taskweave.textSecondary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            Button(action: onApply) {
+                Text("Apply")
+                    .font(DesignSystem.Typography.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, DesignSystem.Spacing.md)
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .background(Color.Taskweave.accent)
+                    .cornerRadius(DesignSystem.CornerRadius.small)
+            }
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Color.Taskweave.textTertiary)
+            }
+        }
+        .padding(DesignSystem.Spacing.sm)
+        .background(Color.Taskweave.accent.opacity(0.1))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
     }
 }
 
