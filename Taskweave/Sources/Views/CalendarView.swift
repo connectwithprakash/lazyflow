@@ -82,7 +82,11 @@ struct CalendarView: View {
     private var todayToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                selectedDate = Date()
+                withAnimation(.smooth(duration: 0.35)) {
+                    let today = Date()
+                    selectedDate = today
+                    currentWeekStart = Calendar.current.startOfWeek(for: today)
+                }
             } label: {
                 Text("Today")
                     .font(DesignSystem.Typography.callout)
@@ -271,11 +275,13 @@ struct CalendarView: View {
 
     private func navigateDate(by value: Int) {
         let calendar = Calendar.current
-        switch viewMode {
-        case .day:
-            selectedDate = calendar.date(byAdding: .day, value: value, to: selectedDate) ?? selectedDate
-        case .week:
-            currentWeekStart = calendar.date(byAdding: .weekOfYear, value: value, to: currentWeekStart) ?? currentWeekStart
+        withAnimation(.smooth(duration: 0.35)) {
+            switch viewMode {
+            case .day:
+                selectedDate = calendar.date(byAdding: .day, value: value, to: selectedDate) ?? selectedDate
+            case .week:
+                currentWeekStart = calendar.date(byAdding: .weekOfYear, value: value, to: currentWeekStart) ?? currentWeekStart
+            }
         }
     }
 
@@ -342,8 +348,6 @@ struct DayView: View {
     @State private var isInitialized = false
 
     // Pre-generate dates: 1 year back and forward from today
-    // This is the standard approach - pre-generate a reasonable range
-    // rather than trying to dynamically manage scroll position
     private var dates: [Date] {
         let today = calendar.startOfDay(for: Date())
         return (-365...365).compactMap { offset in
@@ -361,31 +365,30 @@ struct DayView: View {
                         onTaskDropped: onTaskDropped,
                         onCreateTaskFromEvent: onCreateTaskFromEvent
                     )
-                    .containerRelativeFrame(.horizontal)
+                    .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 0)
                 }
             }
             .scrollTargetLayout()
         }
-        .scrollTargetBehavior(.paging)
+        .scrollTargetBehavior(.viewAligned)
         .scrollPosition(id: $scrollPosition)
+        .ignoresSafeArea(.container, edges: .horizontal)
         .onChange(of: scrollPosition) { _, newDate in
-            // Update currentDate when user scrolls
             if let newDate, isInitialized {
                 currentDate = newDate
             }
         }
         .onChange(of: currentDate) { _, newDate in
-            // Respond to external changes (chevron buttons, "Today" button)
             let normalizedDate = calendar.startOfDay(for: newDate)
             if scrollPosition != normalizedDate {
-                scrollPosition = normalizedDate
+                withAnimation(.smooth(duration: 0.35)) {
+                    scrollPosition = normalizedDate
+                }
             }
         }
         .onAppear {
-            // Set initial position without triggering onChange
             if !isInitialized {
                 scrollPosition = calendar.startOfDay(for: currentDate)
-                // Delay setting initialized to avoid initial onChange trigger
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     isInitialized = true
                 }
@@ -401,54 +404,149 @@ struct DayContentView: View {
     var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
 
     private let hourHeight: CGFloat = 60
-    private let startHour = 6
-    private let endHour = 22
+    private let startHour = 0
+    private let endHour = 24
+    private let timeColumnWidth: CGFloat = 48
     @State private var isDraggingOver = false
     @State private var dragLocation: CGPoint = .zero
+    @State private var hasScrolledToCurrentTime = false
+
+    /// Current hour for initial scroll position
+    private var currentHour: Int {
+        Calendar.current.component(.hour, from: Date())
+    }
+
+    /// Calculates column layout for overlapping events
+    private var eventLayout: [(event: CalendarEvent, column: Int, totalColumns: Int)] {
+        let timedEvents = events.filter { !$0.isAllDay }
+            .sorted { $0.startDate < $1.startDate }
+
+        guard !timedEvents.isEmpty else { return [] }
+
+        var columns: [[CalendarEvent]] = []
+        var result: [(event: CalendarEvent, column: Int, totalColumns: Int)] = []
+
+        for event in timedEvents {
+            var assignedColumn: Int?
+            for (index, column) in columns.enumerated() {
+                let overlaps = column.contains { existing in
+                    event.startDate < existing.endDate && event.endDate > existing.startDate
+                }
+                if !overlaps {
+                    assignedColumn = index
+                    columns[index].append(event)
+                    break
+                }
+            }
+
+            if assignedColumn == nil {
+                assignedColumn = columns.count
+                columns.append([event])
+            }
+
+            result.append((event: event, column: assignedColumn!, totalColumns: 0))
+        }
+
+        for i in 0..<result.count {
+            let event = result[i].event
+            var maxColumns = result[i].column + 1
+            for j in 0..<result.count {
+                let other = result[j].event
+                if event.startDate < other.endDate && event.endDate > other.startDate {
+                    maxColumns = max(maxColumns, result[j].column + 1)
+                }
+            }
+            result[i].totalColumns = maxColumns
+        }
+
+        return result
+    }
+
+    private var allDayEvents: [CalendarEvent] {
+        events.filter { $0.isAllDay }
+    }
 
     var body: some View {
-        GeometryReader { geometry in
+        ScrollViewReader { proxy in
             ScrollView {
-                ZStack(alignment: .topLeading) {
-                    // Hour grid
-                    VStack(spacing: 0) {
-                        ForEach(startHour..<endHour, id: \.self) { hour in
-                            HourRow(hour: hour, isHighlighted: isHourHighlighted(hour))
-                                .frame(height: hourHeight)
-                        }
+                VStack(spacing: 0) {
+                    // All-day events section
+                    if !allDayEvents.isEmpty {
+                        AllDayEventsSection(
+                            events: allDayEvents,
+                            onCreateTaskFromEvent: onCreateTaskFromEvent
+                        )
                     }
 
-                    // Events overlay
-                    ForEach(events) { event in
-                        if !event.isAllDay {
-                            EventBlock(event: event, hourHeight: hourHeight, startHour: startHour)
-                                .contextMenu {
-                                    Button {
-                                        onCreateTaskFromEvent?(event)
-                                    } label: {
-                                        Label("Create Task", systemImage: "checkmark.circle.badge.plus")
-                                    }
-                                }
+                    // Time grid with timed events
+                    ZStack(alignment: .topLeading) {
+                        // Hour grid - each row has time label + line
+                        VStack(spacing: 0) {
+                            ForEach(startHour..<endHour, id: \.self) { hour in
+                                HourRow(hour: hour, isHighlighted: isHourHighlighted(hour))
+                                    .frame(height: hourHeight, alignment: .top)
+                                    .id(hour)
+                            }
                         }
-                    }
 
-                    // Drop indicator
-                    if isDraggingOver {
-                        dropIndicator
+                        // Events overlay
+                        eventsOverlay
+
+                        // Drop indicator
+                        if isDraggingOver {
+                            dropIndicator
+                        }
                     }
                 }
-                .padding(.leading, 50) // Space for time labels
+                .padding(.horizontal, DesignSystem.Spacing.md)
             }
-            .dropDestination(for: Task.self) { tasks, location in
-                guard let task = tasks.first else { return false }
-                let dropTime = calculateDropTime(from: location, in: geometry)
-                onTaskDropped?(task, dropTime)
-                isDraggingOver = false
-                return true
-            } isTargeted: { isTargeted in
-                isDraggingOver = isTargeted
+            .onAppear {
+                // Scroll to current time (show 2 hours before current hour)
+                if !hasScrolledToCurrentTime {
+                    let targetHour = max(0, currentHour - 2)
+                    proxy.scrollTo(targetHour, anchor: .top)
+                    hasScrolledToCurrentTime = true
+                }
             }
         }
+        .dropDestination(for: Task.self) { tasks, location in
+            guard let task = tasks.first else { return false }
+            let dropTime = calculateDropTime(from: location)
+            onTaskDropped?(task, dropTime)
+            isDraggingOver = false
+            return true
+        } isTargeted: { isTargeted in
+            isDraggingOver = isTargeted
+        }
+    }
+
+    @ViewBuilder
+    private var eventsOverlay: some View {
+        GeometryReader { geometry in
+            let availableWidth = geometry.size.width - timeColumnWidth - DesignSystem.Spacing.sm
+
+            ForEach(eventLayout, id: \.event.id) { layout in
+                let columnWidth = availableWidth / CGFloat(layout.totalColumns)
+                let xOffset = timeColumnWidth + CGFloat(layout.column) * columnWidth
+
+                EventBlockView(
+                    event: layout.event,
+                    hourHeight: hourHeight,
+                    startHour: startHour,
+                    width: columnWidth - 2,
+                    xOffset: xOffset
+                )
+                .contextMenu {
+                    Button {
+                        onCreateTaskFromEvent?(layout.event)
+                    } label: {
+                        Label("Create Task", systemImage: "checkmark.circle.badge.plus")
+                    }
+                }
+            }
+
+        }
+        .frame(height: CGFloat(endHour - startHour) * hourHeight)
     }
 
     private func isHourHighlighted(_ hour: Int) -> Bool {
@@ -457,7 +555,7 @@ struct DayContentView: View {
         return hour == dragHour
     }
 
-    private func calculateDropTime(from location: CGPoint, in geometry: GeometryProxy) -> Date {
+    private func calculateDropTime(from location: CGPoint) -> Date {
         let adjustedY = location.y - 50 // Account for time label padding
         let hourOffset = adjustedY / hourHeight
         let hour = startHour + Int(hourOffset)
@@ -519,51 +617,65 @@ struct HourRow: View {
     }
 }
 
-struct EventBlock: View {
-    let event: CalendarEvent
-    let hourHeight: CGFloat
-    let startHour: Int
+// MARK: - All-Day Events Section
+
+struct AllDayEventsSection: View {
+    let events: [CalendarEvent]
+    var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
 
     var body: some View {
-        let yOffset = calculateYOffset()
-        let height = calculateHeight()
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            // Header row - matches HourRow layout
+            HStack(alignment: .center, spacing: DesignSystem.Spacing.sm) {
+                Text("All Day")
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 40, alignment: .trailing)
 
-        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.small)
-            .fill(eventColor.opacity(0.8))
-            .frame(height: max(height, 20))
-            .overlay(
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(event.title)
-                        .font(DesignSystem.Typography.caption1)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-
-                    if height > 30 {
-                        Text(event.formattedTimeRange)
-                            .font(DesignSystem.Typography.caption2)
-                            .foregroundStyle(.white.opacity(0.8))
+                // All-day events as horizontal scroll
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        ForEach(events) { event in
+                            AllDayEventChip(event: event)
+                                .contextMenu {
+                                    Button {
+                                        onCreateTaskFromEvent?(event)
+                                    } label: {
+                                        Label("Create Task", systemImage: "checkmark.circle.badge.plus")
+                                    }
+                                }
+                        }
                     }
                 }
-                .padding(.horizontal, DesignSystem.Spacing.sm)
-                .padding(.vertical, 4),
-                alignment: .topLeading
-            )
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .offset(y: yOffset)
+            }
+        }
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color.adaptiveSurface.opacity(0.5))
     }
+}
 
-    private func calculateYOffset() -> CGFloat {
-        let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: event.startDate)
-        let minute = calendar.component(.minute, from: event.startDate)
-        let hoursSinceStart = CGFloat(hour - startHour) + CGFloat(minute) / 60.0
-        return hoursSinceStart * hourHeight
-    }
+struct AllDayEventChip: View {
+    let event: CalendarEvent
 
-    private func calculateHeight() -> CGFloat {
-        let durationHours = event.duration / 3600
-        return CGFloat(durationHours) * hourHeight
+    var body: some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(eventColor)
+                .frame(width: 4)
+
+            Text(event.title)
+                .font(DesignSystem.Typography.caption1)
+                .fontWeight(.medium)
+                .foregroundStyle(Color.Taskweave.textPrimary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .background(eventColor.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(event.title), all day event")
+        .accessibilityHint("Double tap to view event options")
     }
 
     private var eventColor: Color {
@@ -571,6 +683,96 @@ struct EventBlock: View {
             return Color(cgColor: cgColor)
         }
         return Color.Taskweave.accent
+    }
+}
+
+/// Event block view for Day view - positioned absolutely using offset
+struct EventBlockView: View {
+    let event: CalendarEvent
+    let hourHeight: CGFloat
+    let startHour: Int
+    let width: CGFloat
+    let xOffset: CGFloat
+
+    private var yOffset: CGFloat {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: event.startDate)
+        let minute = calendar.component(.minute, from: event.startDate)
+        let hoursSinceStart = CGFloat(hour - startHour) + CGFloat(minute) / 60.0
+        return hoursSinceStart * hourHeight
+    }
+
+    private var height: CGFloat {
+        let calendar = Calendar.current
+        let startHour = calendar.component(.hour, from: event.startDate)
+        let startMinute = calendar.component(.minute, from: event.startDate)
+        let endHour = calendar.component(.hour, from: event.endDate)
+        let endMinute = calendar.component(.minute, from: event.endDate)
+
+        let startPosition = CGFloat(startHour - self.startHour) + CGFloat(startMinute) / 60.0
+        var endPosition = CGFloat(endHour - self.startHour) + CGFloat(endMinute) / 60.0
+
+        // Handle events that span midnight
+        if endPosition < startPosition {
+            endPosition += 24.0
+        }
+
+        let height = (endPosition - startPosition) * hourHeight
+        return max(height, 24)
+    }
+
+    private var eventColor: Color {
+        if let cgColor = event.calendarColor {
+            return Color(cgColor: cgColor)
+        }
+        return Color.Taskweave.accent
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            // Color indicator strip - explicitly set height to match event duration
+            RoundedRectangle(cornerRadius: 2)
+                .fill(eventColor)
+                .frame(width: 4, height: height)
+
+            // Event content
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.title)
+                    .font(DesignSystem.Typography.caption1)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .lineLimit(height > 40 ? 2 : 1)
+
+                if height > 35 {
+                    Text(event.formattedTimeRange)
+                        .font(DesignSystem.Typography.caption2)
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+
+                if height > 55, let location = event.location, !location.isEmpty {
+                    HStack(spacing: 2) {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 8))
+                        Text(location)
+                            .font(.system(size: 9))
+                    }
+                    .foregroundStyle(.white.opacity(0.75))
+                    .lineLimit(1)
+                }
+            }
+            .padding(.horizontal, DesignSystem.Spacing.xs)
+            .padding(.vertical, 4)
+        }
+        .frame(width: width, height: height, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.small)
+                .fill(eventColor.opacity(0.85))
+                .shadow(color: eventColor.opacity(0.3), radius: 2, x: 0, y: 1)
+        )
+        .offset(x: xOffset, y: yOffset)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(event.title), \(event.formattedTimeRange)")
+        .accessibilityHint("Double tap to view event options")
     }
 }
 
@@ -601,7 +803,7 @@ struct WeekView: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 0) {
+            LazyHStack(alignment: .top, spacing: 0) {
                 ForEach(weekStarts, id: \.self) { weekStart in
                     WeekContentView(
                         startDate: weekStart,
@@ -612,32 +814,30 @@ struct WeekView: View {
                         onCreateTaskFromEvent: onCreateTaskFromEvent,
                         onHighlightChanged: { highlightedDay = $0 }
                     )
-                    .containerRelativeFrame(.horizontal)
+                    .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 0)
                 }
             }
             .scrollTargetLayout()
         }
-        .scrollTargetBehavior(.paging)
+        .scrollTargetBehavior(.viewAligned)
         .scrollPosition(id: $scrollPosition)
         .onChange(of: scrollPosition) { _, newWeekStart in
-            // Update currentWeekStart when user scrolls
             if let newWeekStart, isInitialized {
                 currentWeekStart = newWeekStart
             }
         }
         .onChange(of: currentWeekStart) { _, newWeekStart in
-            // Respond to external changes (chevron buttons, "Today" button)
             let normalizedWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: newWeekStart)) ?? newWeekStart
             if scrollPosition != normalizedWeek {
-                scrollPosition = normalizedWeek
+                withAnimation(.smooth(duration: 0.35)) {
+                    scrollPosition = normalizedWeek
+                }
             }
         }
         .onAppear {
-            // Set initial position without triggering onChange
             if !isInitialized {
                 let normalizedWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: currentWeekStart)) ?? currentWeekStart
                 scrollPosition = normalizedWeek
-                // Delay setting initialized to avoid initial onChange trigger
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     isInitialized = true
                 }
@@ -656,42 +856,69 @@ struct WeekContentView: View {
     var onHighlightChanged: ((Int?) -> Void)?
 
     private let calendar = Calendar.current
+    private let hourHeight: CGFloat = 50
+    private let startHour = 0
+    private let endHour = 24
+    private let timeColumnWidth: CGFloat = 40
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Day headers
-            HStack(spacing: 0) {
-                ForEach(0..<7, id: \.self) { dayOffset in
-                    if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
-                        DayHeader(date: date, isToday: calendar.isDateInToday(date))
-                            .frame(maxWidth: .infinity)
-                            .onTapGesture {
-                                onDateSelected(date)
-                            }
-                    }
-                }
-            }
-            .padding(.vertical, DesignSystem.Spacing.sm)
-
-            Divider()
-
-            // Day columns with events
+        ScrollViewReader { proxy in
             ScrollView {
-                HStack(alignment: .top, spacing: 1) {
+                VStack(spacing: 0) {
+                    // Day headers with time column spacer
+                    HStack(spacing: 0) {
+                        // Spacer for time column
+                        Color.clear
+                            .frame(width: timeColumnWidth)
+
+                        ForEach(0..<7, id: \.self) { dayOffset in
+                            if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
+                                DayHeader(date: date, isToday: calendar.isDateInToday(date))
+                                    .frame(maxWidth: .infinity)
+                                    .onTapGesture {
+                                        onDateSelected(date)
+                                    }
+                            }
+                        }
+                    }
+                    .padding(.vertical, DesignSystem.Spacing.sm)
+
+                    Divider()
+
+                    // Time grid with day columns
+                    HStack(alignment: .top, spacing: 0) {
+                    // Time column
+                    VStack(spacing: 0) {
+                        ForEach(startHour..<endHour, id: \.self) { hour in
+                            HStack {
+                                Text(hourString(for: hour))
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: timeColumnWidth - 4, alignment: .trailing)
+                            }
+                            .frame(height: hourHeight, alignment: .top)
+                        }
+                    }
+
+                    // Day columns with time grid
                     ForEach(0..<7, id: \.self) { dayOffset in
                         if let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) {
                             let dayEvents = events[calendar.startOfDay(for: date)] ?? []
 
-                            DayColumn(
+                            WeekDayColumn(
                                 date: date,
                                 events: dayEvents,
+                                hourHeight: hourHeight,
+                                startHour: startHour,
+                                endHour: endHour,
                                 isDropTarget: highlightedDay == dayOffset,
                                 onCreateTaskFromEvent: onCreateTaskFromEvent
                             )
                             .frame(maxWidth: .infinity)
-                            .dropDestination(for: Task.self) { tasks, _ in
+                            .dropDestination(for: Task.self) { tasks, location in
                                 guard let task = tasks.first else { return false }
-                                onTaskDropped?(task, date)
+                                let dropTime = calculateDropTime(from: location, for: date)
+                                onTaskDropped?(task, dropTime)
                                 onHighlightChanged?(nil)
                                 return true
                             } isTargeted: { isTargeted in
@@ -699,9 +926,151 @@ struct WeekContentView: View {
                             }
                         }
                     }
+                    }
                 }
             }
         }
+    }
+
+    private func hourString(for hour: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h a"
+        guard let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) else {
+            return "\(hour)"
+        }
+        return formatter.string(from: date)
+    }
+
+    private func calculateDropTime(from location: CGPoint, for date: Date) -> Date {
+        let hourOffset = location.y / hourHeight
+        let hour = startHour + Int(hourOffset)
+        let minute = Int((hourOffset.truncatingRemainder(dividingBy: 1)) * 60)
+        let roundedMinute = (minute / 15) * 15
+
+        var components = calendar.dateComponents([.year, .month, .day], from: date)
+        components.hour = min(max(hour, startHour), endHour - 1)
+        components.minute = roundedMinute
+
+        return calendar.date(from: components) ?? date
+    }
+}
+
+// MARK: - Week Day Column with Time Grid
+
+struct WeekDayColumn: View {
+    let date: Date
+    let events: [CalendarEvent]
+    let hourHeight: CGFloat
+    let startHour: Int
+    let endHour: Int
+    var isDropTarget: Bool = false
+    var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
+
+    private var timedEvents: [CalendarEvent] {
+        events.filter { !$0.isAllDay }
+    }
+
+    private var allDayEvents: [CalendarEvent] {
+        events.filter { $0.isAllDay }
+    }
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            // Hour grid lines
+            VStack(spacing: 0) {
+                ForEach(startHour..<endHour, id: \.self) { _ in
+                    VStack(spacing: 0) {
+                        Divider()
+                        Spacer()
+                    }
+                    .frame(height: hourHeight)
+                }
+            }
+
+            // Events overlay
+            ForEach(timedEvents) { event in
+                WeekEventBlock(
+                    event: event,
+                    hourHeight: hourHeight,
+                    startHour: startHour
+                )
+                .contextMenu {
+                    Button {
+                        onCreateTaskFromEvent?(event)
+                    } label: {
+                        Label("Create Task", systemImage: "checkmark.circle.badge.plus")
+                    }
+                }
+            }
+
+            // Drop target indicator
+            if isDropTarget {
+                Rectangle()
+                    .fill(Color.Taskweave.accent.opacity(0.15))
+                    .overlay(
+                        Rectangle()
+                            .stroke(Color.Taskweave.accent, lineWidth: 2)
+                    )
+            }
+        }
+        .frame(height: CGFloat(endHour - startHour) * hourHeight)
+    }
+}
+
+struct WeekEventBlock: View {
+    let event: CalendarEvent
+    let hourHeight: CGFloat
+    let startHour: Int
+
+    private var yOffset: CGFloat {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: event.startDate)
+        let minute = calendar.component(.minute, from: event.startDate)
+        let hoursSinceStart = CGFloat(hour - startHour) + CGFloat(minute) / 60.0
+        return hoursSinceStart * hourHeight
+    }
+
+    private var height: CGFloat {
+        let durationHours = event.duration / 3600
+        return max(CGFloat(durationHours) * hourHeight, 20)
+    }
+
+    private var eventColor: Color {
+        if let cgColor = event.calendarColor {
+            return Color(cgColor: cgColor)
+        }
+        return Color.Taskweave.accent
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(event.title)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(.white)
+                .lineLimit(height > 30 ? 2 : 1)
+
+            if height > 35 {
+                Text(formattedTime)
+                    .font(.system(size: 8))
+                    .foregroundStyle(.white.opacity(0.8))
+            }
+        }
+        .padding(.horizontal, 3)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: height)
+        .background(
+            RoundedRectangle(cornerRadius: 3)
+                .fill(eventColor.opacity(0.9))
+        )
+        .padding(.horizontal, 1)
+        .offset(y: yOffset)
+    }
+
+    private var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm"
+        return formatter.string(from: event.startDate)
     }
 }
 
@@ -735,85 +1104,6 @@ struct DayHeader: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "d"
         return formatter.string(from: date)
-    }
-}
-
-struct DayColumn: View {
-    let date: Date
-    let events: [CalendarEvent]
-    var isDropTarget: Bool = false
-    var onCreateTaskFromEvent: ((CalendarEvent) -> Void)?
-
-    private var maxEventsToShow: Int { 4 }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(events.prefix(maxEventsToShow)) { event in
-                CompactEventView(event: event)
-                    .contextMenu {
-                        Button {
-                            onCreateTaskFromEvent?(event)
-                        } label: {
-                            Label("Create Task", systemImage: "checkmark.circle.badge.plus")
-                        }
-                    }
-            }
-
-            if events.count > maxEventsToShow {
-                Text("+\(events.count - maxEventsToShow)")
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.leading, 2)
-            }
-
-            if isDropTarget {
-                HStack(spacing: 2) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 10))
-                    Text("Drop")
-                        .font(.system(size: 9))
-                }
-                .foregroundColor(Color.Taskweave.accent)
-                .padding(.top, 2)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 2)
-        .padding(.vertical, DesignSystem.Spacing.xs)
-        .frame(minHeight: 120)
-        .background(isDropTarget ? Color.Taskweave.accent.opacity(0.1) : .clear)
-        .cornerRadius(DesignSystem.CornerRadius.small)
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.small)
-                .stroke(isDropTarget ? Color.Taskweave.accent : .clear, lineWidth: 2)
-        )
-        .animation(.easeInOut(duration: 0.15), value: isDropTarget)
-    }
-}
-
-struct CompactEventView: View {
-    let event: CalendarEvent
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(eventColor)
-                .frame(width: 6, height: 6)
-
-            Text(event.title)
-                .font(DesignSystem.Typography.caption2)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 4)
-    }
-
-    private var eventColor: Color {
-        if let cgColor = event.calendarColor {
-            return Color(cgColor: cgColor)
-        }
-        return Color.Taskweave.accent
     }
 }
 

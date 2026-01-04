@@ -18,5 +18,11 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>WKApplication</key>
+	<true/>
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>4</integer>
+	</array>
 </dict>
 </plist>

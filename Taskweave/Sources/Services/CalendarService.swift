@@ -352,6 +352,7 @@ struct CalendarEvent: Identifiable {
     let isAllDay: Bool
     let calendarColor: CGColor?
     let linkedTaskID: UUID?
+    let location: String?
 
     init(from ekEvent: EKEvent, linkedTaskID: UUID? = nil) {
         self.id = ekEvent.eventIdentifier ?? UUID().uuidString
@@ -361,6 +362,7 @@ struct CalendarEvent: Identifiable {
         self.isAllDay = ekEvent.isAllDay
         self.calendarColor = ekEvent.calendar?.cgColor
         self.linkedTaskID = linkedTaskID
+        self.location = ekEvent.location
     }
 
     var duration: TimeInterval {

@@ -122,6 +122,18 @@ extension WatchConnectivityService: WCSessionDelegate {
         handleIncomingMessage(applicationContext)
     }
 
+    // iOS-only required delegate methods
+    #if os(iOS)
+    func sessionDidBecomeInactive(_ session: WCSession) {
+        print("[Watch] Session became inactive")
+    }
+
+    func sessionDidDeactivate(_ session: WCSession) {
+        print("[Watch] Session deactivated")
+        session.activate()
+    }
+    #endif
+
     private func handleIncomingMessage(_ message: [String: Any]) {
         guard let watchMessage = WatchMessage.from(dictionary: message) else {
             print("[Watch] Failed to parse message")
