@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0](https://github.com/connectwithprakash/taskweave/compare/v0.22.0...v0.23.0) (2026-01-04)
+
+
+### Features
+
+* Simplify AI architecture - remove ML model, enhance LLM integration ([c74ce19](https://github.com/connectwithprakash/taskweave/commit/c74ce19b9168223bb095ea90c7ba1e8a329a0066))
+
 ## [0.22.0](https://github.com/connectwithprakash/taskweave/compare/v0.21.0...v0.22.0) (2026-01-04)
 
 
