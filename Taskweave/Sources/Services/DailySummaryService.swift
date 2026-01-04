@@ -98,8 +98,9 @@ final class DailySummaryService: ObservableObject {
         // Save summary
         saveSummary(summary)
 
+        let finalSummary = summary
         await MainActor.run {
-            self.todaySummary = summary
+            self.todaySummary = finalSummary
         }
 
         return summary
