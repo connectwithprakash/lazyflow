@@ -138,11 +138,11 @@ struct SettingsView: View {
                             .foregroundColor(Color.Taskweave.textPrimary)
                     }
 
-                    Link(destination: URL(string: "https://connectwithprakash.github.io/taskweave/privacy/")!) {
+                    Link(destination: URL(string: "https://taskweave.netlify.app/privacy/")!) {
                         Text("Privacy Policy")
                     }
 
-                    Link(destination: URL(string: "https://connectwithprakash.github.io/taskweave/terms/")!) {
+                    Link(destination: URL(string: "https://taskweave.netlify.app/terms/")!) {
                         Text("Terms of Service")
                     }
                 }

@@ -4,13 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taskweave - Calendar-First Todo App for iOS</title>
+    <meta name="description" content="A free, open-source, calendar-first todo app for iOS. Schedule tasks as naturally as writing a todo with AI-powered suggestions, Apple Calendar integration, Siri Shortcuts, widgets, and Apple Watch support.">
+    <meta name="keywords" content="todo app, task manager, iOS app, calendar integration, AI, productivity, open source, SwiftUI">
+    <meta name="author" content="Prakash Chaudhary">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://taskweave.netlify.app/">
+    <meta property="og:title" content="Taskweave - Calendar-First Todo App for iOS">
+    <meta property="og:description" content="A free, open-source, calendar-first todo app that makes task scheduling as natural as writing a todo.">
+    <meta property="og:image" content="https://taskweave.netlify.app/assets/icons/icon-512.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Taskweave - Calendar-First Todo App for iOS">
+    <meta name="twitter:description" content="A free, open-source, calendar-first todo app that makes task scheduling as natural as writing a todo.">
+    <meta name="twitter:image" content="https://taskweave.netlify.app/assets/icons/icon-512.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
     <style>
         :root {
             --accent: #218A8D;
             --accent-light: #2BA5A8;
             --bg: #F5F5F5;
+            --bg-card: #FFFFFF;
             --text: #333;
             --text-light: #666;
+            --header-bg: linear-gradient(135deg, #1F2121 0%, #2d3436 100%);
+            --shadow: rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] {
+            --bg: #1a1a1a;
+            --bg-card: #2d2d2d;
+            --text: #f0f0f0;
+            --text-light: #aaa;
+            --header-bg: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+            --shadow: rgba(0,0,0,0.3);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #1a1a1a;
+                --bg-card: #2d2d2d;
+                --text: #f0f0f0;
+                --text-light: #aaa;
+                --header-bg: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+                --shadow: rgba(0,0,0,0.3);
+            }
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -18,15 +60,59 @@
             line-height: 1.6;
             color: var(--text);
             background: var(--bg);
+            transition: background 0.3s, color 0.3s;
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: var(--bg-card);
+            border: 1px solid var(--shadow);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px var(--shadow);
         }
         header {
-            background: linear-gradient(135deg, #1F2121 0%, #2d3436 100%);
+            background: var(--header-bg);
             color: white;
-            padding: 60px 20px;
+            padding: 60px 20px 100px;
             text-align: center;
         }
         header h1 { font-size: 2.5rem; margin-bottom: 10px; }
         header p { color: rgba(255,255,255,0.8); font-size: 1.2rem; max-width: 600px; margin: 0 auto; }
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .app-store-cta {
+            margin-top: 20px;
+        }
+        .coming-soon {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            z-index: 10;
+        }
         .version {
             display: inline-block;
             background: var(--accent);
@@ -60,10 +146,11 @@
             margin-bottom: 50px;
         }
         .feature {
-            background: white;
+            background: var(--bg-card);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px var(--shadow);
+            transition: background 0.3s;
         }
         .feature h3 {
             color: var(--accent);
@@ -91,9 +178,10 @@
         .cta {
             text-align: center;
             padding: 50px 20px;
-            background: white;
+            background: var(--bg-card);
             margin: 40px 0;
             border-radius: 12px;
+            transition: background 0.3s;
         }
         .cta a {
             display: inline-block;
@@ -127,6 +215,9 @@
             padding: 30px;
             color: var(--text-light);
             font-size: 0.9rem;
+            background: var(--bg-card);
+            margin-top: 40px;
+            transition: background 0.3s;
         }
 
         @media (max-width: 600px) {
@@ -136,10 +227,17 @@
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌚</span>
+    </button>
     <header>
+        <img src="assets/icons/apple-touch-icon.png" alt="Taskweave App Icon" class="app-icon">
         <h1>Taskweave</h1>
         <p>A free, open-source, calendar-first todo app that makes task scheduling as natural as writing a todo.</p>
         <span class="version">v0.21.0</span>
+        <div class="app-store-cta">
+            <span class="coming-soon">Coming Soon to the App Store</span>
+        </div>
     </header>
 
     <div class="screenshots">
@@ -150,7 +248,7 @@
     </div>
 
     <div class="container">
-        <section class="features">
+        <section id="features" class="features">
             <div class="feature">
                 <h3>📋 Task Management</h3>
                 <ul>
@@ -169,8 +267,8 @@
                     <li>Native Apple Calendar sync</li>
                     <li>Day and week calendar views</li>
                     <li>See events alongside tasks</li>
+                    <li>Swipe events to create tasks</li>
                     <li>Schedule tasks as time blocks</li>
-                    <li>Conflict detection</li>
                 </ul>
             </div>
 
@@ -248,7 +346,6 @@
             <a href="design/">Design System</a>
             <a href="privacy/">Privacy Policy</a>
             <a href="terms/">Terms of Service</a>
-            <a href="https://github.com/connectwithprakash/taskweave/blob/main/CONTRIBUTING.md">Contributing</a>
         </div>
     </div>
 
@@ -256,5 +353,54 @@
         <p>Built with <a href="https://claude.com/claude-code" style="color: var(--accent);">Claude Code</a></p>
         <p style="margin-top: 10px;">MIT License &copy; 2025</p>
     </footer>
+
+    <script>
+        function getSystemTheme() {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function updateIcon(theme) {
+            const icon = document.querySelector('.theme-icon');
+            icon.textContent = theme === 'dark' ? '🌞' : '🌚';
+        }
+
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const systemTheme = getSystemTheme();
+
+            let newTheme;
+            if (!currentTheme) {
+                // First click: override system preference
+                newTheme = systemTheme === 'dark' ? 'light' : 'dark';
+            } else {
+                newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            }
+
+            root.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        }
+
+        // Initialize theme on load
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemTheme = getSystemTheme();
+
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                updateIcon(savedTheme);
+            } else {
+                updateIcon(systemTheme);
+            }
+
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    updateIcon(e.matches ? 'dark' : 'light');
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

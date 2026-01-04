@@ -4,14 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terms of Service - Taskweave</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; color: #333; }
-        h1, h2 { color: #218A8D; }
-        a { color: #218A8D; }
+        :root {
+            --accent: #218A8D;
+            --bg: #F5F5F5;
+            --bg-card: #FFFFFF;
+            --text: #333;
+            --text-light: #666;
+        }
+        [data-theme="dark"] {
+            --bg: #1a1a1a;
+            --bg-card: #2d2d2d;
+            --text: #f0f0f0;
+            --text-light: #aaa;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #1a1a1a;
+                --bg-card: #2d2d2d;
+                --text: #f0f0f0;
+                --text-light: #aaa;
+            }
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            transition: background 0.3s, color 0.3s;
+        }
+        h1, h2 { color: var(--accent); }
+        h3 { color: var(--text); }
+        a { color: var(--accent); }
         .back { margin-bottom: 20px; }
+        ul { color: var(--text-light); }
+        li { margin-bottom: 8px; }
+        p { color: var(--text-light); }
+        strong { color: var(--text); }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: var(--bg-card);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .theme-toggle:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌚</span>
+    </button>
+
     <div class="back"><a href="../">&larr; Back to Taskweave</a></div>
 
     <h1>Terms of Service</h1>
@@ -78,5 +139,39 @@
 
     <h2>Contact</h2>
     <p>For questions, open an issue on <a href="https://github.com/connectwithprakash/taskweave/issues">GitHub</a>.</p>
+
+    <script>
+        function getSystemTheme() {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        function updateIcon(theme) {
+            const icon = document.querySelector('.theme-icon');
+            icon.textContent = theme === 'dark' ? '🌞' : '🌚';
+        }
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const systemTheme = getSystemTheme();
+            let newTheme;
+            if (!currentTheme) {
+                newTheme = systemTheme === 'dark' ? 'light' : 'dark';
+            } else {
+                newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            }
+            root.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        }
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemTheme = getSystemTheme();
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                updateIcon(savedTheme);
+            } else {
+                updateIcon(systemTheme);
+            }
+        })();
+    </script>
 </body>
 </html>

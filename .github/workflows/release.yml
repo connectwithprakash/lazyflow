@@ -61,12 +61,13 @@ jobs:
         run: |
           VERSION=${{ needs.release-please.outputs.version }}
           sed -i "s/<span class=\"version\">v[0-9]*\.[0-9]*\.[0-9]*</<span class=\"version\">v$VERSION</g" docs/site/index.html
-          echo "Updated website version badge to v$VERSION"
+          sed -i "s/Design System v[0-9]*\.[0-9]*\.[0-9]*/Design System v$VERSION/g" docs/site/design/index.html
+          echo "Updated website version badges to v$VERSION"
 
       - name: Commit version update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Taskweave.xcodeproj/project.pbxproj docs/site/index.html
+          git add Taskweave.xcodeproj/project.pbxproj docs/site/index.html docs/site/design/index.html
           git commit -m "chore: bump iOS version to ${{ needs.release-please.outputs.version }}"
           git push
