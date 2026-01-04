@@ -182,6 +182,66 @@ final class NotificationService: @unchecked Sendable {
         notificationCenter.removeAllPendingNotificationRequests()
     }
 
+    // MARK: - Daily Summary Notifications
+
+    private static let dailySummaryIdentifier = "daily_summary_reminder"
+
+    /// Schedule daily evening summary reminder
+    /// - Parameters:
+    ///   - hour: Hour to send reminder (0-23)
+    ///   - minute: Minute to send reminder (0-59)
+    func scheduleDailySummaryReminder(hour: Int, minute: Int) {
+        _Concurrency.Task {
+            let status = await checkPermissionStatus()
+
+            switch status {
+            case .authorized, .provisional, .ephemeral:
+                await scheduleDailySummaryNotification(hour: hour, minute: minute)
+            case .notDetermined:
+                let granted = await requestPermission()
+                if granted {
+                    await scheduleDailySummaryNotification(hour: hour, minute: minute)
+                }
+            case .denied:
+                print("Notification permission denied for daily summary")
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    private func scheduleDailySummaryNotification(hour: Int, minute: Int) async {
+        let content = UNMutableNotificationContent()
+        content.title = "Daily Summary Ready"
+        content.body = "See how productive you were today!"
+        content.sound = .default
+        content.categoryIdentifier = "DAILY_SUMMARY"
+
+        var dateComponents = DateComponents()
+        dateComponents.hour = hour
+        dateComponents.minute = minute
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+
+        let request = UNNotificationRequest(
+            identifier: Self.dailySummaryIdentifier,
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await notificationCenter.add(request)
+            print("Scheduled daily summary reminder at \(hour):\(minute)")
+        } catch {
+            print("Failed to schedule daily summary reminder: \(error)")
+        }
+    }
+
+    /// Cancel the daily summary reminder
+    func cancelDailySummaryReminder() {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [Self.dailySummaryIdentifier])
+    }
+
     // MARK: - Badge Management
 
     /// Clear the notification badge
@@ -228,6 +288,23 @@ final class NotificationService: @unchecked Sendable {
             options: []
         )
 
-        notificationCenter.setNotificationCategories([taskReminderCategory, taskUpcomingCategory])
+        let viewSummaryAction = UNNotificationAction(
+            identifier: "VIEW_SUMMARY_ACTION",
+            title: "View Summary",
+            options: [.foreground]
+        )
+
+        let dailySummaryCategory = UNNotificationCategory(
+            identifier: "DAILY_SUMMARY",
+            actions: [viewSummaryAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        notificationCenter.setNotificationCategories([
+            taskReminderCategory,
+            taskUpcomingCategory,
+            dailySummaryCategory
+        ])
     }
 }
