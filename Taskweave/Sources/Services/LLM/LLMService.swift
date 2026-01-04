@@ -240,6 +240,9 @@ final class LLMService: ObservableObject {
     }
 
     private func buildFullAnalysisPrompt(task: Task) -> String {
+        // Get learning context from user corrections
+        let learningContext = AILearningService.shared.getCorrectionsContext()
+
         var prompt = """
         Analyze this task completely:
 
@@ -258,9 +261,13 @@ final class LLMService: ObservableObject {
 
         prompt += "\nCurrent Priority: \(task.priority.displayName)"
 
+        // Include learning context
+        prompt += "\n\n\(learningContext)"
+
         prompt += """
 
         Provide complete analysis including duration, priority, best time, category, refined title, suggested description, subtasks, and tips.
+        Consider the user preferences above when making suggestions.
 
         Respond in JSON format only:
         {

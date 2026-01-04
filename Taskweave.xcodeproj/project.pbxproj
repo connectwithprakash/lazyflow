@@ -73,6 +73,10 @@
 		BDE54D573C1126CE73B38C94 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45B38F1755E8984C7F33C03E /* SettingsView.swift */; };
 		C5DB3C6BC940A2CCDCCBFA1E /* TaskViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4607DBE0549C49D4E5530FBB /* TaskViewModel.swift */; };
 		C695E251436C3F28E0AA320B /* Priority.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C2746788E2B53379FE262D /* Priority.swift */; };
+		9818171E90C84262AF2B3DF8 /* AICorrection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICorrection.swift; sourceTree = "<group>"; };
+		FFF381D3BE424745A869C3D9 /* AILearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILearningService.swift; sourceTree = "<group>"; };
+		9818171E90C84262AF2B3DF9 /* AICorrection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9818171E90C84262AF2B3DF8 /* AICorrection.swift */; };
+		FFF381D3BE424745A869C3DA /* AILearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFF381D3BE424745A869C3D9 /* AILearningService.swift */; };
 		C6E58B05FEAB135E688655F1 /* TaskweaveWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DBD26B0BA3382145D1B39C /* TaskweaveWidgetBundle.swift */; };
 		C75E0FB81A58863307B71812 /* SmartRescheduleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D37A9F9B8D0979DB9480F9 /* SmartRescheduleService.swift */; };
 		C86B43D6611AFBA65FCE80AC /* RecurringRuleEntity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C84C134D070FB1E0ADD562 /* RecurringRuleEntity+Extensions.swift */; };
@@ -392,6 +396,7 @@
 			isa = PBXGroup;
 			children = (
 				BDAC333C919BB0B5392A8115 /* LLM */,
+				FFF381D3BE424745A869C3D9 /* AILearningService.swift */,
 				2844BB6F06D15D6E70D51359 /* AIService.swift */,
 				E1F8C0BED069AC92C4166B74 /* CalendarService.swift */,
 				BD82E69401005EE869071460 /* ConflictDetectionService.swift */,
@@ -440,6 +445,7 @@
 		ABDC651898570970922681AF /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				9818171E90C84262AF2B3DF8 /* AICorrection.swift */,
 				58C2746788E2B53379FE262D /* Priority.swift */,
 				04B726BC641EFB8CC98BF496 /* RecurringRule.swift */,
 				99C84C134D070FB1E0ADD562 /* RecurringRuleEntity+Extensions.swift */,
@@ -755,6 +761,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9818171E90C84262AF2B3DF9 /* AICorrection.swift in Sources */,
+				FFF381D3BE424745A869C3DA /* AILearningService.swift in Sources */,
 				42235169663AA16F0156870B /* AIService.swift in Sources */,
 				21EFAAAAEB1FD4F60511631F /* AddTaskView.swift in Sources */,
 				3F3057702097070DC3C3641B /* AnthropicProvider.swift in Sources */,
