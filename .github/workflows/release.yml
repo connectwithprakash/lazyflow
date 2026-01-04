@@ -57,10 +57,16 @@ jobs:
           sed -i "s/MARKETING_VERSION = [0-9]*\.[0-9]*\.[0-9]*/MARKETING_VERSION = $VERSION/g" Taskweave.xcodeproj/project.pbxproj
           echo "Updated MARKETING_VERSION to $VERSION"
 
+      - name: Update website version badge
+        run: |
+          VERSION=${{ needs.release-please.outputs.version }}
+          sed -i "s/<span class=\"version\">v[0-9]*\.[0-9]*\.[0-9]*</<span class=\"version\">v$VERSION</g" docs/site/index.html
+          echo "Updated website version badge to v$VERSION"
+
       - name: Commit version update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Taskweave.xcodeproj/project.pbxproj
+          git add Taskweave.xcodeproj/project.pbxproj docs/site/index.html
           git commit -m "chore: bump iOS version to ${{ needs.release-please.outputs.version }}"
           git push
