@@ -15,6 +15,8 @@ struct TodayView: View {
     @State private var showBatchReschedule = false
     @State private var undoAction: UndoAction?
     @State private var undoSnapshot: Task?
+    @State private var showDailySummary = false
+    @StateObject private var summaryService = DailySummaryService.shared
 
     var body: some View {
         Group {
@@ -82,6 +84,17 @@ struct TodayView: View {
         .undoToast(action: $undoAction) { action in
             handleUndo(action)
         }
+        .sheet(isPresented: $showDailySummary) {
+            DailySummaryView()
+        }
+    }
+
+    // MARK: - Daily Summary Prompt
+
+    /// Show summary prompt after 6 PM when tasks are completed
+    private var shouldShowSummaryPrompt: Bool {
+        let hour = Calendar.current.component(.hour, from: Date())
+        return hour >= 18 && viewModel.completedTaskCount > 0 && !summaryService.hasTodaySummary
     }
 
     // MARK: - Undo Handling
@@ -280,6 +293,16 @@ struct TodayView: View {
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
+            // Daily summary prompt (shows after 6 PM with completed tasks)
+            if shouldShowSummaryPrompt {
+                Section {
+                    dailySummaryPromptCard
+                }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.adaptiveBackground)
+                .listRowSeparator(.hidden)
+            }
+
             // Conflicts banner
             if !conflictService.detectedConflicts.isEmpty {
                 Section {
@@ -441,6 +464,44 @@ struct TodayView: View {
         .padding()
         .background(Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.large)
+    }
+
+    private var dailySummaryPromptCard: some View {
+        Button {
+            showDailySummary = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                ZStack {
+                    Circle()
+                        .fill(Color.orange.opacity(0.15))
+                        .frame(width: 44, height: 44)
+
+                    Image(systemName: "chart.bar.doc.horizontal")
+                        .font(.system(size: 20))
+                        .foregroundColor(.orange)
+                }
+
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                    Text("View Daily Summary")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundColor(Color.Taskweave.textPrimary)
+
+                    Text("See your productivity stats for today")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Taskweave.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color.Taskweave.textTertiary)
+            }
+            .padding()
+            .background(Color.adaptiveSurface)
+            .cornerRadius(DesignSystem.CornerRadius.large)
+        }
+        .buttonStyle(.plain)
     }
 
     private func taskSection(title: String, tasks: [Task], accentColor: Color) -> some View {
