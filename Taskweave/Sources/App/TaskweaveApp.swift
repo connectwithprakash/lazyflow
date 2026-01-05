@@ -1,16 +1,10 @@
 import SwiftUI
 import UserNotifications
-import WatchConnectivity
 
 /// Main entry point for the Taskweave app
 @main
 struct TaskweaveApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
-    init() {
-        // Configure appearance (lightweight, OK on main thread)
-        configureAppearance()
-    }
 
     var body: some Scene {
         WindowGroup {
@@ -64,20 +58,6 @@ struct TaskweaveApp: App {
         }
     }
 
-    private func configureAppearance() {
-        // Tab bar appearance
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithDefaultBackground()
-        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-        UITabBar.appearance().standardAppearance = tabBarAppearance
-
-        // Navigation bar appearance
-        let navBarAppearance = UINavigationBarAppearance()
-        navBarAppearance.configureWithDefaultBackground()
-        UINavigationBar.appearance().standardAppearance = navBarAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
-    }
-
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "taskweave" else { return }
         if url.host == "view", let path = url.pathComponents.last {
@@ -100,13 +80,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         NotificationService.shared.registerNotificationCategories()
 
         return true
-    }
-
-    func application(
-        _ application: UIApplication,
-        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
-    ) {
-        // Handle remote notification registration for CloudKit
     }
 
     func application(
