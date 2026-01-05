@@ -6,15 +6,27 @@ A comprehensive design system for building consistent, accessible, and beautiful
 
 ## Visual Preview
 
-### Dark Mode
-| Today View | Add Task | Task List |
-|------------|----------|-----------|
-| ![Today Empty](../assets/screenshots/dark/01-today-empty.png) | ![Add Task](../assets/screenshots/dark/02-add-task-sheet.png) | ![Task List](../assets/screenshots/dark/05-today-multiple-tasks.png) |
-
 ### Light Mode
-| Today View | Lists | Settings |
-|------------|-------|----------|
-| ![Today Light](../assets/screenshots/light/05-today-multiple-tasks.png) | ![Lists Light](../assets/screenshots/light/08-lists-view.png) | ![Settings Light](../assets/screenshots/light/09-settings-view.png) |
+| Today View | Daily Summary | AI Priority |
+|------------|---------------|-------------|
+| ![Today](../site/assets/screenshots/light/iphone/01-today-view.png) | ![Daily Summary](../site/assets/screenshots/light/iphone/02-daily-summary.png) | ![AI Priority](../site/assets/screenshots/light/iphone/03-ai-priority.png) |
+
+| Calendar | Upcoming | Lists |
+|----------|----------|-------|
+| ![Calendar](../site/assets/screenshots/light/iphone/04-calendar-week.png) | ![Upcoming](../site/assets/screenshots/light/iphone/05-upcoming.png) | ![Lists](../site/assets/screenshots/light/iphone/06-lists.png) |
+
+| Settings | Task Edit |
+|----------|-----------|
+| ![Settings](../site/assets/screenshots/light/iphone/07-settings.png) | ![Task Edit](../site/assets/screenshots/light/iphone/09-task-edit.png) |
+
+### Dark Mode
+| Today View | Calendar | Upcoming |
+|------------|----------|----------|
+| ![Today Dark](../site/assets/screenshots/dark/iphone/01-today-view.png) | ![Calendar Dark](../site/assets/screenshots/dark/iphone/02-calendar-week.png) | ![Upcoming Dark](../site/assets/screenshots/dark/iphone/03-upcoming.png) |
+
+| Lists | Settings |
+|-------|----------|
+| ![Lists Dark](../site/assets/screenshots/dark/iphone/04-lists.png) | ![Settings Dark](../site/assets/screenshots/dark/iphone/05-settings.png) |
 
 ---
 
@@ -92,7 +104,7 @@ Productivity apps should disappear into the background. Every visual element com
 
 **vs. Fantastical**
 - Fantastical: Calendar-first but complex UI, subscription
-- Taskweave: Simpler task focus, free, engineer-targeted
+- Taskweave: Simpler task focus, free and open source
 
 ### Lessons Learned from Competitors
 
