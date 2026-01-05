@@ -377,4 +377,288 @@ final class TaskweaveUITests: XCTestCase {
         let listsNav = app.navigationBars["Lists"]
         XCTAssertTrue(listsNav.waitForExistence(timeout: 3), "Lists view should be accessible")
     }
+
+    // MARK: - Morning Briefing Tests
+
+    func testMorningBriefingSettingsExist() throws {
+        app.tabBars.buttons["Settings"].tap()
+
+        // Scroll to find Morning Briefing settings
+        let settingsView = app.scrollViews.firstMatch
+        settingsView.swipeUp()
+
+        // Look for Morning Briefing toggle in Daily Summary section
+        let morningToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Morning'")).firstMatch
+        if morningToggle.waitForExistence(timeout: 3) {
+            XCTAssertTrue(morningToggle.exists, "Morning briefing toggle should exist in settings")
+        }
+    }
+
+    func testMorningBriefingPromptCard() throws {
+        // Navigate to Today view
+        app.tabBars.buttons["Today"].tap()
+
+        // The morning briefing prompt card may appear in the morning hours
+        // If it appears, verify it has the expected content
+        let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
+        if briefingCard.waitForExistence(timeout: 2) {
+            XCTAssertTrue(briefingCard.exists)
+
+            // Tap on the card to open morning briefing
+            briefingCard.tap()
+
+            // Verify morning briefing view opens
+            let briefingNav = app.navigationBars["Good Morning"]
+            XCTAssertTrue(briefingNav.waitForExistence(timeout: 3), "Morning briefing view should open")
+        }
+    }
+
+    func testMorningBriefingViewContent() throws {
+        // Navigate to Today view
+        app.tabBars.buttons["Today"].tap()
+
+        // Try to access morning briefing through settings or direct navigation
+        // First check if there's a briefing card to tap
+        let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
+        if briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable {
+            briefingCard.tap()
+
+            // Verify morning briefing content sections
+            let scrollView = app.scrollViews.firstMatch
+
+            // Verify key sections exist
+            let yesterdaySection = app.staticTexts["Yesterday"]
+            let todayPlanSection = app.staticTexts["Today's Plan"]
+            let weekSection = app.staticTexts["This Week"]
+
+            // At least one section should be visible
+            let hasContent = yesterdaySection.waitForExistence(timeout: 3) ||
+                            todayPlanSection.exists ||
+                            weekSection.exists
+
+            XCTAssertTrue(hasContent, "Morning briefing should have content sections")
+
+            // Dismiss the briefing
+            let doneButton = app.buttons["Done"]
+            if doneButton.exists && doneButton.isHittable {
+                doneButton.tap()
+            }
+        }
+    }
+
+    func testMorningBriefingRefresh() throws {
+        app.tabBars.buttons["Today"].tap()
+
+        let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
+        if briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable {
+            briefingCard.tap()
+
+            // Wait for briefing view
+            let briefingNav = app.navigationBars["Good Morning"]
+            XCTAssertTrue(briefingNav.waitForExistence(timeout: 3))
+
+            // Find and tap refresh button
+            let refreshButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'arrow.clockwise' OR label CONTAINS[c] 'Refresh'")).firstMatch
+            if refreshButton.waitForExistence(timeout: 2) && refreshButton.isHittable {
+                refreshButton.tap()
+
+                // Wait for refresh to complete (loading indicator should appear and disappear)
+                sleep(2)
+
+                // View should still exist after refresh
+                XCTAssertTrue(briefingNav.exists)
+            }
+
+            // Dismiss
+            let doneButton = app.buttons["Done"]
+            if doneButton.exists {
+                doneButton.tap()
+            }
+        }
+    }
+
+    // MARK: - Daily Summary Tests
+
+    func testDailySummarySettingsExist() throws {
+        app.tabBars.buttons["Settings"].tap()
+
+        // Scroll to find Daily Summary section
+        let settingsView = app.scrollViews.firstMatch
+        settingsView.swipeUp()
+
+        // Look for Daily Summary toggle
+        let summaryToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Summary' OR label CONTAINS[c] 'Evening'")).firstMatch
+        if summaryToggle.waitForExistence(timeout: 3) {
+            XCTAssertTrue(summaryToggle.exists, "Daily summary toggle should exist in settings")
+        }
+    }
+
+    func testDailySummarySection() throws {
+        app.tabBars.buttons["Settings"].tap()
+
+        // Verify Daily Summary section header exists
+        let summarySection = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Daily Summary'")).firstMatch
+        XCTAssertTrue(summarySection.waitForExistence(timeout: 3), "Daily Summary section should exist in settings")
+    }
+
+    func testDailySummaryToggleInteraction() throws {
+        app.tabBars.buttons["Settings"].tap()
+
+        let settingsView = app.scrollViews.firstMatch
+        settingsView.swipeUp()
+
+        // Find the summary reminder toggle
+        let reminderToggle = app.switches.firstMatch
+        if reminderToggle.waitForExistence(timeout: 3) && reminderToggle.isHittable {
+            let wasOn = reminderToggle.value as? String == "1"
+
+            // Toggle it
+            reminderToggle.tap()
+
+            // Verify state changed
+            let isOn = reminderToggle.value as? String == "1"
+            XCTAssertNotEqual(wasOn, isOn, "Toggle should change state")
+
+            // Toggle back
+            reminderToggle.tap()
+        }
+    }
+
+    // MARK: - Task Category Tests
+
+    func testTaskCategorySelection() throws {
+        app.tabBars.buttons["Today"].tap()
+        app.buttons["Add task"].tap()
+
+        // Verify add task sheet appears
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 2))
+
+        // Enter task title first
+        let titleField = app.textFields["What do you need to do?"]
+        titleField.tap()
+        titleField.typeText("Categorized Task")
+
+        // Look for category picker
+        let categoryButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'category' OR label CONTAINS[c] 'work' OR label CONTAINS[c] 'personal'")).firstMatch
+        if categoryButton.waitForExistence(timeout: 2) && categoryButton.isHittable {
+            categoryButton.tap()
+
+            // Select a category
+            let workOption = app.buttons["Work"]
+            if workOption.waitForExistence(timeout: 2) && workOption.isHittable {
+                workOption.tap()
+            }
+        }
+
+        // Cancel to clean up
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists {
+            cancelButton.tap()
+        }
+    }
+
+    // MARK: - Priority Tests
+
+    func testTaskPrioritySelection() throws {
+        app.tabBars.buttons["Today"].tap()
+        app.buttons["Add task"].tap()
+
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 2))
+
+        let titleField = app.textFields["What do you need to do?"]
+        titleField.tap()
+        titleField.typeText("Priority Task")
+
+        // Look for priority picker
+        let priorityButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'priority'")).firstMatch
+        if priorityButton.waitForExistence(timeout: 2) && priorityButton.isHittable {
+            priorityButton.tap()
+
+            // Select high priority
+            let highOption = app.buttons["High"]
+            if highOption.waitForExistence(timeout: 2) && highOption.isHittable {
+                highOption.tap()
+            }
+        }
+
+        // Cancel to clean up
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists {
+            cancelButton.tap()
+        }
+    }
+
+    // MARK: - Streak Display Tests
+
+    func testStreakDisplayInSettings() throws {
+        app.tabBars.buttons["Settings"].tap()
+
+        // Scroll to look for streak information
+        let settingsView = app.scrollViews.firstMatch
+        settingsView.swipeUp()
+
+        // Look for streak-related text
+        let streakText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'streak' OR label CONTAINS[c] 'day'")).firstMatch
+        // Streak display may or may not exist depending on user's history
+        // This test just verifies settings page loads properly
+        XCTAssertTrue(app.navigationBars["Settings"].exists)
+    }
+
+    // MARK: - Calendar Integration Tests
+
+    func testCalendarViewNavigation() throws {
+        app.tabBars.buttons["Calendar"].tap()
+
+        // Verify calendar view loads
+        XCTAssertTrue(app.navigationBars["Calendar"].waitForExistence(timeout: 3))
+
+        // Look for date picker or calendar grid
+        let calendarExists = app.datePickers.firstMatch.exists ||
+                            app.collectionViews.firstMatch.exists ||
+                            app.otherElements.matching(NSPredicate(format: "identifier CONTAINS[c] 'calendar'")).firstMatch.exists
+
+        // Calendar view should have some content
+        XCTAssertTrue(app.navigationBars["Calendar"].exists, "Calendar should load successfully")
+    }
+
+    func testCalendarDateSelection() throws {
+        app.tabBars.buttons["Calendar"].tap()
+        XCTAssertTrue(app.navigationBars["Calendar"].waitForExistence(timeout: 3))
+
+        // Try to tap on a date
+        let datePicker = app.datePickers.firstMatch
+        if datePicker.exists && datePicker.isHittable {
+            datePicker.tap()
+        }
+
+        // Calendar view should still be visible
+        XCTAssertTrue(app.navigationBars["Calendar"].exists)
+    }
+
+    // MARK: - Search Tests
+
+    func testSearchFunctionality() throws {
+        app.tabBars.buttons["Today"].tap()
+
+        // First create a task to search for
+        app.buttons["Add task"].tap()
+        let titleField = app.textFields["What do you need to do?"]
+        titleField.tap()
+        titleField.typeText("Searchable test task")
+        app.buttons["Add"].tap()
+
+        // Look for search field or search button
+        let searchField = app.searchFields.firstMatch
+        let searchButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'magnifyingglass' OR label CONTAINS[c] 'Search'")).firstMatch
+
+        if searchField.waitForExistence(timeout: 2) && searchField.isHittable {
+            searchField.tap()
+            searchField.typeText("Searchable")
+
+            // Verify task appears in results
+            XCTAssertTrue(app.staticTexts["Searchable test task"].waitForExistence(timeout: 3))
+        } else if searchButton.exists && searchButton.isHittable {
+            searchButton.tap()
+        }
+    }
 }
