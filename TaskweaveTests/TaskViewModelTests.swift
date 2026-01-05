@@ -262,14 +262,22 @@ final class TaskViewModelTests: XCTestCase {
     func testDurationPresets_Values() {
         let presets = TaskViewModel.durationPresets
 
-        XCTAssertEqual(presets[0], ("15 min", 15 * 60))
-        XCTAssertEqual(presets[1], ("30 min", 30 * 60))
-        XCTAssertEqual(presets[2], ("45 min", 45 * 60))
-        XCTAssertEqual(presets[3], ("1 hour", 60 * 60))
-        XCTAssertEqual(presets[4], ("1.5 hours", 90 * 60))
-        XCTAssertEqual(presets[5], ("2 hours", 120 * 60))
-        XCTAssertEqual(presets[6], ("3 hours", 180 * 60))
-        XCTAssertEqual(presets[7], ("4 hours", 240 * 60))
+        XCTAssertEqual(presets[0].0, "15 min")
+        XCTAssertEqual(presets[0].1, 15 * 60)
+        XCTAssertEqual(presets[1].0, "30 min")
+        XCTAssertEqual(presets[1].1, 30 * 60)
+        XCTAssertEqual(presets[2].0, "45 min")
+        XCTAssertEqual(presets[2].1, 45 * 60)
+        XCTAssertEqual(presets[3].0, "1 hour")
+        XCTAssertEqual(presets[3].1, 60 * 60)
+        XCTAssertEqual(presets[4].0, "1.5 hours")
+        XCTAssertEqual(presets[4].1, 90 * 60)
+        XCTAssertEqual(presets[5].0, "2 hours")
+        XCTAssertEqual(presets[5].1, 120 * 60)
+        XCTAssertEqual(presets[6].0, "3 hours")
+        XCTAssertEqual(presets[6].1, 180 * 60)
+        XCTAssertEqual(presets[7].0, "4 hours")
+        XCTAssertEqual(presets[7].1, 240 * 60)
     }
 
     // MARK: - Category Tests
