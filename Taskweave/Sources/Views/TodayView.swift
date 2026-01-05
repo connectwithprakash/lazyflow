@@ -16,8 +16,11 @@ struct TodayView: View {
     @State private var undoAction: UndoAction?
     @State private var undoSnapshot: Task?
     @State private var showDailySummary = false
+    @State private var showMorningBriefing = false
     @StateObject private var summaryService = DailySummaryService.shared
     @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
+    @AppStorage("morningBriefingEnabled") private var morningBriefingEnabled: Bool = false
+    @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
 
     var body: some View {
         Group {
@@ -88,6 +91,29 @@ struct TodayView: View {
         .sheet(isPresented: $showDailySummary) {
             DailySummaryView()
         }
+        .sheet(isPresented: $showMorningBriefing) {
+            MorningBriefingView()
+        }
+        .onChange(of: showMorningBriefing) { _, newValue in
+            if !newValue {
+                // Mark as viewed when sheet is dismissed
+                lastMorningBriefingDate = Date().timeIntervalSince1970
+            }
+        }
+    }
+
+    // MARK: - Morning Briefing Prompt
+
+    /// Show morning briefing prompt between 5 AM and 12 PM when there are tasks
+    private var shouldShowMorningBriefingPrompt: Bool {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let isMorning = hour >= 5 && hour < 12
+
+        // Check if already viewed today
+        let lastViewedDate = Date(timeIntervalSince1970: lastMorningBriefingDate)
+        let alreadyViewedToday = Calendar.current.isDateInToday(lastViewedDate)
+
+        return isMorning && viewModel.totalTaskCount > 0 && !alreadyViewedToday
     }
 
     // MARK: - Daily Summary Prompt
@@ -294,6 +320,16 @@ struct TodayView: View {
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
+            // Morning briefing prompt (shows between 5 AM - 12 PM with tasks)
+            if shouldShowMorningBriefingPrompt {
+                Section {
+                    morningBriefingPromptCard
+                }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowBackground(Color.adaptiveBackground)
+                .listRowSeparator(.hidden)
+            }
+
             // Daily summary prompt (shows after 6 PM with completed tasks)
             if shouldShowSummaryPrompt {
                 Section {
@@ -465,6 +501,44 @@ struct TodayView: View {
         .padding()
         .background(Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.large)
+    }
+
+    private var morningBriefingPromptCard: some View {
+        Button {
+            showMorningBriefing = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                ZStack {
+                    Circle()
+                        .fill(Color.orange.opacity(0.15))
+                        .frame(width: 44, height: 44)
+
+                    Image(systemName: "sun.max.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.orange)
+                }
+
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                    Text("Start Your Day")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundColor(Color.Taskweave.textPrimary)
+
+                    Text("You have \(viewModel.totalTaskCount) task\(viewModel.totalTaskCount == 1 ? "" : "s") planned for today")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Taskweave.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color.Taskweave.textTertiary)
+            }
+            .padding()
+            .background(Color.adaptiveSurface)
+            .cornerRadius(DesignSystem.CornerRadius.large)
+        }
+        .buttonStyle(.plain)
     }
 
     private var dailySummaryPromptCard: some View {
