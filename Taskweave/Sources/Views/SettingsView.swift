@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var showNotificationSettings = false
     @State private var showAISettings = false
     @State private var showDailySummary = false
+    @State private var showMorningBriefing = false
     @StateObject private var summaryService = DailySummaryService.shared
 
     var body: some View {
@@ -26,6 +27,7 @@ struct SettingsView: View {
                 .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
                 .sheet(isPresented: $showAISettings) { AISettingsView() }
                 .sheet(isPresented: $showDailySummary) { DailySummaryView() }
+                .sheet(isPresented: $showMorningBriefing) { MorningBriefingView() }
         } else {
             // iPhone: Full NavigationStack
             NavigationStack {
@@ -35,6 +37,7 @@ struct SettingsView: View {
                     .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
                     .sheet(isPresented: $showAISettings) { AISettingsView() }
                     .sheet(isPresented: $showDailySummary) { DailySummaryView() }
+                    .sheet(isPresented: $showMorningBriefing) { MorningBriefingView() }
             }
         }
     }
@@ -75,6 +78,28 @@ struct SettingsView: View {
                                 .foregroundColor(Color.Taskweave.textTertiary)
                         }
                     }
+                }
+
+                // Morning Briefing
+                Section {
+                    Button {
+                        showMorningBriefing = true
+                    } label: {
+                        HStack {
+                            Label("View Morning Briefing", systemImage: "sun.max.fill")
+                                .foregroundColor(Color.Taskweave.textPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(Color.Taskweave.textTertiary)
+                        }
+                    }
+
+                    MorningBriefingNotificationToggle()
+                } header: {
+                    Text("Morning Briefing")
+                } footer: {
+                    Text("Start your day with yesterday's recap, today's priorities, and weekly progress. The prompt card appears in Today view between 5 AM and 12 PM.")
                 }
 
                 // Daily Summary
@@ -1031,6 +1056,66 @@ struct BatchAnalysisResultRow: View {
         .onTapGesture {
             result.isSelected.toggle()
         }
+    }
+}
+
+// MARK: - Morning Briefing Notification Toggle
+
+struct MorningBriefingNotificationToggle: View {
+    @AppStorage("morningBriefingNotificationEnabled") private var isEnabled = false
+    @AppStorage("morningBriefingNotificationHour") private var notificationHour = 7 // 7 AM default
+
+    private let notificationService = NotificationService.shared
+
+    var body: some View {
+        Toggle(isOn: $isEnabled) {
+            HStack {
+                Image(systemName: "bell.badge")
+                    .foregroundColor(.orange)
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Morning Reminder")
+                    if isEnabled {
+                        Text(formattedTime)
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Taskweave.textSecondary)
+                    }
+                }
+            }
+        }
+        .onChange(of: isEnabled) { _, newValue in
+            if newValue {
+                notificationService.scheduleMorningBriefing(hour: notificationHour, minute: 0)
+            } else {
+                notificationService.cancelMorningBriefing()
+            }
+        }
+
+        if isEnabled {
+            Picker("Reminder Time", selection: $notificationHour) {
+                ForEach(5..<12, id: \.self) { hour in
+                    Text(formatHour(hour)).tag(hour)
+                }
+            }
+            .onChange(of: notificationHour) { _, newHour in
+                notificationService.scheduleMorningBriefing(hour: newHour, minute: 0)
+            }
+        }
+    }
+
+    private var formattedTime: String {
+        formatHour(notificationHour)
+    }
+
+    private func formatHour(_ hour: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:00 a"
+        var components = DateComponents()
+        components.hour = hour
+        if let date = Calendar.current.date(from: components) {
+            return formatter.string(from: date)
+        }
+        return "\(hour):00"
     }
 }
 

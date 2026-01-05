@@ -242,6 +242,66 @@ final class NotificationService: @unchecked Sendable {
         notificationCenter.removePendingNotificationRequests(withIdentifiers: [Self.dailySummaryIdentifier])
     }
 
+    // MARK: - Morning Briefing Notifications
+
+    private static let morningBriefingIdentifier = "morning_briefing_reminder"
+
+    /// Schedule daily morning briefing notification
+    /// - Parameters:
+    ///   - hour: Hour to send briefing (0-23), typically 6-9 AM
+    ///   - minute: Minute to send briefing (0-59)
+    func scheduleMorningBriefing(hour: Int, minute: Int) {
+        _Concurrency.Task {
+            let status = await checkPermissionStatus()
+
+            switch status {
+            case .authorized, .provisional, .ephemeral:
+                await scheduleMorningBriefingNotification(hour: hour, minute: minute)
+            case .notDetermined:
+                let granted = await requestPermission()
+                if granted {
+                    await scheduleMorningBriefingNotification(hour: hour, minute: minute)
+                }
+            case .denied:
+                print("Notification permission denied for morning briefing")
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    private func scheduleMorningBriefingNotification(hour: Int, minute: Int) async {
+        let content = UNMutableNotificationContent()
+        content.title = "Good Morning!"
+        content.body = "Your daily briefing is ready. See what's planned for today."
+        content.sound = .default
+        content.categoryIdentifier = "MORNING_BRIEFING"
+
+        var dateComponents = DateComponents()
+        dateComponents.hour = hour
+        dateComponents.minute = minute
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+
+        let request = UNNotificationRequest(
+            identifier: Self.morningBriefingIdentifier,
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await notificationCenter.add(request)
+            print("Scheduled morning briefing at \(hour):\(String(format: "%02d", minute))")
+        } catch {
+            print("Failed to schedule morning briefing: \(error)")
+        }
+    }
+
+    /// Cancel the morning briefing reminder
+    func cancelMorningBriefing() {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [Self.morningBriefingIdentifier])
+    }
+
     // MARK: - Badge Management
 
     /// Clear the notification badge
@@ -301,10 +361,24 @@ final class NotificationService: @unchecked Sendable {
             options: []
         )
 
+        let viewBriefingAction = UNNotificationAction(
+            identifier: "VIEW_BRIEFING_ACTION",
+            title: "Start My Day",
+            options: [.foreground]
+        )
+
+        let morningBriefingCategory = UNNotificationCategory(
+            identifier: "MORNING_BRIEFING",
+            actions: [viewBriefingAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
         notificationCenter.setNotificationCategories([
             taskReminderCategory,
             taskUpcomingCategory,
-            dailySummaryCategory
+            dailySummaryCategory,
+            morningBriefingCategory
         ])
     }
 }
