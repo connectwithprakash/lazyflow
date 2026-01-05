@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- FOREGROUND LAYER: Front ring (Tasks) + AI Sparkle -->
+  <defs>
+    <linearGradient id="ringGradFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#E8FAFA"/>
+    </linearGradient>
+    <filter id="frontShadow">
+      <feDropShadow dx="0" dy="10" stdDeviation="15" flood-color="#0D4244" flood-opacity="0.35"/>
+    </filter>
+    <filter id="sparkleGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Front ring (Tasks) - positioned slightly right and forward -->
+  <circle cx="644" cy="512" r="210" fill="none" stroke="url(#ringGradFront)" stroke-width="52" filter="url(#frontShadow)"/>
+
+  <!-- AI Sparkle at intersection - the intelligence that weaves them together -->
+  <g transform="translate(512, 512)" filter="url(#sparkleGlow)">
+    <!-- Main 4-point sparkle -->
+    <path d="M0,-80 L10,-10 L80,0 L10,10 L0,80 L-10,10 L-80,0 L-10,-10 Z" fill="#FFFFFF"/>
+
+    <!-- Secondary smaller sparkles for depth -->
+    <path d="M-45,-45 L-38,-38 L-45,-31 L-52,-38 Z" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M45,-45 L52,-38 L45,-31 L38,-38 Z" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M45,45 L52,52 L45,59 L38,52 Z" fill="#FFFFFF" opacity="0.7"/>
+    <path d="M-45,45 L-38,52 L-45,59 L-52,52 Z" fill="#FFFFFF" opacity="0.7"/>
+
+    <!-- Tiny accent sparkles -->
+    <circle cx="-30" cy="0" r="4" fill="#FFFFFF" opacity="0.5"/>
+    <circle cx="30" cy="0" r="4" fill="#FFFFFF" opacity="0.5"/>
+    <circle cx="0" cy="-30" r="4" fill="#FFFFFF" opacity="0.5"/>
+    <circle cx="0" cy="30" r="4" fill="#FFFFFF" opacity="0.5"/>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- BACKGROUND LAYER: Rich teal gradient for Liquid Glass specular effects -->
+  <defs>
+    <radialGradient id="bgRadial" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#3DBFC2"/>
+      <stop offset="50%" style="stop-color:#218A8D"/>
+      <stop offset="100%" style="stop-color:#145456"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bgRadial)"/>
+</svg>
