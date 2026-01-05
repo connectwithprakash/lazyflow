@@ -307,4 +307,213 @@ final class DailySummaryService: ObservableObject {
 
         return cached.tasksCompleted != currentCompleted || cached.totalTasksPlanned != currentPlanned
     }
+
+    // MARK: - Morning Briefing Generation
+
+    /// Generate morning briefing with yesterday's recap, today's plan, and weekly stats
+    func generateMorningBriefing() async -> MorningBriefingData {
+        await MainActor.run { isGeneratingSummary = true }
+        defer {
+            _Concurrency.Task { @MainActor in
+                isGeneratingSummary = false
+            }
+        }
+
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+
+        // Yesterday's data
+        let yesterdayCompleted = taskService.fetchTasksCompletedOn(date: yesterday)
+        let yesterdayPlanned = taskService.fetchTasksDueOn(date: yesterday)
+        let yesterdayTopCategory = calculateTopCategory(from: yesterdayCompleted)
+
+        // Today's tasks
+        let todayTasks = taskService.fetchTodayTasks()
+        let todayOverdue = taskService.fetchOverdueTasks()
+        let todayTaskSummaries = todayTasks
+            .sorted { $0.priority.rawValue > $1.priority.rawValue }
+            .prefix(10)
+            .map { TaskBriefingSummary(from: $0) }
+        let todayHighPriority = todayTasks.filter { $0.priority == .high || $0.priority == .urgent }.count
+        let todayEstimatedMinutes = calculateTotalMinutesWorked(from: todayTasks)
+
+        // Weekly stats
+        let weeklyStats = calculateWeeklyStats()
+
+        // Create initial briefing without AI content
+        var briefing = MorningBriefingData(
+            date: today,
+            yesterdayCompleted: yesterdayCompleted.count,
+            yesterdayPlanned: yesterdayPlanned.count,
+            yesterdayTopCategory: yesterdayTopCategory,
+            todayTasks: Array(todayTaskSummaries),
+            todayHighPriority: todayHighPriority,
+            todayOverdue: todayOverdue.count,
+            todayEstimatedMinutes: todayEstimatedMinutes,
+            weeklyStats: weeklyStats
+        )
+
+        // Generate AI content if available
+        if llmService.isReady {
+            do {
+                let aiContent = try await generateAIMorningBriefing(data: briefing)
+                briefing.aiSummary = aiContent.summary
+                briefing.todayFocus = aiContent.todayFocus
+                briefing.motivationalMessage = aiContent.motivation
+            } catch {
+                // Fall back to defaults
+                briefing.motivationalMessage = getDefaultMorningMotivation(briefing: briefing)
+            }
+        } else {
+            briefing.motivationalMessage = getDefaultMorningMotivation(briefing: briefing)
+        }
+
+        return briefing
+    }
+
+    /// Calculate weekly productivity statistics
+    func calculateWeeklyStats() -> WeeklyStats {
+        let calendar = Calendar.current
+        let today = Date()
+
+        // Get start of week (Sunday or Monday based on locale)
+        let weekStart = calendar.date(from: calendar.dateComponents(
+            [.yearForWeekOfYear, .weekOfYear], from: today))!
+
+        // Get all summaries from this week
+        let weekSummaries = summaryHistory.filter {
+            $0.date >= weekStart && $0.date <= today
+        }
+
+        let totalCompleted = weekSummaries.reduce(0) { $0 + $1.tasksCompleted }
+        let totalPlanned = weekSummaries.reduce(0) { $0 + $1.totalTasksPlanned }
+        let avgRate = totalPlanned > 0 ? (Double(totalCompleted) / Double(totalPlanned)) * 100 : 0
+
+        // Find most productive day
+        let mostProductive = weekSummaries.max(by: { $0.tasksCompleted < $1.tasksCompleted })
+        let dayName = mostProductive?.date.formatted(.dateTime.weekday(.wide))
+
+        // Calculate days until weekend
+        let weekday = calendar.component(.weekday, from: today)
+        let daysUntilWeekEnd = weekday == 1 ? 0 : (7 - weekday + 1) // Sunday = 1
+
+        return WeeklyStats(
+            tasksCompletedThisWeek: totalCompleted,
+            totalTasksPlannedThisWeek: totalPlanned,
+            averageCompletionRate: avgRate,
+            mostProductiveDay: dayName,
+            currentStreak: streakData.currentStreak,
+            daysUntilWeekEnd: daysUntilWeekEnd
+        )
+    }
+
+    // MARK: - Morning Briefing AI
+
+    private func generateAIMorningBriefing(data: MorningBriefingData) async throws -> (summary: String, todayFocus: String, motivation: String) {
+        let prompt = buildMorningBriefingPrompt(data: data)
+        let systemPrompt = "You are a supportive productivity assistant helping users start their day. Generate encouraging, actionable morning briefings. Respond in JSON format only."
+
+        let response = try await llmService.complete(prompt: prompt, systemPrompt: systemPrompt)
+
+        return parseMorningBriefingResponse(response, briefing: data)
+    }
+
+    private func buildMorningBriefingPrompt(data: MorningBriefingData) -> String {
+        let todayTaskList = data.todayTasks
+            .prefix(5)
+            .map { task in
+                let priority = task.priority == .urgent ? "[URGENT]" : task.priority == .high ? "[HIGH]" : ""
+                return "- \(priority) \(task.title) (\(task.category.displayName))"
+            }
+            .joined(separator: "\n")
+
+        return """
+        Generate a motivating morning briefing for a productivity app user.
+
+        Yesterday's Results:
+        - Completed: \(data.yesterdayCompleted) of \(data.yesterdayPlanned) tasks
+        - Top category: \(data.yesterdayTopCategory?.displayName ?? "Various")
+
+        Today's Plan:
+        - Total tasks: \(data.todayTasks.count)
+        - High priority: \(data.todayHighPriority)
+        - Overdue: \(data.todayOverdue)
+        - Estimated time: \(data.formattedTodayTime)
+
+        Weekly Progress:
+        - Tasks completed this week: \(data.weeklyStats.tasksCompletedThisWeek)
+        - Completion rate: \(data.weeklyStats.formattedCompletionRate)
+        - Current streak: \(data.weeklyStats.currentStreak) days
+
+        Today's Top Priorities:
+        \(todayTaskList.isEmpty ? "No tasks scheduled yet" : todayTaskList)
+
+        Provide:
+        1. A 2-3 sentence morning greeting that briefly mentions yesterday's progress
+        2. One sentence highlighting today's focus areas based on priorities
+        3. A brief motivational message based on streak and weekly progress
+
+        Respond in JSON format only:
+        {
+            "summary": "<morning greeting with yesterday recap>",
+            "todayFocus": "<today's priorities and focus>",
+            "motivation": "<encouraging message>"
+        }
+
+        Keep tone warm, energizing, and action-oriented.
+        """
+    }
+
+    private func parseMorningBriefingResponse(_ response: String, briefing: MorningBriefingData) -> (summary: String, todayFocus: String, motivation: String) {
+        guard let data = extractJSON(from: response),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return (
+                summary: getDefaultMorningSummary(briefing: briefing),
+                todayFocus: getDefaultTodayFocus(briefing: briefing),
+                motivation: getDefaultMorningMotivation(briefing: briefing)
+            )
+        }
+
+        let summary = json["summary"] as? String ?? getDefaultMorningSummary(briefing: briefing)
+        let todayFocus = json["todayFocus"] as? String ?? getDefaultTodayFocus(briefing: briefing)
+        let motivation = json["motivation"] as? String ?? getDefaultMorningMotivation(briefing: briefing)
+
+        return (summary: summary, todayFocus: todayFocus, motivation: motivation)
+    }
+
+    // MARK: - Default Morning Messages
+
+    private func getDefaultMorningSummary(briefing: MorningBriefingData) -> String {
+        if briefing.yesterdayCompleted > 0 {
+            return "Good morning! Yesterday you completed \(briefing.yesterdayCompleted) tasks. Let's build on that momentum today."
+        } else {
+            return "Good morning! Today is a fresh start with \(briefing.todayTasks.count) tasks waiting for you."
+        }
+    }
+
+    private func getDefaultTodayFocus(briefing: MorningBriefingData) -> String {
+        if briefing.todayHighPriority > 0 {
+            return "Focus on your \(briefing.todayHighPriority) high-priority tasks first."
+        } else if briefing.todayOverdue > 0 {
+            return "Start by clearing your \(briefing.todayOverdue) overdue tasks."
+        } else if briefing.todayTasks.isEmpty {
+            return "Plan your day by adding some tasks to tackle."
+        } else {
+            return "You have \(briefing.todayTasks.count) tasks lined up for today."
+        }
+    }
+
+    private func getDefaultMorningMotivation(briefing: MorningBriefingData) -> String {
+        let streak = briefing.weeklyStats.currentStreak
+        if streak >= 7 {
+            return "Amazing \(streak)-day streak! Keep the momentum going!"
+        } else if streak >= 3 {
+            return "\(streak) days strong! You're building great habits."
+        } else if briefing.weeklyStats.averageCompletionRate >= 70 {
+            return "Great week so far! You've got this."
+        } else {
+            return "Every day is a chance to be productive. Let's make today count!"
+        }
+    }
 }
