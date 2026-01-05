@@ -5,6 +5,19 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0](https://github.com/connectwithprakash/taskweave/compare/v0.25.0...v0.26.0) (2026-01-05)
+
+
+### Features
+
+* **icon:** Redesign app icon with Liquid Glass design ([#77](https://github.com/connectwithprakash/taskweave/issues/77)) ([417a73f](https://github.com/connectwithprakash/taskweave/commit/417a73f95d3a054239c17414116131cb8597aabc)), closes [#73](https://github.com/connectwithprakash/taskweave/issues/73)
+* **launch:** Redesign launch screen with fullscreen gradient ([#79](https://github.com/connectwithprakash/taskweave/issues/79)) ([1dd598d](https://github.com/connectwithprakash/taskweave/commit/1dd598dd0be100d37aba432edd2430421b358d11))
+
+
+### Performance Improvements
+
+* Remove artificial delays from app loading ([#80](https://github.com/connectwithprakash/taskweave/issues/80)) ([d5f87d1](https://github.com/connectwithprakash/taskweave/commit/d5f87d1e776cf50ec0e2251e60281852e542e773))
+
 ## [0.25.0](https://github.com/connectwithprakash/taskweave/compare/v0.24.0...v0.25.0) (2026-01-05)
 
 
