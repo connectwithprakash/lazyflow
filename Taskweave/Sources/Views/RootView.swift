@@ -18,7 +18,7 @@ struct RootView: View {
                     ContentView()
                         .environment(\.managedObjectContext, controller.viewContext)
                         .environmentObject(service)
-                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                        .transition(.opacity)
                         .onAppear {
                             WatchConnectivityService.shared.configure(with: service)
                         }
@@ -55,25 +55,20 @@ struct RootView: View {
     }
 }
 
-/// Loading view with logo and spinner - no artificial delays
+/// Loading view matching LaunchScreen - fullscreen gradient with spinner
 /// Shows feedback immediately, fades out when content is ready
 private struct LoadingView: View {
-    private let logoSize: CGFloat = 120
-
     var body: some View {
         ZStack {
-            Color("LaunchBackground")
+            Image("LaunchLogo")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
                 .ignoresSafeArea()
 
-            VStack(spacing: 32) {
-                Image("LaunchLogo")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: logoSize, height: logoSize)
-
-                ProgressView()
-                    .tint(Color("AccentColor"))
-            }
+            ProgressView()
+                .tint(.white)
+                .scaleEffect(1.2)
+                .offset(y: 100)
         }
     }
 }

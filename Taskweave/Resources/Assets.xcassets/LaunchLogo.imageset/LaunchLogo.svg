@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 2220" width="1024" height="2220">
+  <!-- Fullscreen Launch Logo - Portrait aspect ratio -->
+  <defs>
+    <!-- Background gradient - centered for portrait -->
+    <radialGradient id="bgRadial" cx="50%" cy="45%" r="80%">
+      <stop offset="0%" style="stop-color:#3DBFC2"/>
+      <stop offset="50%" style="stop-color:#218A8D"/>
+      <stop offset="100%" style="stop-color:#145456"/>
+    </radialGradient>
+
+    <!-- Ring gradients -->
+    <linearGradient id="ringGradBack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.85"/>
+      <stop offset="100%" style="stop-color:#E0F4F4;stop-opacity:0.7"/>
+    </linearGradient>
+
+    <linearGradient id="ringGradFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#E8FAFA"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="backShadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0D4244" flood-opacity="0.3"/>
+    </filter>
+
+    <filter id="frontShadow">
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#0D4244" flood-opacity="0.35"/>
+    </filter>
+
+    <filter id="sparkleGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- LAYER 1: Background - fills entire portrait canvas -->
+  <rect width="1024" height="2220" fill="url(#bgRadial)"/>
+
+  <!-- LAYER 2 & 3: Design elements - scaled 50% and centered -->
+  <g transform="translate(512, 1010) scale(0.5) translate(-512, -512)">
+    <!-- Back ring (Calendar) -->
+    <circle cx="380" cy="512" r="210" fill="none" stroke="url(#ringGradBack)" stroke-width="52" filter="url(#backShadow)"/>
+
+    <!-- Subtle weave threads -->
+    <g stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.25">
+      <path d="M200,350 Q400,400 500,512 Q600,624 824,674"/>
+      <path d="M200,674 Q400,624 500,512 Q600,400 824,350"/>
+    </g>
+
+    <!-- Front ring (Tasks) -->
+    <circle cx="644" cy="512" r="210" fill="none" stroke="url(#ringGradFront)" stroke-width="52" filter="url(#frontShadow)"/>
+
+    <!-- AI Sparkle at intersection -->
+    <g transform="translate(512, 512)" filter="url(#sparkleGlow)">
+      <!-- Main 4-point sparkle -->
+      <path d="M0,-80 L10,-10 L80,0 L10,10 L0,80 L-10,10 L-80,0 L-10,-10 Z" fill="#FFFFFF"/>
+
+      <!-- Secondary sparkles -->
+      <path d="M-45,-45 L-38,-38 L-45,-31 L-52,-38 Z" fill="#FFFFFF" opacity="0.8"/>
+      <path d="M45,-45 L52,-38 L45,-31 L38,-38 Z" fill="#FFFFFF" opacity="0.8"/>
+      <path d="M45,45 L52,52 L45,59 L38,52 Z" fill="#FFFFFF" opacity="0.7"/>
+      <path d="M-45,45 L-38,52 L-45,59 L-52,52 Z" fill="#FFFFFF" opacity="0.7"/>
+
+      <!-- Tiny accent dots -->
+      <circle cx="-30" cy="0" r="4" fill="#FFFFFF" opacity="0.5"/>
+      <circle cx="30" cy="0" r="4" fill="#FFFFFF" opacity="0.5"/>
+      <circle cx="0" cy="-30" r="4" fill="#FFFFFF" opacity="0.5"/>
+      <circle cx="0" cy="30" r="4" fill="#FFFFFF" opacity="0.5"/>
+    </g>
+  </g>
+</svg>
