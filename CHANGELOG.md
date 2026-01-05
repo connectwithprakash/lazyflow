@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.1](https://github.com/connectwithprakash/taskweave/compare/v0.23.0...v0.23.1) (2026-01-04)
+
+
+### Bug Fixes
+
+* Update README image paths and reduce Netlify builds ([0a22bcb](https://github.com/connectwithprakash/taskweave/commit/0a22bcbf5512301c841cf15d9d1482f8c8741e81))
+
 ## [0.23.0](https://github.com/connectwithprakash/taskweave/compare/v0.22.0...v0.23.0) (2026-01-04)
 
 
