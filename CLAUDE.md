@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.com/claude-code) when working with code in this repository.
 
 ## Operational Guidelines
 
@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Taskweave is a calendar-first todo app for iOS targeting ML/AI engineers. The core value proposition is seamless task-to-calendar integration with AI-powered prioritization.
+Taskweave is an AI-powered, calendar-integrated todo app for iOS. The core value proposition is helping us plan our day - see calendar events alongside tasks, schedule tasks as time blocks, and get AI-powered "What should I do next?" recommendations with daily summaries.
 
 ## Tech Stack
 
