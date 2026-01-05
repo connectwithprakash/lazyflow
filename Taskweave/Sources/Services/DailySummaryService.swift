@@ -297,4 +297,14 @@ final class DailySummaryService: ObservableObject {
         let calendar = Calendar.current
         return summaryHistory.first { calendar.isDate($0.date, inSameDayAs: date) }
     }
+
+    /// Check if summary needs refresh (task counts changed since last generation)
+    func needsRefresh(for date: Date) -> Bool {
+        guard let cached = getSummary(for: date) else { return true }
+
+        let currentCompleted = taskService.fetchTasksCompletedOn(date: date).count
+        let currentPlanned = taskService.fetchTasksDueOn(date: date).count
+
+        return cached.tasksCompleted != currentCompleted || cached.totalTasksPlanned != currentPlanned
+    }
 }

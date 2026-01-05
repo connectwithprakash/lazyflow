@@ -367,15 +367,15 @@ struct DailySummaryView: View {
     private func loadSummary() async {
         isLoading = true
 
-        // Check if we already have today's summary
-        if let existing = summaryService.getSummary(for: Date()) {
+        // Smart refresh: regenerate if task counts changed, otherwise use cache
+        if summaryService.needsRefresh(for: Date()) {
+            summary = await summaryService.generateSummary(for: Date())
+        } else if let existing = summaryService.getSummary(for: Date()) {
             summary = existing
-            isLoading = false
-            return
+        } else {
+            summary = await summaryService.generateSummary(for: Date())
         }
 
-        // Generate new summary
-        summary = await summaryService.generateSummary(for: Date())
         isLoading = false
     }
 
