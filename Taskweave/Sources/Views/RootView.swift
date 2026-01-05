@@ -32,7 +32,7 @@ struct RootView: View {
             }
 
             if isLoading {
-                LoadingView(isFinished: !isLoading && persistenceController != nil)
+                LoadingView()
                     .transition(.opacity)
             }
         }
@@ -47,109 +47,39 @@ struct RootView: View {
             self.persistenceController = controller
             self.taskService = TaskService(persistenceController: controller)
 
-            // Animate the transition
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            withAnimation(.easeOut(duration: 0.2)) {
                 self.showContent = true
-            }
-
-            // Delay hiding the loading view for smooth overlap
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                withAnimation(.easeOut(duration: 0.3)) {
-                    self.isLoading = false
-                }
+                self.isLoading = false
             }
         }
     }
 }
 
-/// Branded loading view shown during Core Data initialization
-/// Designed to seamlessly match LaunchScreen.storyboard and animate elegantly
+/// Loading view with logo and spinner - no artificial delays
+/// Shows feedback immediately, fades out when content is ready
 private struct LoadingView: View {
-    let isFinished: Bool
-
-    @State private var phase: LoadingPhase = .initial
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private enum LoadingPhase {
-        case initial      // Logo only, matches launch screen exactly
-        case revealing    // Logo moves up, text fades in
-        case loading      // Full loading UI with spinner
-    }
-
-    // Logo size matches LaunchScreen.storyboard (120pt)
     private let logoSize: CGFloat = 120
-    private let logoOffset: CGFloat = -40
 
     var body: some View {
         ZStack {
             Color("LaunchBackground")
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer()
-
-                // App Logo - matches launch screen position initially
+            VStack(spacing: 32) {
                 Image("LaunchLogo")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: logoSize, height: logoSize)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .shadow(color: .black.opacity(phase != .initial ? 0.15 : 0), radius: 20, y: 10)
-                    .scaleEffect(phase == .initial ? 1.0 : (reduceMotion ? 1.0 : 1.02))
-                    .offset(y: phase == .initial ? 0 : logoOffset)
 
-                // App Name
-                Text("Taskweave")
-                    .font(.title.bold())
-                    .foregroundStyle(.primary)
-                    .padding(.top, 24)
-                    .opacity(phase == .initial ? 0 : 1)
-                    .offset(y: phase == .initial ? 20 : 0)
-
-                // Loading indicator section
-                VStack(spacing: 16) {
-                    Text("Loading your tasks...")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    ProgressView()
-                        .tint(Color("AccentColor"))
-                        .scaleEffect(1.1)
-                }
-                .padding(.top, 32)
-                .opacity(phase == .loading ? 1 : 0)
-                .offset(y: phase == .loading ? 0 : 10)
-
-                Spacer()
-                Spacer()
-            }
-        }
-        .onAppear {
-            startAnimationSequence()
-        }
-    }
-
-    private func startAnimationSequence() {
-        // Phase 1 → 2: Reveal app name (after brief delay to match launch screen)
-        let revealDelay = reduceMotion ? 0.1 : 0.3
-        DispatchQueue.main.asyncAfter(deadline: .now() + revealDelay) {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                phase = .revealing
-            }
-        }
-
-        // Phase 2 → 3: Show loading indicator
-        let loadingDelay = reduceMotion ? 0.3 : 0.7
-        DispatchQueue.main.asyncAfter(deadline: .now() + loadingDelay) {
-            withAnimation(.easeOut(duration: 0.4)) {
-                phase = .loading
+                ProgressView()
+                    .tint(Color("AccentColor"))
             }
         }
     }
 }
 
 #Preview("Loading View") {
-    LoadingView(isFinished: false)
+    LoadingView()
 }
 
 #Preview("Root View") {
