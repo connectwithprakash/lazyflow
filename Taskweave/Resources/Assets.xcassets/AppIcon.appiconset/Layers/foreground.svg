@@ -1,66 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- FOREGROUND LAYER: Front ring (Tasks) + AI Sparkle -->
   <defs>
-    <!-- Clock face gradient for glass effect -->
-    <linearGradient id="clockFaceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.95" />
-      <stop offset="100%" style="stop-color:#F0F8F8;stop-opacity:0.9" />
+    <linearGradient id="ringGradFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#E8FAFA"/>
     </linearGradient>
-    <!-- Shadow for depth -->
-    <filter id="clockShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="20" flood-color="#000000" flood-opacity="0.15"/>
+    <filter id="frontShadow">
+      <feDropShadow dx="0" dy="10" stdDeviation="15" flood-color="#0D4244" flood-opacity="0.35"/>
     </filter>
-    <!-- Checkmark badge shadow -->
-    <filter id="badgeShadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.2"/>
+    <filter id="sparkleGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
   </defs>
 
-  <!-- Clock face circle -->
-  <circle cx="512" cy="480" r="320" fill="url(#clockFaceGradient)" filter="url(#clockShadow)"/>
+  <!-- Front ring (Tasks) - positioned slightly right and forward -->
+  <circle cx="644" cy="512" r="210" fill="none" stroke="url(#ringGradFront)" stroke-width="52" filter="url(#frontShadow)"/>
 
-  <!-- Clock face inner ring -->
-  <circle cx="512" cy="480" r="300" fill="none" stroke="#218A8D" stroke-width="2" stroke-opacity="0.2"/>
+  <!-- AI Sparkle at intersection - the intelligence that weaves them together -->
+  <g transform="translate(512, 512)" filter="url(#sparkleGlow)">
+    <!-- Main 4-point sparkle -->
+    <path d="M0,-80 L10,-10 L80,0 L10,10 L0,80 L-10,10 L-80,0 L-10,-10 Z" fill="#FFFFFF"/>
 
-  <!-- Hour markers -->
-  <g fill="#218A8D" fill-opacity="0.6">
-    <!-- 12 o'clock -->
-    <circle cx="512" cy="200" r="12"/>
-    <!-- 3 o'clock -->
-    <circle cx="792" cy="480" r="12"/>
-    <!-- 6 o'clock -->
-    <circle cx="512" cy="760" r="12"/>
-    <!-- 9 o'clock -->
-    <circle cx="232" cy="480" r="12"/>
-    <!-- Minor markers -->
-    <circle cx="610" cy="210" r="8"/>
-    <circle cx="698" cy="282" r="8"/>
-    <circle cx="770" cy="382" r="8"/>
-    <circle cx="770" cy="578" r="8"/>
-    <circle cx="698" cy="678" r="8"/>
-    <circle cx="610" cy="750" r="8"/>
-    <circle cx="414" cy="750" r="8"/>
-    <circle cx="326" cy="678" r="8"/>
-    <circle cx="254" cy="578" r="8"/>
-    <circle cx="254" cy="382" r="8"/>
-    <circle cx="326" cy="282" r="8"/>
-    <circle cx="414" cy="210" r="8"/>
-  </g>
+    <!-- Secondary smaller sparkles for depth -->
+    <path d="M-45,-45 L-38,-38 L-45,-31 L-52,-38 Z" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M45,-45 L52,-38 L45,-31 L38,-38 Z" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M45,45 L52,52 L45,59 L38,52 Z" fill="#FFFFFF" opacity="0.7"/>
+    <path d="M-45,45 L-38,52 L-45,59 L-52,52 Z" fill="#FFFFFF" opacity="0.7"/>
 
-  <!-- Clock hands -->
-  <g stroke="#1A6E70" stroke-linecap="round">
-    <!-- Hour hand (pointing to 10) -->
-    <line x1="512" y1="480" x2="380" y2="320" stroke-width="24"/>
-    <!-- Minute hand (pointing to 2) -->
-    <line x1="512" y1="480" x2="620" y2="300" stroke-width="16"/>
-  </g>
-
-  <!-- Center dot -->
-  <circle cx="512" cy="480" r="16" fill="#FFFFFF"/>
-  <circle cx="512" cy="480" r="10" fill="#1A6E70"/>
-
-  <!-- Checkmark badge -->
-  <g filter="url(#badgeShadow)">
-    <circle cx="780" cy="750" r="100" fill="#218A8D"/>
-    <path d="M730 750 L760 785 L830 710" fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Tiny accent sparkles -->
+    <circle cx="-30" cy="0" r="4" fill="#FFFFFF" opacity="0.5"/>
+    <circle cx="30" cy="0" r="4" fill="#FFFFFF" opacity="0.5"/>
+    <circle cx="0" cy="-30" r="4" fill="#FFFFFF" opacity="0.5"/>
+    <circle cx="0" cy="30" r="4" fill="#FFFFFF" opacity="0.5"/>
   </g>
 </svg>
