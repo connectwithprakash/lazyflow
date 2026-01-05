@@ -75,8 +75,14 @@
 		C695E251436C3F28E0AA320B /* Priority.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C2746788E2B53379FE262D /* Priority.swift */; };
 		9818171E90C84262AF2B3DF8 /* AICorrection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICorrection.swift; sourceTree = "<group>"; };
 		FFF381D3BE424745A869C3D9 /* AILearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILearningService.swift; sourceTree = "<group>"; };
+		DSDATA0001A2B3C4D5E6F7A8 /* DailySummaryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryData.swift; sourceTree = "<group>"; };
+		DSSERV0001A2B3C4D5E6F7B9 /* DailySummaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryService.swift; sourceTree = "<group>"; };
+		DSVIEW0001A2B3C4D5E6F7CA /* DailySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryView.swift; sourceTree = "<group>"; };
 		9818171E90C84262AF2B3DF9 /* AICorrection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9818171E90C84262AF2B3DF8 /* AICorrection.swift */; };
 		FFF381D3BE424745A869C3DA /* AILearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFF381D3BE424745A869C3D9 /* AILearningService.swift */; };
+		DSDATAB001A2B3C4D5E6F7AB /* DailySummaryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSDATA0001A2B3C4D5E6F7A8 /* DailySummaryData.swift */; };
+		DSSERVB001A2B3C4D5E6F7BC /* DailySummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSSERV0001A2B3C4D5E6F7B9 /* DailySummaryService.swift */; };
+		DSVIEWB001A2B3C4D5E6F7CD /* DailySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSVIEW0001A2B3C4D5E6F7CA /* DailySummaryView.swift */; };
 		C6E58B05FEAB135E688655F1 /* TaskweaveWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DBD26B0BA3382145D1B39C /* TaskweaveWidgetBundle.swift */; };
 		C75E0FB81A58863307B71812 /* SmartRescheduleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D37A9F9B8D0979DB9480F9 /* SmartRescheduleService.swift */; };
 		C86B43D6611AFBA65FCE80AC /* RecurringRuleEntity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C84C134D070FB1E0ADD562 /* RecurringRuleEntity+Extensions.swift */; };
@@ -348,6 +354,7 @@
 			children = (
 				4EAE0A926B43FBBB6875469A /* AddTaskView.swift */,
 				A4F20B71BD6D87148748D0BC /* CalendarView.swift */,
+				DSVIEW0001A2B3C4D5E6F7CA /* DailySummaryView.swift */,
 				E792CF309818E6413FAEA8E0 /* ListDetailView.swift */,
 				A02B96740C9B26528CA1981D /* ListsView.swift */,
 				3295E36A41D180A3D0E9DA4B /* SearchView.swift */,
@@ -400,6 +407,7 @@
 				2844BB6F06D15D6E70D51359 /* AIService.swift */,
 				E1F8C0BED069AC92C4166B74 /* CalendarService.swift */,
 				BD82E69401005EE869071460 /* ConflictDetectionService.swift */,
+				DSSERV0001A2B3C4D5E6F7B9 /* DailySummaryService.swift */,
 				78B9EC487F517B2D7F64239C /* LiveActivityManager.swift */,
 				E57041C3F33C34964EDD2FE1 /* NotificationService.swift */,
 				B87A52885851C4A33E610EA1 /* PersistenceController.swift */,
@@ -446,6 +454,7 @@
 			isa = PBXGroup;
 			children = (
 				9818171E90C84262AF2B3DF8 /* AICorrection.swift */,
+				DSDATA0001A2B3C4D5E6F7A8 /* DailySummaryData.swift */,
 				58C2746788E2B53379FE262D /* Priority.swift */,
 				04B726BC641EFB8CC98BF496 /* RecurringRule.swift */,
 				99C84C134D070FB1E0ADD562 /* RecurringRuleEntity+Extensions.swift */,
@@ -765,6 +774,9 @@
 				FFF381D3BE424745A869C3DA /* AILearningService.swift in Sources */,
 				42235169663AA16F0156870B /* AIService.swift in Sources */,
 				21EFAAAAEB1FD4F60511631F /* AddTaskView.swift in Sources */,
+				DSDATAB001A2B3C4D5E6F7AB /* DailySummaryData.swift in Sources */,
+				DSSERVB001A2B3C4D5E6F7BC /* DailySummaryService.swift in Sources */,
+				DSVIEWB001A2B3C4D5E6F7CD /* DailySummaryView.swift in Sources */,
 				3F3057702097070DC3C3641B /* AnthropicProvider.swift in Sources */,
 				28B7A99F8B7F2A3384CA4541 /* AppleFoundationModelsProvider.swift in Sources */,
 				585BC74D150604F60D30FF35 /* CalendarService.swift in Sources */,

@@ -7,10 +7,13 @@ struct SettingsView: View {
     @AppStorage("defaultReminderTime") private var defaultReminderTime: Int = 9
     @AppStorage("showCompletedTasks") private var showCompletedTasks: Bool = true
     @AppStorage("hapticFeedback") private var hapticFeedback: Bool = true
+    @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
 
     @State private var showAbout = false
     @State private var showNotificationSettings = false
     @State private var showAISettings = false
+    @State private var showDailySummary = false
+    @StateObject private var summaryService = DailySummaryService.shared
 
     var body: some View {
         if horizontalSizeClass == .regular {
@@ -22,6 +25,7 @@ struct SettingsView: View {
                 .sheet(isPresented: $showAbout) { AboutView() }
                 .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
                 .sheet(isPresented: $showAISettings) { AISettingsView() }
+                .sheet(isPresented: $showDailySummary) { DailySummaryView() }
         } else {
             // iPhone: Full NavigationStack
             NavigationStack {
@@ -30,6 +34,7 @@ struct SettingsView: View {
                     .sheet(isPresented: $showAbout) { AboutView() }
                     .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
                     .sheet(isPresented: $showAISettings) { AISettingsView() }
+                    .sheet(isPresented: $showDailySummary) { DailySummaryView() }
             }
         }
     }
@@ -70,6 +75,43 @@ struct SettingsView: View {
                                 .foregroundColor(Color.Taskweave.textTertiary)
                         }
                     }
+                }
+
+                // Daily Summary
+                Section {
+                    Button {
+                        showDailySummary = true
+                    } label: {
+                        HStack {
+                            Label("View Today's Summary", systemImage: "chart.bar.doc.horizontal")
+                                .foregroundColor(Color.Taskweave.textPrimary)
+                            Spacer()
+                            if summaryService.streakData.currentStreak > 0 {
+                                HStack(spacing: DesignSystem.Spacing.xs) {
+                                    Image(systemName: "flame.fill")
+                                        .foregroundColor(.orange)
+                                    Text("\(summaryService.streakData.currentStreak)")
+                                        .font(DesignSystem.Typography.footnote)
+                                        .foregroundColor(Color.Taskweave.textSecondary)
+                                }
+                            }
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(Color.Taskweave.textTertiary)
+                        }
+                    }
+
+                    DailySummaryNotificationToggle()
+
+                    Picker("Show Prompt After", selection: $summaryPromptHour) {
+                        ForEach(12..<22, id: \.self) { hour in
+                            Text(formatHour(hour)).tag(hour)
+                        }
+                    }
+                } header: {
+                    Text("Daily Summary")
+                } footer: {
+                    Text("Review your daily productivity and track your streak. The prompt card appears in Today view after the selected time.")
                 }
 
                 // Live Activity
@@ -989,6 +1031,67 @@ struct BatchAnalysisResultRow: View {
         .onTapGesture {
             result.isSelected.toggle()
         }
+    }
+}
+
+// MARK: - Daily Summary Notification Toggle
+
+struct DailySummaryNotificationToggle: View {
+    @AppStorage("dailySummaryNotificationEnabled") private var isEnabled = false
+    @AppStorage("dailySummaryNotificationHour") private var notificationHour = 20 // 8 PM default
+    @State private var showTimePicker = false
+
+    private let notificationService = NotificationService.shared
+
+    var body: some View {
+        Toggle(isOn: $isEnabled) {
+            HStack {
+                Image(systemName: "bell.badge")
+                    .foregroundColor(Color.Taskweave.accent)
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Evening Reminder")
+                    if isEnabled {
+                        Text(formattedTime)
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Taskweave.textSecondary)
+                    }
+                }
+            }
+        }
+        .onChange(of: isEnabled) { _, newValue in
+            if newValue {
+                notificationService.scheduleDailySummaryReminder(hour: notificationHour, minute: 0)
+            } else {
+                notificationService.cancelDailySummaryReminder()
+            }
+        }
+
+        if isEnabled {
+            Picker("Reminder Time", selection: $notificationHour) {
+                ForEach(17..<23, id: \.self) { hour in
+                    Text(formatHour(hour)).tag(hour)
+                }
+            }
+            .onChange(of: notificationHour) { _, newHour in
+                notificationService.scheduleDailySummaryReminder(hour: newHour, minute: 0)
+            }
+        }
+    }
+
+    private var formattedTime: String {
+        formatHour(notificationHour)
+    }
+
+    private func formatHour(_ hour: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:00 a"
+        var components = DateComponents()
+        components.hour = hour
+        if let date = Calendar.current.date(from: components) {
+            return formatter.string(from: date)
+        }
+        return "\(hour):00"
     }
 }
 
