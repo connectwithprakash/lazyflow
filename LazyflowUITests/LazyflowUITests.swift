@@ -424,7 +424,7 @@ final class LazyflowUITests: XCTestCase {
             briefingCard.tap()
 
             // Verify morning briefing content sections
-            let scrollView = app.scrollViews.firstMatch
+            _ = app.scrollViews.firstMatch
 
             // Verify key sections exist
             let yesterdaySection = app.staticTexts["Yesterday"]
@@ -598,7 +598,7 @@ final class LazyflowUITests: XCTestCase {
         settingsView.swipeUp()
 
         // Look for streak-related text
-        let streakText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'streak' OR label CONTAINS[c] 'day'")).firstMatch
+        _ = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'streak' OR label CONTAINS[c] 'day'")).firstMatch
         // Streak display may or may not exist depending on user's history
         // This test just verifies settings page loads properly
         XCTAssertTrue(app.navigationBars["Settings"].exists)
@@ -613,9 +613,9 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Calendar"].waitForExistence(timeout: 3))
 
         // Look for date picker or calendar grid
-        let calendarExists = app.datePickers.firstMatch.exists ||
-                            app.collectionViews.firstMatch.exists ||
-                            app.otherElements.matching(NSPredicate(format: "identifier CONTAINS[c] 'calendar'")).firstMatch.exists
+        _ = app.datePickers.firstMatch.exists ||
+            app.collectionViews.firstMatch.exists ||
+            app.otherElements.matching(NSPredicate(format: "identifier CONTAINS[c] 'calendar'")).firstMatch.exists
 
         // Calendar view should have some content
         XCTAssertTrue(app.navigationBars["Calendar"].exists, "Calendar should load successfully")
