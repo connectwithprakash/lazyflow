@@ -241,10 +241,22 @@
     </header>
 
     <div class="screenshots">
-        <img src="assets/screenshots/light/05-today-multiple-tasks.png" alt="Today View">
-        <img src="assets/screenshots/light/06-calendar-view.png" alt="Calendar View">
-        <img src="assets/screenshots/light/11-ai-suggestions.png" alt="AI Analysis">
-        <img src="assets/screenshots/light/09-settings-view.png" alt="Settings">
+        <img src="assets/screenshots/light/02-today-tasks.png"
+             data-light="assets/screenshots/light/02-today-tasks.png"
+             data-dark="assets/screenshots/dark/02-today-tasks.png"
+             alt="Today View" class="theme-screenshot">
+        <img src="assets/screenshots/light/07-upcoming-view.png"
+             data-light="assets/screenshots/light/07-upcoming-view.png"
+             data-dark="assets/screenshots/dark/07-upcoming-view.png"
+             alt="Upcoming View" class="theme-screenshot">
+        <img src="assets/screenshots/light/11-ai-suggestions.png"
+             data-light="assets/screenshots/light/11-ai-suggestions.png"
+             data-dark="assets/screenshots/dark/11-ai-suggestions.png"
+             alt="AI Priority" class="theme-screenshot">
+        <img src="assets/screenshots/light/09-settings-view.png"
+             data-light="assets/screenshots/light/09-settings-view.png"
+             data-dark="assets/screenshots/dark/09-settings-view.png"
+             alt="Settings" class="theme-screenshot">
     </div>
 
     <div class="container">
@@ -364,6 +376,16 @@
             icon.textContent = theme === 'dark' ? '🌞' : '🌚';
         }
 
+        function updateScreenshots(theme) {
+            const screenshots = document.querySelectorAll('.theme-screenshot');
+            screenshots.forEach(img => {
+                const src = theme === 'dark' ? img.dataset.dark : img.dataset.light;
+                if (src && img.src !== src) {
+                    img.src = src;
+                }
+            });
+        }
+
         function toggleTheme() {
             const root = document.documentElement;
             const currentTheme = root.getAttribute('data-theme');
@@ -380,6 +402,7 @@
             root.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateIcon(newTheme);
+            updateScreenshots(newTheme);
         }
 
         // Initialize theme on load
@@ -390,14 +413,18 @@
             if (savedTheme) {
                 document.documentElement.setAttribute('data-theme', savedTheme);
                 updateIcon(savedTheme);
+                updateScreenshots(savedTheme);
             } else {
                 updateIcon(systemTheme);
+                updateScreenshots(systemTheme);
             }
 
             // Listen for system theme changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                 if (!localStorage.getItem('theme')) {
-                    updateIcon(e.matches ? 'dark' : 'light');
+                    const theme = e.matches ? 'dark' : 'light';
+                    updateIcon(theme);
+                    updateScreenshots(theme);
                 }
             });
         })();
