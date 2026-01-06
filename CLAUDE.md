@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.com/claude-code) when working
 
 ## Project Overview
 
-Taskweave is an AI-powered, calendar-integrated todo app for iOS. The core value proposition is helping us plan our day - see calendar events alongside tasks, schedule tasks as time blocks, and get AI-powered "What should I do next?" recommendations with daily summaries.
+Lazyflow is an AI-powered, calendar-integrated todo app for iOS. The core value proposition is helping us plan our day - see calendar events alongside tasks, schedule tasks as time blocks, and get AI-powered "What should I do next?" recommendations with daily summaries.
 
 ## Tech Stack
 
@@ -100,7 +100,7 @@ MVVM with Combine for reactive data flow:
 ## Documentation
 
 ### Website (`docs/site/`)
-Hosted on Netlify at taskweave.netlify.app:
+Hosted on Netlify at lazyflow.netlify.app:
 - `index.html` - Landing page
 - `privacy/` - Privacy Policy
 - `terms/` - Terms of Service

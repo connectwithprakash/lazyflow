@@ -1,6 +1,6 @@
-# Contributing to Taskweave
+# Contributing to Lazyflow
 
-Thank you for your interest in contributing to Taskweave!
+Thank you for your interest in contributing to Lazyflow!
 
 ## Development Workflow
 
@@ -61,13 +61,13 @@ Examples:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/connectwithprakash/taskweave.git
-   cd taskweave
+   git clone https://github.com/connectwithprakash/lazyflow.git
+   cd lazyflow
    ```
 
 2. Open the project:
    ```bash
-   open Taskweave.xcodeproj
+   open Lazyflow.xcodeproj
    ```
 
 3. Build and run in Xcode (Cmd+R)

@@ -1,4 +1,4 @@
-# Taskweave Design System
+# Lazyflow Design System
 
 A comprehensive design system for building consistent, accessible, and beautiful interfaces.
 
@@ -62,7 +62,7 @@ A comprehensive design system for building consistent, accessible, and beautiful
 ### Design Rationale
 
 **Why Calendar-First?**
-Engineers schedule their days around meetings. A task app that ignores calendar context fails to address the core problem: finding *when* to do tasks, not just *what* to do. Taskweave puts the calendar at the center, making time-blocking a first-class feature.
+Engineers schedule their days around meetings. A task app that ignores calendar context fails to address the core problem: finding *when* to do tasks, not just *what* to do. Lazyflow puts the calendar at the center, making time-blocking a first-class feature.
 
 **Why Minimal UI?**
 Productivity apps should disappear into the background. Every visual element competes for cognitive attention. We chose a restrained palette and simple forms to keep focus on tasks, not the app itself.
@@ -81,7 +81,7 @@ Productivity apps should disappear into the background. Every visual element com
 
 | App | Primary Color | Background | Typography | Density |
 |-----|---------------|------------|------------|---------|
-| **Taskweave** | Teal #218A8D | Light gray/Dark | SF Pro | Medium |
+| **Lazyflow** | Teal #218A8D | Light gray/Dark | SF Pro | Medium |
 | Todoist | Red #DB4035 | White/Dark | System | High |
 | Things 3 | Blue #4A90D9 | White/Dark | Helvetica Neue | Low |
 | TickTick | Blue #4772FA | White/Dark | System | High |
@@ -92,19 +92,19 @@ Productivity apps should disappear into the background. Every visual element com
 
 **vs. Todoist**
 - Todoist: Dense, information-heavy, karma gamification
-- Taskweave: Clean, calendar-integrated, professional focus
+- Lazyflow: Clean, calendar-integrated, professional focus
 
 **vs. Things 3**
 - Things: Beautiful but no calendar view, one-time purchase
-- Taskweave: Calendar-first, free and open source
+- Lazyflow: Calendar-first, free and open source
 
 **vs. Apple Reminders**
 - Reminders: Simple but limited calendar integration
-- Taskweave: Deep calendar integration, AI estimation
+- Lazyflow: Deep calendar integration, AI estimation
 
 **vs. Fantastical**
 - Fantastical: Calendar-first but complex UI, subscription
-- Taskweave: Simpler task focus, free and open source
+- Lazyflow: Simpler task focus, free and open source
 
 ### Lessons Learned from Competitors
 
@@ -135,7 +135,7 @@ Productivity apps should disappear into the background. Every visual element com
 
 ### Naming Conventions
 
-- **App name**: Taskweave (one word, capital T)
+- **App name**: Lazyflow (one word, capital T)
 - **Tagline**: "Calendar-first task management"
 - **Feature names**: Descriptive, not clever (e.g., "Smart Reschedule" not "TimeMagic")
 
@@ -547,7 +547,7 @@ Subtitle: Provider description
 
 ```
 +-------------------+
-| [*] Taskweave     |
+| [*] Lazyflow     |
 |                   |
 |    +------+       |   Progress ring: 6pt stroke
 |    |  3   |       |   Teal accent color
@@ -576,7 +576,7 @@ Subtitle: Provider description
 
 ```
 +---------------------------------------+
-| [*] Taskweave                   2/5 O |  Header with app name
+| [*] Lazyflow                   2/5 O |  Header with app name
 |---------------------------------------|
 | [!] Overdue (2)                       |  Section header (red)
 | +-----------------------------------+ |
@@ -643,7 +643,7 @@ Live Activities display task progress on Lock Screen and Dynamic Island (iPhone 
 
 ```
 +-------------------------------------------+
-|  [checkmark] Taskweave           [O] 2/5  |  Header: 14pt semibold
+|  [checkmark] Lazyflow           [O] 2/5  |  Header: 14pt semibold
 |  -----------------------------------------|
 |                                           |
 |  | O  Review pull request                 |  Priority bar: 3pt
@@ -840,7 +840,7 @@ A polished launch experience creates a strong first impression and reassures use
 │ │                      ↑ moves up 40pt                        │ │
 │ │                      + shadow appears                       │ │
 │ │                                                             │ │
-│ │                     "Taskweave"                             │ │
+│ │                     "Lazyflow"                             │ │
 │ │                      fades in                               │ │
 │ │                                                             │ │
 │ └─────────────────────────────────────────────────────────────┘ │
@@ -852,7 +852,7 @@ A polished launch experience creates a strong first impression and reassures use
 │ │                                                             │ │
 │ │                      [App Logo]                             │ │
 │ │                                                             │ │
-│ │                     "Taskweave"                             │ │
+│ │                     "Lazyflow"                             │ │
 │ │                                                             │ │
 │ │                "Loading your tasks..."                      │ │
 │ │                      [spinner]                              │ │
@@ -1157,7 +1157,7 @@ VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
 +------------------+
 | [+] [Q] [≡]      |   Toolbar: Add, Search, Toggle
 |------------------|
-| Taskweave        |   Title: Large Title
+| Lazyflow        |   Title: Large Title
 |------------------|
 | TASKS            |   Section header
 |   ★ Today        |   Selected: accent background
