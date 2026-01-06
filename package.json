@@ -1,5 +1,5 @@
 {
-  "name": "taskweave",
+  "name": "lazyflow",
   "version": "1.0.0",
   "description": "A free, open-source, calendar-first todo app for iOS.",
   "main": "index.js",
@@ -11,13 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/connectwithprakash/taskweave.git"
+    "url": "git+https://github.com/connectwithprakash/lazyflow.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/connectwithprakash/taskweave/issues"
+    "url": "https://github.com/connectwithprakash/lazyflow/issues"
   },
-  "homepage": "https://github.com/connectwithprakash/taskweave#readme"
+  "homepage": "https://github.com/connectwithprakash/lazyflow#readme"
 }

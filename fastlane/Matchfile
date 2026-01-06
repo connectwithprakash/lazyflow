@@ -1,14 +1,14 @@
 # Git repo for certificates and profiles
-git_url("https://github.com/connectwithprakash/taskweave-certificates.git")
+git_url("https://github.com/connectwithprakash/lazyflow-certificates.git")
 
 # Storage mode
 storage_mode("git")
 
 # App identifiers for all targets
 app_identifier([
-  "com.taskweave.app",
-  "com.taskweave.app.widget",
-  "com.taskweave.app.watch"
+  "com.lazyflow.app",
+  "com.lazyflow.app.widget",
+  "com.lazyflow.app.watch"
 ])
 
 # Team ID

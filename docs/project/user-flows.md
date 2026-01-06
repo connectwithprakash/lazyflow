@@ -1,4 +1,4 @@
-# Taskweave User Flows
+# Lazyflow User Flows
 
 Documentation of core user journeys, interaction patterns, and UX decisions.
 
@@ -22,7 +22,7 @@ Documentation of core user journeys, interaction patterns, and UX decisions.
 ### App Structure
 
 ```
-Taskweave
+Lazyflow
 |-- Today (default landing)
 |   |-- Overdue Tasks (red indicator)
 |   |-- Today's Tasks (by priority)

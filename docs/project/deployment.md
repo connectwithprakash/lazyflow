@@ -1,10 +1,10 @@
 # Deployment Guide
 
-This guide covers how to deploy Taskweave to TestFlight and the App Store using Fastlane.
+This guide covers how to deploy Lazyflow to TestFlight and the App Store using Fastlane.
 
 ## Overview
 
-Taskweave uses [Fastlane](https://fastlane.tools/) for automated deployments:
+Lazyflow uses [Fastlane](https://fastlane.tools/) for automated deployments:
 - **Code signing**: Managed by [match](https://docs.fastlane.tools/actions/match/) with certificates stored in a private Git repo
 - **Authentication**: App Store Connect API key (no 2FA required)
 - **Targets**: Main app, widget, and watch app
@@ -13,7 +13,7 @@ Taskweave uses [Fastlane](https://fastlane.tools/) for automated deployments:
 
 Before you can deploy, you need:
 
-1. **Access to the certificates repo** - Request access to `taskweave-certificates` (private)
+1. **Access to the certificates repo** - Request access to `lazyflow-certificates` (private)
 2. **Match password** - For decrypting certificates (ask a team member)
 3. **App Store Connect API key** - The `.p8` file and `api_key.json`
 
@@ -108,14 +108,14 @@ This will:
 
 ## Certificates Management
 
-Certificates are stored encrypted in the private `taskweave-certificates` repo and managed by Fastlane match.
+Certificates are stored encrypted in the private `lazyflow-certificates` repo and managed by Fastlane match.
 
 ### Certificate Types
 
 | Type | Purpose | Provisioning Profiles |
 |------|---------|----------------------|
-| **Development** | Local testing on devices | `match Development com.taskweave.app` |
-| **App Store** | TestFlight & App Store distribution | `match AppStore com.taskweave.app` |
+| **Development** | Local testing on devices | `match Development com.lazyflow.app` |
+| **App Store** | TestFlight & App Store distribution | `match AppStore com.lazyflow.app` |
 
 ### Regenerating Certificates
 
@@ -130,7 +130,7 @@ bundle exec fastlane setup_certs
 
 ### "Could not find app on App Store Connect"
 
-The app needs to be created on App Store Connect first. Go to [App Store Connect](https://appstoreconnect.apple.com/) and create a new app with bundle ID `com.taskweave.app`.
+The app needs to be created on App Store Connect first. Go to [App Store Connect](https://appstoreconnect.apple.com/) and create a new app with bundle ID `com.lazyflow.app`.
 
 ### "No code signing identity found"
 
@@ -165,10 +165,10 @@ Before first deployment, create the app on App Store Connect:
 2. Click "My Apps" → "+" → "New App"
 3. Fill in:
    - Platform: iOS
-   - Name: Taskweave
+   - Name: Lazyflow
    - Primary Language: English (U.S.)
-   - Bundle ID: com.taskweave.app
-   - SKU: com.taskweave.app
+   - Bundle ID: com.lazyflow.app
+   - SKU: com.lazyflow.app
 4. Create the app
 
 Then prepare metadata:
@@ -176,5 +176,5 @@ Then prepare metadata:
 - Keywords
 - Screenshots (iPhone, iPad)
 - App icon (1024x1024)
-- Privacy policy URL: https://taskweave.netlify.app/privacy
-- Support URL: https://taskweave.netlify.app
+- Privacy policy URL: https://lazyflow.netlify.app/privacy
+- Support URL: https://lazyflow.netlify.app

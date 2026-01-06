@@ -1,10 +1,10 @@
-# Taskweave Roadmap
+# Lazyflow Roadmap
 
 An AI-powered task companion that helps us plan our day.
 
 ## Vision
 
-Calendar and tasks finally work together. Taskweave helps us see when we're free, schedule tasks as time blocks, and let AI tell us what to work on next.
+Calendar and tasks finally work together. Lazyflow helps us see when we're free, schedule tasks as time blocks, and let AI tell us what to work on next.
 
 ## Who It's For
 

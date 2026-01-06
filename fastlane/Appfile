@@ -1,5 +1,5 @@
 # App Identifier
-app_identifier("com.taskweave.app")
+app_identifier("com.lazyflow.app")
 
 # Apple Developer Portal Team ID
 team_id("WMK84PPNJV")

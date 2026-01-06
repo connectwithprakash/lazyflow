@@ -1,6 +1,6 @@
-# Taskweave
+# Lazyflow
 
-[![Version](https://img.shields.io/badge/version-0.25.0-blue.svg)](https://github.com/connectwithprakash/taskweave/releases)
+[![Version](https://img.shields.io/badge/version-0.25.0-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
 [![iOS](https://img.shields.io/badge/iOS-17.0+-000000.svg?logo=apple)](https://developer.apple.com/ios/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?logo=swift)](https://swift.org)
@@ -14,9 +14,9 @@
   <img src="docs/site/assets/screenshots/light/iphone/07-settings.png" width="180" alt="Settings">
 </p>
 
-## Why Taskweave?
+## Why Lazyflow?
 
-Most todo apps just store tasks. Taskweave lets us **plan our day** by combining calendar with tasks. See when we're free, schedule tasks as time blocks, and let AI tell us what to work on next.
+Most todo apps just store tasks. Lazyflow lets us **plan our day** by combining calendar with tasks. See when we're free, schedule tasks as time blocks, and let AI tell us what to work on next.
 
 ### Key Highlights
 
@@ -75,7 +75,7 @@ Most todo apps just store tasks. Taskweave lets us **plan our day** by combining
 - Keyboard shortcuts (Cmd+N, Cmd+F, Cmd+1-5)
 
 ### Siri Shortcuts
-- "Add a task in Taskweave"
+- "Add a task in Lazyflow"
 - "Complete my next task"
 - "What's on my agenda"
 
@@ -106,14 +106,14 @@ Most todo apps just store tasks. Taskweave lets us **plan our day** by combining
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/connectwithprakash/taskweave.git
+   git clone https://github.com/connectwithprakash/lazyflow.git
    ```
-2. Open `Taskweave.xcodeproj` in Xcode
+2. Open `Lazyflow.xcodeproj` in Xcode
 3. Build and run on simulator or device
 
 ## Deployment
 
-Taskweave uses [Fastlane](https://fastlane.tools/) for automated deployments to TestFlight and the App Store.
+Lazyflow uses [Fastlane](https://fastlane.tools/) for automated deployments to TestFlight and the App Store.
 
 ```bash
 # Install dependencies
@@ -137,7 +137,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, commit conventi
 
 Building software has never been more accessible. With AI-assisted development, the cost of creating quality apps has dropped dramatically. This means we can focus entirely on **making something genuinely useful** rather than figuring out how to monetize it.
 
-Taskweave is built on these principles:
+Lazyflow is built on these principles:
 
 | Principle | What It Means |
 |-----------|---------------|
