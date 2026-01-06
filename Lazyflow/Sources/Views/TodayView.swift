@@ -961,6 +961,28 @@ struct ConflictResolutionSheet: View {
                 }
             }
 
+            // Conflicting task info (for task-to-task conflicts)
+            if let conflictingTask = conflict.conflictingTask {
+                HStack {
+                    Image(systemName: "checkmark.circle")
+                        .foregroundColor(.orange)
+                    VStack(alignment: .leading) {
+                        Text("Conflicts with task")
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                        Text(conflictingTask.title)
+                            .font(DesignSystem.Typography.subheadline)
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+                        if let dueTime = conflictingTask.dueTime {
+                            Text(dueTime.formatted(date: .omitted, time: .shortened))
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                    }
+                    Spacer()
+                }
+            }
+
             // Overlap info
             HStack {
                 Image(systemName: "clock.badge.exclamationmark")
