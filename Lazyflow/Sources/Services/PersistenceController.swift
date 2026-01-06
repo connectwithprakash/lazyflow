@@ -11,13 +11,36 @@ final class PersistenceController: @unchecked Sendable {
     /// CloudKit container identifier
     private static let cloudKitContainerIdentifier = "iCloud.com.lazyflow.app"
 
-    /// Shared singleton instance (lazy initialization)
+    /// UserDefaults key for iCloud sync preference
+    private static let iCloudSyncEnabledKey = "iCloudSyncEnabled"
+
+    /// App launch time for timing measurements
+    private static let appLaunchTime = CFAbsoluteTimeGetCurrent()
+
+    /// Log with timestamp since app launch
+    static func log(_ message: String) {
+        let elapsed = CFAbsoluteTimeGetCurrent() - appLaunchTime
+        print("[\(String(format: "%6.3f", elapsed))s] \(message)")
+    }
+
+    /// Check if user has enabled iCloud sync
+    static var isICloudSyncEnabled: Bool {
+        UserDefaults.standard.bool(forKey: iCloudSyncEnabledKey)
+    }
+
+    /// Enable or disable iCloud sync (requires app restart to take effect)
+    static func setICloudSyncEnabled(_ enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: iCloudSyncEnabledKey)
+    }
+
+    /// Shared singleton instance (lazy initialization with fast local-first loading)
     private static var _shared: PersistenceController?
     static var shared: PersistenceController {
         if let existing = _shared {
             return existing
         }
-        let controller = PersistenceController()
+        // Use fast initialization: local-only unless user enabled iCloud, non-blocking
+        let controller = PersistenceController(enableCloudKit: isICloudSyncEnabled, blocking: false)
         _shared = controller
         return controller
     }
@@ -98,11 +121,14 @@ final class PersistenceController: @unchecked Sendable {
         return controller
     }()
 
-    /// The persistent container with CloudKit sync support
-    let container: NSPersistentCloudKitContainer
+    /// The persistent container (uses CloudKit container only when iCloud sync is enabled for faster startup)
+    let container: NSPersistentContainer
 
     /// Cancellables for Combine subscriptions
     private var cancellables = Set<AnyCancellable>()
+
+    /// Whether this controller is using CloudKit sync
+    private(set) var isCloudKitEnabled: Bool = false
 
     /// Error that occurred during Core Data initialization
     private(set) var initializationError: Error?
@@ -112,14 +138,30 @@ final class PersistenceController: @unchecked Sendable {
         container.viewContext
     }
 
-    /// Initialize the persistence controller (synchronous)
+    /// Initialize the persistence controller
     /// Used by widgets, intents, and direct `.shared` access
     /// - Parameters:
     ///   - inMemory: If true, uses in-memory store (for testing/previews)
     ///   - configureViewContext: If true, configures viewContext immediately (requires main thread)
     ///   - enableCloudKit: If true, enables CloudKit sync (default true, can disable for testing)
-    init(inMemory: Bool = false, configureViewContext: Bool = true, enableCloudKit: Bool = true) {
-        container = NSPersistentCloudKitContainer(name: "Lazyflow")
+    ///   - blocking: If true, waits for store to load (default true for sync access, false for async)
+    init(inMemory: Bool = false, configureViewContext: Bool = true, enableCloudKit: Bool = true, blocking: Bool = true) {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        Self.log("⏱️ PersistenceController.init started")
+
+        // Use CloudKit container only when iCloud sync is enabled - NSPersistentContainer is much faster
+        let useCloudKit = enableCloudKit && FileManager.default.ubiquityIdentityToken != nil
+        self.isCloudKitEnabled = useCloudKit
+
+        if useCloudKit {
+            container = NSPersistentCloudKitContainer(name: "Lazyflow")
+            Self.log("📦 Using NSPersistentCloudKitContainer (iCloud enabled)")
+        } else {
+            container = NSPersistentContainer(name: "Lazyflow")
+            Self.log("📦 Using NSPersistentContainer (fast local-only)")
+        }
+
+        Self.log("⏱️ Container created in \(String(format: "%.3f", CFAbsoluteTimeGetCurrent() - startTime))s")
 
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
@@ -146,39 +188,48 @@ final class PersistenceController: @unchecked Sendable {
             description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-            // Configure CloudKit sync only if enabled and iCloud is available
-            if enableCloudKit && FileManager.default.ubiquityIdentityToken != nil {
+            // Configure CloudKit sync only if using CloudKit container
+            if useCloudKit {
                 let cloudKitOptions = NSPersistentCloudKitContainerOptions(
                     containerIdentifier: Self.cloudKitContainerIdentifier
                 )
                 description.cloudKitContainerOptions = cloudKitOptions
-                print("CloudKit sync enabled")
-            } else {
-                print("CloudKit sync disabled - iCloud not available or disabled")
             }
 
             container.persistentStoreDescriptions = [description]
         }
 
-        // Use semaphore to wait for store to load (sync initialization)
-        let semaphore = DispatchSemaphore(value: 0)
+        // Load persistent stores
+        let semaphore = blocking ? DispatchSemaphore(value: 0) : nil
         var loadError: Error?
+        let storeLoadStartTime = CFAbsoluteTimeGetCurrent()
 
         container.loadPersistentStores { [weak self] storeDescription, error in
+            let loadTime = CFAbsoluteTimeGetCurrent() - storeLoadStartTime
             if let error = error as NSError? {
                 self?.initializationError = error
                 loadError = error
-                print("Critical: Failed to load Core Data store: \(error), \(error.userInfo)")
+                Self.log("❌ Failed to load store in \(String(format: "%.3f", loadTime))s: \(error.localizedDescription)")
             } else {
-                print("Successfully loaded persistent store: \(storeDescription.url?.path ?? "unknown")")
+                Self.log("✅ Store loaded in \(String(format: "%.3f", loadTime))s")
+                self?.isLoaded = true
+
+                // For non-blocking init, set up CloudKit sync when store is ready
+                if !blocking && !inMemory && (self?.isCloudKitEnabled ?? false) {
+                    DispatchQueue.main.async {
+                        self?.setupCloudKitSync()
+                    }
+                }
             }
-            semaphore.signal()
+            semaphore?.signal()
         }
 
-        // Wait for store to load (with timeout)
-        let timeout = DispatchTime.now() + .seconds(10)
-        if semaphore.wait(timeout: timeout) == .timedOut {
-            print("Warning: Persistent store loading timed out")
+        // Only block if requested (widgets/intents need sync access)
+        if let semaphore = semaphore {
+            let timeout = DispatchTime.now() + .seconds(5)
+            if semaphore.wait(timeout: timeout) == .timedOut {
+                print("Warning: Persistent store loading timed out after 5s")
+            }
         }
 
         // Configure viewContext only if requested (must be on main thread) and no error
@@ -186,11 +237,14 @@ final class PersistenceController: @unchecked Sendable {
             self.configureViewContext()
         }
 
-        if !inMemory && loadError == nil {
+        // For blocking init, set up CloudKit sync immediately
+        if blocking && !inMemory && loadError == nil && isCloudKitEnabled {
             setupCloudKitSync()
         }
 
-        isLoaded = loadError == nil
+        if blocking {
+            isLoaded = loadError == nil
+        }
     }
 
     /// Configure the viewContext settings (must be called on main thread)
@@ -199,22 +253,37 @@ final class PersistenceController: @unchecked Sendable {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
     }
 
-    /// Create and initialize persistence controller asynchronously
-    /// Used by main app to show loading UI while Core Data initializes
+    /// Create persistence controller with fast local-first loading
+    /// iCloud sync only enabled if user has opted in
     static func createAsync() async -> PersistenceController {
-        // Create container on background thread
+        let overallStart = CFAbsoluteTimeGetCurrent()
+        let iCloudEnabled = isICloudSyncEnabled && FileManager.default.ubiquityIdentityToken != nil
+
+        print("Starting Core Data initialization (iCloud: \(iCloudEnabled ? "enabled" : "disabled"))")
+
         let controller = await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                let controller = PersistenceController(configureViewContext: false)
+                // Only enable CloudKit if user has opted in
+                let controller = PersistenceController(
+                    configureViewContext: false,
+                    enableCloudKit: iCloudEnabled,
+                    blocking: false
+                )
                 continuation.resume(returning: controller)
             }
         }
 
-        // Configure viewContext on main thread (required by Core Data)
+        let initTime = CFAbsoluteTimeGetCurrent() - overallStart
+        print("Container created in \(String(format: "%.2f", initTime))s")
+
+        // Configure viewContext on main thread
         await MainActor.run {
             controller.configureViewContext()
             setShared(controller)
         }
+
+        let totalTime = CFAbsoluteTimeGetCurrent() - overallStart
+        print("UI ready in \(String(format: "%.2f", totalTime))s (iCloud: \(iCloudEnabled ? "syncing" : "off"))")
 
         return controller
     }

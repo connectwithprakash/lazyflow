@@ -44,7 +44,7 @@
   <!-- LAYER 2 & 3: Design elements - scaled 50% and centered -->
   <g transform="translate(512, 1010) scale(0.5) translate(-512, -512)">
     <!-- Back ring (Calendar) -->
-    <circle cx="380" cy="512" r="210" fill="none" stroke="url(#ringGradBack)" stroke-width="52" filter="url(#backShadow)"/>
+    <circle cx="380" cy="512" r="210" fill="none" stroke="#FFFFFF" stroke-width="52" opacity="0.75"/>
 
     <!-- Subtle weave threads -->
     <g stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.25">
@@ -53,10 +53,10 @@
     </g>
 
     <!-- Front ring (Tasks) -->
-    <circle cx="644" cy="512" r="210" fill="none" stroke="url(#ringGradFront)" stroke-width="52" filter="url(#frontShadow)"/>
+    <circle cx="644" cy="512" r="210" fill="none" stroke="#FFFFFF" stroke-width="52" opacity="0.95"/>
 
     <!-- AI Sparkle at intersection -->
-    <g transform="translate(512, 512)" filter="url(#sparkleGlow)">
+    <g transform="translate(512, 512)">
       <!-- Main 4-point sparkle -->
       <path d="M0,-80 L10,-10 L80,0 L10,10 L0,80 L-10,10 L-80,0 L-10,-10 Z" fill="#FFFFFF"/>
 

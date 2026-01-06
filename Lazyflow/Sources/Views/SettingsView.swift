@@ -389,9 +389,51 @@ struct NotificationSettingsView: View {
 struct DataManagementView: View {
     @State private var showDeleteConfirmation = false
     @State private var isDeleting = false
+    @State private var iCloudSyncEnabled = PersistenceController.isICloudSyncEnabled
+    @State private var showRestartAlert = false
+    @State private var iCloudAvailable = FileManager.default.ubiquityIdentityToken != nil
 
     var body: some View {
         Form {
+            Section {
+                Toggle(isOn: $iCloudSyncEnabled) {
+                    HStack {
+                        Image(systemName: "icloud")
+                            .foregroundColor(iCloudSyncEnabled ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("iCloud Sync")
+                            if !iCloudAvailable {
+                                Text("Sign in to iCloud in Settings")
+                                    .font(DesignSystem.Typography.caption1)
+                                    .foregroundColor(Color.Lazyflow.error)
+                            } else if iCloudSyncEnabled {
+                                Text("Tasks sync across all your devices")
+                                    .font(DesignSystem.Typography.caption1)
+                                    .foregroundColor(Color.Lazyflow.textSecondary)
+                            } else {
+                                Text("Tasks stored locally only")
+                                    .font(DesignSystem.Typography.caption1)
+                                    .foregroundColor(Color.Lazyflow.textSecondary)
+                            }
+                        }
+                    }
+                }
+                .disabled(!iCloudAvailable)
+                .onChange(of: iCloudSyncEnabled) { _, newValue in
+                    PersistenceController.setICloudSyncEnabled(newValue)
+                    showRestartAlert = true
+                }
+            } header: {
+                Text("iCloud")
+            } footer: {
+                if iCloudAvailable {
+                    Text("Changes take effect after restarting the app.")
+                } else {
+                    Text("iCloud is not available. Sign in to iCloud in Settings to enable sync.")
+                }
+            }
+
             Section {
                 Button(role: .destructive) {
                     showDeleteConfirmation = true
@@ -408,22 +450,6 @@ struct DataManagementView: View {
             } footer: {
                 Text("This will permanently delete all tasks, lists, and settings. This action cannot be undone.")
             }
-
-            Section("iCloud Sync") {
-                HStack {
-                    Text("Sync Status")
-                    Spacer()
-                    Text("Enabled")
-                        .foregroundColor(Color.Lazyflow.success)
-                }
-
-                HStack {
-                    Text("Last Synced")
-                    Spacer()
-                    Text("Just now")
-                        .foregroundColor(Color.Lazyflow.textSecondary)
-                }
-            }
         }
         .navigationTitle("Data Management")
         .alert("Delete All Data?", isPresented: $showDeleteConfirmation) {
@@ -433,6 +459,11 @@ struct DataManagementView: View {
             }
         } message: {
             Text("This will permanently delete all your tasks, lists, and settings. This action cannot be undone.")
+        }
+        .alert("Restart Required", isPresented: $showRestartAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Please restart the app for iCloud sync changes to take effect.")
         }
     }
 

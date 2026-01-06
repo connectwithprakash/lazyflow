@@ -1,16 +1,30 @@
 import Foundation
 import Combine
 
+/// Atomic data structure for all task lists - ensures single SwiftUI update
+struct TodayTaskData: Equatable {
+    var overdueTasks: [Task]
+    var todayTasks: [Task]
+    var completedTodayTasks: [Task]
+
+    static let empty = TodayTaskData(overdueTasks: [], todayTasks: [], completedTodayTasks: [])
+}
+
 /// ViewModel for the Today view
 @MainActor
 final class TodayViewModel: ObservableObject {
-    @Published var overdueTasks: [Task] = []
-    @Published var todayTasks: [Task] = []
-    @Published var completedTodayTasks: [Task] = []
+    // SINGLE source of truth - atomic updates prevent UICollectionView crashes
+    @Published private(set) var taskData = TodayTaskData.empty
+
     @Published var isLoading: Bool = false
     @Published var showAddTask: Bool = false
     @Published var selectedTask: Task?
     @Published var searchQuery: String = ""
+
+    // Computed properties for backward compatibility
+    var overdueTasks: [Task] { taskData.overdueTasks }
+    var todayTasks: [Task] { taskData.todayTasks }
+    var completedTodayTasks: [Task] { taskData.completedTodayTasks }
 
     private let taskService: TaskService
     private var cancellables = Set<AnyCancellable>()
@@ -43,9 +57,14 @@ final class TodayViewModel: ObservableObject {
         let overdue = taskService.fetchOverdueTasks()
         let today = taskService.fetchTodayTasks()
 
-        overdueTasks = overdue.filter { !$0.isCompleted }
-        todayTasks = today.filter { !$0.isCompleted }
-        completedTodayTasks = today.filter { $0.isCompleted }
+        // ATOMIC UPDATE: Single @Published property change = single SwiftUI update
+        // NOTE: Do NOT use withAnimation here - it interferes with UICollectionView batch updates
+        // Let SwiftUI handle animations at the View layer via implicit animations
+        taskData = TodayTaskData(
+            overdueTasks: overdue.filter { !$0.isCompleted },
+            todayTasks: today.filter { !$0.isCompleted },
+            completedTodayTasks: today.filter { $0.isCompleted }
+        )
     }
 
     private func filterTasks(query: String) {
@@ -53,17 +72,24 @@ final class TodayViewModel: ObservableObject {
             refreshTasks()
         } else {
             let searchResults = taskService.searchTasks(query: query)
-            let today = Calendar.current.startOfDay(for: Date())
-            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+            let todayDate = Calendar.current.startOfDay(for: Date())
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: todayDate)!
 
-            todayTasks = searchResults.filter { task in
+            let filteredToday = searchResults.filter { task in
                 guard let dueDate = task.dueDate else { return false }
-                return dueDate >= today && dueDate < tomorrow && !task.isCompleted
+                return dueDate >= todayDate && dueDate < tomorrow && !task.isCompleted
             }
-            overdueTasks = searchResults.filter { task in
+            let filteredOverdue = searchResults.filter { task in
                 guard let dueDate = task.dueDate else { return false }
-                return dueDate < today && !task.isCompleted
+                return dueDate < todayDate && !task.isCompleted
             }
+
+            // ATOMIC UPDATE - no withAnimation to prevent UICollectionView batch update conflicts
+            taskData = TodayTaskData(
+                overdueTasks: filteredOverdue,
+                todayTasks: filteredToday,
+                completedTodayTasks: taskData.completedTodayTasks
+            )
         }
     }
 

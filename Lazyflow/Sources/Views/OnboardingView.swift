@@ -62,7 +62,8 @@ struct OnboardingView: View {
                 .tag(pages.count)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut, value: currentPage)
+            // NOTE: Don't add .animation() here - it conflicts with UIPageViewController's
+            // built-in swipe animations and causes stuttering/freezing
 
             Spacer()
 
@@ -152,6 +153,7 @@ private struct OnboardingPageView: View {
 private struct PermissionsPageView: View {
     @Binding var calendarGranted: Bool
     @Binding var notificationsGranted: Bool
+    @State private var hasCheckedPermissions = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -197,16 +199,19 @@ private struct PermissionsPageView: View {
         }
         .padding()
         .onAppear {
+            // Only check permissions once to avoid lag when swiping back and forth
+            guard !hasCheckedPermissions else { return }
+            hasCheckedPermissions = true
             checkExistingPermissions()
         }
     }
 
     private func checkExistingPermissions() {
-        // Check calendar
+        // Check calendar (synchronous)
         let calendarStatus = EKEventStore.authorizationStatus(for: .event)
         calendarGranted = calendarStatus == .fullAccess
 
-        // Check notifications
+        // Check notifications (async)
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
                 notificationsGranted = settings.authorizationStatus == .authorized
