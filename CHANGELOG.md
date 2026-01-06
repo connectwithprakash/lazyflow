@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.1](https://github.com/connectwithprakash/taskweave/compare/v0.26.0...v0.26.1) (2026-01-06)
+
+
+### Bug Fixes
+
+* **launch:** Eliminate black screen flash on physical devices ([#82](https://github.com/connectwithprakash/taskweave/issues/82)) ([659b092](https://github.com/connectwithprakash/taskweave/commit/659b0928de4648c1d7ecce9c016ec0bed6c72577))
+
 ## [0.26.0](https://github.com/connectwithprakash/taskweave/compare/v0.25.0...v0.26.0) (2026-01-05)
 
 
