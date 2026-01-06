@@ -5,6 +5,14 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.28.0](https://github.com/connectwithprakash/taskweave/compare/v0.27.0...v0.28.0) (2026-01-06)
+
+
+### Features
+
+* **ci:** Add Fastlane for automated deployments ([99916a1](https://github.com/connectwithprakash/taskweave/commit/99916a17ae65dc98da5a8300706a576d13331978))
+* **ci:** Add Fastlane for automated deployments ([98f06fd](https://github.com/connectwithprakash/taskweave/commit/98f06fd4799a2372f51afe11e52ff62d27abdd92))
+
 ## [0.27.0](https://github.com/connectwithprakash/taskweave/compare/v0.26.1...v0.27.0) (2026-01-06)
 
 
