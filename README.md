@@ -111,6 +111,24 @@ Most todo apps just store tasks. Taskweave lets us **plan our day** by combining
 2. Open `Taskweave.xcodeproj` in Xcode
 3. Build and run on simulator or device
 
+## Deployment
+
+Taskweave uses [Fastlane](https://fastlane.tools/) for automated deployments to TestFlight and the App Store.
+
+```bash
+# Install dependencies
+bundle install
+
+# Deploy to TestFlight
+export MATCH_PASSWORD="your-password"
+bundle exec fastlane beta
+
+# Deploy to App Store
+bundle exec fastlane release
+```
+
+See [deployment guide](docs/project/deployment.md) for full setup instructions.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, commit conventions, and how to submit pull requests.
