@@ -1,0 +1,11 @@
+# App Identifier
+app_identifier("com.taskweave.app")
+
+# Apple Developer Portal Team ID
+team_id("WMK84PPNJV")
+
+# App Store Connect Team ID (same as team_id for individual accounts)
+itc_team_id("WMK84PPNJV")
+
+# For more information about the Appfile, see:
+# https://docs.fastlane.tools/advanced/#appfile
