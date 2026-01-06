@@ -53,12 +53,45 @@ platform :ios do
     )
 
     # Build the app
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Lazyflow.xcodeproj",
+      team_id: "WMK84PPNJV",
+      code_sign_identity: "Apple Distribution",
+      targets: ["Lazyflow"],
+      profile_name: "match AppStore com.lazyflow.app"
+    )
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Lazyflow.xcodeproj",
+      team_id: "WMK84PPNJV",
+      code_sign_identity: "Apple Distribution",
+      targets: ["LazyflowWidget"],
+      profile_name: "match AppStore com.lazyflow.app.widget"
+    )
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Lazyflow.xcodeproj",
+      team_id: "WMK84PPNJV",
+      code_sign_identity: "Apple Distribution",
+      targets: ["LazyflowWatch"],
+      profile_name: "match AppStore com.lazyflow.app.watch"
+    )
+
     build_app(
       project: "Lazyflow.xcodeproj",
       scheme: "Lazyflow",
       export_method: "app-store",
       output_directory: "./build",
-      output_name: "Lazyflow.ipa"
+      output_name: "Lazyflow.ipa",
+      xcodebuild_formatter: "",
+      export_options: {
+        provisioningProfiles: {
+          "com.lazyflow.app" => "match AppStore com.lazyflow.app",
+          "com.lazyflow.app.widget" => "match AppStore com.lazyflow.app.widget",
+          "com.lazyflow.app.watch" => "match AppStore com.lazyflow.app.watch"
+        }
+      }
     )
 
     # Upload to TestFlight
@@ -84,7 +117,14 @@ platform :ios do
       scheme: "Lazyflow",
       export_method: "app-store",
       output_directory: "./build",
-      output_name: "Lazyflow.ipa"
+      output_name: "Lazyflow.ipa",
+      export_options: {
+        provisioningProfiles: {
+          "com.lazyflow.app" => "match AppStore com.lazyflow.app",
+          "com.lazyflow.app.widget" => "match AppStore com.lazyflow.app.widget",
+          "com.lazyflow.app.watch" => "match AppStore com.lazyflow.app.watch"
+        }
+      }
     )
 
     # Upload to App Store
