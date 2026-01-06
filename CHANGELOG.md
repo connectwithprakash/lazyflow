@@ -5,6 +5,13 @@ All notable changes to Taskweave will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0](https://github.com/connectwithprakash/taskweave/compare/v0.26.1...v0.27.0) (2026-01-06)
+
+
+### Features
+
+* **docs:** Add theme-aware screenshots that switch with dark/light mode ([#85](https://github.com/connectwithprakash/taskweave/issues/85)) ([266ed2f](https://github.com/connectwithprakash/taskweave/commit/266ed2f1204828196e10d3e362d702d5cc0655c4))
+
 ## [0.26.1](https://github.com/connectwithprakash/taskweave/compare/v0.26.0...v0.26.1) (2026-01-06)
 
 
