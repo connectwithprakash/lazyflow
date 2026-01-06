@@ -6,6 +6,14 @@ import UserNotifications
 struct TaskweaveApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    init() {
+        // Set window background BEFORE window is created - prevents black flash
+        // Use hardcoded RGB values matching LaunchBackground color asset (0.078, 0.329, 0.337)
+        // This avoids asset catalog loading delay on physical devices which can cause black flash
+        let launchBackgroundColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
+        UIWindow.appearance().backgroundColor = launchBackgroundColor
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -73,6 +81,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Set window background color to match launch screen - prevents black flash
+        // Use hardcoded RGB values to avoid asset catalog loading delay
+        let launchBackgroundColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
+        UIWindow.appearance().backgroundColor = launchBackgroundColor
+
         // Note: Notification permission will be requested when user creates a task with reminder
         // This provides a better UX than asking immediately on launch
 
@@ -84,9 +97,38 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(
         _ application: UIApplication,
-        didFailToRegisterForRemoteNotificationsWithError error: Error
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let config = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        config.delegateClass = SceneDelegate.self
+        return config
+    }
+}
+
+// MARK: - Scene Delegate
+
+class SceneDelegate: NSObject, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
     ) {
-        print("Failed to register for remote notifications: \(error)")
+        guard let windowScene = scene as? UIWindowScene else { return }
+
+        // Set window background color directly on all windows
+        let launchColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
+        windowScene.windows.forEach { $0.backgroundColor = launchColor }
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+
+        // Ensure window background is set when scene becomes active
+        let launchColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
+        windowScene.windows.forEach { $0.backgroundColor = launchColor }
     }
 }
 

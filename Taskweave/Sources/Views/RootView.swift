@@ -9,8 +9,15 @@ struct RootView: View {
     @State private var showContent = false
     @AppStorage("hasSeenOnboarding") private var hasCompletedOnboarding = false
 
+    // Hardcoded launch background color to avoid asset loading delay on physical devices
+    private static let launchBackgroundColor = Color(red: 0.078, green: 0.329, blue: 0.337)
+
     var body: some View {
         ZStack {
+            // Background color renders immediately - prevents black flash
+            Self.launchBackgroundColor
+                .ignoresSafeArea()
+
             if let controller = persistenceController,
                let service = taskService,
                showContent {
@@ -58,8 +65,14 @@ struct RootView: View {
 /// Loading view matching LaunchScreen - fullscreen gradient with spinner
 /// Shows feedback immediately, fades out when content is ready
 private struct LoadingView: View {
+    // Hardcoded to avoid asset loading delay
+    private static let launchBackgroundColor = Color(red: 0.078, green: 0.329, blue: 0.337)
+
     var body: some View {
         ZStack {
+            Self.launchBackgroundColor
+                .ignoresSafeArea()
+
             Image("LaunchLogo")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
