@@ -110,3 +110,19 @@ Hosted on Netlify at taskweave.netlify.app:
 - `design-system.md` - Colors, typography, spacing, components
 - `user-flows.md` - User journeys and interaction patterns
 - `architecture.md` - Technical architecture (added in v0.5.1)
+- `deployment.md` - Fastlane setup and deployment guide
+
+## Deployment
+
+The app uses Fastlane for automated deployments:
+
+```bash
+# Deploy to TestFlight
+export MATCH_PASSWORD="password"
+bundle exec fastlane beta
+
+# Deploy to App Store
+bundle exec fastlane release
+```
+
+See `docs/project/deployment.md` for full setup instructions.

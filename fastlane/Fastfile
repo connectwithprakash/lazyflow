@@ -1,0 +1,109 @@
+# Fastfile for Taskweave
+
+default_platform(:ios)
+
+# App Store Connect API Key
+API_KEY_ID = "FM4R243635"
+API_KEY_ISSUER_ID = "96211e5a-ff10-4a17-bb3f-9f468f93457d"
+API_KEY_PATH = "./fastlane/keys/AuthKey_FM4R243635.p8"
+
+platform :ios do
+  def api_key
+    app_store_connect_api_key(
+      key_id: API_KEY_ID,
+      issuer_id: API_KEY_ISSUER_ID,
+      key_filepath: API_KEY_PATH
+    )
+  end
+
+  desc "Run all tests"
+  lane :test do
+    run_tests(
+      project: "Taskweave.xcodeproj",
+      scheme: "Taskweave",
+      device: "iPhone 16 Pro",
+      clean: true
+    )
+  end
+
+  desc "Sync development certificates"
+  lane :sync_dev_certs do
+    match(type: "development", readonly: true)
+  end
+
+  desc "Sync App Store certificates"
+  lane :sync_appstore_certs do
+    match(type: "appstore", readonly: true)
+  end
+
+  desc "Generate new certificates (initial setup)"
+  lane :setup_certs do
+    match(type: "development", readonly: false)
+    match(type: "appstore", readonly: false)
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    # Sync certificates
+    match(type: "appstore", readonly: true)
+
+    # Increment build number
+    increment_build_number(
+      build_number: latest_testflight_build_number(api_key: api_key) + 1
+    )
+
+    # Build the app
+    build_app(
+      project: "Taskweave.xcodeproj",
+      scheme: "Taskweave",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "Taskweave.ipa"
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build and submit to App Store"
+  lane :release do
+    # Sync certificates
+    match(type: "appstore", readonly: true)
+
+    # Increment build number
+    increment_build_number(
+      build_number: latest_testflight_build_number(api_key: api_key) + 1
+    )
+
+    # Build the app
+    build_app(
+      project: "Taskweave.xcodeproj",
+      scheme: "Taskweave",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "Taskweave.ipa"
+    )
+
+    # Upload to App Store
+    upload_to_app_store(
+      api_key: api_key,
+      submit_for_review: false,
+      automatic_release: false,
+      skip_screenshots: true,
+      skip_metadata: true
+    )
+  end
+
+  desc "Download dSYMs"
+  lane :refresh_dsyms do
+    download_dsyms(api_key: api_key, app_identifier: "com.taskweave.app")
+  end
+
+  desc "Increment version number"
+  lane :bump_version do |options|
+    increment_version_number(bump_type: options[:type] || "patch")
+  end
+end

@@ -1,0 +1,18 @@
+# Git repo for certificates and profiles
+git_url("https://github.com/connectwithprakash/taskweave-certificates.git")
+
+# Storage mode
+storage_mode("git")
+
+# App identifiers for all targets
+app_identifier([
+  "com.taskweave.app",
+  "com.taskweave.app.widget",
+  "com.taskweave.app.watch"
+])
+
+# Team ID
+team_id("WMK84PPNJV")
+
+# Use API key for authentication (no 2FA needed)
+api_key_path("./fastlane/keys/api_key.json")
