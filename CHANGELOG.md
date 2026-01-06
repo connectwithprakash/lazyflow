@@ -5,6 +5,26 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0](https://github.com/connectwithprakash/lazyflow/compare/v0.27.0...v1.0.0) (2026-01-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* release v1.0.0 - first stable release
+
+### Features
+
+* **ci:** Add Fastlane for automated deployments ([99916a1](https://github.com/connectwithprakash/lazyflow/commit/99916a17ae65dc98da5a8300706a576d13331978))
+* **ci:** Add Fastlane for automated deployments ([98f06fd](https://github.com/connectwithprakash/lazyflow/commit/98f06fd4799a2372f51afe11e52ff62d27abdd92))
+* release v1.0.0 - first stable release ([c4b6046](https://github.com/connectwithprakash/lazyflow/commit/c4b604655f7a8780ecf80cd0f1c13beac9b07e13))
+* rename app from Taskweave to Lazyflow ([#90](https://github.com/connectwithprakash/lazyflow/issues/90)) ([18d5765](https://github.com/connectwithprakash/lazyflow/commit/18d576534293f31d8fef70febe16662b6491fa92))
+
+
+### Bug Fixes
+
+* display conflicting task info in conflict resolution card ([1ce96c7](https://github.com/connectwithprakash/lazyflow/commit/1ce96c7efeb4fa80315763c9f595c08633e1ae99))
+* fastlane code signing and export compliance ([#92](https://github.com/connectwithprakash/lazyflow/issues/92)) ([78026ce](https://github.com/connectwithprakash/lazyflow/commit/78026ce225a031a727b09a44a2a5c402635a32d5))
+
 ## [0.27.0](https://github.com/connectwithprakash/lazyflow/compare/v0.26.1...v0.27.0) (2026-01-06)
 
 
