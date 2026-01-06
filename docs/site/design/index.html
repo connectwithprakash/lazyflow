@@ -160,6 +160,8 @@
             overflow: hidden;
             box-shadow: 0 4px 20px var(--shadow);
             transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            max-width: 350px;
+            justify-self: center;
         }
 
         .screenshot-card:hover {
@@ -186,32 +188,6 @@
         .screenshot-info p {
             color: var(--text-secondary);
             font-size: 0.9rem;
-        }
-
-        .mode-toggle {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .mode-btn {
-            padding: 10px 24px;
-            border: 2px solid var(--accent);
-            background: transparent;
-            color: var(--accent);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .mode-btn.active {
-            background: var(--accent);
-            color: white;
-        }
-
-        .mode-btn:hover:not(.active) {
-            background: rgba(33, 138, 141, 0.1);
         }
 
         .color-grid {
@@ -307,6 +283,7 @@
 
     <nav>
         <ul>
+            <li><a href="#app-icon">App Icon</a></li>
             <li><a href="#screens">Screens</a></li>
             <li><a href="#ai-features">AI Features</a></li>
             <li><a href="#apple-ecosystem">Apple Ecosystem</a></li>
@@ -322,166 +299,132 @@
     <main>
         <a href="../" class="back-link">← Back to Taskweave</a>
 
+        <section id="app-icon">
+            <h2>App Icon</h2>
+            <p class="section-desc">
+                The Taskweave icon features two interlocking rings representing the weaving of tasks and time, with a compass star at the center symbolizing direction and focus.
+            </p>
+
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="../assets/icons/variants/AppIcon-Dark.png" alt="App Icon - Dark">
+                    <div class="screenshot-info">
+                        <h3>Dark</h3>
+                        <p>Primary app icon with teal gradient background</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/icons/variants/AppIcon-LiquidGlass.png" alt="App Icon - Liquid Glass">
+                    <div class="screenshot-info">
+                        <h3>Liquid Glass</h3>
+                        <p>iOS 26 glass effect variant</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/icons/variants/AppIcon-Tinted.png" alt="App Icon - Tinted">
+                    <div class="screenshot-info">
+                        <h3>Tinted</h3>
+                        <p>Grayscale variant for tinted icon mode</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="screens">
             <h2>App Screens</h2>
             <p class="section-desc">
                 Complete visual reference for all screens in Taskweave. Toggle between dark and light mode to see both appearances.
             </p>
 
-            <div class="mode-toggle">
-                <button class="mode-btn active" onclick="showMode('dark')">Dark Mode</button>
-                <button class="mode-btn" onclick="showMode('light')">Light Mode</button>
-            </div>
-
-            <div class="screenshot-grid" id="dark-screenshots">
+            <div class="screenshot-grid">
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/01-today-empty.png" alt="Today Empty State">
+                    <img src="../assets/screenshots/light/01-today-empty.png"
+                         data-light="../assets/screenshots/light/01-today-empty.png"
+                         data-dark="../assets/screenshots/dark/01-today-empty.png"
+                         alt="Today Empty State" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Today - Empty State</h3>
                         <p>Celebratory empty state when all tasks are complete</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/02-add-task-sheet.png" alt="Add Task Sheet">
+                    <img src="../assets/screenshots/light/02-add-task-sheet.png"
+                         data-light="../assets/screenshots/light/02-add-task-sheet.png"
+                         data-dark="../assets/screenshots/dark/02-add-task-sheet.png"
+                         alt="Add Task Sheet" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Add Task Sheet</h3>
                         <p>Quick task entry with date chips and options</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/03-add-task-with-content.png" alt="Add Task with Content">
+                    <img src="../assets/screenshots/light/03-add-task-with-content.png"
+                         data-light="../assets/screenshots/light/03-add-task-with-content.png"
+                         data-dark="../assets/screenshots/dark/03-add-task-with-content.png"
+                         alt="Add Task with Content" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Add Task - Filled</h3>
                         <p>Task entry with AI-powered suggestions</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/05-today-multiple-tasks.png" alt="Today with Tasks">
+                    <img src="../assets/screenshots/light/05-today-multiple-tasks.png"
+                         data-light="../assets/screenshots/light/05-today-multiple-tasks.png"
+                         data-dark="../assets/screenshots/dark/05-today-multiple-tasks.png"
+                         alt="Today with Tasks" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Today - With Tasks</h3>
                         <p>Task list with auto-categorization tags</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/06-calendar-view.png" alt="Calendar View">
+                    <img src="../assets/screenshots/light/06-calendar-view.png"
+                         data-light="../assets/screenshots/light/06-calendar-view.png"
+                         data-dark="../assets/screenshots/dark/06-calendar-view.png"
+                         alt="Calendar View" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Calendar View (v0.2.0)</h3>
                         <p>Week/Day view with EventKit integration</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/07-upcoming-view.png" alt="Upcoming View">
+                    <img src="../assets/screenshots/light/07-upcoming-view.png"
+                         data-light="../assets/screenshots/light/07-upcoming-view.png"
+                         data-dark="../assets/screenshots/dark/07-upcoming-view.png"
+                         alt="Upcoming View" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Upcoming - Empty</h3>
                         <p>Future tasks organized by date</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/08-lists-view.png" alt="Lists View">
+                    <img src="../assets/screenshots/light/08-lists-view.png"
+                         data-light="../assets/screenshots/light/08-lists-view.png"
+                         data-dark="../assets/screenshots/dark/08-lists-view.png"
+                         alt="Lists View" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Lists</h3>
                         <p>Smart lists and custom project organization</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/09-settings-view.png" alt="Settings View">
+                    <img src="../assets/screenshots/light/09-settings-view.png"
+                         data-light="../assets/screenshots/light/09-settings-view.png"
+                         data-dark="../assets/screenshots/dark/09-settings-view.png"
+                         alt="Settings View" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Settings</h3>
                         <p>App preferences with AI provider selection</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/10-task-detail.png" alt="Task Detail">
+                    <img src="../assets/screenshots/light/10-task-detail.png"
+                         data-light="../assets/screenshots/light/10-task-detail.png"
+                         data-dark="../assets/screenshots/dark/10-task-detail.png"
+                         alt="Task Detail" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Task Detail</h3>
                         <p>Full task editing with duration estimates</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="screenshot-grid" id="light-screenshots" style="display: none;">
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/01-today-empty.png" alt="Today Empty State Light">
-                    <div class="screenshot-info">
-                        <h3>Today - Empty State</h3>
-                        <p>All tasks complete celebration</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/02-add-task-sheet.png" alt="Add Task Sheet Light">
-                    <div class="screenshot-info">
-                        <h3>Add Task Sheet</h3>
-                        <p>Quick task entry in light mode</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/03-add-task-with-content.png" alt="Add Task Filled Light">
-                    <div class="screenshot-info">
-                        <h3>Add Task - Filled</h3>
-                        <p>Task entry with AI suggestions</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/04-today-with-task.png" alt="Today With Task Light">
-                    <div class="screenshot-info">
-                        <h3>Today - Single Task</h3>
-                        <p>Today view with one task</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/05-today-multiple-tasks.png" alt="Today Light">
-                    <div class="screenshot-info">
-                        <h3>Today - With Tasks</h3>
-                        <p>Task list in light mode</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/06-calendar-view.png" alt="Calendar Light">
-                    <div class="screenshot-info">
-                        <h3>Calendar View (v0.2.0)</h3>
-                        <p>Apple Calendar integration</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/07-upcoming-view.png" alt="Upcoming Light">
-                    <div class="screenshot-info">
-                        <h3>Upcoming</h3>
-                        <p>Upcoming view in light mode</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/08-lists-view.png" alt="Lists Light">
-                    <div class="screenshot-info">
-                        <h3>Lists</h3>
-                        <p>Lists view in light mode</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/09-settings-view.png" alt="Settings Light">
-                    <div class="screenshot-info">
-                        <h3>Settings</h3>
-                        <p>Settings in light mode</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/10-task-detail.png" alt="Task Detail Light">
-                    <div class="screenshot-info">
-                        <h3>Task Detail</h3>
-                        <p>Task editing in light mode</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/11-ai-suggestions.png" alt="AI Analysis">
-                    <div class="screenshot-info">
-                        <h3>AI Analysis</h3>
-                        <p>Apple Intelligence-powered task suggestions</p>
-                    </div>
-                </div>
-                <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/12-ai-subtasks.png" alt="AI Subtasks">
-                    <div class="screenshot-info">
-                        <h3>AI Subtasks</h3>
-                        <p>Intelligent task breakdown with subtasks</p>
                     </div>
                 </div>
             </div>
@@ -495,14 +438,20 @@
 
             <div class="screenshot-grid">
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/11-ai-suggestions.png" alt="AI Analysis">
+                    <img src="../assets/screenshots/light/11-ai-suggestions.png"
+                         data-light="../assets/screenshots/light/11-ai-suggestions.png"
+                         data-dark="../assets/screenshots/dark/11-ai-suggestions.png"
+                         alt="AI Analysis" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>AI Analysis</h3>
                         <p>Refined title, description, category, duration, and priority suggestions</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/light/12-ai-subtasks.png" alt="AI Subtasks">
+                    <img src="../assets/screenshots/light/12-ai-subtasks.png"
+                         data-light="../assets/screenshots/light/12-ai-subtasks.png"
+                         data-dark="../assets/screenshots/dark/12-ai-subtasks.png"
+                         alt="AI Subtasks" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>AI Subtasks</h3>
                         <p>Best time to work and intelligent subtask breakdown</p>
@@ -519,17 +468,43 @@
 
             <div class="screenshot-grid">
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/watch/watch-today.png" alt="Apple Watch">
+                    <img src="../assets/screenshots/watch/watch-today.png"
+                         data-light="../assets/screenshots/watch/watch-today.png"
+                         data-dark="../assets/screenshots/watch/watch-today-dark.png"
+                         alt="Apple Watch Today" class="theme-screenshot">
                     <div class="screenshot-info">
-                        <h3>Apple Watch</h3>
+                        <h3>Apple Watch - Today</h3>
                         <p>Today's tasks on your wrist with tap to complete</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/ipad/ipad-today-view.png" alt="iPad">
+                    <img src="../assets/screenshots/watch/watch-tasks-light.png"
+                         data-light="../assets/screenshots/watch/watch-tasks-light.png"
+                         data-dark="../assets/screenshots/watch/watch-tasks-dark.png"
+                         alt="Apple Watch Tasks" class="theme-screenshot">
                     <div class="screenshot-info">
-                        <h3>iPad</h3>
-                        <p>Split view with sidebar navigation</p>
+                        <h3>Apple Watch - Tasks</h3>
+                        <p>Task list with completion status</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/ipad/ipad-today-empty-light.png"
+                         data-light="../assets/screenshots/ipad/ipad-today-empty-light.png"
+                         data-dark="../assets/screenshots/ipad/ipad-today-empty-dark.png"
+                         alt="iPad Today" class="theme-screenshot">
+                    <div class="screenshot-info">
+                        <h3>iPad - Today</h3>
+                        <p>Sidebar navigation with Today view</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/ipad/ipad-calendar-light.png"
+                         data-light="../assets/screenshots/ipad/ipad-calendar-light.png"
+                         data-dark="../assets/screenshots/ipad/ipad-calendar-dark.png"
+                         alt="iPad Calendar" class="theme-screenshot">
+                    <div class="screenshot-info">
+                        <h3>iPad - Calendar</h3>
+                        <p>Week view with time grid</p>
                     </div>
                 </div>
             </div>
@@ -538,29 +513,38 @@
         <section id="widgets">
             <h2>Home Screen Widgets</h2>
             <p class="section-desc">
-                Taskweave offers three widget sizes to keep your tasks visible on the Home Screen.
+                Taskweave offers multiple widget sizes to keep your tasks visible on the Home Screen.
             </p>
 
             <div class="screenshot-grid">
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/widgets/small-widget.png" alt="Small Widget">
+                    <img src="../assets/screenshots/widgets/small-widget.png"
+                         data-light="../assets/screenshots/widgets/small-widget.png"
+                         data-dark="../assets/screenshots/widgets/small-widget-dark.png"
+                         alt="Small Widget" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Small Widget</h3>
-                        <p>Task count with progress ring</p>
+                        <p>Progress ring with task count at a glance</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/widgets/medium-widget.png" alt="Medium Widget">
+                    <img src="../assets/screenshots/widgets/medium-widget.png"
+                         data-light="../assets/screenshots/widgets/medium-widget.png"
+                         data-dark="../assets/screenshots/widgets/medium-widget-dark.png"
+                         alt="Medium Widget" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Medium Widget</h3>
-                        <p>Today's task list with completion status</p>
+                        <p>Today's task list with quick overview</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/widgets/large-widget.png" alt="Large Widget">
+                    <img src="../assets/screenshots/widgets/large-widget.png"
+                         data-light="../assets/screenshots/widgets/large-widget.png"
+                         data-dark="../assets/screenshots/widgets/large-widget-dark.png"
+                         alt="Large Widget" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Large Widget</h3>
-                        <p>Full task list with sections</p>
+                        <p>Full task list with progress and categories</p>
                     </div>
                 </div>
             </div>
@@ -574,10 +558,23 @@
 
             <div class="screenshot-grid">
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/live-activity/dynamic-island.png" alt="Dynamic Island">
+                    <img src="../assets/screenshots/live-activity/dynamic-island-compact-light.png"
+                         data-light="../assets/screenshots/live-activity/dynamic-island-compact-light.png"
+                         data-dark="../assets/screenshots/live-activity/dynamic-island-compact-dark.png"
+                         alt="Dynamic Island Compact" class="theme-screenshot">
                     <div class="screenshot-info">
-                        <h3>Dynamic Island</h3>
-                        <p>Compact progress indicator in the Dynamic Island</p>
+                        <h3>Dynamic Island (Compact)</h3>
+                        <p>Compact progress indicator showing task count</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/live-activity/dynamic-island-light.png"
+                         data-light="../assets/screenshots/live-activity/dynamic-island-light.png"
+                         data-dark="../assets/screenshots/live-activity/dynamic-island-dark.png"
+                         alt="Dynamic Island Expanded" class="theme-screenshot">
+                    <div class="screenshot-info">
+                        <h3>Dynamic Island (Expanded)</h3>
+                        <p>Expanded view with task list on long press</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
@@ -687,21 +684,30 @@
 
             <div class="screenshot-grid">
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/02-add-task-sheet.png" alt="Sheet Component">
+                    <img src="../assets/screenshots/light/02-add-task-sheet.png"
+                         data-light="../assets/screenshots/light/02-add-task-sheet.png"
+                         data-dark="../assets/screenshots/dark/02-add-task-sheet.png"
+                         alt="Sheet Component" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Bottom Sheet</h3>
                         <p>Medium detent sheet for quick task entry</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/05-today-multiple-tasks.png" alt="Task List">
+                    <img src="../assets/screenshots/light/05-today-multiple-tasks.png"
+                         data-light="../assets/screenshots/light/05-today-multiple-tasks.png"
+                         data-dark="../assets/screenshots/dark/05-today-multiple-tasks.png"
+                         alt="Task List" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>Task List</h3>
                         <p>Task rows with checkbox, title, and metadata tags</p>
                     </div>
                 </div>
                 <div class="screenshot-card">
-                    <img src="../assets/screenshots/dark/08-lists-view.png" alt="List Navigation">
+                    <img src="../assets/screenshots/light/08-lists-view.png"
+                         data-light="../assets/screenshots/light/08-lists-view.png"
+                         data-dark="../assets/screenshots/dark/08-lists-view.png"
+                         alt="List Navigation" class="theme-screenshot">
                     <div class="screenshot-info">
                         <h3>List Navigation</h3>
                         <p>Grouped list with smart lists and custom lists</p>
@@ -743,24 +749,6 @@
     </footer>
 
     <script>
-        function showMode(mode) {
-            const darkGrid = document.getElementById('dark-screenshots');
-            const lightGrid = document.getElementById('light-screenshots');
-            const buttons = document.querySelectorAll('.mode-btn');
-
-            buttons.forEach(btn => btn.classList.remove('active'));
-
-            if (mode === 'dark') {
-                darkGrid.style.display = 'grid';
-                lightGrid.style.display = 'none';
-                buttons[0].classList.add('active');
-            } else {
-                darkGrid.style.display = 'none';
-                lightGrid.style.display = 'grid';
-                buttons[1].classList.add('active');
-            }
-        }
-
         function getSystemTheme() {
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
@@ -768,6 +756,16 @@
         function updateIcon(theme) {
             const icon = document.querySelector('.theme-icon');
             icon.textContent = theme === 'dark' ? '🌞' : '🌚';
+        }
+
+        function updateScreenshots(theme) {
+            const screenshots = document.querySelectorAll('.theme-screenshot');
+            screenshots.forEach(img => {
+                const src = theme === 'dark' ? img.dataset.dark : img.dataset.light;
+                if (src && img.src !== src) {
+                    img.src = src;
+                }
+            });
         }
 
         function toggleTheme() {
@@ -785,6 +783,7 @@
             root.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateIcon(newTheme);
+            updateScreenshots(newTheme);
         }
 
         (function() {
@@ -794,13 +793,17 @@
             if (savedTheme) {
                 document.documentElement.setAttribute('data-theme', savedTheme);
                 updateIcon(savedTheme);
+                updateScreenshots(savedTheme);
             } else {
                 updateIcon(systemTheme);
+                updateScreenshots(systemTheme);
             }
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                 if (!localStorage.getItem('theme')) {
-                    updateIcon(e.matches ? 'dark' : 'light');
+                    const theme = e.matches ? 'dark' : 'light';
+                    updateIcon(theme);
+                    updateScreenshots(theme);
                 }
             });
         })();
