@@ -4,9 +4,14 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("hasSeenOnboarding") private var hasCompletedOnboarding = false
 
+    /// Check if running in UI test mode - bypasses onboarding
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("UI_TESTING")
+    }
+
     var body: some View {
         Group {
-            if hasCompletedOnboarding {
+            if hasCompletedOnboarding || isUITesting {
                 ContentView()
                     .environment(\.managedObjectContext, PersistenceController.shared.viewContext)
                     .environmentObject(TaskService.shared)

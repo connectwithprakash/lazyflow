@@ -10,6 +10,28 @@ final class LazyflowUITests: XCTestCase {
         app.launch()
     }
 
+    // MARK: - Helper Methods
+
+    /// Reliably types text into a text field by ensuring keyboard focus is active.
+    /// This addresses XCUITest's keyboard focus timing issues.
+    private func tapAndTypeText(_ element: XCUIElement, text: String) {
+        XCTAssertTrue(element.waitForExistence(timeout: 3), "Text field should exist")
+
+        // Tap the element to focus it
+        element.tap()
+
+        // Wait for keyboard to appear by checking for any key
+        let keyboard = app.keyboards.firstMatch
+        if !keyboard.waitForExistence(timeout: 2) {
+            // If keyboard didn't appear, try tapping again
+            element.tap()
+            _ = keyboard.waitForExistence(timeout: 2)
+        }
+
+        // Type the text
+        element.typeText(text)
+    }
+
     override func tearDownWithError() throws {
         app = nil
     }
@@ -47,20 +69,35 @@ final class LazyflowUITests: XCTestCase {
         // Navigate to Today view
         app.tabBars.buttons["Today"].tap()
 
-        // Tap add button
-        app.buttons["Add task"].tap()
+        // Wait for view to load
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Tap add button - wait for it to be ready
+        let addTaskButton = app.buttons["Add task"]
+        XCTAssertTrue(addTaskButton.waitForExistence(timeout: 3), "Add task button should exist")
+        addTaskButton.tap()
 
         // Verify add task sheet appears
-        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
 
         // Enter task title
         let titleField = app.textFields["What do you need to do?"]
-        XCTAssertTrue(titleField.waitForExistence(timeout: 2))
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
         titleField.tap()
         titleField.typeText("Test Task from UI Test")
 
+        // Set due date to Tomorrow so task appears in Upcoming view
+        // (Avoid "Today" button confusion with tab bar)
+        let tomorrowButton = app.buttons["Tomorrow"]
+        if tomorrowButton.exists && tomorrowButton.isHittable {
+            tomorrowButton.tap()
+        }
+
         // Tap Add button
         app.buttons["Add"].tap()
+
+        // Navigate to Upcoming to see the task
+        app.tabBars.buttons["Upcoming"].tap()
 
         // Verify task appears in list (increased timeout for physical device reliability)
         XCTAssertTrue(app.staticTexts["Test Task from UI Test"].waitForExistence(timeout: 5))
@@ -138,10 +175,9 @@ final class LazyflowUITests: XCTestCase {
         // Verify sheet appears
         XCTAssertTrue(app.navigationBars["New List"].waitForExistence(timeout: 2))
 
-        // Enter list name
+        // Enter list name using helper to ensure keyboard focus
         let nameField = app.textFields["List Name"]
-        nameField.tap()
-        nameField.typeText("Work Projects")
+        tapAndTypeText(nameField, text: "Work Projects")
 
         // Tap Create
         app.buttons["Create"].tap()
@@ -155,9 +191,12 @@ final class LazyflowUITests: XCTestCase {
         app.tabBars.buttons["Lists"].tap()
         app.buttons["Add list"].tap()
 
+        // Verify sheet appears
+        XCTAssertTrue(app.navigationBars["New List"].waitForExistence(timeout: 2))
+
+        // Enter list name using helper to ensure keyboard focus
         let nameField = app.textFields["List Name"]
-        nameField.tap()
-        nameField.typeText("Nav Test List")
+        tapAndTypeText(nameField, text: "Nav Test List")
         app.buttons["Create"].tap()
 
         // Wait for list to appear - use firstMatch to handle multiple matches
@@ -235,12 +274,34 @@ final class LazyflowUITests: XCTestCase {
 
     func testPushToTomorrowSwipeAction() throws {
         app.tabBars.buttons["Today"].tap()
-        app.buttons["Add task"].tap()
+
+        // Wait for view to load
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Tap add button - wait for it to be ready
+        let addTaskButton = app.buttons["Add task"]
+        XCTAssertTrue(addTaskButton.waitForExistence(timeout: 3), "Add task button should exist")
+        addTaskButton.tap()
+
+        // Verify add task sheet appears
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
 
         let titleField = app.textFields["What do you need to do?"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
         titleField.tap()
         titleField.typeText("Task to push")
+
+        // Set due date to Tomorrow so task appears in Upcoming view
+        // (Avoid "Today" button confusion with tab bar)
+        let tomorrowButton = app.buttons["Tomorrow"]
+        if tomorrowButton.exists && tomorrowButton.isHittable {
+            tomorrowButton.tap()
+        }
+
         app.buttons["Add"].tap()
+
+        // Navigate to Upcoming to see the task
+        app.tabBars.buttons["Upcoming"].tap()
 
         // Task should appear (increased timeout for physical device reliability)
         XCTAssertTrue(app.staticTexts["Task to push"].waitForExistence(timeout: 5))
@@ -503,19 +564,17 @@ final class LazyflowUITests: XCTestCase {
     func testDailySummarySection() throws {
         app.tabBars.buttons["Settings"].tap()
 
-        // Scroll to find Daily Summary section - need multiple swipes as it's below several sections
-        let settingsTable = app.tables.firstMatch
-        let eveningToggle = app.switches["Evening Reminder Toggle"]
+        // Use flexible predicate to find Evening Reminder toggle (more reliable across devices)
+        let eveningToggle = app.switches.matching(NSPredicate(format: "identifier CONTAINS[c] 'Evening' OR label CONTAINS[c] 'Evening'")).firstMatch
 
-        if settingsTable.waitForExistence(timeout: 3) {
-            // Scroll until we find the toggle or give up after 5 attempts
-            for _ in 0..<5 {
-                if eveningToggle.exists && eveningToggle.isHittable {
-                    break
-                }
-                settingsTable.swipeUp()
-                Thread.sleep(forTimeInterval: 0.3)
+        // Scroll to find Daily Summary section - swipe on app directly since SwiftUI List may not be Table
+        // Scroll until we find the toggle or give up after 5 attempts
+        for _ in 0..<5 {
+            if eveningToggle.exists && eveningToggle.isHittable {
+                break
             }
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
         }
 
         XCTAssertTrue(eveningToggle.waitForExistence(timeout: 5), "Daily Summary section should exist in settings (Evening Reminder toggle)")
@@ -524,10 +583,19 @@ final class LazyflowUITests: XCTestCase {
     func testDailySummaryToggleInteraction() throws {
         app.tabBars.buttons["Settings"].tap()
 
-        // Find the toggle - XCUITest will auto-scroll when we interact with it
-        let reminderToggle = app.switches["Evening Reminder Toggle"]
+        // Use flexible predicate to find Evening Reminder toggle (more reliable across devices)
+        let reminderToggle = app.switches.matching(NSPredicate(format: "identifier CONTAINS[c] 'Evening' OR label CONTAINS[c] 'Evening'")).firstMatch
 
-        // Wait for toggle to exist (may need scrolling)
+        // Scroll to find Daily Summary section - swipe on app directly since SwiftUI List may not be Table
+        for _ in 0..<5 {
+            if reminderToggle.exists && reminderToggle.isHittable {
+                break
+            }
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        // Wait for toggle to exist
         XCTAssertTrue(reminderToggle.waitForExistence(timeout: 5), "Evening Reminder toggle should exist")
 
         // Get initial state (handles both "1"/"0" and "true"/"false" formats)

@@ -187,13 +187,20 @@ final class PersistenceController: @unchecked Sendable {
         UserDefaults.standard.set(date, forKey: lastSyncDateKey)
     }
 
+    /// Check if running in UI test mode
+    private static var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("UI_TESTING")
+    }
+
     /// Shared singleton instance (lazy initialization)
+    /// Uses in-memory store for UI tests to ensure test isolation
     private static var _shared: PersistenceController?
     static var shared: PersistenceController {
         if let existing = _shared {
             return existing
         }
-        let controller = PersistenceController()
+        // Use in-memory store for UI tests to ensure clean state each run
+        let controller = PersistenceController(inMemory: isUITesting)
         _shared = controller
         return controller
     }
