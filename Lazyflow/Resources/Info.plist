@@ -38,7 +38,7 @@
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Lazyflow needs calendar access to display your events and schedule tasks as time blocks.</string>
+	<string>Lazyflow needs calendar access to schedule tasks as time blocks and show your events alongside tasks.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>Lazyflow needs calendar access to create time blocks for your tasks.</string>
 	<key>UILaunchStoryboardName</key>

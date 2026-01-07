@@ -27,6 +27,7 @@ targets:
       path: Lazyflow/Resources/Info.plist
       properties:
         NSSupportsLiveActivities: YES
+        NSCalendarsFullAccessUsageDescription: "Lazyflow needs calendar access to schedule tasks as time blocks and show your events alongside tasks."
         INAlternativeAppNames:
           - INAlternativeAppName: Task Weave
           - INAlternativeAppName: Task weave
