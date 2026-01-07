@@ -288,6 +288,7 @@ struct EmptyStateView: View {
                     .frame(width: 200)
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(DesignSystem.Spacing.xxl)
     }
 }

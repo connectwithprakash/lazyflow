@@ -54,8 +54,16 @@ final class ConflictDetectionService: ObservableObject {
             return conflict1.conflictTime < conflict2.conflictTime
         }
 
-        detectedConflicts = conflicts
-        lastScanDate = now
+        // Ensure UI updates happen on main thread to prevent UICollectionView crashes
+        if Thread.isMainThread {
+            detectedConflicts = conflicts
+            lastScanDate = now
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.detectedConflicts = conflicts
+                self?.lastScanDate = now
+            }
+        }
 
         return conflicts
     }

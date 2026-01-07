@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// Main content view with adaptive navigation
@@ -6,9 +7,11 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
+    @AppStorage("hasShownICloudPrompt") private var hasShownICloudPrompt = false
     @State private var selectedTab: Tab? = .today
     @State private var showSearch = false
     @State private var showAddTask = false
+    @State private var showICloudPrompt = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     enum Tab: String, CaseIterable, Identifiable {
@@ -66,6 +69,48 @@ struct ContentView: View {
                 case "settings": selectedTab = .settings
                 default: break
                 }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)) { _ in
+            // Check if we should show iCloud prompt after first task is created
+            checkICloudPrompt()
+        }
+        .alert("Sync with iCloud?", isPresented: $showICloudPrompt) {
+            Button("Enable iCloud Sync") {
+                PersistenceController.setICloudSyncEnabled(true)
+                hasShownICloudPrompt = true
+                // Show restart required message
+                showRestartRequiredAlert = true
+            }
+            Button("Not Now", role: .cancel) {
+                hasShownICloudPrompt = true
+            }
+        } message: {
+            Text("Enable iCloud sync to access your tasks on all your Apple devices. You can change this later in Settings.")
+        }
+        .alert("Restart Required", isPresented: $showRestartRequiredAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Please restart the app to enable iCloud sync.")
+        }
+    }
+
+    @State private var showRestartRequiredAlert = false
+
+    private func checkICloudPrompt() {
+        // Don't show if already shown or iCloud already enabled
+        guard !hasShownICloudPrompt,
+              !PersistenceController.isICloudSyncEnabled,
+              FileManager.default.ubiquityIdentityToken != nil else {
+            return
+        }
+
+        // Check if user has created their first task
+        let taskCount = TaskService.shared.tasks.count
+        if taskCount >= 1 {
+            // Small delay to let the task creation animation complete
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                showICloudPrompt = true
             }
         }
     }
