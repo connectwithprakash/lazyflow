@@ -32,9 +32,9 @@ targets:
         UIBackgroundModes:
           - remote-notification
         INAlternativeAppNames:
-          - INAlternativeAppName: Task Weave
-          - INAlternativeAppName: Task weave
-          - INAlternativeAppName: Tasks
+          - INAlternativeAppName: Lazy Flow
+          - INAlternativeAppName: Todo
+          - INAlternativeAppName: Planner
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lazyflow.app

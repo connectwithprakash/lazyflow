@@ -22,15 +22,15 @@
 	<array>
 		<dict>
 			<key>INAlternativeAppName</key>
-			<string>Task Weave</string>
+			<string>Lazy Flow</string>
 		</dict>
 		<dict>
 			<key>INAlternativeAppName</key>
-			<string>Task weave</string>
+			<string>Todo</string>
 		</dict>
 		<dict>
 			<key>INAlternativeAppName</key>
-			<string>Tasks</string>
+			<string>Planner</string>
 		</dict>
 	</array>
 	<key>NSCalendarsFullAccessUsageDescription</key>
