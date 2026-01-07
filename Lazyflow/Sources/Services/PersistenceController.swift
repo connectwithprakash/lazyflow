@@ -3,6 +3,70 @@ import Combine
 import CoreData
 import Foundation
 
+// MARK: - Sync Status
+
+/// Represents the current state of iCloud sync
+enum SyncStatus: Equatable {
+    case synced(lastSync: Date)
+    case syncing
+    case pendingChanges(count: Int)
+    case offline
+    case disabled
+    case error(String)
+
+    var displayText: String {
+        switch self {
+        case .synced(let date):
+            let formatter = RelativeDateTimeFormatter()
+            formatter.unitsStyle = .abbreviated
+            return "Synced \(formatter.localizedString(for: date, relativeTo: Date()))"
+        case .syncing:
+            return "Syncing..."
+        case .pendingChanges(let count):
+            return "\(count) change\(count == 1 ? "" : "s") pending"
+        case .offline:
+            return "Offline"
+        case .disabled:
+            return "Disabled"
+        case .error(let message):
+            return "Error: \(message)"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .synced: return "checkmark.icloud"
+        case .syncing: return "arrow.triangle.2.circlepath.icloud"
+        case .pendingChanges: return "arrow.clockwise.icloud"
+        case .offline: return "icloud.slash"
+        case .disabled: return "icloud.slash"
+        case .error: return "exclamationmark.icloud"
+        }
+    }
+
+    var isHealthy: Bool {
+        switch self {
+        case .synced, .syncing, .pendingChanges: return true
+        case .offline, .disabled, .error: return false
+        }
+    }
+}
+
+/// Data counts for storage
+struct DataCounts: Equatable {
+    let tasks: Int
+    let lists: Int
+
+    var isEmpty: Bool { tasks == 0 && lists == 0 }
+
+    var description: String {
+        if isEmpty { return "No data" }
+        return "\(tasks) task\(tasks == 1 ? "" : "s"), \(lists) list\(lists == 1 ? "" : "s")"
+    }
+}
+
+// MARK: - Persistence Controller
+
 /// Core Data persistence controller managing the Core Data stack
 final class PersistenceController: @unchecked Sendable {
     /// App Group identifier for sharing data with widgets
@@ -14,33 +78,122 @@ final class PersistenceController: @unchecked Sendable {
     /// UserDefaults key for iCloud sync preference
     private static let iCloudSyncEnabledKey = "iCloudSyncEnabled"
 
-    /// App launch time for timing measurements
-    private static let appLaunchTime = CFAbsoluteTimeGetCurrent()
+    /// UserDefaults key for last sync date
+    private static let lastSyncDateKey = "lastCloudKitSyncDate"
 
-    /// Log with timestamp since app launch
-    static func log(_ message: String) {
-        let elapsed = CFAbsoluteTimeGetCurrent() - appLaunchTime
-        print("[\(String(format: "%6.3f", elapsed))s] \(message)")
-    }
+    // MARK: - iCloud Sync Preference
 
     /// Check if user has enabled iCloud sync
+    /// Defaults to true if iCloud is available and never set
     static var isICloudSyncEnabled: Bool {
-        UserDefaults.standard.bool(forKey: iCloudSyncEnabledKey)
+        // If preference has been explicitly set, use that value
+        if UserDefaults.standard.object(forKey: iCloudSyncEnabledKey) != nil {
+            return UserDefaults.standard.bool(forKey: iCloudSyncEnabledKey)
+        }
+        // First launch: enable sync by default if iCloud is available
+        let defaultEnabled = isICloudAvailable
+        UserDefaults.standard.set(defaultEnabled, forKey: iCloudSyncEnabledKey)
+        return defaultEnabled
     }
 
-    /// Enable or disable iCloud sync (requires app restart to take effect)
+    /// Check if iCloud is available on this device
+    static var isICloudAvailable: Bool {
+        FileManager.default.ubiquityIdentityToken != nil
+    }
+
+    /// Enable or disable iCloud sync
+    /// This now takes effect immediately without requiring a restart
     static func setICloudSyncEnabled(_ enabled: Bool) {
         UserDefaults.standard.set(enabled, forKey: iCloudSyncEnabledKey)
     }
 
-    /// Shared singleton instance (lazy initialization with fast local-first loading)
+    /// Reload the persistent store with updated CloudKit settings
+    /// Call this after changing iCloud sync preference to apply immediately
+    func reloadStoreWithCurrentSyncSettings() {
+        guard isLoaded else {
+            print("Warning: Store not loaded yet")
+            return
+        }
+
+        guard let storeDescription = container.persistentStoreDescriptions.first,
+              let storeURL = storeDescription.url else {
+            print("Could not find store description")
+            return
+        }
+
+        let coordinator = container.persistentStoreCoordinator
+
+        // Remove current store
+        for store in coordinator.persistentStores {
+            do {
+                try coordinator.remove(store)
+            } catch {
+                print("Failed to remove store: \(error)")
+                return
+            }
+        }
+
+        // Create new store description with updated CloudKit settings
+        let newDescription = NSPersistentStoreDescription(url: storeURL)
+        newDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        newDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        // Configure CloudKit based on current preference
+        if Self.isICloudSyncEnabled && Self.isICloudAvailable {
+            let cloudKitOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: Self.cloudKitContainerIdentifier
+            )
+            newDescription.cloudKitContainerOptions = cloudKitOptions
+            print("Reloading store with CloudKit sync ENABLED")
+        } else {
+            newDescription.cloudKitContainerOptions = nil
+            print("Reloading store with CloudKit sync DISABLED")
+        }
+
+        // Re-add the store with new settings
+        container.persistentStoreDescriptions = [newDescription]
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var loadError: Error?
+
+        coordinator.addPersistentStore(with: newDescription) { _, error in
+            loadError = error
+            semaphore.signal()
+        }
+
+        // Wait for store to load
+        _ = semaphore.wait(timeout: .now() + 10)
+
+        if let error = loadError {
+            print("Failed to reload store: \(error)")
+        } else {
+            // Reset and refresh context
+            container.viewContext.reset()
+            container.viewContext.refreshAllObjects()
+
+            // Post notification for UI to refresh
+            NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
+            print("Store reloaded successfully")
+        }
+    }
+
+    /// Get last sync date
+    static var lastSyncDate: Date? {
+        UserDefaults.standard.object(forKey: lastSyncDateKey) as? Date
+    }
+
+    /// Set last sync date
+    private static func setLastSyncDate(_ date: Date) {
+        UserDefaults.standard.set(date, forKey: lastSyncDateKey)
+    }
+
+    /// Shared singleton instance (lazy initialization)
     private static var _shared: PersistenceController?
     static var shared: PersistenceController {
         if let existing = _shared {
             return existing
         }
-        // Use fast initialization: local-only unless user enabled iCloud, non-blocking
-        let controller = PersistenceController(enableCloudKit: isICloudSyncEnabled, blocking: false)
+        let controller = PersistenceController()
         _shared = controller
         return controller
     }
@@ -121,14 +274,11 @@ final class PersistenceController: @unchecked Sendable {
         return controller
     }()
 
-    /// The persistent container (uses CloudKit container only when iCloud sync is enabled for faster startup)
-    let container: NSPersistentContainer
+    /// The persistent container with CloudKit sync support
+    let container: NSPersistentCloudKitContainer
 
     /// Cancellables for Combine subscriptions
     private var cancellables = Set<AnyCancellable>()
-
-    /// Whether this controller is using CloudKit sync
-    private(set) var isCloudKitEnabled: Bool = false
 
     /// Error that occurred during Core Data initialization
     private(set) var initializationError: Error?
@@ -138,30 +288,14 @@ final class PersistenceController: @unchecked Sendable {
         container.viewContext
     }
 
-    /// Initialize the persistence controller
+    /// Initialize the persistence controller (synchronous)
     /// Used by widgets, intents, and direct `.shared` access
     /// - Parameters:
     ///   - inMemory: If true, uses in-memory store (for testing/previews)
     ///   - configureViewContext: If true, configures viewContext immediately (requires main thread)
     ///   - enableCloudKit: If true, enables CloudKit sync (default true, can disable for testing)
-    ///   - blocking: If true, waits for store to load (default true for sync access, false for async)
-    init(inMemory: Bool = false, configureViewContext: Bool = true, enableCloudKit: Bool = true, blocking: Bool = true) {
-        let startTime = CFAbsoluteTimeGetCurrent()
-        Self.log("⏱️ PersistenceController.init started")
-
-        // Use CloudKit container only when iCloud sync is enabled - NSPersistentContainer is much faster
-        let useCloudKit = enableCloudKit && FileManager.default.ubiquityIdentityToken != nil
-        self.isCloudKitEnabled = useCloudKit
-
-        if useCloudKit {
-            container = NSPersistentCloudKitContainer(name: "Lazyflow")
-            Self.log("📦 Using NSPersistentCloudKitContainer (iCloud enabled)")
-        } else {
-            container = NSPersistentContainer(name: "Lazyflow")
-            Self.log("📦 Using NSPersistentContainer (fast local-only)")
-        }
-
-        Self.log("⏱️ Container created in \(String(format: "%.3f", CFAbsoluteTimeGetCurrent() - startTime))s")
+    init(inMemory: Bool = false, configureViewContext: Bool = true, enableCloudKit: Bool = true) {
+        container = NSPersistentCloudKitContainer(name: "Lazyflow")
 
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
@@ -188,48 +322,41 @@ final class PersistenceController: @unchecked Sendable {
             description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-            // Configure CloudKit sync only if using CloudKit container
-            if useCloudKit {
+            // Configure CloudKit sync only if enabled and iCloud is available
+            // Check both the parameter and user preference
+            let shouldEnableCloudKit = enableCloudKit && Self.isICloudSyncEnabled && Self.isICloudAvailable
+            if shouldEnableCloudKit {
                 let cloudKitOptions = NSPersistentCloudKitContainerOptions(
                     containerIdentifier: Self.cloudKitContainerIdentifier
                 )
                 description.cloudKitContainerOptions = cloudKitOptions
+                print("CloudKit sync enabled - user preference: enabled, iCloud: available")
+            } else {
+                print("CloudKit sync disabled - user preference: \(Self.isICloudSyncEnabled), iCloud available: \(Self.isICloudAvailable)")
             }
 
             container.persistentStoreDescriptions = [description]
         }
 
-        // Load persistent stores
-        let semaphore = blocking ? DispatchSemaphore(value: 0) : nil
+        // Use semaphore to wait for store to load (sync initialization)
+        let semaphore = DispatchSemaphore(value: 0)
         var loadError: Error?
-        let storeLoadStartTime = CFAbsoluteTimeGetCurrent()
 
         container.loadPersistentStores { [weak self] storeDescription, error in
-            let loadTime = CFAbsoluteTimeGetCurrent() - storeLoadStartTime
             if let error = error as NSError? {
                 self?.initializationError = error
                 loadError = error
-                Self.log("❌ Failed to load store in \(String(format: "%.3f", loadTime))s: \(error.localizedDescription)")
+                print("Critical: Failed to load Core Data store: \(error), \(error.userInfo)")
             } else {
-                Self.log("✅ Store loaded in \(String(format: "%.3f", loadTime))s")
-                self?.isLoaded = true
-
-                // For non-blocking init, set up CloudKit sync when store is ready
-                if !blocking && !inMemory && (self?.isCloudKitEnabled ?? false) {
-                    DispatchQueue.main.async {
-                        self?.setupCloudKitSync()
-                    }
-                }
+                print("Successfully loaded persistent store: \(storeDescription.url?.path ?? "unknown")")
             }
-            semaphore?.signal()
+            semaphore.signal()
         }
 
-        // Only block if requested (widgets/intents need sync access)
-        if let semaphore = semaphore {
-            let timeout = DispatchTime.now() + .seconds(5)
-            if semaphore.wait(timeout: timeout) == .timedOut {
-                print("Warning: Persistent store loading timed out after 5s")
-            }
+        // Wait for store to load (with timeout)
+        let timeout = DispatchTime.now() + .seconds(10)
+        if semaphore.wait(timeout: timeout) == .timedOut {
+            print("Warning: Persistent store loading timed out")
         }
 
         // Configure viewContext only if requested (must be on main thread) and no error
@@ -237,14 +364,11 @@ final class PersistenceController: @unchecked Sendable {
             self.configureViewContext()
         }
 
-        // For blocking init, set up CloudKit sync immediately
-        if blocking && !inMemory && loadError == nil && isCloudKitEnabled {
+        if !inMemory && loadError == nil {
             setupCloudKitSync()
         }
 
-        if blocking {
-            isLoaded = loadError == nil
-        }
+        isLoaded = loadError == nil
     }
 
     /// Configure the viewContext settings (must be called on main thread)
@@ -253,37 +377,22 @@ final class PersistenceController: @unchecked Sendable {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
     }
 
-    /// Create persistence controller with fast local-first loading
-    /// iCloud sync only enabled if user has opted in
+    /// Create and initialize persistence controller asynchronously
+    /// Used by main app to show loading UI while Core Data initializes
     static func createAsync() async -> PersistenceController {
-        let overallStart = CFAbsoluteTimeGetCurrent()
-        let iCloudEnabled = isICloudSyncEnabled && FileManager.default.ubiquityIdentityToken != nil
-
-        print("Starting Core Data initialization (iCloud: \(iCloudEnabled ? "enabled" : "disabled"))")
-
+        // Create container on background thread
         let controller = await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                // Only enable CloudKit if user has opted in
-                let controller = PersistenceController(
-                    configureViewContext: false,
-                    enableCloudKit: iCloudEnabled,
-                    blocking: false
-                )
+                let controller = PersistenceController(configureViewContext: false)
                 continuation.resume(returning: controller)
             }
         }
 
-        let initTime = CFAbsoluteTimeGetCurrent() - overallStart
-        print("Container created in \(String(format: "%.2f", initTime))s")
-
-        // Configure viewContext on main thread
+        // Configure viewContext on main thread (required by Core Data)
         await MainActor.run {
             controller.configureViewContext()
             setShared(controller)
         }
-
-        let totalTime = CFAbsoluteTimeGetCurrent() - overallStart
-        print("UI ready in \(String(format: "%.2f", totalTime))s (iCloud: \(iCloudEnabled ? "syncing" : "off"))")
 
         return controller
     }
@@ -308,8 +417,174 @@ final class PersistenceController: @unchecked Sendable {
             // Force refresh all objects to pick up remote changes
             self.container.viewContext.refreshAllObjects()
 
+            // Update last sync date
+            Self.setLastSyncDate(Date())
+
             // Post notification for services to refresh their data
             NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
+        }
+    }
+
+    // MARK: - Sync Status
+
+    /// Get current sync status
+    func getSyncStatus() -> SyncStatus {
+        // Check if sync is disabled
+        guard Self.isICloudSyncEnabled else {
+            return .disabled
+        }
+
+        // Check if iCloud is available
+        guard Self.isICloudAvailable else {
+            return .offline
+        }
+
+        // Check for last sync date
+        if let lastSync = Self.lastSyncDate {
+            return .synced(lastSync: lastSync)
+        }
+
+        // If enabled but never synced, show as syncing
+        return .syncing
+    }
+
+    // MARK: - Data Counts
+
+    /// Get local data counts
+    func getLocalDataCounts() -> DataCounts {
+        guard isLoaded else { return DataCounts(tasks: 0, lists: 0) }
+
+        let context = viewContext
+        var taskCount = 0
+        var listCount = 0
+
+        do {
+            let taskRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+            taskCount = try context.count(for: taskRequest)
+
+            let listRequest: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
+            listCount = try context.count(for: listRequest)
+        } catch {
+            print("Failed to count entities: \(error)")
+        }
+
+        return DataCounts(tasks: taskCount, lists: listCount)
+    }
+
+    /// Result type for cloud data counts query
+    enum CloudCountsResult {
+        case success(DataCounts)
+        case unavailable
+        case error(String)
+    }
+
+    /// Get iCloud data counts (async - queries CloudKit directly)
+    func getCloudDataCounts() async -> DataCounts? {
+        let result = await getCloudDataCountsWithError()
+        switch result {
+        case .success(let counts): return counts
+        case .unavailable, .error: return nil
+        }
+    }
+
+    /// Get iCloud data counts with detailed error handling
+    /// Uses the Core Data CloudKit zone to fetch records
+    func getCloudDataCountsWithError() async -> CloudCountsResult {
+        guard Self.isICloudAvailable else {
+            return .unavailable
+        }
+
+        let cloudContainer = CKContainer(identifier: Self.cloudKitContainerIdentifier)
+        let privateDatabase = cloudContainer.privateCloudDatabase
+
+        // Core Data CloudKit uses this specific zone
+        let coreDataZoneID = CKRecordZone.ID(
+            zoneName: "com.apple.coredata.cloudkit.zone",
+            ownerName: CKCurrentUserDefaultName
+        )
+
+        do {
+            // First verify the zone exists
+            let zone = try await privateDatabase.recordZone(for: coreDataZoneID)
+            print("Found Core Data CloudKit zone: \(zone.zoneID.zoneName)")
+
+            // Fetch all records from the zone to count them
+            // Using recordZoneChanges to get all records without needing queryable fields
+            var taskCount = 0
+            var listCount = 0
+
+            // Create a fetch configuration for the zone
+            let config = CKFetchRecordZoneChangesOperation.ZoneConfiguration()
+            config.previousServerChangeToken = nil // Fetch all records
+
+            // Use continuation to handle the callback-based API
+            let counts = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(tasks: Int, lists: Int), Error>) in
+                var tasks = 0
+                var lists = 0
+                var operationError: Error?
+
+                let operation = CKFetchRecordZoneChangesOperation(recordZoneIDs: [coreDataZoneID], configurationsByRecordZoneID: [coreDataZoneID: config])
+
+                operation.recordWasChangedBlock = { recordID, result in
+                    switch result {
+                    case .success(let record):
+                        if record.recordType == "CD_TaskEntity" {
+                            tasks += 1
+                        } else if record.recordType == "CD_TaskListEntity" {
+                            lists += 1
+                        }
+                    case .failure:
+                        break
+                    }
+                }
+
+                operation.recordZoneFetchResultBlock = { zoneID, result in
+                    if case .failure(let error) = result {
+                        operationError = error
+                    }
+                }
+
+                operation.fetchRecordZoneChangesResultBlock = { result in
+                    switch result {
+                    case .success:
+                        continuation.resume(returning: (tasks: tasks, lists: lists))
+                    case .failure(let error):
+                        continuation.resume(throwing: operationError ?? error)
+                    }
+                }
+
+                privateDatabase.add(operation)
+            }
+
+            taskCount = counts.tasks
+            listCount = counts.lists
+
+            // Update last sync date on successful cloud query
+            Self.setLastSyncDate(Date())
+
+            return .success(DataCounts(tasks: taskCount, lists: listCount))
+        } catch let ckError as CKError {
+            let errorMessage: String
+            switch ckError.code {
+            case .networkUnavailable, .networkFailure:
+                errorMessage = "No network connection"
+            case .notAuthenticated:
+                errorMessage = "Sign in to iCloud"
+            case .quotaExceeded:
+                errorMessage = "iCloud storage full"
+            case .serverResponseLost:
+                errorMessage = "Connection lost"
+            case .zoneNotFound:
+                // Zone doesn't exist yet - no data synced
+                return .success(DataCounts(tasks: 0, lists: 0))
+            default:
+                errorMessage = "CloudKit error: \(ckError.localizedDescription)"
+            }
+            print("CloudKit error fetching counts: \(ckError)")
+            return .error(errorMessage)
+        } catch {
+            print("Failed to fetch CloudKit counts: \(error)")
+            return .error("Unable to check iCloud")
         }
     }
 
@@ -343,23 +618,211 @@ final class PersistenceController: @unchecked Sendable {
         return context
     }
 
-    /// Delete all data (for testing or reset)
-    func deleteAllData() {
+    // MARK: - Data Deletion
+
+    /// Delete local data only (keeps iCloud data intact)
+    /// Use when: User wants to clear local cache and re-sync from cloud
+    /// Note: This removes the local SQLite store and lets CloudKit re-download data
+    func deleteLocalDataOnly() {
+        guard isLoaded else {
+            print("Warning: Attempted to delete before store was loaded")
+            return
+        }
+
+        guard let storeDescription = container.persistentStoreDescriptions.first,
+              let storeURL = storeDescription.url else {
+            print("Could not find store URL")
+            return
+        }
+
+        // Get the persistent store coordinator
+        let coordinator = container.persistentStoreCoordinator
+
+        // Remove all persistent stores
+        for store in coordinator.persistentStores {
+            do {
+                try coordinator.remove(store)
+            } catch {
+                print("Failed to remove store: \(error)")
+            }
+        }
+
+        // Delete the SQLite files
+        let sqliteFiles = [
+            storeURL,
+            storeURL.appendingPathExtension("shm"),
+            storeURL.appendingPathExtension("wal"),
+            storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"),
+            storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal")
+        ]
+
+        for fileURL in sqliteFiles {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+
+        // Also delete the ckAssets folder if it exists (CloudKit cached assets)
+        let ckAssetsURL = storeURL.deletingLastPathComponent().appendingPathComponent("ckAssets")
+        try? FileManager.default.removeItem(at: ckAssetsURL)
+
+        // Re-add the store with the same description (preserves CloudKit options)
+        let semaphore = DispatchSemaphore(value: 0)
+        var loadError: Error?
+
+        coordinator.addPersistentStore(with: storeDescription) { _, error in
+            loadError = error
+            semaphore.signal()
+        }
+
+        // Wait for store to load
+        let result = semaphore.wait(timeout: .now() + 10)
+        if result == .timedOut {
+            print("Store reload timed out")
+        } else if let error = loadError {
+            print("Failed to re-add store: \(error)")
+        } else {
+            print("Local cache cleared - CloudKit will re-sync data")
+        }
+
+        // Reset and refresh view context
+        container.viewContext.reset()
+        container.viewContext.refreshAllObjects()
+    }
+
+    /// Delete all data everywhere (local + iCloud)
+    /// Use when: User wants a complete fresh start
+    /// Note: Only works properly when iCloud sync is enabled
+    func deleteAllDataEverywhere() {
+        guard isLoaded else {
+            print("Warning: Attempted to delete before store was loaded")
+            return
+        }
+
+        // If sync is enabled, deletions will propagate to CloudKit automatically
         let entities = container.managedObjectModel.entities
 
         for entity in entities {
             guard let entityName = entity.name else { continue }
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
 
+            // Fetch and delete each object individually so CloudKit sync picks up deletions
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
             do {
-                try container.viewContext.execute(deleteRequest)
+                let objects = try container.viewContext.fetch(fetchRequest)
+                for object in objects {
+                    container.viewContext.delete(object)
+                }
             } catch {
-                print("Failed to delete \(entityName): \(error)")
+                print("Failed to fetch \(entityName) for deletion: \(error)")
             }
         }
 
         save()
+        print("All data deleted (will sync to iCloud if enabled)")
+    }
+
+    /// Delete CloudKit data directly using CloudKit API
+    /// Use when: Sync is disabled but user wants to clear iCloud data
+    func deleteCloudKitData() async throws {
+        let cloudContainer = CKContainer(identifier: Self.cloudKitContainerIdentifier)
+        let privateDatabase = cloudContainer.privateCloudDatabase
+
+        // Core Data CloudKit uses this specific zone
+        let coreDataZoneID = CKRecordZone.ID(
+            zoneName: "com.apple.coredata.cloudkit.zone",
+            ownerName: CKCurrentUserDefaultName
+        )
+
+        // First, fetch all record IDs from the zone
+        let config = CKFetchRecordZoneChangesOperation.ZoneConfiguration()
+        config.previousServerChangeToken = nil
+
+        let recordIDs: [CKRecord.ID] = try await withCheckedThrowingContinuation { continuation in
+            var ids: [CKRecord.ID] = []
+            var operationError: Error?
+
+            let operation = CKFetchRecordZoneChangesOperation(
+                recordZoneIDs: [coreDataZoneID],
+                configurationsByRecordZoneID: [coreDataZoneID: config]
+            )
+
+            operation.recordWasChangedBlock = { recordID, result in
+                if case .success = result {
+                    ids.append(recordID)
+                }
+            }
+
+            operation.recordZoneFetchResultBlock = { _, result in
+                if case .failure(let error) = result {
+                    operationError = error
+                }
+            }
+
+            operation.fetchRecordZoneChangesResultBlock = { result in
+                switch result {
+                case .success:
+                    continuation.resume(returning: ids)
+                case .failure(let error):
+                    continuation.resume(throwing: operationError ?? error)
+                }
+            }
+
+            privateDatabase.add(operation)
+        }
+
+        if recordIDs.isEmpty {
+            print("No CloudKit records to delete")
+            return
+        }
+
+        // Delete records in batches of 400 (CloudKit limit)
+        let batchSize = 400
+        for startIndex in stride(from: 0, to: recordIDs.count, by: batchSize) {
+            let endIndex = min(startIndex + batchSize, recordIDs.count)
+            let batch = Array(recordIDs[startIndex..<endIndex])
+
+            let (_, deleteResults) = try await privateDatabase.modifyRecords(
+                saving: [],
+                deleting: batch
+            )
+
+            let failures = deleteResults.filter { _, result in
+                if case .failure = result { return true }
+                return false
+            }
+
+            if !failures.isEmpty {
+                print("Some CloudKit records failed to delete: \(failures.count) failures")
+            } else {
+                print("Deleted \(batch.count) records from CloudKit")
+            }
+        }
+
+        // Clear last sync date since we've wiped CloudKit
+        UserDefaults.standard.removeObject(forKey: Self.lastSyncDateKey)
+        print("CloudKit data deleted - total \(recordIDs.count) records")
+    }
+
+    /// Re-sync from iCloud (clear local, pull fresh from cloud)
+    /// Use when: Local data is corrupted or out of sync
+    func resyncFromCloud() {
+        guard isLoaded else {
+            print("Warning: Attempted to resync before store was loaded")
+            return
+        }
+
+        // Delete local data without propagating to CloudKit
+        deleteLocalDataOnly()
+
+        // Trigger a fresh sync from CloudKit
+        container.viewContext.refreshAllObjects()
+
+        // Clear and reload will happen automatically via CloudKit sync
+        print("Local data cleared, waiting for CloudKit resync...")
+    }
+
+    /// Legacy method - now calls deleteAllDataEverywhere for backwards compatibility
+    @available(*, deprecated, renamed: "deleteAllDataEverywhere")
+    func deleteAllData() {
+        deleteAllDataEverywhere()
     }
 
     /// Create default lists if they don't exist

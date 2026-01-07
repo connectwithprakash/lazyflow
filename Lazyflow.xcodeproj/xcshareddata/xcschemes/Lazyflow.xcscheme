@@ -14,23 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9F16E7CB0758FA2A1D79E8CF"
+               BlueprintIdentifier = "E9A0F8457DE1DF6D1CCC4662"
                BuildableName = "Lazyflow.app"
                BlueprintName = "Lazyflow"
-               ReferencedContainer = "container:Lazyflow.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B8C47195269FCBBA629C5F7F"
-               BuildableName = "LazyflowWidget.appex"
-               BlueprintName = "LazyflowWidget"
                ReferencedContainer = "container:Lazyflow.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,7 +30,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9F16E7CB0758FA2A1D79E8CF"
+            BlueprintIdentifier = "E9A0F8457DE1DF6D1CCC4662"
             BuildableName = "Lazyflow.app"
             BlueprintName = "Lazyflow"
             ReferencedContainer = "container:Lazyflow.xcodeproj">
@@ -56,7 +42,7 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "39354085B490A86832143B1F"
+               BlueprintIdentifier = "DEE563A90E7618A5AA54978F"
                BuildableName = "LazyflowTests.xctest"
                BlueprintName = "LazyflowTests"
                ReferencedContainer = "container:Lazyflow.xcodeproj">
@@ -66,7 +52,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "BBF599EBCBC7B022EEB7AC49"
+               BlueprintIdentifier = "159595D39EF58F9B042BC398"
                BuildableName = "LazyflowUITests.xctest"
                BlueprintName = "LazyflowUITests"
                ReferencedContainer = "container:Lazyflow.xcodeproj">
@@ -88,7 +74,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9F16E7CB0758FA2A1D79E8CF"
+            BlueprintIdentifier = "E9A0F8457DE1DF6D1CCC4662"
             BuildableName = "Lazyflow.app"
             BlueprintName = "Lazyflow"
             ReferencedContainer = "container:Lazyflow.xcodeproj">
@@ -105,7 +91,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9F16E7CB0758FA2A1D79E8CF"
+            BlueprintIdentifier = "E9A0F8457DE1DF6D1CCC4662"
             BuildableName = "Lazyflow.app"
             BlueprintName = "Lazyflow"
             ReferencedContainer = "container:Lazyflow.xcodeproj">
