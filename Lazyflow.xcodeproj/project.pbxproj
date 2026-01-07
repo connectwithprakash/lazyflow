@@ -36,7 +36,9 @@
 		59458963ACA0ED5B8963E1B1 /* LazyflowComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500B294690B749F58C76D79 /* LazyflowComplication.swift */; };
 		5C8B310FDC4166428B8F113F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE8A0C85317637E68DD7F26 /* Assets.xcassets */; };
 		5E2CDE489A38DDAB96C565B9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9C2C6D7CF3D5DE85D39BCFD9 /* LaunchScreen.storyboard */; };
+		605BEC16F86F4B3EAA26A71C /* TimeProtectionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B5FD6DF9D625DC4EE56CA7 /* TimeProtectionServiceTests.swift */; };
 		60E1FE44588BBF17DBA5084E /* WatchEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECEA0861D2217E32782DC9A /* WatchEmptyStateView.swift */; };
+		62AA1990946C8434F42876CC /* PrioritizationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13812F19A8F95C40B90B9163 /* PrioritizationServiceTests.swift */; };
 		63FAF9C0324776D82B876C26 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B73DE04AAFEB38F09D3451 /* CalendarService.swift */; };
 		6783F4297555A6E766B493A4 /* LazyflowWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFD252151F38D56B1B17808 /* LazyflowWidget.swift */; };
 		687728335608652BA7E463EA /* LazyflowWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 841994A33067F846C2F3A746 /* LazyflowWatchApp.swift */; };
@@ -81,12 +83,14 @@
 		C0EF2A29B4B40A3593492138 /* DailySummaryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890AC8D55C65782EE5E751FF /* DailySummaryData.swift */; };
 		C20DC9A45258813472213101 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EDA02F17F284A77E160221A /* Assets.xcassets */; };
 		C30945FFB1894DD47C3D936B /* TaskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8210DCBCD9408BFE2E2B7407 /* TaskDetailView.swift */; };
+		C6CD4AAE1A6067EAE87B5384 /* ConflictDetectionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64D6A748B77F20FFB339BFD /* ConflictDetectionServiceTests.swift */; };
 		CB213B794FC134AFADAF9B74 /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C52EFEED3427A4E73A166D /* SmallWidgetView.swift */; };
 		CB65445794D417CFB6DB4C9D /* TaskPriorityAppEnum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A17401CC11FEE18E3134A02 /* TaskPriorityAppEnum.swift */; };
 		CC743E4C263CF8C6FA2F481B /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4105B773B04B8612DC35F5 /* WatchConnectivityService.swift */; };
 		CD4BE551397E10312AD534C6 /* DynamicIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002395269F0E8026C0A2A79D /* DynamicIslandView.swift */; };
 		CDA609A9355F3C12549F6556 /* UpcomingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F891A77BAC392674B76D2FB9 /* UpcomingView.swift */; };
 		D381763B5C08E49FCAFB7997 /* WatchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446E889579D11D455A18E0E1 /* WatchViewModel.swift */; };
+		D6E6BBDD58560FF9FC3005E2 /* ListsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D306089AAB63803F626C7041 /* ListsViewModelTests.swift */; };
 		D80264DA66FF1386A28A1873 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0233412D63AEFF7D4A0AC9 /* ReminderService.swift */; };
 		DBC2F67A159D88666472A523 /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0966885EA526F6266DACE369 /* Color+Extensions.swift */; };
 		DD9477FED0D0B491C3CDEE80 /* Notification+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E984DA67113CE647FA5CA2 /* Notification+Extensions.swift */; };
@@ -103,6 +107,7 @@
 		F3DD5D78DA037DC32D7D4B4D /* LazyflowUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */; };
 		F6538631367C9A9E80D16A5E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB436CC06BC124AF3305385B /* DesignSystem.swift */; };
 		F847E633D5AD71A505F65E36 /* LazyflowWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F93DA1CCE51B65E74DAB2FA3 /* SmartRescheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61776C1CF42FB28B3323BF50 /* SmartRescheduleServiceTests.swift */; };
 		FB4C171E524EA0FF9A7AD456 /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D7E695AE8A50888BB2CF464 /* Task.swift */; };
 		FD56FCF2F09EA9046439B39A /* TaskTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD9381F83ADC609FB4E5790 /* TaskTimelineProvider.swift */; };
 /* End PBXBuildFile section */
@@ -171,6 +176,7 @@
 		0C5F23987492CF9DBF92700E /* DailySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryView.swift; sourceTree = "<group>"; };
 		0D0233412D63AEFF7D4A0AC9 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		0FFD252151F38D56B1B17808 /* LazyflowWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWidget.swift; sourceTree = "<group>"; };
+		13812F19A8F95C40B90B9163 /* PrioritizationServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PrioritizationServiceTests.swift; sourceTree = "<group>"; };
 		14A21AD04C5407E342830D9E /* TaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModel.swift; sourceTree = "<group>"; };
 		155736724278218CAF5DFFA5 /* LazyflowWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LazyflowWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BDFA6859BC13DEBC35D1CEF /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
@@ -200,6 +206,7 @@
 		55CAA946FCF526BB2AFEAE68 /* TaskViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModelTests.swift; sourceTree = "<group>"; };
 		5F018E899F22FF4A0E0F8001 /* RecurringRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRule.swift; sourceTree = "<group>"; };
 		5FD94A2D660B93F6C3A2DB8A /* LazyflowShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowShortcuts.swift; sourceTree = "<group>"; };
+		61776C1CF42FB28B3323BF50 /* SmartRescheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SmartRescheduleServiceTests.swift; sourceTree = "<group>"; };
 		61EC4AC29B50F17794EC5BF7 /* MorningBriefingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningBriefingView.swift; sourceTree = "<group>"; };
 		64508FE3566220E62129F09B /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
 		68F731F96242074EDA7DF785 /* WatchTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTask.swift; sourceTree = "<group>"; };
@@ -233,6 +240,7 @@
 		A18A003B1DA91B6D86F47C66 /* LazyflowWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWidgetBundle.swift; sourceTree = "<group>"; };
 		A34CA29A2CC7068B558C16DC /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A500B294690B749F58C76D79 /* LazyflowComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowComplication.swift; sourceTree = "<group>"; };
+		A64D6A748B77F20FFB339BFD /* ConflictDetectionServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConflictDetectionServiceTests.swift; sourceTree = "<group>"; };
 		A65DF4C4543097EBF9234F97 /* WidgetDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataStore.swift; sourceTree = "<group>"; };
 		A7B1349EEB55473E75B6E480 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A87E8C6CE81AAE400BCBDCC6 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
@@ -248,6 +256,7 @@
 		C73A4C25CB347B06CCF457E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CA4FED1BAEBC8929BA6A99A8 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		D02792F18772E41185C3AA44 /* SmartRescheduleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleService.swift; sourceTree = "<group>"; };
+		D306089AAB63803F626C7041 /* ListsViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListsViewModelTests.swift; sourceTree = "<group>"; };
 		D3391545EB6E7A4277AF8D35 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
 		D54995645C2EE5455A31488E /* Lazyflow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lazyflow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
@@ -262,6 +271,7 @@
 		F729BB9BDF9430A95176FDD8 /* LazyflowUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LazyflowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8769C43782895FD84F8B04A /* LazyflowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowUITests.swift; sourceTree = "<group>"; };
 		F891A77BAC392674B76D2FB9 /* UpcomingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingView.swift; sourceTree = "<group>"; };
+		F8B5FD6DF9D625DC4EE56CA7 /* TimeProtectionServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimeProtectionServiceTests.swift; sourceTree = "<group>"; };
 		FCCEEDCCC7E90A6148060ACD /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		FDD9381F83ADC609FB4E5790 /* TaskTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskTimelineProvider.swift; sourceTree = "<group>"; };
 		FEA6E85B014FF9813EF3522A /* LazyflowLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowLiveActivity.swift; sourceTree = "<group>"; };
@@ -377,6 +387,11 @@
 				8F2A1BA3F316C06064B36EB8 /* TaskServiceTests.swift */,
 				55CAA946FCF526BB2AFEAE68 /* TaskViewModelTests.swift */,
 				DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */,
+				13812F19A8F95C40B90B9163 /* PrioritizationServiceTests.swift */,
+				A64D6A748B77F20FFB339BFD /* ConflictDetectionServiceTests.swift */,
+				F8B5FD6DF9D625DC4EE56CA7 /* TimeProtectionServiceTests.swift */,
+				61776C1CF42FB28B3323BF50 /* SmartRescheduleServiceTests.swift */,
+				D306089AAB63803F626C7041 /* ListsViewModelTests.swift */,
 			);
 			path = LazyflowTests;
 			sourceTree = "<group>";
@@ -615,8 +630,6 @@
 				92C91CEAF41232331F53173A /* PBXTargetDependency */,
 			);
 			name = LazyflowUITests;
-			packageProductDependencies = (
-			);
 			productName = LazyflowUITests;
 			productReference = F729BB9BDF9430A95176FDD8 /* LazyflowUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -633,8 +646,6 @@
 			dependencies = (
 			);
 			name = LazyflowWatch;
-			packageProductDependencies = (
-			);
 			productName = LazyflowWatch;
 			productReference = FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */;
 			productType = "com.apple.product-type.application";
@@ -651,8 +662,6 @@
 				EE282970DCCFDFB9E6DE2E10 /* PBXTargetDependency */,
 			);
 			name = LazyflowTests;
-			packageProductDependencies = (
-			);
 			productName = LazyflowTests;
 			productReference = 87784A77AB4B29803E6D1A27 /* LazyflowTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -673,8 +682,6 @@
 				1F65EE216A7D35FF26E43D33 /* PBXTargetDependency */,
 			);
 			name = Lazyflow;
-			packageProductDependencies = (
-			);
 			productName = Lazyflow;
 			productReference = D54995645C2EE5455A31488E /* Lazyflow.app */;
 			productType = "com.apple.product-type.application";
@@ -691,8 +698,6 @@
 			dependencies = (
 			);
 			name = LazyflowWidget;
-			packageProductDependencies = (
-			);
 			productName = LazyflowWidget;
 			productReference = 155736724278218CAF5DFFA5 /* LazyflowWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -737,6 +742,7 @@
 			);
 			mainGroup = 44BADD85CAF36E2B426946B0;
 			minimizedProjectReferenceProxies = 1;
+			productRefGroup = F978F491326E2C748584A54A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -809,6 +815,11 @@
 				47272E6F94D597DA2481FF37 /* TaskServiceTests.swift in Sources */,
 				1332E186487C65027636259E /* TaskViewModelTests.swift in Sources */,
 				C0CEFEE1C77BEC254CA177C6 /* TodayViewModelTests.swift in Sources */,
+				62AA1990946C8434F42876CC /* PrioritizationServiceTests.swift in Sources */,
+				C6CD4AAE1A6067EAE87B5384 /* ConflictDetectionServiceTests.swift in Sources */,
+				605BEC16F86F4B3EAA26A71C /* TimeProtectionServiceTests.swift in Sources */,
+				F93DA1CCE51B65E74DAB2FA3 /* SmartRescheduleServiceTests.swift in Sources */,
+				D6E6BBDD58560FF9FC3005E2 /* ListsViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
