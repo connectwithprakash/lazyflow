@@ -517,19 +517,22 @@ final class LazyflowUITests: XCTestCase {
             settingsTable.swipeUp()
         }
 
-        // Find the summary reminder toggle
-        let reminderToggle = app.switches.firstMatch
+        // Find the Evening Reminder toggle (the actual working toggle, not placeholders)
+        let reminderToggle = app.switches["Evening Reminder"]
         if reminderToggle.waitForExistence(timeout: 3) && reminderToggle.isHittable {
             let wasOn = reminderToggle.value as? String == "1"
 
             // Toggle it
             reminderToggle.tap()
 
+            // Wait for state change
+            Thread.sleep(forTimeInterval: 0.3)
+
             // Verify state changed
             let isOn = reminderToggle.value as? String == "1"
             XCTAssertNotEqual(wasOn, isOn, "Toggle should change state")
 
-            // Toggle back
+            // Toggle back to original state
             reminderToggle.tap()
         }
     }
