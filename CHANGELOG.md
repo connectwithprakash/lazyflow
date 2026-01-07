@@ -5,6 +5,13 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1](https://github.com/connectwithprakash/lazyflow/compare/v1.0.0...v1.0.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* resolve UI crashes and improve stability ([#93](https://github.com/connectwithprakash/lazyflow/issues/93)) ([424d044](https://github.com/connectwithprakash/lazyflow/commit/424d044249bc659434e3b218106eedebcd538fb8))
+
 ## [1.0.0](https://github.com/connectwithprakash/lazyflow/compare/v0.27.0...v1.0.0) (2026-01-06)
 
 
