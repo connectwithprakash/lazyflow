@@ -4,10 +4,6 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("hasSeenOnboarding") private var hasCompletedOnboarding = false
 
-    init() {
-        PersistenceController.log("📱 RootView.init started")
-    }
-
     var body: some View {
         Group {
             if hasCompletedOnboarding {
@@ -15,21 +11,14 @@ struct RootView: View {
                     .environment(\.managedObjectContext, PersistenceController.shared.viewContext)
                     .environmentObject(TaskService.shared)
                     .onAppear {
-                        PersistenceController.log("📱 ContentView appeared")
                         WatchConnectivityService.shared.configure(with: TaskService.shared)
                         PersistenceController.shared.createDefaultListsIfNeeded()
                     }
             } else {
                 OnboardingView()
-                    .onAppear {
-                        PersistenceController.log("📱 OnboardingView appeared")
-                    }
             }
         }
         .background(Color.adaptiveBackground.ignoresSafeArea())
-        .onAppear {
-            PersistenceController.log("📱 RootView appeared")
-        }
     }
 }
 

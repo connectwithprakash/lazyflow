@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -172,7 +172,7 @@
 		0D0233412D63AEFF7D4A0AC9 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		0FFD252151F38D56B1B17808 /* LazyflowWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWidget.swift; sourceTree = "<group>"; };
 		14A21AD04C5407E342830D9E /* TaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModel.swift; sourceTree = "<group>"; };
-		155736724278218CAF5DFFA5 /* LazyflowWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LazyflowWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		155736724278218CAF5DFFA5 /* LazyflowWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LazyflowWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BDFA6859BC13DEBC35D1CEF /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
 		1EDA02F17F284A77E160221A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FE8A0C85317637E68DD7F26 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -190,7 +190,7 @@
 		34293063E78842624055CD8C /* LLMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProvider.swift; sourceTree = "<group>"; };
 		34C7BF0359B1373B7432656A /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
 		3C3FB71AB248FDD9843E5449 /* GetTodayTasksIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetTodayTasksIntent.swift; sourceTree = "<group>"; };
-		3C4824B59531F94012837CB8 /* AppIcon.svg */ = {isa = PBXFileReference; path = AppIcon.svg; sourceTree = "<group>"; };
+		3C4824B59531F94012837CB8 /* AppIcon.svg */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppIcon.svg; sourceTree = "<group>"; };
 		41C52EFEED3427A4E73A166D /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
 		446E889579D11D455A18E0E1 /* WatchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViewModel.swift; sourceTree = "<group>"; };
 		464273955722DB557CDC0BAD /* WidgetTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTask.swift; sourceTree = "<group>"; };
@@ -215,7 +215,7 @@
 		83FD268CF434D2866A63A99A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		841994A33067F846C2F3A746 /* LazyflowWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWatchApp.swift; sourceTree = "<group>"; };
 		868AB7877C9C7AEA584AECC2 /* ListsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewModel.swift; sourceTree = "<group>"; };
-		87784A77AB4B29803E6D1A27 /* LazyflowTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LazyflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		87784A77AB4B29803E6D1A27 /* LazyflowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LazyflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		890AC8D55C65782EE5E751FF /* DailySummaryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryData.swift; sourceTree = "<group>"; };
 		894FC3172D458DF3B827CE18 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		89B73DE04AAFEB38F09D3451 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
@@ -249,7 +249,7 @@
 		CA4FED1BAEBC8929BA6A99A8 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		D02792F18772E41185C3AA44 /* SmartRescheduleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleService.swift; sourceTree = "<group>"; };
 		D3391545EB6E7A4277AF8D35 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
-		D54995645C2EE5455A31488E /* Lazyflow.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Lazyflow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D54995645C2EE5455A31488E /* Lazyflow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lazyflow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
 		E8B3A75210BFBE685534AE28 /* AppleFoundationModelsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleFoundationModelsProvider.swift; sourceTree = "<group>"; };
 		E8C28B175A2ABFA5B21D7837 /* TaskListService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListService.swift; sourceTree = "<group>"; };
@@ -259,7 +259,7 @@
 		F2A8720AD9E15D86484861BD /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		F41C3B0383366E7103B4CF90 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryServiceTests.swift; sourceTree = "<group>"; };
-		F729BB9BDF9430A95176FDD8 /* LazyflowUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LazyflowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F729BB9BDF9430A95176FDD8 /* LazyflowUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LazyflowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8769C43782895FD84F8B04A /* LazyflowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowUITests.swift; sourceTree = "<group>"; };
 		F891A77BAC392674B76D2FB9 /* UpcomingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingView.swift; sourceTree = "<group>"; };
 		FCCEEDCCC7E90A6148060ACD /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
@@ -471,7 +471,6 @@
 		B7EFC687D23B3D13089A9289 /* LazyflowWidget */ = {
 			isa = PBXGroup;
 			children = (
-				C5B4BBFE178DBC821ECDCB01 /* LiveActivity */,
 				17F4499497E825E92C718428 /* Models */,
 				618C430702F0CA9CBDADD5CE /* Providers */,
 				BC30C788825C8D51E87ECCA3 /* Views */,
@@ -705,7 +704,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					159595D39EF58F9B042BC398 = {
 						DevelopmentTeam = WMK84PPNJV;
@@ -738,7 +737,6 @@
 			);
 			mainGroup = 44BADD85CAF36E2B426946B0;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -956,7 +954,11 @@
 				CODE_SIGN_ENTITLEMENTS = LazyflowWidget/LazyflowWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = LazyflowWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app.widget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -987,7 +989,11 @@
 				CODE_SIGN_ENTITLEMENTS = LazyflowWidget/LazyflowWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = LazyflowWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app.widget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1005,7 +1011,10 @@
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = LazyflowWatch/Info.plist;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lazyflow.app;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1049,6 +1058,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1080,10 +1090,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = WMK84PPNJV;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1098,6 +1110,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -1115,7 +1128,10 @@
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = LazyflowWatch/Info.plist;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lazyflow.app;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1183,6 +1199,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1214,10 +1231,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = WMK84PPNJV;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1239,6 +1258,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

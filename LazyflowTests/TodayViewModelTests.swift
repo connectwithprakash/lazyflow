@@ -17,7 +17,7 @@ final class TodayViewModelTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        persistenceController.deleteAllData()
+        persistenceController.deleteAllDataEverywhere()
         persistenceController = nil
         taskService = nil
         viewModel = nil
@@ -244,10 +244,10 @@ final class TodayViewModelTests: XCTestCase {
     func testTaskServiceChanges_UpdatesViewModel() async throws {
         let expectation = XCTestExpectation(description: "Tasks updated")
 
-        viewModel.$todayTasks
+        viewModel.$taskData
             .dropFirst()
-            .sink { tasks in
-                if !tasks.isEmpty {
+            .sink { data in
+                if !data.todayTasks.isEmpty {
                     expectation.fulfill()
                 }
             }
