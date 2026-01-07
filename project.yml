@@ -13,7 +13,8 @@ settings:
     SWIFT_VERSION: "5.0"
     GENERATE_INFOPLIST_FILE: YES
     CURRENT_PROJECT_VERSION: 1
-    MARKETING_VERSION: 0.8.0
+    MARKETING_VERSION: 1.0.1
+    DEVELOPMENT_TEAM: WMK84PPNJV
 
 targets:
   Lazyflow:
@@ -28,10 +29,12 @@ targets:
       properties:
         NSSupportsLiveActivities: YES
         NSCalendarsFullAccessUsageDescription: "Lazyflow needs calendar access to schedule tasks as time blocks and show your events alongside tasks."
+        UIBackgroundModes:
+          - remote-notification
         INAlternativeAppNames:
-          - INAlternativeAppName: Task Weave
-          - INAlternativeAppName: Task weave
-          - INAlternativeAppName: Tasks
+          - INAlternativeAppName: Lazy Flow
+          - INAlternativeAppName: Todo
+          - INAlternativeAppName: Planner
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lazyflow.app

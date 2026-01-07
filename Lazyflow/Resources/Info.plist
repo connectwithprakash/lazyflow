@@ -17,58 +17,26 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>3</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
+	<string>1</string>
 	<key>INAlternativeAppNames</key>
 	<array>
 		<dict>
 			<key>INAlternativeAppName</key>
-			<string>Task Weave</string>
+			<string>Lazy Flow</string>
 		</dict>
 		<dict>
 			<key>INAlternativeAppName</key>
-			<string>Task weave</string>
+			<string>Todo</string>
 		</dict>
 		<dict>
 			<key>INAlternativeAppName</key>
-			<string>Tasks</string>
+			<string>Planner</string>
 		</dict>
 	</array>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Lazyflow needs calendar access to schedule tasks as time blocks and show your events alongside tasks.</string>
-	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
-	<string>Lazyflow needs calendar access to create time blocks for your tasks.</string>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UTExportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.lazyflow.task</string>
-			<key>UTTypeDescription</key>
-			<string>Lazyflow Task</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict/>
-		</dict>
-	</array>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.lazyflow.app</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>lazyflow</string>
-			</array>
-		</dict>
-	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

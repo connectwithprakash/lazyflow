@@ -54,7 +54,10 @@ jobs:
       - name: Update iOS version in Xcode project
         run: |
           VERSION=${{ needs.release-please.outputs.version }}
+          # Update project.pbxproj
           sed -i "s/MARKETING_VERSION = [0-9]*\.[0-9]*\.[0-9]*/MARKETING_VERSION = $VERSION/g" Lazyflow.xcodeproj/project.pbxproj
+          # Update project.yml (XcodeGen source of truth)
+          sed -i "s/MARKETING_VERSION: [0-9]*\.[0-9]*\.[0-9]*/MARKETING_VERSION: $VERSION/g" project.yml
           echo "Updated MARKETING_VERSION to $VERSION"
 
       - name: Update website version badge
@@ -68,6 +71,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Lazyflow.xcodeproj/project.pbxproj docs/site/index.html docs/site/design/index.html
+          git add Lazyflow.xcodeproj/project.pbxproj project.yml docs/site/index.html docs/site/design/index.html
           git commit -m "chore: bump iOS version to ${{ needs.release-please.outputs.version }}"
           git push
