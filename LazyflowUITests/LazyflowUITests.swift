@@ -503,38 +503,55 @@ final class LazyflowUITests: XCTestCase {
     func testDailySummarySection() throws {
         app.tabBars.buttons["Settings"].tap()
 
-        // Verify Daily Summary section header exists
-        let summarySection = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Daily Summary'")).firstMatch
-        XCTAssertTrue(summarySection.waitForExistence(timeout: 3), "Daily Summary section should exist in settings")
+        // Scroll to find Daily Summary section - need multiple swipes as it's below several sections
+        let settingsTable = app.tables.firstMatch
+        let eveningToggle = app.switches["Evening Reminder Toggle"]
+
+        if settingsTable.waitForExistence(timeout: 3) {
+            // Scroll until we find the toggle or give up after 5 attempts
+            for _ in 0..<5 {
+                if eveningToggle.exists && eveningToggle.isHittable {
+                    break
+                }
+                settingsTable.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+        }
+
+        XCTAssertTrue(eveningToggle.waitForExistence(timeout: 5), "Daily Summary section should exist in settings (Evening Reminder toggle)")
     }
 
     func testDailySummaryToggleInteraction() throws {
         app.tabBars.buttons["Settings"].tap()
 
-        // Note: SwiftUI Form renders as UITableView, not ScrollView
-        let settingsTable = app.tables.firstMatch
-        if settingsTable.waitForExistence(timeout: 3) {
-            settingsTable.swipeUp()
-        }
+        // Find the toggle - XCUITest will auto-scroll when we interact with it
+        let reminderToggle = app.switches["Evening Reminder Toggle"]
 
-        // Find the Evening Reminder toggle (the actual working toggle, not placeholders)
-        let reminderToggle = app.switches["Evening Reminder"]
-        if reminderToggle.waitForExistence(timeout: 3) && reminderToggle.isHittable {
-            let wasOn = reminderToggle.value as? String == "1"
+        // Wait for toggle to exist (may need scrolling)
+        XCTAssertTrue(reminderToggle.waitForExistence(timeout: 5), "Evening Reminder toggle should exist")
 
-            // Toggle it
-            reminderToggle.tap()
+        // Get initial state (handles both "1"/"0" and "true"/"false" formats)
+        let wasOnValue = reminderToggle.value as? String ?? ""
+        let wasOn = wasOnValue == "1" || wasOnValue.lowercased() == "true"
 
-            // Wait for state change
-            Thread.sleep(forTimeInterval: 0.3)
+        // KNOWN XCUITEST ISSUE: Tapping center of toggle hits label, not switch.
+        // Solution: First do an intermediate tap, then tap the switch coordinate.
+        // See: https://www.sylvaingamel.fr/en/blog/2023/23-02-12_ios-toggle-uitest/
+        reminderToggle.tap() // Intermediate tap - required for the next tap to work
+        let switchCoord = reminderToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        switchCoord.tap() // Tap the actual switch control on the right side
 
-            // Verify state changed
-            let isOn = reminderToggle.value as? String == "1"
-            XCTAssertNotEqual(wasOn, isOn, "Toggle should change state")
+        // Wait for state change
+        Thread.sleep(forTimeInterval: 0.5)
 
-            // Toggle back to original state
-            reminderToggle.tap()
-        }
+        // Verify state changed
+        let isOnValue = reminderToggle.value as? String ?? ""
+        let isOn = isOnValue == "1" || isOnValue.lowercased() == "true"
+        XCTAssertNotEqual(wasOn, isOn, "Toggle should change state from \(wasOnValue) to \(isOnValue)")
+
+        // Toggle back to original state
+        reminderToggle.tap() // Intermediate tap
+        switchCoord.tap() // Actual switch tap
     }
 
     // MARK: - Task Category Tests

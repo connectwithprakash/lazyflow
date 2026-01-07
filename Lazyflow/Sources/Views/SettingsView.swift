@@ -1519,6 +1519,7 @@ struct DailySummaryNotificationToggle: View {
                 }
             }
         }
+        .accessibilityIdentifier("Evening Reminder Toggle")
         .onChange(of: isEnabled) { _, newValue in
             if newValue {
                 notificationService.scheduleDailySummaryReminder(hour: notificationHour, minute: 0)
