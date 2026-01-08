@@ -146,4 +146,15 @@ platform :ios do
   lane :bump_version do |options|
     increment_version_number(bump_type: options[:type] || "patch")
   end
+
+  desc "Get current build info"
+  lane :build_info do
+    version = get_version_number(xcodeproj: "Lazyflow.xcodeproj", target: "Lazyflow")
+    local_build = get_build_number(xcodeproj: "Lazyflow.xcodeproj")
+    testflight_build = latest_testflight_build_number(api_key: api_key)
+
+    UI.success("Local version: #{version} (build #{local_build})")
+    UI.success("Latest TestFlight build: #{testflight_build}")
+    UI.success("Next build will be: #{version} (build #{testflight_build + 1})")
+  end
 end
