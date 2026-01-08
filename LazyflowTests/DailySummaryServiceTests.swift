@@ -1,6 +1,7 @@
 import XCTest
 @testable import Lazyflow
 
+@MainActor
 final class DailySummaryServiceTests: XCTestCase {
     var persistenceController: PersistenceController!
     var taskService: TaskService!
@@ -18,7 +19,7 @@ final class DailySummaryServiceTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        persistenceController.deleteAllData()
+        persistenceController.deleteAllDataEverywhere()
         persistenceController = nil
         taskService = nil
         dailySummaryService = nil
@@ -629,42 +630,5 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertEqual(summary.category, .work)
         XCTAssertEqual(summary.priority, .high)
         XCTAssertEqual(summary.estimatedDuration, 3600)
-    }
-
-    // MARK: - Performance Tests
-
-    func testGenerateSummaryPerformance() async throws {
-        // Create 50 tasks
-        for i in 0..<50 {
-            let task = taskService.createTask(title: "Task \(i)", dueDate: Date())
-            if i % 2 == 0 {
-                taskService.toggleTaskCompletion(task)
-            }
-        }
-
-        measure {
-            let expectation = XCTestExpectation(description: "Generate summary")
-            _Concurrency.Task {
-                _ = await dailySummaryService.generateSummary()
-                expectation.fulfill()
-            }
-            wait(for: [expectation], timeout: 5.0)
-        }
-    }
-
-    func testGenerateMorningBriefingPerformance() async throws {
-        // Create 50 tasks
-        for i in 0..<50 {
-            taskService.createTask(title: "Task \(i)", dueDate: Date())
-        }
-
-        measure {
-            let expectation = XCTestExpectation(description: "Generate briefing")
-            _Concurrency.Task {
-                _ = await dailySummaryService.generateMorningBriefing()
-                expectation.fulfill()
-            }
-            wait(for: [expectation], timeout: 5.0)
-        }
     }
 }

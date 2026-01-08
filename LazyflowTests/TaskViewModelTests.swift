@@ -17,7 +17,7 @@ final class TaskViewModelTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        persistenceController.deleteAllData()
+        persistenceController.deleteAllDataEverywhere()
         persistenceController = nil
         taskService = nil
         viewModel = nil
@@ -336,15 +336,18 @@ final class TaskViewModelTests: XCTestCase {
     // MARK: - List Assignment Tests
 
     func testListAssignment() async throws {
-        let listID = UUID()
+        // Create a real TaskList first so the listID is valid in the database
+        let taskListService = TaskListService(persistenceController: persistenceController)
+        let createdList = taskListService.createList(name: "Test List")
+
         viewModel.title = "List Task"
-        viewModel.selectedListID = listID
+        viewModel.selectedListID = createdList.id
 
         try await _Concurrency.Task.sleep(nanoseconds: 100_000_000)
 
         let savedTask = viewModel.save()
 
-        XCTAssertEqual(savedTask?.listID, listID)
+        XCTAssertEqual(savedTask?.listID, createdList.id)
     }
 
     // MARK: - Recurring Rule Tests

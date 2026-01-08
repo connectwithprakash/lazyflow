@@ -2,6 +2,7 @@ import XCTest
 import CoreData
 @testable import Lazyflow
 
+@MainActor
 final class TaskServiceTests: XCTestCase {
     var persistenceController: PersistenceController!
     var taskService: TaskService!
@@ -12,7 +13,7 @@ final class TaskServiceTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        persistenceController.deleteAllData()
+        persistenceController.deleteAllDataEverywhere()
         persistenceController = nil
         taskService = nil
     }

@@ -4,32 +4,26 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("hasSeenOnboarding") private var hasCompletedOnboarding = false
 
-    init() {
-        PersistenceController.log("📱 RootView.init started")
+    /// Check if running in UI test mode - bypasses onboarding
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("UI_TESTING")
     }
 
     var body: some View {
         Group {
-            if hasCompletedOnboarding {
+            if hasCompletedOnboarding || isUITesting {
                 ContentView()
                     .environment(\.managedObjectContext, PersistenceController.shared.viewContext)
                     .environmentObject(TaskService.shared)
                     .onAppear {
-                        PersistenceController.log("📱 ContentView appeared")
                         WatchConnectivityService.shared.configure(with: TaskService.shared)
                         PersistenceController.shared.createDefaultListsIfNeeded()
                     }
             } else {
                 OnboardingView()
-                    .onAppear {
-                        PersistenceController.log("📱 OnboardingView appeared")
-                    }
             }
         }
         .background(Color.adaptiveBackground.ignoresSafeArea())
-        .onAppear {
-            PersistenceController.log("📱 RootView appeared")
-        }
     }
 }
 

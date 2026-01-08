@@ -187,13 +187,26 @@ final class PersistenceController: @unchecked Sendable {
         UserDefaults.standard.set(date, forKey: lastSyncDateKey)
     }
 
+    /// Check if running in UI test mode
+    private static var isUITesting: Bool {
+        // Check both arguments and environment for maximum reliability
+        ProcessInfo.processInfo.arguments.contains("UI_TESTING") ||
+        ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+    }
+
     /// Shared singleton instance (lazy initialization)
+    /// Uses in-memory store for UI tests to ensure test isolation
     private static var _shared: PersistenceController?
     static var shared: PersistenceController {
         if let existing = _shared {
             return existing
         }
-        let controller = PersistenceController()
+        // Use in-memory store and disable CloudKit for UI tests
+        // This ensures clean state and prevents background sync from blocking XCUITest
+        let controller = PersistenceController(
+            inMemory: isUITesting,
+            enableCloudKit: !isUITesting
+        )
         _shared = controller
         return controller
     }

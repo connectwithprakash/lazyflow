@@ -347,12 +347,6 @@ struct NotificationSettingsView: View {
                     }
                 }
 
-                Section("Reminder Types") {
-                    Toggle("Task Due Reminders", isOn: .constant(true))
-                    Toggle("Morning Daily Summary", isOn: .constant(false))
-                    Toggle("Overdue Task Alerts", isOn: .constant(true))
-                }
-                .disabled(!notificationsEnabled)
             }
             .navigationTitle("Notifications")
             .navigationBarTitleDisplayMode(.inline)
@@ -1525,6 +1519,7 @@ struct DailySummaryNotificationToggle: View {
                 }
             }
         }
+        .accessibilityIdentifier("Evening Reminder Toggle")
         .onChange(of: isEnabled) { _, newValue in
             if newValue {
                 notificationService.scheduleDailySummaryReminder(hour: notificationHour, minute: 0)

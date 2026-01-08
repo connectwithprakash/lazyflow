@@ -7,14 +7,10 @@ struct LazyflowApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {
-        PersistenceController.log("🚀 LazyflowApp.init started")
-
         // Set window background BEFORE window is created - prevents black flash
         // Use hardcoded RGB values matching LaunchBackground color asset (0.078, 0.329, 0.337)
         let launchBackgroundColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
         UIWindow.appearance().backgroundColor = launchBackgroundColor
-
-        PersistenceController.log("🚀 LazyflowApp.init completed")
     }
 
     var body: some Scene {
@@ -84,16 +80,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        PersistenceController.log("🔧 AppDelegate.didFinishLaunching started")
-
         // Set window background color to match launch screen
         let launchBackgroundColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
         UIWindow.appearance().backgroundColor = launchBackgroundColor
 
-        PersistenceController.log("🔧 Registering notifications...")
         NotificationService.shared.registerNotificationCategories()
-
-        PersistenceController.log("🔧 AppDelegate.didFinishLaunching completed")
         return true
     }
 
@@ -118,7 +109,6 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
         willConnectTo session: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
-        PersistenceController.log("🎬 SceneDelegate.willConnectTo started")
         guard let windowScene = scene as? UIWindowScene else { return }
 
         let launchColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
@@ -127,11 +117,6 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             windowScene.windows.forEach { $0.backgroundColor = .systemBackground }
         }
-        PersistenceController.log("🎬 SceneDelegate.willConnectTo completed")
-    }
-
-    func sceneDidBecomeActive(_ scene: UIScene) {
-        PersistenceController.log("🎬 SceneDelegate.sceneDidBecomeActive")
     }
 }
 
