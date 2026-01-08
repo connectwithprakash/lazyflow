@@ -2,12 +2,29 @@
 
 This guide covers how to deploy Lazyflow to TestFlight and the App Store using Fastlane.
 
+## Quick Start
+
+```bash
+# One-time setup: store password in macOS Keychain
+make setup-keychain
+
+# Deploy to TestFlight
+make beta
+
+# Deploy to App Store
+make release
+
+# Check current version info
+make build-info
+```
+
 ## Overview
 
 Lazyflow uses [Fastlane](https://fastlane.tools/) for automated deployments:
 - **Code signing**: Managed by [match](https://docs.fastlane.tools/actions/match/) with certificates stored in a private Git repo
 - **Authentication**: App Store Connect API key (no 2FA required)
 - **Targets**: Main app, widget, and watch app
+- **Automation**: Makefile wraps Fastlane for simpler commands
 
 ## Prerequisites
 
@@ -52,20 +69,44 @@ The `api_key.json` format:
 }
 ```
 
-### 3. Sync Certificates
+### 3. Store Match Password in Keychain
+
+Instead of exporting `MATCH_PASSWORD` every time, store it securely in macOS Keychain:
 
 ```bash
-# Set the match password
-export MATCH_PASSWORD="your-password"
+make setup-keychain
+# Enter your match password when prompted
+```
 
-# Sync development certificates
-bundle exec fastlane sync_dev_certs
+The Makefile automatically retrieves this password when running deployment commands.
 
+### 4. Sync Certificates
+
+```bash
 # Sync App Store certificates
+make sync-certs
+
+# Or use Fastlane directly
 bundle exec fastlane sync_appstore_certs
 ```
 
-## Available Lanes
+## Available Commands
+
+### Makefile (Recommended)
+
+| Command | Description |
+|---------|-------------|
+| `make test` | Run all tests |
+| `make beta` | Build and upload to TestFlight |
+| `make release` | Build and submit to App Store |
+| `make sync-certs` | Sync App Store certificates |
+| `make build-info` | Show current version and TestFlight build info |
+| `make bump-patch` | Increment patch version (x.x.X) |
+| `make bump-minor` | Increment minor version (x.X.0) |
+| `make bump-major` | Increment major version (X.0.0) |
+| `make setup-keychain` | Store MATCH_PASSWORD in macOS Keychain |
+
+### Fastlane Lanes
 
 | Lane | Command | Description |
 |------|---------|-------------|
@@ -77,14 +118,14 @@ bundle exec fastlane sync_appstore_certs
 | **release** | `bundle exec fastlane release` | Build and submit to App Store |
 | **refresh_dsyms** | `bundle exec fastlane refresh_dsyms` | Download dSYMs for crash reporting |
 | **bump_version** | `bundle exec fastlane bump_version type:minor` | Increment version (patch/minor/major) |
+| **build_info** | `bundle exec fastlane build_info` | Show version and build info |
 
 ## Deployment Workflow
 
 ### Deploy to TestFlight
 
 ```bash
-export MATCH_PASSWORD="your-password"
-bundle exec fastlane beta
+make beta
 ```
 
 This will:
@@ -96,8 +137,7 @@ This will:
 ### Deploy to App Store
 
 ```bash
-export MATCH_PASSWORD="your-password"
-bundle exec fastlane release
+make release
 ```
 
 This will:
@@ -105,6 +145,27 @@ This will:
 2. Increment the build number
 3. Build the app
 4. Upload to App Store Connect (ready for manual submission)
+
+## Version Management
+
+### Automatic Updates (Release-Please)
+
+When release-please creates a new release, the GitHub Actions workflow automatically updates versions across the project using `scripts/bump-version.sh`:
+
+- `Lazyflow.xcodeproj/project.pbxproj` (MARKETING_VERSION)
+- `project.yml` (XcodeGen source)
+- `docs/site/index.html` (website badge)
+- `docs/site/design/index.html` (design system badge)
+- `README.md` (version badge)
+
+### Manual Version Updates
+
+To manually update versions locally:
+
+```bash
+# Update all version strings to a specific version
+./scripts/bump-version.sh 1.2.0
+```
 
 ## Certificates Management
 
@@ -145,7 +206,12 @@ bundle exec fastlane match appstore --force
 
 ### Match password issues
 
-Ensure `MATCH_PASSWORD` environment variable is set:
+If using Makefile commands, ensure password is stored in Keychain:
+```bash
+make setup-keychain
+```
+
+If using Fastlane directly, set the environment variable:
 ```bash
 export MATCH_PASSWORD="your-password"
 ```
