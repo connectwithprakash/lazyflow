@@ -7,7 +7,15 @@ final class LazyflowUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["UI_TESTING"]
+        app.launchEnvironment = ["UI_TESTING": "1"]
+
+        // Force terminate any existing instance to ensure fresh launch with UI_TESTING flag
+        app.terminate()
         app.launch()
+
+        // Wait for app to be fully ready - tab bar indicates UI is loaded
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "App should launch and show tab bar")
     }
 
     // MARK: - Helper Methods
@@ -244,16 +252,20 @@ final class LazyflowUITests: XCTestCase {
 
     func testAccessibilityLabels() throws {
         // Verify important elements have accessibility labels
-        app.tabBars.buttons["Today"].tap()
+        let todayTab = app.tabBars.buttons["Today"]
+        XCTAssertTrue(todayTab.waitForExistence(timeout: 5), "Tab bar should be ready")
+        todayTab.tap()
 
         let addButton = app.buttons["Add task"]
-        XCTAssertTrue(addButton.exists)
+        XCTAssertTrue(addButton.waitForExistence(timeout: 3))
         XCTAssertTrue(addButton.isHittable)
     }
 
     func testVoiceOverSupport() throws {
         // This test verifies that key elements are accessible to VoiceOver
-        app.tabBars.buttons["Today"].tap()
+        let todayTab = app.tabBars.buttons["Today"]
+        XCTAssertTrue(todayTab.waitForExistence(timeout: 5), "Tab bar should be ready")
+        todayTab.tap()
 
         // All tab bar items should be accessible
         for tabName in ["Today", "Calendar", "Upcoming", "Lists", "Settings"] {
@@ -328,16 +340,17 @@ final class LazyflowUITests: XCTestCase {
             // iPad should show sidebar navigation
             // Look for sidebar elements
             let sidebar = app.otherElements["Sidebar"]
-            let hasSidebar = sidebar.waitForExistence(timeout: 3)
+            let hasSidebar = sidebar.waitForExistence(timeout: 5)
 
             // Also check for navigation split view behavior
             let todayButton = app.buttons["Today"]
-            let hasNavigation = todayButton.waitForExistence(timeout: 3)
+            let hasNavigation = todayButton.waitForExistence(timeout: 5)
 
             XCTAssertTrue(hasSidebar || hasNavigation, "iPad should have sidebar navigation")
         } else {
-            // iPhone should show tab bar
-            XCTAssertTrue(app.tabBars.firstMatch.exists, "iPhone should have tab bar")
+            // iPhone should show tab bar - wait for it to be ready
+            let tabBar = app.tabBars.firstMatch
+            XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "iPhone should have tab bar")
         }
     }
 
@@ -708,10 +721,12 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Calendar Integration Tests
 
     func testCalendarViewNavigation() throws {
-        app.tabBars.buttons["Calendar"].tap()
+        let calendarTab = app.tabBars.buttons["Calendar"]
+        XCTAssertTrue(calendarTab.waitForExistence(timeout: 5), "Calendar tab should exist")
+        calendarTab.tap()
 
         // Verify calendar view loads
-        XCTAssertTrue(app.navigationBars["Calendar"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Calendar"].waitForExistence(timeout: 5))
 
         // Look for date picker or calendar grid
         _ = app.datePickers.firstMatch.exists ||

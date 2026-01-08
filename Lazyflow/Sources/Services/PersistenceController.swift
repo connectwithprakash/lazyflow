@@ -189,7 +189,9 @@ final class PersistenceController: @unchecked Sendable {
 
     /// Check if running in UI test mode
     private static var isUITesting: Bool {
-        ProcessInfo.processInfo.arguments.contains("UI_TESTING")
+        // Check both arguments and environment for maximum reliability
+        ProcessInfo.processInfo.arguments.contains("UI_TESTING") ||
+        ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
     }
 
     /// Shared singleton instance (lazy initialization)
@@ -199,8 +201,12 @@ final class PersistenceController: @unchecked Sendable {
         if let existing = _shared {
             return existing
         }
-        // Use in-memory store for UI tests to ensure clean state each run
-        let controller = PersistenceController(inMemory: isUITesting)
+        // Use in-memory store and disable CloudKit for UI tests
+        // This ensures clean state and prevents background sync from blocking XCUITest
+        let controller = PersistenceController(
+            inMemory: isUITesting,
+            enableCloudKit: !isUITesting
+        )
         _shared = controller
         return controller
     }
