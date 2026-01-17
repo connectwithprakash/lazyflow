@@ -94,6 +94,47 @@ struct TaskRowView: View {
                 .foregroundStyle(isOverdue ? WidgetDesign.urgentColor : .primary)
 
             Spacer()
+
+            // Subtask progress badge
+            if task.hasSubtasks {
+                HStack(spacing: 2) {
+                    WidgetSubtaskProgressRing(progress: task.subtaskProgress)
+                        .frame(width: 12, height: 12)
+                    Text(task.subtaskProgressString ?? "")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
+/// Mini progress ring for subtask progress in widget
+struct WidgetSubtaskProgressRing: View {
+    let progress: Double
+
+    private var isComplete: Bool {
+        progress >= 1.0
+    }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
+
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(
+                    isComplete ? Color.green : WidgetDesign.accentColor,
+                    style: StrokeStyle(lineWidth: 1.5, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+
+            if isComplete {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 6, weight: .bold))
+                    .foregroundStyle(Color.green)
+            }
         }
     }
 }

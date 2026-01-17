@@ -16,6 +16,40 @@ struct WidgetTask: Identifiable {
     let priority: Int16
     let isCompleted: Bool
     let dueDate: Date?
+    let subtaskCount: Int
+    let completedSubtaskCount: Int
+
+    init(
+        id: UUID,
+        title: String,
+        priority: Int16,
+        isCompleted: Bool,
+        dueDate: Date?,
+        subtaskCount: Int = 0,
+        completedSubtaskCount: Int = 0
+    ) {
+        self.id = id
+        self.title = title
+        self.priority = priority
+        self.isCompleted = isCompleted
+        self.dueDate = dueDate
+        self.subtaskCount = subtaskCount
+        self.completedSubtaskCount = completedSubtaskCount
+    }
+
+    var hasSubtasks: Bool {
+        subtaskCount > 0
+    }
+
+    var subtaskProgress: Double {
+        guard subtaskCount > 0 else { return 0 }
+        return Double(completedSubtaskCount) / Double(subtaskCount)
+    }
+
+    var subtaskProgressString: String? {
+        guard hasSubtasks else { return nil }
+        return "\(completedSubtaskCount)/\(subtaskCount)"
+    }
 
     var priorityColor: Color {
         switch priority {
