@@ -5,6 +5,7 @@ struct TaskDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: TaskViewModel
     @StateObject private var llmService = LLMService.shared
+    @StateObject private var taskService = TaskService.shared
     @FocusState private var isTitleFocused: Bool
 
     @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
@@ -12,6 +13,17 @@ struct TaskDetailView: View {
     @State private var showAISuggestions = false
     @State private var aiAnalysis: TaskAnalysis?
     @State private var isAnalyzing = false
+    @State private var showAddSubtask = false
+    @State private var newSubtaskTitle = ""
+    @State private var subtasks: [Task] = []
+    @State private var pendingSubtasksFromAI: [String] = []
+
+    // Store original values before AI analysis for un-apply
+    @State private var originalTitleBeforeAI: String = ""
+    @State private var originalNotesBeforeAI: String = ""
+    @State private var originalCategoryBeforeAI: TaskCategory = .uncategorized
+    @State private var originalDurationBeforeAI: TimeInterval?
+    @State private var originalPriorityBeforeAI: Priority = .none
 
     private let originalTask: Task
 
@@ -49,6 +61,65 @@ struct TaskDetailView: View {
                     TextField("Notes", text: $viewModel.notes, axis: .vertical)
                         .font(DesignSystem.Typography.body)
                         .lineLimit(3...6)
+                }
+
+                // Subtasks Section (only for non-subtasks)
+                if !originalTask.isSubtask {
+                    Section {
+                        // Header with progress
+                        HStack {
+                            Text("Subtasks")
+                                .font(DesignSystem.Typography.headline)
+
+                            Spacer()
+
+                            if !subtasks.isEmpty {
+                                SubtaskProgressBadge(completedCount: subtasks.filter(\.isCompleted).count, totalCount: subtasks.count)
+                            }
+
+                            Button {
+                                showAddSubtask = true
+                            } label: {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(Color.Lazyflow.accent)
+                            }
+                        }
+
+                        // Subtask list
+                        if subtasks.isEmpty {
+                            Text("No subtasks yet")
+                                .font(DesignSystem.Typography.subheadline)
+                                .foregroundColor(Color.Lazyflow.textTertiary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.vertical, DesignSystem.Spacing.sm)
+                        } else {
+                            ForEach(subtasks) { subtask in
+                                HStack(spacing: DesignSystem.Spacing.sm) {
+                                    // Checkbox
+                                    Button {
+                                        toggleSubtask(subtask)
+                                    } label: {
+                                        Image(systemName: subtask.isCompleted ? "checkmark.circle.fill" : "circle")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(subtask.isCompleted ? Color.Lazyflow.success : Color.Lazyflow.textTertiary)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    // Title
+                                    Text(subtask.title)
+                                        .font(DesignSystem.Typography.body)
+                                        .foregroundColor(subtask.isCompleted ? Color.Lazyflow.textTertiary : Color.Lazyflow.textPrimary)
+                                        .strikethrough(subtask.isCompleted)
+
+                                    Spacer()
+                                }
+                                .padding(.vertical, DesignSystem.Spacing.xs)
+                            }
+                            .onDelete(perform: deleteSubtask)
+                            .onMove(perform: moveSubtask)
+                        }
+                    }
                 }
 
                 // Due Date & Time
@@ -196,6 +267,10 @@ struct TaskDetailView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         _ = viewModel.save()
+                        // Create any pending subtasks from AI suggestions
+                        if !pendingSubtasksFromAI.isEmpty {
+                            createSubtasksFromAI(titles: pendingSubtasksFromAI)
+                        }
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -207,8 +282,17 @@ struct TaskDetailView: View {
                     AISuggestionsSheet(
                         analysis: analysis,
                         currentTitle: viewModel.title,
+                        originalTitle: originalTitleBeforeAI,
+                        originalNotes: originalNotesBeforeAI,
+                        originalCategory: originalCategoryBeforeAI,
+                        originalDuration: originalDurationBeforeAI,
+                        originalPriority: originalPriorityBeforeAI,
                         onApplyDuration: { minutes in
-                            viewModel.estimatedDuration = TimeInterval(minutes * 60)
+                            if let mins = minutes {
+                                viewModel.estimatedDuration = TimeInterval(mins * 60)
+                            } else {
+                                viewModel.estimatedDuration = nil
+                            }
                         },
                         onApplyPriority: { priority in
                             viewModel.priority = priority
@@ -221,12 +305,64 @@ struct TaskDetailView: View {
                         },
                         onApplyDescription: { description in
                             viewModel.notes = description
-                        }
+                        },
+                        onApplySubtasks: { subtasks in
+                            pendingSubtasksFromAI = subtasks
+                        },
+                        pendingSubtasks: pendingSubtasksFromAI
                     )
                     .presentationDetents([.medium, .large])
                 }
             }
+            .sheet(isPresented: $showAddSubtask) {
+                AddSubtaskSheet(
+                    parentTaskID: originalTask.id,
+                    onAdd: { title in
+                        addSubtask(title: title)
+                    }
+                )
+                .presentationDetents([.height(200)])
+            }
+            .onAppear {
+                loadSubtasks()
+            }
         }
+    }
+
+    // MARK: - Subtask Management
+
+    private func loadSubtasks() {
+        subtasks = taskService.fetchSubtasks(forParentID: originalTask.id)
+    }
+
+    private func addSubtask(title: String) {
+        taskService.createSubtask(title: title, parentTaskID: originalTask.id)
+        loadSubtasks()
+    }
+
+    private func toggleSubtask(_ subtask: Task) {
+        taskService.toggleSubtaskCompletion(subtask)
+        loadSubtasks()
+    }
+
+    private func deleteSubtask(at offsets: IndexSet) {
+        for index in offsets {
+            let subtask = subtasks[index]
+            taskService.deleteTask(subtask)
+        }
+        loadSubtasks()
+    }
+
+    private func moveSubtask(from source: IndexSet, to destination: Int) {
+        var reordered = subtasks
+        reordered.move(fromOffsets: source, toOffset: destination)
+        taskService.reorderSubtasks(reordered, parentID: originalTask.id)
+        loadSubtasks()
+    }
+
+    private func createSubtasksFromAI(titles: [String]) {
+        taskService.createSubtasks(titles: titles, parentTaskID: originalTask.id)
+        loadSubtasks()
     }
 
     // MARK: - AI Analysis
@@ -234,6 +370,13 @@ struct TaskDetailView: View {
     private func analyzeTask() {
         guard !viewModel.title.isEmpty else { return }
         isAnalyzing = true
+
+        // Store original values before AI suggestions
+        originalTitleBeforeAI = viewModel.title
+        originalNotesBeforeAI = viewModel.notes
+        originalCategoryBeforeAI = viewModel.category
+        originalDurationBeforeAI = viewModel.estimatedDuration
+        originalPriorityBeforeAI = viewModel.priority
 
         _Concurrency.Task {
             do {

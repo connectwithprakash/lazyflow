@@ -38,7 +38,11 @@ struct SearchView: View {
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(item: $selectedTask) { task in
-                TaskDetailView(task: task)
+                if task.isSubtask {
+                    SubtaskDetailView(subtask: task)
+                } else {
+                    TaskDetailView(task: task)
+                }
             }
             .onAppear {
                 isSearchFocused = true

@@ -29,7 +29,13 @@ struct UpcomingView: View {
                 .navigationTitle("Upcoming")
                 .toolbar { addTaskToolbar }
                 .sheet(isPresented: $showAddTask) { AddTaskView() }
-                .sheet(item: $selectedTask) { task in TaskDetailView(task: task) }
+                .sheet(item: $selectedTask) { task in
+                    if task.isSubtask {
+                        SubtaskDetailView(subtask: task)
+                    } else {
+                        TaskDetailView(task: task)
+                    }
+                }
                 .sheet(item: $taskToSchedule) { task in
                     TimeBlockSheet(
                         task: task,
@@ -46,7 +52,13 @@ struct UpcomingView: View {
                     .navigationTitle("Upcoming")
                     .toolbar { addTaskToolbar }
                     .sheet(isPresented: $showAddTask) { AddTaskView() }
-                    .sheet(item: $selectedTask) { task in TaskDetailView(task: task) }
+                    .sheet(item: $selectedTask) { task in
+                        if task.isSubtask {
+                            SubtaskDetailView(subtask: task)
+                        } else {
+                            TaskDetailView(task: task)
+                        }
+                    }
                     .sheet(item: $taskToSchedule) { task in
                         TimeBlockSheet(
                             task: task,

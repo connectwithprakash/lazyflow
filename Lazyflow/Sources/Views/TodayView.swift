@@ -16,6 +16,10 @@ struct TodayView: View {
     @State private var undoSnapshot: Task?
     @State private var showDailySummary = false
     @State private var showMorningBriefing = false
+    @State private var showAddSubtask = false
+    @State private var parentTaskForSubtask: Task?
+    @State private var showAutoCompleteCelebration = false
+    @State private var autoCompletedParentTitle = ""
     @StateObject private var summaryService = DailySummaryService.shared
     @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
     @AppStorage("morningBriefingEnabled") private var morningBriefingEnabled: Bool = false
@@ -58,7 +62,11 @@ struct TodayView: View {
             AddTaskView(defaultDueDate: Date())
         }
         .sheet(item: $viewModel.selectedTask) { task in
-            TaskDetailView(task: task)
+            if task.isSubtask {
+                SubtaskDetailView(subtask: task)
+            } else {
+                TaskDetailView(task: task)
+            }
         }
         .sheet(item: $taskToSchedule) { task in
             TimeBlockSheet(
@@ -89,6 +97,20 @@ struct TodayView: View {
         }
         .sheet(isPresented: $showMorningBriefing) {
             MorningBriefingView()
+        }
+        .sheet(item: $parentTaskForSubtask) { task in
+            AddSubtaskSheet(parentTaskID: task.id) { subtaskTitle in
+                TaskService.shared.createSubtask(title: subtaskTitle, parentTaskID: task.id)
+                viewModel.refreshTasks()
+            }
+        }
+        .autoCompleteCelebration(isPresented: $showAutoCompleteCelebration, parentTitle: autoCompletedParentTitle)
+        .onReceive(NotificationCenter.default.publisher(for: .parentTaskAutoCompleted)) { notification in
+            if let title = notification.userInfo?["parentTitle"] as? String {
+                autoCompletedParentTitle = title
+                showAutoCompleteCelebration = true
+                viewModel.refreshTasks()
+            }
         }
         .onChange(of: showMorningBriefing) { _, newValue in
             if !newValue {
@@ -431,7 +453,7 @@ struct TodayView: View {
     }
 
     private func taskRowView(task: Task, isCompleted: Bool) -> some View {
-        TaskRowView(
+        ExpandableTaskRowView(
             task: task,
             onToggle: {
                 if !isCompleted {
@@ -458,7 +480,25 @@ struct TodayView: View {
                 viewModel.deleteTask(task)
             },
             onStartWorking: isCompleted ? nil : { viewModel.startWorking(on: $0) },
-            onStopWorking: isCompleted ? nil : { viewModel.stopWorking(on: $0) }
+            onStopWorking: isCompleted ? nil : { viewModel.stopWorking(on: $0) },
+            onSubtaskToggle: { subtask in
+                TaskService.shared.toggleSubtaskCompletion(subtask)
+                viewModel.refreshTasks()
+            },
+            onSubtaskTap: { subtask in
+                viewModel.selectedTask = subtask
+            },
+            onSubtaskDelete: { subtask in
+                TaskService.shared.deleteTask(subtask)
+                viewModel.refreshTasks()
+            },
+            onSubtaskPromote: { subtask in
+                TaskService.shared.promoteSubtaskToTask(subtask)
+                viewModel.refreshTasks()
+            },
+            onAddSubtask: { parentTask in
+                parentTaskForSubtask = parentTask
+            }
         )
     }
 
