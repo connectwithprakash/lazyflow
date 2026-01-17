@@ -234,4 +234,304 @@ final class TaskServiceTests: XCTestCase {
             _ = taskService.searchTasks(query: "task")
         }
     }
+
+    // MARK: - Subtask Tests
+
+    func testCreateSubtask() throws {
+        // Create parent task
+        let parent = taskService.createTask(title: "Parent Task")
+
+        // Create subtask
+        let subtask = taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+
+        XCTAssertNotNil(subtask)
+        XCTAssertEqual(subtask?.title, "Subtask 1")
+        XCTAssertEqual(subtask?.parentTaskID, parent.id)
+        XCTAssertTrue(subtask?.isSubtask ?? false)
+        XCTAssertFalse(subtask?.isCompleted ?? true)
+    }
+
+    func testSubtaskInheritsDueDateFromParent() throws {
+        let dueDate = Date()
+        let parent = taskService.createTask(title: "Parent Task", dueDate: dueDate)
+
+        let subtask = taskService.createSubtask(title: "Subtask", parentTaskID: parent.id)
+
+        XCTAssertNotNil(subtask?.dueDate)
+        // Compare dates (ignoring sub-second precision)
+        if let subtaskDueDate = subtask?.dueDate {
+            XCTAssertEqual(
+                Calendar.current.compare(subtaskDueDate, to: dueDate, toGranularity: .second),
+                .orderedSame
+            )
+        }
+    }
+
+    func testSubtaskInheritsPriorityFromParent() throws {
+        let parent = taskService.createTask(title: "Parent Task", priority: .high)
+
+        let subtask = taskService.createSubtask(title: "Subtask", parentTaskID: parent.id)
+
+        XCTAssertEqual(subtask?.priority, .high)
+    }
+
+    func testSubtaskCanOverridePriority() throws {
+        let parent = taskService.createTask(title: "Parent Task", priority: .high)
+
+        let subtask = taskService.createSubtask(title: "Subtask", parentTaskID: parent.id, priority: .low)
+
+        XCTAssertEqual(subtask?.priority, .low)
+    }
+
+    func testCreateMultipleSubtasks() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        let titles = ["Subtask 1", "Subtask 2", "Subtask 3"]
+
+        let subtasks = taskService.createSubtasks(titles: titles, parentTaskID: parent.id)
+
+        XCTAssertEqual(subtasks.count, 3)
+        XCTAssertEqual(subtasks[0].title, "Subtask 1")
+        XCTAssertEqual(subtasks[1].title, "Subtask 2")
+        XCTAssertEqual(subtasks[2].title, "Subtask 3")
+    }
+
+    func testFetchSubtasks() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+        taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id)
+
+        let subtasks = taskService.fetchSubtasks(forParentID: parent.id)
+
+        XCTAssertEqual(subtasks.count, 2)
+    }
+
+    func testSubtasksExcludedFromTopLevelFetch() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+        taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id)
+
+        taskService.fetchAllTasks()
+
+        // Only parent should be in top-level tasks
+        XCTAssertEqual(taskService.tasks.count, 1)
+        XCTAssertEqual(taskService.tasks.first?.title, "Parent Task")
+    }
+
+    func testToggleSubtaskCompletion() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask = taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtask")
+            return
+        }
+        XCTAssertFalse(subtask.isCompleted)
+
+        taskService.toggleSubtaskCompletion(subtask)
+
+        let updatedSubtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertTrue(updatedSubtasks.first?.isCompleted ?? false)
+    }
+
+    func testAutoCompleteParentWhenAllSubtasksComplete() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask1 = taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id),
+              let subtask2 = taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtasks")
+            return
+        }
+
+        // Complete first subtask
+        taskService.toggleSubtaskCompletion(subtask1)
+
+        // Parent should not be completed yet
+        taskService.fetchAllTasks()
+        let parentAfterFirst = taskService.tasks.first { $0.id == parent.id }
+        XCTAssertFalse(parentAfterFirst?.isCompleted ?? true)
+
+        // Complete second subtask
+        taskService.toggleSubtaskCompletion(subtask2)
+
+        // Parent should now be auto-completed
+        taskService.fetchAllTasks()
+        let parentAfterAll = taskService.tasks.first { $0.id == parent.id }
+        XCTAssertTrue(parentAfterAll?.isCompleted ?? false)
+    }
+
+    func testParentNotAutoCompletedWhenSomeSubtasksIncomplete() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask1 = taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id),
+              let _ = taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtasks")
+            return
+        }
+
+        // Complete only first subtask
+        taskService.toggleSubtaskCompletion(subtask1)
+
+        // Parent should not be completed
+        taskService.fetchAllTasks()
+        let parentTask = taskService.tasks.first { $0.id == parent.id }
+        XCTAssertFalse(parentTask?.isCompleted ?? true)
+    }
+
+    func testUncompletingSubtaskUncompletesParent() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask1 = taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id),
+              let subtask2 = taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtasks")
+            return
+        }
+
+        // Complete both subtasks
+        taskService.toggleSubtaskCompletion(subtask1)
+        taskService.toggleSubtaskCompletion(subtask2)
+
+        // Verify parent is completed
+        taskService.fetchAllTasks()
+        var parentTask = taskService.tasks.first { $0.id == parent.id }
+        XCTAssertTrue(parentTask?.isCompleted ?? false)
+
+        // Uncomplete one subtask
+        let completedSubtask = taskService.fetchSubtasks(forParentID: parent.id).first!
+        taskService.toggleSubtaskCompletion(completedSubtask)
+
+        // Parent should no longer be completed
+        taskService.fetchAllTasks()
+        parentTask = taskService.tasks.first { $0.id == parent.id }
+        XCTAssertFalse(parentTask?.isCompleted ?? true)
+    }
+
+    func testDeleteSubtask() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask = taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtask")
+            return
+        }
+
+        let initialCount = taskService.fetchSubtasks(forParentID: parent.id).count
+        XCTAssertEqual(initialCount, 1)
+
+        taskService.deleteTask(subtask)
+
+        let remainingSubtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(remainingSubtasks.count, 0)
+    }
+
+    func testDeleteParentDeletesSubtasks() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+        taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id)
+
+        // Verify subtasks exist
+        let initialSubtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(initialSubtasks.count, 2)
+
+        // Delete parent
+        taskService.deleteTask(parent)
+
+        // Subtasks should be cascade deleted
+        let remainingSubtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(remainingSubtasks.count, 0)
+    }
+
+    func testPromoteSubtaskToTask() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask = taskService.createSubtask(title: "Subtask to Promote", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtask")
+            return
+        }
+
+        XCTAssertTrue(subtask.isSubtask)
+
+        taskService.promoteSubtaskToTask(subtask)
+
+        // Task should now be top-level
+        taskService.fetchAllTasks()
+        let promotedTask = taskService.tasks.first { $0.title == "Subtask to Promote" }
+        XCTAssertNotNil(promotedTask)
+        XCTAssertFalse(promotedTask?.isSubtask ?? true)
+        XCTAssertNil(promotedTask?.parentTaskID)
+
+        // Subtask count should be reduced
+        let remainingSubtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(remainingSubtasks.count, 0)
+    }
+
+    func testSubtaskProgress() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask1 = taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id),
+              let _ = taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id),
+              let _ = taskService.createSubtask(title: "Subtask 3", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtasks")
+            return
+        }
+
+        taskService.fetchAllTasks()
+        var parentTask = taskService.tasks.first { $0.id == parent.id }
+
+        // Initial progress: 0/3
+        XCTAssertEqual(parentTask?.completedSubtaskCount, 0)
+        XCTAssertEqual(parentTask?.subtasks.count, 3)
+        XCTAssertEqual(parentTask?.subtaskProgress ?? 0.0, 0.0, accuracy: 0.01)
+
+        // Complete one subtask
+        taskService.toggleSubtaskCompletion(subtask1)
+
+        taskService.fetchAllTasks()
+        parentTask = taskService.tasks.first { $0.id == parent.id }
+
+        // Progress: 1/3
+        XCTAssertEqual(parentTask?.completedSubtaskCount, 1)
+        XCTAssertEqual(parentTask?.subtaskProgress ?? 0.0, 1.0/3.0, accuracy: 0.01)
+    }
+
+    func testReorderSubtasks() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        guard let subtask1 = taskService.createSubtask(title: "First", parentTaskID: parent.id),
+              let subtask2 = taskService.createSubtask(title: "Second", parentTaskID: parent.id),
+              let subtask3 = taskService.createSubtask(title: "Third", parentTaskID: parent.id) else {
+            XCTFail("Failed to create subtasks")
+            return
+        }
+
+        // Initial order: First, Second, Third
+        var subtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasks[0].title, "First")
+        XCTAssertEqual(subtasks[1].title, "Second")
+        XCTAssertEqual(subtasks[2].title, "Third")
+
+        // Reorder to: Third, First, Second
+        let reordered = [subtask3, subtask1, subtask2]
+        taskService.reorderSubtasks(reordered, parentID: parent.id)
+
+        subtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasks[0].title, "Third")
+        XCTAssertEqual(subtasks[1].title, "First")
+        XCTAssertEqual(subtasks[2].title, "Second")
+    }
+
+    func testAddingSubtaskToCompletedParentUncompletesIt() throws {
+        let parent = taskService.createTask(title: "Parent Task")
+        taskService.toggleTaskCompletion(parent)
+
+        // Verify parent is completed
+        taskService.fetchAllTasks()
+        var parentTask = taskService.tasks.first { $0.id == parent.id }
+        XCTAssertTrue(parentTask?.isCompleted ?? false)
+
+        // Add a subtask
+        taskService.createSubtask(title: "New Subtask", parentTaskID: parent.id)
+
+        // Parent should no longer be completed
+        taskService.fetchAllTasks()
+        parentTask = taskService.tasks.first { $0.id == parent.id }
+        XCTAssertFalse(parentTask?.isCompleted ?? true)
+    }
+
+    func testSubtaskCreationFailsForInvalidParent() throws {
+        let invalidParentID = UUID()
+
+        let subtask = taskService.createSubtask(title: "Orphan Subtask", parentTaskID: invalidParentID)
+
+        XCTAssertNil(subtask)
+    }
 }
