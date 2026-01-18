@@ -44,6 +44,9 @@ platform :ios do
 
   desc "Build and upload to TestFlight"
   lane :beta do
+    # Setup CI environment (configures keychain for non-interactive signing)
+    setup_ci if ENV['CI']
+
     # Sync certificates
     match(type: "appstore", readonly: true)
 
@@ -84,7 +87,6 @@ platform :ios do
       export_method: "app-store",
       output_directory: "./build",
       output_name: "Lazyflow.ipa",
-      xcodebuild_formatter: "",
       export_options: {
         provisioningProfiles: {
           "com.lazyflow.app" => "match AppStore com.lazyflow.app",

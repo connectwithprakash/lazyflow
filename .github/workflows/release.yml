@@ -61,3 +61,53 @@ jobs:
           git add -A
           git commit -m "chore: bump iOS version to ${{ needs.release-please.outputs.version }}"
           git push
+
+  testflight:
+    needs: [release-please, post-release]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # Get the latest with version bump
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Setup App Store Connect API Key
+        env:
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          mkdir -p fastlane/keys
+          # Create p8 file
+          echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > fastlane/keys/AuthKey_FM4R243635.p8
+          # Create api_key.json for match
+          P8_CONTENT=$(cat fastlane/keys/AuthKey_FM4R243635.p8 | awk '{printf "%s\\n", $0}')
+          cat > fastlane/keys/api_key.json << EOF
+          {
+            "key_id": "FM4R243635",
+            "issuer_id": "96211e5a-ff10-4a17-bb3f-9f468f93457d",
+            "key": "$P8_CONTENT",
+            "in_house": false
+          }
+          EOF
+
+      - name: Configure Git credentials
+        env:
+          MATCH_GIT_BASIC_AUTH: ${{ secrets.MATCH_GIT_BASIC_AUTH }}
+        run: |
+          git config --global credential.helper store
+          DECODED_AUTH=$(echo "$MATCH_GIT_BASIC_AUTH" | base64 --decode)
+          echo "https://${DECODED_AUTH}@github.com" > ~/.git-credentials
+
+      - name: Deploy to TestFlight
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bundle exec fastlane beta
