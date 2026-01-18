@@ -1,0 +1,36 @@
+name: App Store (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  submit:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Setup App Store Connect API Key
+        env:
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          mkdir -p fastlane/keys
+          echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > fastlane/keys/AuthKey_FM4R243635.p8
+
+      - name: Prepare App Store Screenshots
+        run: |
+          mkdir -p fastlane/screenshots/en-US
+          for f in docs/assets/screenshots/appstore/*.png; do
+            name=$(basename "$f" .png)
+            cp "$f" "fastlane/screenshots/en-US/iPhone 6.5-${name}.png"
+          done
+          ls -la fastlane/screenshots/en-US/
+
+      - name: Submit to App Store Review
+        run: bundle exec fastlane submit_for_review
