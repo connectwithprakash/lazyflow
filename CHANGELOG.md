@@ -5,6 +5,13 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1](https://github.com/connectwithprakash/lazyflow/compare/v1.2.0...v1.2.1) (2026-01-18)
+
+
+### Bug Fixes
+
+* add App Store submission workflow and screenshots ([#103](https://github.com/connectwithprakash/lazyflow/issues/103)) ([293c537](https://github.com/connectwithprakash/lazyflow/commit/293c53738bbbd6d33a3c1a87f87481a91d10699e))
+
 ## [1.2.0](https://github.com/connectwithprakash/lazyflow/compare/v1.1.0...v1.2.0) (2026-01-18)
 
 
