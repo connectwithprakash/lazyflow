@@ -6,11 +6,11 @@
 
 # Disable deploy previews to save build minutes
 [context.deploy-preview]
-  ignore = true
+  ignore = "exit 0"
 
 # Disable branch deploys to save build minutes
 [context.branch-deploy]
-  ignore = true
+  ignore = "exit 0"
 
 [[headers]]
   for = "/*"
