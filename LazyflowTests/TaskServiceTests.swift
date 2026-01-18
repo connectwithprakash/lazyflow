@@ -534,4 +534,111 @@ final class TaskServiceTests: XCTestCase {
 
         XCTAssertNil(subtask)
     }
+
+    // MARK: - Undo Tests
+
+    func testUndoDeleteTaskWithSubtasks() throws {
+        // Create a parent task with subtasks
+        let parent = taskService.createTask(title: "Parent Task with Subtasks")
+        taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+        taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id)
+        taskService.createSubtask(title: "Subtask 3", parentTaskID: parent.id)
+
+        // Verify setup: 1 parent task with 3 subtasks
+        taskService.fetchAllTasks()
+        XCTAssertEqual(taskService.tasks.count, 1)
+        let subtasksBefore = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasksBefore.count, 3)
+
+        // Delete the parent task with allowUndo: true (doesn't save immediately)
+        taskService.deleteTask(parent, allowUndo: true)
+
+        // Verify deletion is visible in context
+        taskService.fetchAllTasks()
+        XCTAssertEqual(taskService.tasks.count, 0, "Parent task should be deleted")
+        let subtasksAfterDelete = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasksAfterDelete.count, 0, "Subtasks should be deleted with parent")
+
+        // Undo the deletion (restores soft-deleted tasks)
+        XCTAssertNotNil(taskService.pendingDeleteTaskID, "Should have pending delete")
+        taskService.discardPendingChanges()
+
+        // Verify restoration: parent AND subtasks should be back
+        taskService.fetchAllTasks()
+        XCTAssertEqual(taskService.tasks.count, 1, "Parent task should be restored")
+        XCTAssertEqual(taskService.tasks.first?.title, "Parent Task with Subtasks")
+
+        let subtasksAfterUndo = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasksAfterUndo.count, 3, "All 3 subtasks should be restored")
+
+        // Verify subtask titles
+        let subtaskTitles = Set(subtasksAfterUndo.map { $0.title })
+        XCTAssertTrue(subtaskTitles.contains("Subtask 1"))
+        XCTAssertTrue(subtaskTitles.contains("Subtask 2"))
+        XCTAssertTrue(subtaskTitles.contains("Subtask 3"))
+    }
+
+    func testDeleteWithAllowUndoUsesSoftDelete() throws {
+        let task = taskService.createTask(title: "Test Task")
+
+        // Delete with allowUndo: true (soft delete)
+        taskService.deleteTask(task, allowUndo: true)
+
+        // Verify task is not visible (soft deleted)
+        taskService.fetchAllTasks()
+        XCTAssertEqual(taskService.tasks.count, 0, "Task should not be visible after soft delete")
+        XCTAssertNotNil(taskService.pendingDeleteTaskID, "Should have pending delete task ID")
+
+        // Discard changes (restores soft-deleted task)
+        taskService.discardPendingChanges()
+        taskService.fetchAllTasks()
+        XCTAssertEqual(taskService.tasks.count, 1, "Task should be restored after discard")
+        XCTAssertNil(taskService.pendingDeleteTaskID, "Should not have pending delete after discard")
+    }
+
+    func testCommitPendingChangesHardDeletesTask() throws {
+        let task = taskService.createTask(title: "Test Task")
+
+        // Delete with allowUndo: true (soft delete)
+        taskService.deleteTask(task, allowUndo: true)
+        XCTAssertNotNil(taskService.pendingDeleteTaskID, "Should have pending delete")
+
+        // Commit changes (hard deletes the soft-deleted task)
+        taskService.commitPendingChanges()
+        XCTAssertNil(taskService.pendingDeleteTaskID, "Should not have pending delete after commit")
+
+        // Discard now should have no effect - task is permanently gone
+        taskService.discardPendingChanges()
+        taskService.fetchAllTasks()
+        XCTAssertEqual(taskService.tasks.count, 0, "Task should remain deleted after commit")
+    }
+
+    func testUndoDeleteSubtask() throws {
+        // Create a parent task with subtasks
+        let parent = taskService.createTask(title: "Parent Task")
+        taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+        taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id)
+
+        // Verify setup
+        var subtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasks.count, 2)
+
+        // Delete one subtask with allowUndo: true (soft delete)
+        let subtaskToDelete = subtasks.first!
+        taskService.deleteTask(subtaskToDelete, allowUndo: true)
+
+        // Verify subtask is not visible (soft deleted)
+        subtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasks.count, 1, "Should have 1 subtask after soft delete")
+        XCTAssertNotNil(taskService.pendingDeleteTaskID, "Should have pending delete")
+
+        // Undo the deletion (restore soft-deleted subtask)
+        taskService.discardPendingChanges()
+
+        // Verify subtask is restored
+        subtasks = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasks.count, 2, "Should have 2 subtasks after undo")
+        XCTAssertTrue(subtasks.contains { $0.title == "Subtask 1" }, "Subtask 1 should be restored")
+        XCTAssertTrue(subtasks.contains { $0.title == "Subtask 2" }, "Subtask 2 should be restored")
+    }
 }

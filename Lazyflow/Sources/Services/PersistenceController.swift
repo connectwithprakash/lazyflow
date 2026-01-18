@@ -388,6 +388,69 @@ final class PersistenceController: @unchecked Sendable {
     func configureViewContext() {
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+
+        // Enable UndoManager for undo/redo support
+        // This allows Core Data to automatically track all changes (inserts, updates, deletes)
+        // and restore them including relationships (e.g., subtasks) when undo is called
+        let undoManager = UndoManager()
+        // Group undo operations by event (each user action becomes one undo operation)
+        undoManager.groupsByEvent = true
+        // Set a reasonable undo limit
+        undoManager.levelsOfUndo = 10
+        container.viewContext.undoManager = undoManager
+    }
+
+    // MARK: - Undo Manager
+
+    /// The undo manager for the view context
+    var undoManager: UndoManager? {
+        container.viewContext.undoManager
+    }
+
+    /// Check if there are actions that can be undone
+    var canUndo: Bool {
+        container.viewContext.undoManager?.canUndo ?? false
+    }
+
+    /// Check if there are actions that can be redone
+    var canRedo: Bool {
+        container.viewContext.undoManager?.canRedo ?? false
+    }
+
+    /// Undo the last action
+    func undo() {
+        // Process any pending changes first to ensure they're registered
+        container.viewContext.processPendingChanges()
+        container.viewContext.undoManager?.undo()
+        // Process changes from undo and save to persist
+        container.viewContext.processPendingChanges()
+        save()
+    }
+
+    /// Redo the last undone action
+    func redo() {
+        container.viewContext.processPendingChanges()
+        container.viewContext.undoManager?.redo()
+        container.viewContext.processPendingChanges()
+        save()
+    }
+
+    /// Begin an undo grouping (for grouping multiple operations as one undo action)
+    func beginUndoGrouping(named name: String? = nil) {
+        container.viewContext.undoManager?.beginUndoGrouping()
+        if let name = name {
+            container.viewContext.undoManager?.setActionName(name)
+        }
+    }
+
+    /// End an undo grouping
+    func endUndoGrouping() {
+        container.viewContext.undoManager?.endUndoGrouping()
+    }
+
+    /// Remove all undo actions (clear the undo stack)
+    func removeAllUndoActions() {
+        container.viewContext.undoManager?.removeAllActions()
     }
 
     /// Create and initialize persistence controller asynchronously

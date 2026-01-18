@@ -141,6 +141,7 @@ struct UndoToastView: View {
 struct UndoToastModifier: ViewModifier {
     @Binding var undoAction: UndoAction?
     let onUndo: (UndoAction) -> Void
+    let onDismissWithoutUndo: (() -> Void)?
 
     func body(content: Content) -> some View {
         ZStack(alignment: .bottom) {
@@ -154,6 +155,8 @@ struct UndoToastModifier: ViewModifier {
                         undoAction = nil
                     },
                     onDismiss: {
+                        // Call the dismiss callback for actions that need commit (e.g., delete)
+                        onDismissWithoutUndo?()
                         undoAction = nil
                     }
                 )
@@ -165,8 +168,16 @@ struct UndoToastModifier: ViewModifier {
 
 extension View {
     /// Adds an undo toast overlay to the view
-    func undoToast(action: Binding<UndoAction?>, onUndo: @escaping (UndoAction) -> Void) -> some View {
-        modifier(UndoToastModifier(undoAction: action, onUndo: onUndo))
+    /// - Parameters:
+    ///   - action: Binding to the undo action (nil to hide toast)
+    ///   - onUndo: Called when user taps Undo button
+    ///   - onDismissWithoutUndo: Called when toast dismisses without undo (for committing pending changes)
+    func undoToast(
+        action: Binding<UndoAction?>,
+        onUndo: @escaping (UndoAction) -> Void,
+        onDismissWithoutUndo: (() -> Void)? = nil
+    ) -> some View {
+        modifier(UndoToastModifier(undoAction: action, onUndo: onUndo, onDismissWithoutUndo: onDismissWithoutUndo))
     }
 }
 

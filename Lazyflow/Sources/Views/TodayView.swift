@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Main Today view showing overdue and today's tasks
 struct TodayView: View {
@@ -41,7 +42,10 @@ struct TodayView: View {
                 }
             }
         }
-        .onAppear { scanForConflicts() }
+        .onAppear {
+            scanForConflicts()
+            viewModel.autoExpandTasksWithSubtasks()
+        }
         .sheet(item: $selectedConflict) { conflict in
             ConflictResolutionSheet(
                 conflict: conflict,
@@ -91,6 +95,8 @@ struct TodayView: View {
         }
         .undoToast(action: $undoAction) { action in
             handleUndo(action)
+        } onDismissWithoutUndo: {
+            onUndoToastDismissed()
         }
         .sheet(isPresented: $showDailySummary) {
             DailySummaryView()
@@ -149,34 +155,31 @@ struct TodayView: View {
         let taskService = TaskService.shared
 
         switch action {
+        case .deleted:
+            // Undo delete by rolling back uncommitted changes
+            // This restores the task AND all its subtasks
+            viewModel.discardPendingChanges()
         case .completed:
             // Restore to uncompleted state
             var restoredTask = snapshot
             restoredTask.isCompleted = false
+            restoredTask.completedAt = nil
             taskService.updateTask(restoredTask)
-        case .deleted:
-            // Re-add the deleted task
-            taskService.createTask(
-                title: snapshot.title,
-                notes: snapshot.notes,
-                dueDate: snapshot.dueDate,
-                dueTime: snapshot.dueTime,
-                reminderDate: snapshot.reminderDate,
-                priority: snapshot.priority,
-                category: snapshot.category,
-                listID: snapshot.listID,
-                estimatedDuration: snapshot.estimatedDuration,
-                recurringRule: snapshot.recurringRule
-            )
         case .movedToToday, .pushedToTomorrow:
             // Restore original due date
             taskService.updateTask(snapshot)
         case .createdFromEvent(let task):
-            // Delete the task that was created from event
+            // For tasks created from events, we need to delete them
             taskService.deleteTask(task)
         }
         undoSnapshot = nil
         viewModel.refreshTasks()
+    }
+
+    /// Called when the undo toast dismisses without undo being tapped
+    private func onUndoToastDismissed() {
+        // Commit any pending changes (e.g., from delete with allowUndo)
+        viewModel.commitPendingChanges()
     }
 
     private func showUndoToast(_ action: UndoAction, snapshot: Task) {
@@ -353,7 +356,7 @@ struct TodayView: View {
             // Overdue tasks section - ALWAYS present (even when empty) to prevent section count mismatch crashes
             Section {
                 ForEach(viewModel.overdueTasks) { task in
-                    taskRowView(task: task, isCompleted: false)
+                    flatTaskRows(task: task, isCompleted: false)
                 }
             } header: {
                 // Only show header when there are overdue tasks
@@ -361,14 +364,13 @@ struct TodayView: View {
                     taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: viewModel.overdueTasks.count)
                 }
             }
-            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
             // Today tasks section - ALWAYS present (even when empty)
             Section {
                 ForEach(viewModel.todayTasks) { task in
-                    taskRowView(task: task, isCompleted: false)
+                    flatTaskRows(task: task, isCompleted: false)
                 }
             } header: {
                 // Only show header when there are today tasks
@@ -376,14 +378,13 @@ struct TodayView: View {
                     taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: viewModel.todayTasks.count)
                 }
             }
-            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
             // Completed tasks section - ALWAYS present (even when empty)
             Section {
                 ForEach(viewModel.completedTodayTasks) { task in
-                    taskRowView(task: task, isCompleted: true)
+                    flatTaskRows(task: task, isCompleted: true)
                 }
             } header: {
                 // Only show header when there are completed tasks
@@ -391,7 +392,6 @@ struct TodayView: View {
                     completedSectionHeader(count: viewModel.completedTodayTasks.count)
                 }
             }
-            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
@@ -452,8 +452,12 @@ struct TodayView: View {
         }
     }
 
-    private func taskRowView(task: Task, isCompleted: Bool) -> some View {
-        ExpandableTaskRowView(
+    /// Creates a flat list of rows for a task (parent + optional subtasks)
+    /// Each view returned becomes a separate list row, fixing the swipe actions issue
+    @ViewBuilder
+    private func flatTaskRows(task: Task, isCompleted: Bool) -> some View {
+        // Parent task row
+        TaskRowView(
             task: task,
             onToggle: {
                 if !isCompleted {
@@ -476,30 +480,80 @@ struct TodayView: View {
             onDelete: { task in
                 if !isCompleted {
                     showUndoToast(.deleted(task), snapshot: task)
+                    // Use allowUndo: true to delay save and allow rollback
+                    viewModel.deleteTask(task, allowUndo: true)
+                } else {
+                    // Completed tasks don't need undo
+                    viewModel.deleteTask(task, allowUndo: false)
                 }
-                viewModel.deleteTask(task)
             },
             onStartWorking: isCompleted ? nil : { viewModel.startWorking(on: $0) },
             onStopWorking: isCompleted ? nil : { viewModel.stopWorking(on: $0) },
-            onSubtaskToggle: { subtask in
-                TaskService.shared.toggleSubtaskCompletion(subtask)
-                viewModel.refreshTasks()
-            },
-            onSubtaskTap: { subtask in
-                viewModel.selectedTask = subtask
-            },
-            onSubtaskDelete: { subtask in
-                TaskService.shared.deleteTask(subtask)
-                viewModel.refreshTasks()
-            },
-            onSubtaskPromote: { subtask in
-                TaskService.shared.promoteSubtaskToTask(subtask)
-                viewModel.refreshTasks()
-            },
-            onAddSubtask: { parentTask in
-                parentTaskForSubtask = parentTask
-            }
+            hideSubtaskBadge: true,
+            showProgressRing: task.hasSubtasks
         )
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: task.hasSubtasks ? 0 : 4, trailing: 16))
+
+        // Subtasks section (if task has subtasks)
+        if task.hasSubtasks {
+            // Expansion header
+            SubtaskExpansionHeader(
+                task: task,
+                isExpanded: viewModel.isExpanded(task.id),
+                onToggle: {
+                    withAnimation(DesignSystem.Animation.quick) {
+                        viewModel.toggleExpansion(task.id)
+                    }
+                }
+            )
+            .listRowInsets(EdgeInsets(top: 0, leading: 32, bottom: 0, trailing: 16))
+            .listRowBackground(Color.adaptiveBackground)
+
+            // Subtask rows (if expanded)
+            if viewModel.isExpanded(task.id) {
+                ForEach(Array(task.subtasks.enumerated()), id: \.element.id) { index, subtask in
+                    SubtaskRowView(
+                        subtask: subtask,
+                        onToggle: {
+                            TaskService.shared.toggleSubtaskCompletion(subtask)
+                            viewModel.refreshTasks()
+                            // Auto-collapse when all subtasks completed
+                            if task.subtasks.filter({ !$0.isCompleted }).count <= 1 && !subtask.isCompleted {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    withAnimation(DesignSystem.Animation.standard) {
+                                        viewModel.setExpanded(task.id, expanded: false)
+                                    }
+                                }
+                            }
+                        },
+                        onTap: { viewModel.selectedTask = subtask },
+                        onDelete: { subtask in
+                            // Show undo toast and delete with allowUndo
+                            showUndoToast(.deleted(subtask), snapshot: subtask)
+                            TaskService.shared.deleteTask(subtask, allowUndo: true)
+                            viewModel.refreshTasks()
+                        },
+                        onPromote: { subtask in
+                            TaskService.shared.promoteSubtaskToTask(subtask)
+                            viewModel.refreshTasks()
+                        },
+                        index: index,
+                        isLast: index == task.subtasks.count - 1
+                    )
+                    .listRowInsets(EdgeInsets(top: 0, leading: 32, bottom: index == task.subtasks.count - 1 && task.isCompleted ? 4 : 0, trailing: 16))
+                    .listRowBackground(Color.adaptiveBackground)
+                }
+
+                // Add subtask button (only for incomplete tasks)
+                if !task.isCompleted {
+                    AddSubtaskInlineButton {
+                        parentTaskForSubtask = task
+                    }
+                    .listRowInsets(EdgeInsets(top: 0, leading: 32, bottom: 4, trailing: 16))
+                    .listRowBackground(Color.adaptiveBackground)
+                }
+            }
+        }
     }
 
     // MARK: - Next Task Suggestion Card
@@ -1274,6 +1328,56 @@ struct BatchRescheduleSheet: View {
         case .high: return Color.Lazyflow.error
         case .medium: return .orange
         case .low: return .yellow
+        }
+    }
+}
+
+// MARK: - Subtask Expansion Header
+
+/// Header row for expanding/collapsing subtasks in the flat list structure
+struct SubtaskExpansionHeader: View {
+    let task: Task
+    let isExpanded: Bool
+    let onToggle: () -> Void
+
+    private let impactLight = UIImpactFeedbackGenerator(style: .light)
+
+    var body: some View {
+        Button {
+            impactLight.impactOccurred()
+            onToggle()
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                // Left spacing for thread connector alignment (matches SubtaskRowView)
+                Spacer()
+                    .frame(width: 16 + DesignSystem.Spacing.sm)
+
+                Text("\(task.completedSubtaskCount)/\(task.subtasks.count) subtasks")
+                    .font(DesignSystem.Typography.caption2)
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+
+                Spacer()
+
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+            }
+            .padding(.vertical, DesignSystem.Spacing.xs)
+            .padding(.trailing, DesignSystem.Spacing.md)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .leading) {
+            // Vertical thread line - matches SubtaskThreadConnector positioning
+            Canvas { context, size in
+                let xPos: CGFloat = 2
+                var path = Path()
+                path.move(to: CGPoint(x: xPos, y: 0))
+                path.addLine(to: CGPoint(x: xPos, y: size.height))
+                context.stroke(path, with: .color(Color.Lazyflow.textTertiary.opacity(0.4)), lineWidth: 1.5)
+            }
+            .frame(width: 16)
+            .padding(.leading, DesignSystem.Spacing.sm)
         }
     }
 }

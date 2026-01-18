@@ -20,6 +20,7 @@ final class TodayViewModel: ObservableObject {
     @Published var showAddTask: Bool = false
     @Published var selectedTask: Task?
     @Published var searchQuery: String = ""
+    @Published var expandedTaskIDs: Set<UUID> = []
 
     // Computed properties for backward compatibility
     var overdueTasks: [Task] { taskData.overdueTasks }
@@ -29,7 +30,7 @@ final class TodayViewModel: ObservableObject {
     private let taskService: TaskService
     private var cancellables = Set<AnyCancellable>()
 
-    init(taskService: TaskService = TaskService()) {
+    init(taskService: TaskService = .shared) {
         self.taskService = taskService
         setupBindings()
     }
@@ -99,8 +100,18 @@ final class TodayViewModel: ObservableObject {
         taskService.toggleTaskCompletion(task)
     }
 
-    func deleteTask(_ task: Task) {
-        taskService.deleteTask(task)
+    func deleteTask(_ task: Task, allowUndo: Bool = false) {
+        taskService.deleteTask(task, allowUndo: allowUndo)
+    }
+
+    /// Commit pending changes (call when undo window closes without undo)
+    func commitPendingChanges() {
+        taskService.commitPendingChanges()
+    }
+
+    /// Discard pending changes (call when undo is tapped for delete)
+    func discardPendingChanges() {
+        taskService.discardPendingChanges()
     }
 
     func updateTaskPriority(_ task: Task, priority: Priority) {
@@ -143,5 +154,35 @@ final class TodayViewModel: ObservableObject {
         let total = totalTaskCount + completedTaskCount
         guard total > 0 else { return 0 }
         return Double(completedTaskCount) / Double(total)
+    }
+
+    // MARK: - Expansion State Management
+
+    func isExpanded(_ taskID: UUID) -> Bool {
+        expandedTaskIDs.contains(taskID)
+    }
+
+    func toggleExpansion(_ taskID: UUID) {
+        if expandedTaskIDs.contains(taskID) {
+            expandedTaskIDs.remove(taskID)
+        } else {
+            expandedTaskIDs.insert(taskID)
+        }
+    }
+
+    func setExpanded(_ taskID: UUID, expanded: Bool) {
+        if expanded {
+            expandedTaskIDs.insert(taskID)
+        } else {
+            expandedTaskIDs.remove(taskID)
+        }
+    }
+
+    /// Auto-expand tasks that have incomplete subtasks
+    func autoExpandTasksWithSubtasks() {
+        let allTasks = overdueTasks + todayTasks
+        for task in allTasks where task.hasSubtasks && !task.allSubtasksCompleted {
+            expandedTaskIDs.insert(task.id)
+        }
     }
 }

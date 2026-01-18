@@ -50,12 +50,12 @@ final class TaskService: ObservableObject {
 
     // MARK: - Fetch Operations
 
-    /// Fetch all non-archived top-level tasks (excluding subtasks)
+    /// Fetch all non-archived, non-deleted top-level tasks (excluding subtasks)
     func fetchAllTasks() {
         let context = persistenceController.viewContext
         let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
-        // Only fetch top-level tasks (not subtasks) that are not archived
-        request.predicate = NSPredicate(format: "isArchived == NO AND parentTask == nil")
+        // Only fetch top-level tasks (not subtasks) that are not archived and not soft-deleted
+        request.predicate = NSPredicate(format: "isArchived == NO AND parentTask == nil AND isSoftDeleted == NO")
         request.sortDescriptors = [
             NSSortDescriptor(keyPath: \TaskEntity.isCompleted, ascending: true),
             NSSortDescriptor(keyPath: \TaskEntity.priorityRaw, ascending: false),
@@ -427,10 +427,17 @@ final class TaskService: ObservableObject {
         }
     }
 
-    // MARK: - Delete Operations
+    // MARK: - Delete Operations (Soft Delete Pattern)
 
-    /// Delete a task
-    func deleteTask(_ task: Task, deleteLinkedEvent: Bool = false) {
+    /// ID of task pending deletion (for undo support)
+    private(set) var pendingDeleteTaskID: UUID?
+
+    /// Delete a task using soft delete pattern
+    /// - Parameters:
+    ///   - task: The task to delete
+    ///   - deleteLinkedEvent: Whether to delete the linked calendar event
+    ///   - allowUndo: If true, uses soft delete to allow undo. Call `commitPendingDelete()` after undo window closes.
+    func deleteTask(_ task: Task, deleteLinkedEvent: Bool = false, allowUndo: Bool = false) {
         let context = persistenceController.viewContext
         let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
@@ -438,11 +445,27 @@ final class TaskService: ObservableObject {
         do {
             guard let entity = try context.fetch(request).first else { return }
 
-            // Store parent ID before deletion (for subtask status update)
+            // Store parent ID (for subtask status update)
             let parentTaskID = entity.parentTaskID
-            let wasCompleted = entity.isCompleted
 
-            context.delete(entity)
+            if allowUndo {
+                // Soft delete: mark as deleted but keep in database
+                entity.isSoftDeleted = true
+                entity.deletedAt = Date()
+                pendingDeleteTaskID = task.id
+
+                // Also soft-delete subtasks if this is a parent task
+                if let subtasks = entity.subtasks as? Set<TaskEntity> {
+                    for subtask in subtasks {
+                        subtask.isSoftDeleted = true
+                        subtask.deletedAt = Date()
+                    }
+                }
+            } else {
+                // Hard delete: remove from database immediately
+                context.delete(entity)
+            }
+
             persistenceController.save()
 
             // Cancel any scheduled notifications
@@ -463,6 +486,61 @@ final class TaskService: ObservableObject {
             self.error = error
             print("Failed to delete task: \(error)")
         }
+    }
+
+    /// Commit pending delete (call after undo window closes without undo)
+    /// This performs the actual hard delete of soft-deleted tasks
+    func commitPendingChanges() {
+        guard let taskID = pendingDeleteTaskID else { return }
+
+        let context = persistenceController.viewContext
+        let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", taskID as CVarArg)
+
+        do {
+            if let entity = try context.fetch(request).first {
+                // Hard delete the soft-deleted task and its subtasks
+                context.delete(entity)
+                persistenceController.save()
+            }
+        } catch {
+            print("Failed to commit pending delete: \(error)")
+        }
+
+        pendingDeleteTaskID = nil
+    }
+
+    /// Undo pending delete (call when user taps undo)
+    /// This restores soft-deleted tasks by clearing the soft delete flags
+    func discardPendingChanges() {
+        guard let taskID = pendingDeleteTaskID else { return }
+
+        let context = persistenceController.viewContext
+        let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", taskID as CVarArg)
+
+        do {
+            if let entity = try context.fetch(request).first {
+                // Restore the soft-deleted task
+                entity.isSoftDeleted = false
+                entity.deletedAt = nil
+
+                // Also restore subtasks
+                if let subtasks = entity.subtasks as? Set<TaskEntity> {
+                    for subtask in subtasks {
+                        subtask.isSoftDeleted = false
+                        subtask.deletedAt = nil
+                    }
+                }
+
+                persistenceController.save()
+                fetchAllTasks()
+            }
+        } catch {
+            print("Failed to undo delete: \(error)")
+        }
+
+        pendingDeleteTaskID = nil
     }
 
     /// Delete linked calendar event for a task
@@ -570,11 +648,11 @@ final class TaskService: ObservableObject {
         return createdSubtasks
     }
 
-    /// Fetch subtasks for a parent task
+    /// Fetch subtasks for a parent task (excludes soft-deleted)
     func fetchSubtasks(forParentID parentID: UUID) -> [Task] {
         let context = persistenceController.viewContext
         let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "parentTaskID == %@", parentID as CVarArg)
+        request.predicate = NSPredicate(format: "parentTaskID == %@ AND isSoftDeleted == NO", parentID as CVarArg)
         request.sortDescriptors = [
             NSSortDescriptor(keyPath: \TaskEntity.subtaskOrder, ascending: true),
             NSSortDescriptor(keyPath: \TaskEntity.createdAt, ascending: true)
@@ -632,8 +710,9 @@ final class TaskService: ObservableObject {
             return false
         }
 
-        // Check if all subtasks are completed
-        let allSubtasksCompleted = (parentEntity.subtasks as? Set<TaskEntity>)?.allSatisfy { $0.isCompleted } ?? false
+        // Check if all non-deleted subtasks are completed
+        let activeSubtasks = (parentEntity.subtasks as? Set<TaskEntity>)?.filter { !$0.isSoftDeleted } ?? []
+        let allSubtasksCompleted = !activeSubtasks.isEmpty && activeSubtasks.allSatisfy { $0.isCompleted }
 
         if allSubtasksCompleted && !parentEntity.isCompleted {
             parentEntity.isCompleted = true
@@ -721,17 +800,18 @@ final class TaskService: ObservableObject {
             return
         }
 
-        // Get remaining subtasks
-        let subtaskEntities = parentEntity.subtasks as? Set<TaskEntity> ?? []
+        // Get remaining active subtasks (exclude soft-deleted)
+        let allSubtasks = parentEntity.subtasks as? Set<TaskEntity> ?? []
+        let subtaskEntities = allSubtasks.filter { !$0.isSoftDeleted }
 
-        // If no subtasks remain, set to pending (or keep current if no subtasks to track)
+        // If no active subtasks remain, set to pending (or keep current if no subtasks to track)
         if subtaskEntities.isEmpty {
             // No subtasks - parent status based on its own completion
             // Keep as-is since the parent might have been manually completed
             return
         }
 
-        // Check completion status of remaining subtasks
+        // Check completion status of remaining active subtasks
         let completedCount = subtaskEntities.filter { $0.isCompleted }.count
         let totalCount = subtaskEntities.count
 
@@ -779,8 +859,9 @@ final class TaskService: ObservableObject {
             return
         }
 
-        // Check how many subtasks are still completed
-        let subtaskEntities = parentEntity.subtasks as? Set<TaskEntity> ?? []
+        // Check how many active subtasks are still completed (exclude soft-deleted)
+        let allSubtasks = parentEntity.subtasks as? Set<TaskEntity> ?? []
+        let subtaskEntities = allSubtasks.filter { !$0.isSoftDeleted }
         let completedCount = subtaskEntities.filter { $0.isCompleted }.count
 
         // Determine new status based on completed subtask count
@@ -828,6 +909,48 @@ final class TaskService: ObservableObject {
         persistenceController.save()
         fetchAllTasks()
     }
+
+    // MARK: - Undo Support
+
+    /// Check if there are actions that can be undone
+    var canUndo: Bool {
+        persistenceController.canUndo
+    }
+
+    /// Check if there are actions that can be redone
+    var canRedo: Bool {
+        persistenceController.canRedo
+    }
+
+    /// Undo the last action and refresh tasks
+    /// This uses Core Data's built-in UndoManager which automatically
+    /// handles relationships (subtasks are restored with their parent)
+    func undo() {
+        persistenceController.undo()
+        fetchAllTasks()
+    }
+
+    /// Redo the last undone action and refresh tasks
+    func redo() {
+        persistenceController.redo()
+        fetchAllTasks()
+    }
+
+    /// Begin an undo grouping for multiple operations
+    /// Use this when you want multiple changes to be undone as a single action
+    func beginUndoGrouping(named name: String? = nil) {
+        persistenceController.beginUndoGrouping(named: name)
+    }
+
+    /// End an undo grouping
+    func endUndoGrouping() {
+        persistenceController.endUndoGrouping()
+    }
+
+    /// Remove all undo actions (clear the undo stack)
+    func removeAllUndoActions() {
+        persistenceController.removeAllUndoActions()
+    }
 }
 
 // MARK: - Notification Names
@@ -864,9 +987,11 @@ extension TaskEntity {
         }
 
         // Convert subtasks (avoiding infinite recursion by not including nested subtasks)
+        // Filter out soft-deleted subtasks
         var subtaskModels: [Task] = []
         if includeSubtasks, let subtaskEntities = subtasks as? Set<TaskEntity> {
             subtaskModels = subtaskEntities
+                .filter { !$0.isSoftDeleted }
                 .sorted { ($0.subtaskOrder, $0.createdAt ?? Date()) < ($1.subtaskOrder, $1.createdAt ?? Date()) }
                 .map { $0.toDomainModel(includeSubtasks: false) }
         }
