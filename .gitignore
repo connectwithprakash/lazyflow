@@ -50,9 +50,6 @@ iOSInjectionProject/
 !**/Release.xcconfig
 Secrets.swift
 
-# Screenshots (local testing, not committed)
-/screenshots/
-
 # OS files
 .DS_Store
 *.swp

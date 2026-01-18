@@ -22,11 +22,11 @@ A comprehensive design system for building consistent, accessible, and beautiful
 ### Dark Mode
 | Today View | Calendar | Upcoming |
 |------------|----------|----------|
-| ![Today Dark](../site/assets/screenshots/dark/iphone/01-today-view.png) | ![Calendar Dark](../site/assets/screenshots/dark/iphone/02-calendar-week.png) | ![Upcoming Dark](../site/assets/screenshots/dark/iphone/03-upcoming.png) |
+| ![Today Dark](../site/assets/screenshots/dark/iphone/01-today-view.png) | ![Calendar Dark](../site/assets/screenshots/dark/iphone/04-calendar-week.png) | ![Upcoming Dark](../site/assets/screenshots/dark/iphone/05-upcoming.png) |
 
 | Lists | Settings |
 |-------|----------|
-| ![Lists Dark](../site/assets/screenshots/dark/iphone/04-lists.png) | ![Settings Dark](../site/assets/screenshots/dark/iphone/05-settings.png) |
+| ![Lists Dark](../site/assets/screenshots/dark/iphone/06-lists.png) | ![Settings Dark](../site/assets/screenshots/dark/iphone/07-settings.png) |
 
 ---
 
@@ -905,12 +905,6 @@ The launch experience respects `accessibilityReduceMotion`:
 // - Phase transitions are instant
 // - Spinner continues (essential feedback)
 ```
-
-### Screenshots
-
-| Phase 2b: Revealing | Phase 2c: Loading | Phase 3: Content |
-|---------------------|-------------------|------------------|
-| ![Revealing](../assets/screenshots/launch/phase2b-revealing.png) | ![Loading](../assets/screenshots/launch/phase2c-loading.png) | ![Content](../assets/screenshots/launch/phase3-content.png) |
 
 ---
 

@@ -2,7 +2,7 @@
 
 Documentation of core user journeys, interaction patterns, and UX decisions.
 
-> **Visual References**: Screenshots demonstrating these user flows are captured during testing and stored in `screenshots/` directory.
+> **Visual References**: Screenshots demonstrating these user flows are stored in `docs/site/assets/screenshots/` directory.
 
 ## Table of Contents
 
