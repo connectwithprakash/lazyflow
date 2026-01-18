@@ -83,6 +83,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Read the full [PHILOSOPHY.md](PHILOSOPHY.md) for more on our principles.
 
+## Support
+
+If you find Lazyflow useful, consider supporting its development:
+
+<a href="https://github.com/sponsors/connectwithprakash">
+  <img src="https://img.shields.io/badge/GitHub_Sponsors-Support-ea4aaa?logo=github" alt="GitHub Sponsors">
+</a>
+<a href="https://buymeacoffee.com/connectwithprakash">
+  <img src="https://img.shields.io/badge/Buy_Me_a_Coffee-Support-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee">
+</a>
+
 ## License
 
 [MIT](LICENSE)
