@@ -5,6 +5,16 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2](https://github.com/connectwithprakash/lazyflow/compare/v1.2.1...v1.2.2) (2026-01-18)
+
+
+### Bug Fixes
+
+* add App Store metadata and update deployment docs ([468e924](https://github.com/connectwithprakash/lazyflow/commit/468e9246885831a98f3eb0f8e12cb2d5516ae6ae))
+* add iPad and Watch screenshots for App Store submission ([f1f1dcc](https://github.com/connectwithprakash/lazyflow/commit/f1f1dcc759b7a42b304657a202a3e393630c3cde))
+* correct netlify.toml ignore syntax to use command string ([b00e6e2](https://github.com/connectwithprakash/lazyflow/commit/b00e6e2db22dd016dce952fe07c26b83cca4a924))
+* resolve swipe actions conflict on tasks with subtasks ([#108](https://github.com/connectwithprakash/lazyflow/issues/108)) ([5fb55a3](https://github.com/connectwithprakash/lazyflow/commit/5fb55a348a53833e5e5c225d53d4667fddb896d3))
+
 ## [1.2.1](https://github.com/connectwithprakash/lazyflow/compare/v1.2.0...v1.2.1) (2026-01-18)
 
 
