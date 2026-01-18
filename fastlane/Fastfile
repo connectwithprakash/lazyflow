@@ -167,6 +167,7 @@ platform :ios do
       build_number: build_number.to_s,
       submit_for_review: true,
       automatic_release: true,
+      reject_if_possible: true,  # Cancel pending submission if exists
       skip_binary_upload: true,
       skip_screenshots: false,
       overwrite_screenshots: true,
