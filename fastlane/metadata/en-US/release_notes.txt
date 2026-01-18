@@ -1,6 +1,8 @@
 What's New in 1.2.2:
 
+- Subtasks: Break down complex tasks into smaller steps
+- Auto-complete parent tasks when all subtasks are done
+- AI-powered subtask suggestions
+- Track progress with visual indicators
 - Fixed swipe actions on tasks with subtasks
-- Improved undo functionality for deleted tasks
-- Undo now correctly restores tasks with all subtasks
-- Bug fixes and performance improvements
+- Improved undo - now restores tasks with all subtasks
