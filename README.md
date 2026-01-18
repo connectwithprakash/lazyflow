@@ -1,6 +1,6 @@
 # Lazyflow
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
+[![Version](https://img.shields.io/badge/version-1.2.2-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
 [![App Store](https://img.shields.io/badge/App_Store-Available-0D96F6.svg?logo=apple)](https://apps.apple.com/us/app/lazyflow/id6757427688)
 [![iOS](https://img.shields.io/badge/iOS-17.0+-000000.svg?logo=apple)](https://developer.apple.com/ios/)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?logo=swift)](https://swift.org)
