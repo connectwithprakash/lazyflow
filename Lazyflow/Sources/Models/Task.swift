@@ -44,6 +44,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var linkedEventID: String?
     var estimatedDuration: TimeInterval?
     var completedAt: Date?
+    var startedAt: Date?
     var createdAt: Date
     var updatedAt: Date
     var recurringRule: RecurringRule?
@@ -101,6 +102,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         linkedEventID: String? = nil,
         estimatedDuration: TimeInterval? = nil,
         completedAt: Date? = nil,
+        startedAt: Date? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         recurringRule: RecurringRule? = nil,
@@ -122,6 +124,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.linkedEventID = linkedEventID
         self.estimatedDuration = estimatedDuration
         self.completedAt = completedAt
+        self.startedAt = startedAt
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.recurringRule = recurringRule
@@ -146,6 +149,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         linkedEventID: String? = nil,
         estimatedDuration: TimeInterval? = nil,
         completedAt: Date? = nil,
+        startedAt: Date? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         recurringRule: RecurringRule? = nil,
@@ -168,6 +172,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
             linkedEventID: linkedEventID,
             estimatedDuration: estimatedDuration,
             completedAt: completedAt,
+            startedAt: startedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
             recurringRule: recurringRule,
@@ -250,36 +255,70 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         }
     }
 
+    /// Actual time spent on the task (from startedAt to completedAt)
+    var actualDuration: TimeInterval? {
+        guard let started = startedAt, let completed = completedAt else { return nil }
+        return completed.timeIntervalSince(started)
+    }
+
+    /// Formatted actual duration string
+    var formattedActualDuration: String? {
+        guard let duration = actualDuration, duration > 0 else { return nil }
+
+        let hours = Int(duration) / 3600
+        let minutes = (Int(duration) % 3600) / 60
+
+        if hours > 0 && minutes > 0 {
+            return "\(hours)h \(minutes)m"
+        } else if hours > 0 {
+            return "\(hours)h"
+        } else if minutes > 0 {
+            return "\(minutes)m"
+        } else {
+            return "<1m"
+        }
+    }
+
     /// Create a completed copy of this task
+    /// Preserves startedAt for time tracking
     func completed() -> Task {
         var copy = self
         copy.status = .completed
         copy.completedAt = Date()
+        // startedAt is preserved for time tracking
         copy.updatedAt = Date()
         return copy
     }
 
     /// Create an uncompleted copy of this task
+    /// Clears startedAt since we're resetting the task
     func uncompleted() -> Task {
         var copy = self
         copy.status = .pending
         copy.completedAt = nil
+        copy.startedAt = nil
         copy.updatedAt = Date()
         return copy
     }
 
     /// Create an in-progress copy of this task
+    /// Sets startedAt only if not already set (preserves original start time)
     func inProgress() -> Task {
         var copy = self
         copy.status = .inProgress
+        if copy.startedAt == nil {
+            copy.startedAt = Date()
+        }
         copy.updatedAt = Date()
         return copy
     }
 
     /// Create a pending copy of this task (stop progress)
+    /// Preserves startedAt for time tracking continuity
     func stopProgress() -> Task {
         var copy = self
         copy.status = .pending
+        // startedAt is preserved for time tracking continuity
         copy.updatedAt = Date()
         return copy
     }
