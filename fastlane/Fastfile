@@ -171,8 +171,9 @@ platform :ios do
       skip_screenshots: false,
       overwrite_screenshots: true,
       screenshots_path: "./fastlane/screenshots",
-      skip_metadata: true,
+      skip_metadata: false,
       precheck_include_in_app_purchases: false,
+      force: true,  # Skip interactive prompts for CI
       submission_information: {
         add_id_info_uses_idfa: false
       }

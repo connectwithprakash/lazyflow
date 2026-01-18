@@ -1,0 +1,8 @@
+What's New in 1.2.1:
+
+- Added subtask support with auto-completion
+- Break down complex tasks into manageable subtasks
+- Track progress with visual indicators
+- Auto-complete parent tasks when all subtasks are done
+- AI-powered subtask suggestions
+- Updated App Store screenshots

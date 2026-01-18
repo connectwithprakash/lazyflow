@@ -114,15 +114,47 @@ Hosted on Netlify at lazyflow.netlify.app:
 
 ## Deployment
 
-The app uses Fastlane for automated deployments:
+The app uses Fastlane for automated deployments with GitHub Actions CI/CD.
+
+### Fastlane Lanes
 
 ```bash
-# Deploy to TestFlight
+# Deploy to TestFlight (local)
 export MATCH_PASSWORD="password"
 bundle exec fastlane beta
 
-# Deploy to App Store
-bundle exec fastlane release
+# Submit to App Store Review
+bundle exec fastlane submit_for_review
+
+# Upload screenshots only
+bundle exec fastlane upload_screenshots
 ```
+
+### GitHub Actions Workflows
+
+- **Release** (`.github/workflows/release.yml`) - Triggered on push to main
+  - Creates GitHub release via Release Please
+  - Bumps iOS version numbers
+  - Deploys to TestFlight automatically
+
+- **App Store** (`.github/workflows/appstore.yml`) - Manual trigger
+  - Uploads screenshots from `docs/assets/screenshots/appstore/`
+  - Uploads metadata from `fastlane/metadata/`
+  - Submits latest TestFlight build for App Store review
+
+### App Store Metadata
+
+Located in `fastlane/metadata/en-US/`:
+- `name.txt` - App name
+- `subtitle.txt` - App subtitle
+- `description.txt` - Full description
+- `keywords.txt` - Search keywords (comma-separated)
+- `release_notes.txt` - What's New for current version
+- `privacy_url.txt`, `support_url.txt`, `marketing_url.txt`
+
+### Screenshots
+
+- **App Store** (`docs/assets/screenshots/appstore/`) - 1284x2778 iPhone 6.5"
+- **Website** (`docs/site/assets/screenshots/`) - Light and dark mode
 
 See `docs/project/deployment.md` for full setup instructions.

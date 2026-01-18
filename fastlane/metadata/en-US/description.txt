@@ -1,0 +1,57 @@
+Lazyflow is a free, open-source, calendar-first todo app that makes task scheduling as natural as writing a todo.
+
+KEY FEATURES
+
+Task Management
+- Create, edit, and organize tasks with ease
+- Task lists for projects and categories
+- Due dates with smart reminders
+- Recurring tasks for habits and routines
+- Priority levels with color coding
+- Subtasks with auto-completion
+
+Calendar Integration
+- Native Apple Calendar sync
+- Day and week calendar views
+- See events alongside tasks
+- Swipe events to create tasks
+- Schedule tasks as time blocks
+
+AI-Powered Productivity
+- Multi-provider LLM support
+- Apple Intelligence, Claude, OpenAI
+- Smart task suggestions
+- Automatic categorization
+- "What should I do next?" recommendations
+
+Siri Shortcuts
+- "Add a task in Lazyflow"
+- "Complete my next task"
+- "What's on my agenda today"
+- Hands-free task management
+
+Widgets & Live Activities
+- Home Screen widgets (Small, Medium, Large)
+- Lock Screen Live Activity
+- Dynamic Island support
+- Real-time progress updates
+
+Apple Watch
+- Today's tasks on your wrist
+- Tap to complete tasks
+- Real-time sync with iPhone
+- Watch complications
+
+iPad Optimized
+- Sidebar navigation
+- Adaptive layouts
+- Keyboard shortcuts
+- Split view multitasking
+
+Privacy First
+- All data stored locally on device
+- Optional iCloud sync
+- No tracking or analytics
+- Bring your own API keys for AI features
+
+Lazyflow is open source under the MIT License. View the code on GitHub.
