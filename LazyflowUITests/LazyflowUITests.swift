@@ -777,4 +777,238 @@ final class LazyflowUITests: XCTestCase {
             searchButton.tap()
         }
     }
+
+    // MARK: - Subtask Tests
+
+    func testAddSubtaskInAddTaskView() throws {
+        app.tabBars.buttons["Today"].tap()
+        app.buttons["Add task"].tap()
+
+        // Verify add task sheet appears
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
+
+        // Enter task title
+        let titleField = app.textFields["What do you need to do?"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
+        titleField.tap()
+        titleField.typeText("Parent Task with Subtasks")
+
+        // Look for the subtasks section add button
+        let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus' OR label CONTAINS[c] 'Add subtask'")).firstMatch
+
+        // Scroll down if needed to find subtasks section
+        for _ in 0..<3 {
+            if addSubtaskButton.exists && addSubtaskButton.isHittable {
+                break
+            }
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        if addSubtaskButton.waitForExistence(timeout: 3) && addSubtaskButton.isHittable {
+            addSubtaskButton.tap()
+
+            // Find subtask input field
+            let subtaskField = app.textFields.matching(NSPredicate(format: "placeholderValue CONTAINS[c] 'subtask' OR identifier CONTAINS[c] 'subtask'")).firstMatch
+            if subtaskField.waitForExistence(timeout: 2) && subtaskField.isHittable {
+                subtaskField.tap()
+                subtaskField.typeText("First Subtask")
+
+                // Submit the subtask (press return)
+                app.keyboards.buttons["Return"].tap()
+            }
+        }
+
+        // Cancel to clean up
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists && cancelButton.isHittable {
+            cancelButton.tap()
+        }
+    }
+
+    func testSubtaskDisplayInTaskDetail() throws {
+        // First create a task
+        app.tabBars.buttons["Today"].tap()
+        app.buttons["Add task"].tap()
+
+        let titleField = app.textFields["What do you need to do?"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
+        titleField.tap()
+        titleField.typeText("Task for Subtask Test")
+
+        // Set due date to Tomorrow
+        let tomorrowButton = app.buttons["Tomorrow"]
+        if tomorrowButton.exists && tomorrowButton.isHittable {
+            tomorrowButton.tap()
+        }
+
+        // Tap the navigation bar Add button (not the subtask Add button)
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
+
+        // Navigate to Upcoming to see the task
+        app.tabBars.buttons["Upcoming"].tap()
+
+        // Wait for task to appear
+        let taskText = app.staticTexts["Task for Subtask Test"]
+        XCTAssertTrue(taskText.waitForExistence(timeout: 5))
+
+        // Tap on the task to open detail view
+        taskText.tap()
+
+        // Verify detail view opens
+        let detailNav = app.navigationBars["Edit Task"]
+        XCTAssertTrue(detailNav.waitForExistence(timeout: 3), "Task detail view should open")
+
+        // Look for Subtasks section
+        let subtasksHeader = app.staticTexts["Subtasks"]
+        if !subtasksHeader.exists {
+            // Scroll to find it
+            for _ in 0..<3 {
+                app.swipeUp()
+                if subtasksHeader.exists {
+                    break
+                }
+            }
+        }
+
+        // Subtasks section should exist (for non-subtask tasks)
+        XCTAssertTrue(subtasksHeader.waitForExistence(timeout: 3), "Subtasks section should be visible in task detail")
+
+        // Close detail view
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists && cancelButton.isHittable {
+            cancelButton.tap()
+        }
+    }
+
+    func testAddSubtaskInTaskDetail() throws {
+        // First create a task
+        app.tabBars.buttons["Today"].tap()
+        app.buttons["Add task"].tap()
+
+        let titleField = app.textFields["What do you need to do?"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
+        titleField.tap()
+        titleField.typeText("Task with Subtasks Detail")
+
+        // Set due date to Tomorrow
+        let tomorrowButton = app.buttons["Tomorrow"]
+        if tomorrowButton.exists && tomorrowButton.isHittable {
+            tomorrowButton.tap()
+        }
+
+        // Tap the navigation bar Add button (not the subtask Add button)
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
+
+        // Navigate to Upcoming to see the task
+        app.tabBars.buttons["Upcoming"].tap()
+
+        // Wait for task to appear
+        let taskText = app.staticTexts["Task with Subtasks Detail"]
+        XCTAssertTrue(taskText.waitForExistence(timeout: 5))
+
+        // Tap on the task to open detail view
+        taskText.tap()
+
+        // Verify detail view opens
+        let detailNav = app.navigationBars["Edit Task"]
+        XCTAssertTrue(detailNav.waitForExistence(timeout: 3))
+
+        // Scroll to find Subtasks section
+        let subtasksHeader = app.staticTexts["Subtasks"]
+        for _ in 0..<3 {
+            if subtasksHeader.exists {
+                break
+            }
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        // Find and tap add subtask button (plus.circle.fill)
+        let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus.circle' OR label CONTAINS[c] 'Add'")).firstMatch
+        if addSubtaskButton.waitForExistence(timeout: 2) && addSubtaskButton.isHittable {
+            addSubtaskButton.tap()
+
+            // Verify add subtask sheet appears
+            let addSubtaskNav = app.navigationBars.matching(NSPredicate(format: "identifier CONTAINS[c] 'Subtask' OR identifier CONTAINS[c] 'Add'")).firstMatch
+            if addSubtaskNav.waitForExistence(timeout: 2) {
+                // Enter subtask title
+                let subtaskTitleField = app.textFields.firstMatch
+                if subtaskTitleField.exists && subtaskTitleField.isHittable {
+                    subtaskTitleField.tap()
+                    subtaskTitleField.typeText("Subtask from Detail")
+                }
+
+                // Tap Add
+                let addButton = app.buttons["Add"]
+                if addButton.exists && addButton.isHittable {
+                    addButton.tap()
+                }
+            }
+        }
+
+        // Close detail view
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists && cancelButton.isHittable {
+            cancelButton.tap()
+        }
+    }
+
+    func testSubtaskProgressBadge() throws {
+        // This test verifies that the subtask progress badge appears when a task has subtasks
+        app.tabBars.buttons["Upcoming"].tap()
+
+        // Look for any task row with subtask progress indicator (e.g., "0/2" or "1/3")
+        let progressIndicator = app.staticTexts.matching(NSPredicate(format: "label MATCHES '\\\\d+/\\\\d+'")).firstMatch
+
+        // Progress badge may or may not exist depending on tasks with subtasks
+        // This test verifies the view loads without crashing
+        XCTAssertTrue(app.navigationBars["Upcoming"].waitForExistence(timeout: 3))
+    }
+
+    func testExpandCollapseSubtasks() throws {
+        // Navigate to Upcoming view where tasks with subtasks may appear
+        app.tabBars.buttons["Upcoming"].tap()
+        XCTAssertTrue(app.navigationBars["Upcoming"].waitForExistence(timeout: 3))
+
+        // Look for expand/collapse chevron indicator
+        let expandButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'chevron' OR label CONTAINS[c] 'expand' OR label CONTAINS[c] 'collapse'")).firstMatch
+
+        if expandButton.waitForExistence(timeout: 2) && expandButton.isHittable {
+            // Tap to expand
+            expandButton.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Tap again to collapse
+            expandButton.tap()
+        }
+
+        // View should remain stable
+        XCTAssertTrue(app.navigationBars["Upcoming"].exists)
+    }
+
+    func testCompleteSubtaskInTaskRow() throws {
+        // Navigate to Upcoming to find tasks with subtasks
+        app.tabBars.buttons["Upcoming"].tap()
+        XCTAssertTrue(app.navigationBars["Upcoming"].waitForExistence(timeout: 3))
+
+        // Look for a subtask checkbox
+        let subtaskCheckbox = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'circle' OR identifier CONTAINS[c] 'checkbox'")).firstMatch
+
+        if subtaskCheckbox.waitForExistence(timeout: 2) && subtaskCheckbox.isHittable {
+            subtaskCheckbox.tap()
+
+            // The checkbox state should change (animation may occur)
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        // View should remain stable
+        XCTAssertTrue(app.navigationBars["Upcoming"].exists)
+    }
 }

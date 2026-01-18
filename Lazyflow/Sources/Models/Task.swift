@@ -48,6 +48,44 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var updatedAt: Date
     var recurringRule: RecurringRule?
 
+    // MARK: - Subtask Support
+    var parentTaskID: UUID?
+    var subtasks: [Task]
+    var subtaskOrder: Int32
+
+    /// Whether this task is a subtask (has a parent)
+    var isSubtask: Bool {
+        parentTaskID != nil
+    }
+
+    /// Whether this task has subtasks
+    var hasSubtasks: Bool {
+        !subtasks.isEmpty
+    }
+
+    /// Count of completed subtasks
+    var completedSubtaskCount: Int {
+        subtasks.filter { $0.isCompleted }.count
+    }
+
+    /// Progress of subtasks as a value from 0.0 to 1.0
+    var subtaskProgress: Double {
+        guard !subtasks.isEmpty else { return 0 }
+        return Double(completedSubtaskCount) / Double(subtasks.count)
+    }
+
+    /// Progress string for display (e.g., "2/3")
+    var subtaskProgressString: String? {
+        guard hasSubtasks else { return nil }
+        return "\(completedSubtaskCount)/\(subtasks.count)"
+    }
+
+    /// Whether all subtasks are completed
+    var allSubtasksCompleted: Bool {
+        guard hasSubtasks else { return false }
+        return completedSubtaskCount == subtasks.count
+    }
+
     init(
         id: UUID = UUID(),
         title: String,
@@ -65,7 +103,10 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         completedAt: Date? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
-        recurringRule: RecurringRule? = nil
+        recurringRule: RecurringRule? = nil,
+        parentTaskID: UUID? = nil,
+        subtasks: [Task] = [],
+        subtaskOrder: Int32 = 0
     ) {
         self.id = id
         self.title = title
@@ -84,6 +125,9 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.recurringRule = recurringRule
+        self.parentTaskID = parentTaskID
+        self.subtasks = subtasks
+        self.subtaskOrder = subtaskOrder
     }
 
     /// Convenience initializer for backward compatibility with isCompleted
@@ -104,7 +148,10 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         completedAt: Date? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
-        recurringRule: RecurringRule? = nil
+        recurringRule: RecurringRule? = nil,
+        parentTaskID: UUID? = nil,
+        subtasks: [Task] = [],
+        subtaskOrder: Int32 = 0
     ) {
         self.init(
             id: id,
@@ -123,7 +170,10 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
             completedAt: completedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
-            recurringRule: recurringRule
+            recurringRule: recurringRule,
+            parentTaskID: parentTaskID,
+            subtasks: subtasks,
+            subtaskOrder: subtaskOrder
         )
     }
 
@@ -245,7 +295,10 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         category: TaskCategory? = nil,
         listID: UUID?? = nil,
         estimatedDuration: TimeInterval?? = nil,
-        recurringRule: RecurringRule?? = nil
+        recurringRule: RecurringRule?? = nil,
+        parentTaskID: UUID?? = nil,
+        subtasks: [Task]? = nil,
+        subtaskOrder: Int32? = nil
     ) -> Task {
         var copy = self
 
@@ -259,6 +312,9 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         if let listID = listID { copy.listID = listID }
         if let estimatedDuration = estimatedDuration { copy.estimatedDuration = estimatedDuration }
         if let recurringRule = recurringRule { copy.recurringRule = recurringRule }
+        if let parentTaskID = parentTaskID { copy.parentTaskID = parentTaskID }
+        if let subtasks = subtasks { copy.subtasks = subtasks }
+        if let subtaskOrder = subtaskOrder { copy.subtaskOrder = subtaskOrder }
 
         copy.updatedAt = Date()
         return copy

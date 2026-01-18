@@ -55,7 +55,11 @@ struct ListDetailView: View {
             AddTaskView(defaultListID: list.id)
         }
         .sheet(item: $selectedTask) { task in
-            TaskDetailView(task: task)
+            if task.isSubtask {
+                SubtaskDetailView(subtask: task)
+            } else {
+                TaskDetailView(task: task)
+            }
         }
         .sheet(isPresented: $showEditList) {
             EditListSheet(list: list)

@@ -12,13 +12,17 @@
         <attribute name="isCompleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="linkedEventID" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="parentTaskID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="priorityRaw" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
         <attribute name="reminderDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="statusRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="subtaskOrder" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="title" optional="YES" attributeType="String" defaultValueString=""/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="list" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskListEntity" inverseName="tasks" inverseEntity="TaskListEntity"/>
+        <relationship name="parentTask" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskEntity" inverseName="subtasks" inverseEntity="TaskEntity"/>
         <relationship name="recurringRule" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="RecurringRuleEntity" inverseName="task" inverseEntity="RecurringRuleEntity"/>
+        <relationship name="subtasks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TaskEntity" inverseName="parentTask" inverseEntity="TaskEntity"/>
     </entity>
     <entity name="TaskListEntity" representedClassName="TaskListEntity" syncable="YES" codeGenerationType="class">
         <attribute name="colorHex" attributeType="String" defaultValueString="#218A8D"/>

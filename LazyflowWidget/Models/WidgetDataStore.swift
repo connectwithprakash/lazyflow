@@ -36,6 +36,26 @@ struct WidgetTaskData: Codable, Identifiable {
     let priority: Int16
     let isCompleted: Bool
     let dueDate: Date?
+    let subtaskCount: Int
+    let completedSubtaskCount: Int
+
+    init(
+        id: UUID,
+        title: String,
+        priority: Int16,
+        isCompleted: Bool,
+        dueDate: Date?,
+        subtaskCount: Int = 0,
+        completedSubtaskCount: Int = 0
+    ) {
+        self.id = id
+        self.title = title
+        self.priority = priority
+        self.isCompleted = isCompleted
+        self.dueDate = dueDate
+        self.subtaskCount = subtaskCount
+        self.completedSubtaskCount = completedSubtaskCount
+    }
 
     func toWidgetTask() -> WidgetTask {
         WidgetTask(
@@ -43,7 +63,9 @@ struct WidgetTaskData: Codable, Identifiable {
             title: title,
             priority: priority,
             isCompleted: isCompleted,
-            dueDate: dueDate
+            dueDate: dueDate,
+            subtaskCount: subtaskCount,
+            completedSubtaskCount: completedSubtaskCount
         )
     }
 }

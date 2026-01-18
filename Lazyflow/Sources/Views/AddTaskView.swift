@@ -17,6 +17,16 @@ struct AddTaskView: View {
     @State private var aiAnalysis: TaskAnalysis?
     @State private var isAnalyzing = false
     @State private var detectedDate: Date.ParsedDateResult?
+    @State private var pendingSubtasks: [String] = []
+    @State private var showAddSubtaskField = false
+    @State private var newSubtaskTitle = ""
+
+    // Store original values before AI analysis for un-apply
+    @State private var originalTitleBeforeAI: String = ""
+    @State private var originalNotesBeforeAI: String = ""
+    @State private var originalCategoryBeforeAI: TaskCategory = .uncategorized
+    @State private var originalDurationBeforeAI: TimeInterval?
+    @State private var originalPriorityBeforeAI: Priority = .none
 
     init(defaultDueDate: Date? = nil, defaultListID: UUID? = nil) {
         let vm = TaskViewModel()
@@ -93,6 +103,10 @@ struct AddTaskView: View {
                     quickActionsGrid
                         .padding(.horizontal)
 
+                    // Subtasks section
+                    subtasksSection
+                        .padding(.horizontal)
+
                     // Selected options display
                     if hasSelectedOptions {
                         VStack(spacing: 0) {
@@ -123,7 +137,13 @@ struct AddTaskView: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
-                        _ = viewModel.save()
+                        if let savedTask = viewModel.save() {
+                            // Create subtasks if any were selected from AI suggestions
+                            if !pendingSubtasks.isEmpty {
+                                let taskService = TaskService.shared
+                                taskService.createSubtasks(titles: pendingSubtasks, parentTaskID: savedTask.id)
+                            }
+                        }
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -154,8 +174,17 @@ struct AddTaskView: View {
                     AISuggestionsSheet(
                         analysis: analysis,
                         currentTitle: viewModel.title,
+                        originalTitle: originalTitleBeforeAI,
+                        originalNotes: originalNotesBeforeAI,
+                        originalCategory: originalCategoryBeforeAI,
+                        originalDuration: originalDurationBeforeAI,
+                        originalPriority: originalPriorityBeforeAI,
                         onApplyDuration: { minutes in
-                            viewModel.estimatedDuration = TimeInterval(minutes * 60)
+                            if let mins = minutes {
+                                viewModel.estimatedDuration = TimeInterval(mins * 60)
+                            } else {
+                                viewModel.estimatedDuration = nil
+                            }
                         },
                         onApplyPriority: { priority in
                             viewModel.priority = priority
@@ -168,7 +197,11 @@ struct AddTaskView: View {
                         },
                         onApplyDescription: { description in
                             viewModel.notes = description
-                        }
+                        },
+                        onApplySubtasks: { subtasks in
+                            pendingSubtasks = subtasks
+                        },
+                        pendingSubtasks: pendingSubtasks
                     )
                     .presentationDetents([.medium, .large])
                 }
@@ -259,9 +292,120 @@ struct AddTaskView: View {
         }
     }
 
+    // MARK: - Subtasks Section
+
+    private var subtasksSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            // Header with add button
+            HStack {
+                Label("Subtasks", systemImage: "list.bullet.indent")
+                    .font(DesignSystem.Typography.subheadline)
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+
+                Spacer()
+
+                if !showAddSubtaskField {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showAddSubtaskField = true
+                        }
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(Color.Lazyflow.accent)
+                    }
+                }
+            }
+
+            // Add subtask field
+            if showAddSubtaskField {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    TextField("Add subtask", text: $newSubtaskTitle)
+                        .font(DesignSystem.Typography.body)
+                        .textFieldStyle(.plain)
+                        .onSubmit {
+                            addSubtask()
+                        }
+
+                    Button {
+                        addSubtask()
+                    } label: {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(newSubtaskTitle.isEmpty ? Color.Lazyflow.textTertiary : Color.Lazyflow.accent)
+                    }
+                    .disabled(newSubtaskTitle.isEmpty)
+
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showAddSubtaskField = false
+                            newSubtaskTitle = ""
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                    }
+                }
+                .padding(DesignSystem.Spacing.sm)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(DesignSystem.CornerRadius.small)
+            }
+
+            // List of pending subtasks
+            if !pendingSubtasks.isEmpty {
+                VStack(spacing: 4) {
+                    ForEach(pendingSubtasks, id: \.self) { subtask in
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Image(systemName: "circle")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.Lazyflow.textTertiary)
+
+                            Text(subtask)
+                                .font(DesignSystem.Typography.body)
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+                                .lineLimit(1)
+
+                            Spacer()
+
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    pendingSubtasks.removeAll { $0 == subtask }
+                                }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(Color.Lazyflow.textTertiary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+        }
+        .padding(.top, DesignSystem.Spacing.sm)
+    }
+
+    private func addSubtask() {
+        let trimmed = newSubtaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        withAnimation(.easeInOut(duration: 0.2)) {
+            pendingSubtasks.append(trimmed)
+            newSubtaskTitle = ""
+        }
+    }
+
     private func analyzeTask() {
         guard !viewModel.title.isEmpty else { return }
         isAnalyzing = true
+
+        // Store original values before AI suggestions
+        originalTitleBeforeAI = viewModel.title
+        originalNotesBeforeAI = viewModel.notes
+        originalCategoryBeforeAI = viewModel.category
+        originalDurationBeforeAI = viewModel.estimatedDuration
+        originalPriorityBeforeAI = viewModel.priority
 
         _Concurrency.Task {
             do {
@@ -347,7 +491,7 @@ struct AddTaskView: View {
 
     private var hasSelectedOptions: Bool {
         viewModel.hasDueDate || viewModel.priority != .none || viewModel.hasReminder ||
-        viewModel.category != .uncategorized || viewModel.estimatedDuration != nil
+        viewModel.category != .uncategorized || viewModel.estimatedDuration != nil || !pendingSubtasks.isEmpty
     }
 
     private var selectedOptionsView: some View {
@@ -395,6 +539,15 @@ struct AddTaskView: View {
                         title: "Reminder",
                         color: Color.Lazyflow.info,
                         onRemove: { viewModel.hasReminder = false }
+                    )
+                }
+
+                if !pendingSubtasks.isEmpty {
+                    SelectedOptionChip(
+                        icon: "list.bullet",
+                        title: "\(pendingSubtasks.count) subtask\(pendingSubtasks.count == 1 ? "" : "s")",
+                        color: Color.Lazyflow.accent,
+                        onRemove: { pendingSubtasks.removeAll() }
                     )
                 }
             }
@@ -659,17 +812,25 @@ struct AISuggestionsSheet: View {
     @Environment(\.dismiss) private var dismiss
     let analysis: TaskAnalysis
     let currentTitle: String
-    let onApplyDuration: (Int) -> Void
+    let originalTitle: String
+    let originalNotes: String
+    let originalCategory: TaskCategory
+    let originalDuration: TimeInterval?
+    let originalPriority: Priority
+    let onApplyDuration: (Int?) -> Void
     let onApplyPriority: (Priority) -> Void
     let onApplyCategory: (TaskCategory) -> Void
     let onApplyTitle: (String) -> Void
     let onApplyDescription: (String) -> Void
+    let onApplySubtasks: ([String]) -> Void
+    let pendingSubtasks: [String]  // Initial value from parent
 
     @State private var titleApplied = false
     @State private var descriptionApplied = false
     @State private var categoryApplied = false
     @State private var durationApplied = false
     @State private var priorityApplied = false
+    @State private var localSubtasks: [String] = []  // Local state for subtasks
 
     private var hasTitleSuggestion: Bool {
         if let title = analysis.refinedTitle, !title.isEmpty, title != currentTitle {
@@ -739,13 +900,16 @@ struct AISuggestionsSheet: View {
                             value: refinedTitle,
                             color: Color.purple
                         ) {
-                            ApplyButton(
-                                isApplied: titleApplied,
-                                color: Color.purple
-                            ) {
-                                onApplyTitle(refinedTitle)
-                                titleApplied = true
-                            }
+                            ToggleApplyButton(
+                                isApplied: $titleApplied,
+                                color: Color.purple,
+                                onApply: {
+                                    onApplyTitle(refinedTitle)
+                                },
+                                onUnapply: {
+                                    onApplyTitle(originalTitle)
+                                }
+                            )
                         }
                     }
 
@@ -757,13 +921,16 @@ struct AISuggestionsSheet: View {
                             value: description,
                             color: Color.Lazyflow.info
                         ) {
-                            ApplyButton(
-                                isApplied: descriptionApplied,
-                                color: Color.Lazyflow.info
-                            ) {
-                                onApplyDescription(description)
-                                descriptionApplied = true
-                            }
+                            ToggleApplyButton(
+                                isApplied: $descriptionApplied,
+                                color: Color.Lazyflow.info,
+                                onApply: {
+                                    onApplyDescription(description)
+                                },
+                                onUnapply: {
+                                    onApplyDescription(originalNotes)
+                                }
+                            )
                         }
                     }
 
@@ -775,13 +942,16 @@ struct AISuggestionsSheet: View {
                             value: analysis.suggestedCategory.displayName,
                             color: analysis.suggestedCategory.color
                         ) {
-                            ApplyButton(
-                                isApplied: categoryApplied,
-                                color: analysis.suggestedCategory.color
-                            ) {
-                                onApplyCategory(analysis.suggestedCategory)
-                                categoryApplied = true
-                            }
+                            ToggleApplyButton(
+                                isApplied: $categoryApplied,
+                                color: analysis.suggestedCategory.color,
+                                onApply: {
+                                    onApplyCategory(analysis.suggestedCategory)
+                                },
+                                onUnapply: {
+                                    onApplyCategory(originalCategory)
+                                }
+                            )
                         }
                     }
 
@@ -792,13 +962,20 @@ struct AISuggestionsSheet: View {
                         value: formatDuration(analysis.estimatedMinutes),
                         color: Color.Lazyflow.accent
                     ) {
-                        ApplyButton(
-                            isApplied: durationApplied,
-                            color: Color.Lazyflow.accent
-                        ) {
-                            onApplyDuration(analysis.estimatedMinutes)
-                            durationApplied = true
-                        }
+                        ToggleApplyButton(
+                            isApplied: $durationApplied,
+                            color: Color.Lazyflow.accent,
+                            onApply: {
+                                onApplyDuration(analysis.estimatedMinutes)
+                            },
+                            onUnapply: {
+                                if let duration = originalDuration {
+                                    onApplyDuration(Int(duration / 60))
+                                } else {
+                                    onApplyDuration(nil)
+                                }
+                            }
+                        )
                     }
 
                     // Priority Suggestion
@@ -808,13 +985,16 @@ struct AISuggestionsSheet: View {
                         value: analysis.suggestedPriority.displayName,
                         color: analysis.suggestedPriority.color
                     ) {
-                        ApplyButton(
-                            isApplied: priorityApplied,
-                            color: analysis.suggestedPriority.color
-                        ) {
-                            onApplyPriority(analysis.suggestedPriority)
-                            priorityApplied = true
-                        }
+                        ToggleApplyButton(
+                            isApplied: $priorityApplied,
+                            color: analysis.suggestedPriority.color,
+                            onApply: {
+                                onApplyPriority(analysis.suggestedPriority)
+                            },
+                            onUnapply: {
+                                onApplyPriority(originalPriority)
+                            }
+                        )
                     }
 
                     // Best Time
@@ -830,21 +1010,70 @@ struct AISuggestionsSheet: View {
                     // Subtasks (if any)
                     if !analysis.subtasks.isEmpty {
                         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                            Label("Suggested Subtasks", systemImage: "list.bullet")
-                                .font(DesignSystem.Typography.headline)
-                                .foregroundColor(Color.Lazyflow.textPrimary)
+                            HStack {
+                                Label("Suggested Subtasks", systemImage: "list.bullet")
+                                    .font(DesignSystem.Typography.headline)
+                                    .foregroundColor(Color.Lazyflow.textPrimary)
 
-                            ForEach(analysis.subtasks, id: \.self) { subtask in
-                                HStack(spacing: DesignSystem.Spacing.sm) {
-                                    Image(systemName: "circle")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(Color.Lazyflow.textTertiary)
+                                Spacer()
 
-                                    Text(subtask)
-                                        .font(DesignSystem.Typography.body)
-                                        .foregroundColor(Color.Lazyflow.textSecondary)
+                                if !localSubtasks.isEmpty {
+                                    Text("\(localSubtasks.count) selected")
+                                        .font(DesignSystem.Typography.caption1)
+                                        .foregroundColor(Color.Lazyflow.accent)
                                 }
                             }
+
+                            ForEach(analysis.subtasks, id: \.self) { subtask in
+                                Button {
+                                    toggleSubtask(subtask)
+                                } label: {
+                                    HStack(spacing: DesignSystem.Spacing.sm) {
+                                        Image(systemName: localSubtasks.contains(subtask) ? "checkmark.square.fill" : "square")
+                                            .font(.system(size: 18))
+                                            .foregroundColor(localSubtasks.contains(subtask) ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary)
+
+                                        Text(subtask)
+                                            .font(DesignSystem.Typography.body)
+                                            .foregroundColor(Color.Lazyflow.textPrimary)
+                                            .multilineTextAlignment(.leading)
+
+                                        Spacer()
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+
+                            // Action buttons
+                            HStack(spacing: DesignSystem.Spacing.sm) {
+                                Button {
+                                    localSubtasks = analysis.subtasks
+                                } label: {
+                                    Text("Select All")
+                                        .font(DesignSystem.Typography.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, DesignSystem.Spacing.sm)
+                                        .background(Color.Lazyflow.accent)
+                                        .cornerRadius(DesignSystem.CornerRadius.small)
+                                }
+
+                                Button {
+                                    localSubtasks.removeAll()
+                                } label: {
+                                    Text("Clear All")
+                                        .font(DesignSystem.Typography.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color.Lazyflow.textSecondary)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, DesignSystem.Spacing.sm)
+                                        .background(Color.secondary.opacity(0.15))
+                                        .cornerRadius(DesignSystem.CornerRadius.small)
+                                }
+                                .disabled(localSubtasks.isEmpty)
+                            }
+                            .padding(.top, DesignSystem.Spacing.sm)
                         }
                         .padding()
                         .background(Color.secondary.opacity(0.1))
@@ -877,9 +1106,18 @@ struct AISuggestionsSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        dismiss()
+                        // Apply subtasks before dismissing
+                        onApplySubtasks(localSubtasks)
+                        // Small delay to ensure state update propagates
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            dismiss()
+                        }
                     }
                 }
+            }
+            .onAppear {
+                // Initialize local state from parent
+                localSubtasks = pendingSubtasks
             }
         }
     }
@@ -909,6 +1147,19 @@ struct AISuggestionsSheet: View {
 
         onApplyPriority(analysis.suggestedPriority)
         priorityApplied = true
+
+        // Select all subtasks
+        if !analysis.subtasks.isEmpty {
+            localSubtasks = analysis.subtasks
+        }
+    }
+
+    private func toggleSubtask(_ subtask: String) {
+        if let index = localSubtasks.firstIndex(of: subtask) {
+            localSubtasks.remove(at: index)
+        } else {
+            localSubtasks.append(subtask)
+        }
     }
 
     private var bestTimeIcon: String {
@@ -999,6 +1250,42 @@ struct ApplyButton: View {
         .disabled(isApplied)
         .animation(.easeInOut(duration: 0.2), value: isApplied)
         .accessibilityIdentifier(isApplied ? "Applied" : "Apply")
+    }
+}
+
+// MARK: - Toggle Apply Button (can un-apply)
+
+struct ToggleApplyButton: View {
+    @Binding var isApplied: Bool
+    let color: Color
+    let onApply: () -> Void
+    let onUnapply: () -> Void
+
+    var body: some View {
+        Button {
+            if isApplied {
+                onUnapply()
+                isApplied = false
+            } else {
+                onApply()
+                isApplied = true
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: isApplied ? "checkmark" : "plus")
+                    .font(.system(size: 12, weight: .bold))
+                Text(isApplied ? "Applied" : "Apply")
+                    .font(DesignSystem.Typography.subheadline)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(isApplied ? .white : color)
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+            .background(isApplied ? color : color.opacity(0.15))
+            .cornerRadius(DesignSystem.CornerRadius.small)
+        }
+        .animation(.easeInOut(duration: 0.2), value: isApplied)
+        .accessibilityLabel(isApplied ? "Un-apply suggestion" : "Apply suggestion")
     }
 }
 

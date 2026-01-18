@@ -50,11 +50,12 @@ final class TaskService: ObservableObject {
 
     // MARK: - Fetch Operations
 
-    /// Fetch all non-archived tasks
+    /// Fetch all non-archived top-level tasks (excluding subtasks)
     func fetchAllTasks() {
         let context = persistenceController.viewContext
         let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "isArchived == NO")
+        // Only fetch top-level tasks (not subtasks) that are not archived
+        request.predicate = NSPredicate(format: "isArchived == NO AND parentTask == nil")
         request.sortDescriptors = [
             NSSortDescriptor(keyPath: \TaskEntity.isCompleted, ascending: true),
             NSSortDescriptor(keyPath: \TaskEntity.priorityRaw, ascending: false),
@@ -270,6 +271,8 @@ final class TaskService: ObservableObject {
             entity.estimatedDuration = task.estimatedDuration ?? 0
             entity.linkedEventID = task.linkedEventID
             entity.updatedAt = Date()
+            entity.parentTaskID = task.parentTaskID
+            entity.subtaskOrder = task.subtaskOrder
 
             // Update list relationship
             if let listID = task.listID {
@@ -434,6 +437,11 @@ final class TaskService: ObservableObject {
 
         do {
             guard let entity = try context.fetch(request).first else { return }
+
+            // Store parent ID before deletion (for subtask status update)
+            let parentTaskID = entity.parentTaskID
+            let wasCompleted = entity.isCompleted
+
             context.delete(entity)
             persistenceController.save()
 
@@ -443,6 +451,11 @@ final class TaskService: ObservableObject {
             // Delete linked calendar event if requested
             if deleteLinkedEvent {
                 deleteLinkedCalendarEvent(for: task)
+            }
+
+            // Update parent status if this was a subtask
+            if let parentID = parentTaskID {
+                updateParentStatusAfterSubtaskChange(parentID: parentID)
             }
 
             fetchAllTasks()
@@ -478,12 +491,355 @@ final class TaskService: ObservableObject {
             deleteTask(task)
         }
     }
+
+    // MARK: - Subtask Operations
+
+    /// Create a subtask linked to a parent task
+    @discardableResult
+    func createSubtask(
+        title: String,
+        parentTaskID: UUID,
+        notes: String? = nil,
+        dueDate: Date? = nil,
+        dueTime: Date? = nil,
+        priority: Priority? = nil
+    ) -> Task? {
+        let context = persistenceController.viewContext
+
+        // Find the parent task entity
+        let parentRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        parentRequest.predicate = NSPredicate(format: "id == %@", parentTaskID as CVarArg)
+
+        guard let parentEntity = try? context.fetch(parentRequest).first else {
+            print("Failed to find parent task: \(parentTaskID)")
+            return nil
+        }
+
+        // If parent is completed, adding a new subtask should uncomplete it
+        if parentEntity.isCompleted {
+            parentEntity.isCompleted = false
+            parentEntity.statusRaw = TaskStatus.inProgress.rawValue  // Has some completed subtasks
+            parentEntity.completedAt = nil
+            parentEntity.updatedAt = Date()
+        } else if parentEntity.statusRaw == TaskStatus.pending.rawValue {
+            // Check if there are any existing completed subtasks
+            let existingSubtasks = parentEntity.subtasks as? Set<TaskEntity> ?? []
+            if existingSubtasks.contains(where: { $0.isCompleted }) {
+                parentEntity.statusRaw = TaskStatus.inProgress.rawValue
+                parentEntity.updatedAt = Date()
+            }
+        }
+
+        // Calculate next subtask order
+        let existingSubtaskCount = (parentEntity.subtasks as? Set<TaskEntity>)?.count ?? 0
+
+        let entity = TaskEntity(context: context)
+        entity.id = UUID()
+        entity.title = title
+        entity.notes = notes
+        entity.dueDate = dueDate ?? parentEntity.dueDate
+        entity.dueTime = dueTime ?? parentEntity.dueTime
+        entity.priorityRaw = priority?.rawValue ?? parentEntity.priorityRaw
+        entity.categoryRaw = parentEntity.categoryRaw
+        entity.isCompleted = false
+        entity.statusRaw = TaskStatus.pending.rawValue
+        entity.isArchived = false
+        entity.estimatedDuration = 0
+        entity.createdAt = Date()
+        entity.updatedAt = Date()
+        entity.parentTask = parentEntity
+        entity.parentTaskID = parentTaskID
+        entity.subtaskOrder = Int32(existingSubtaskCount)
+        entity.list = parentEntity.list
+
+        persistenceController.save()
+        fetchAllTasks()
+
+        return entity.toDomainModel()
+    }
+
+    /// Create multiple subtasks at once (for AI suggestions)
+    @discardableResult
+    func createSubtasks(titles: [String], parentTaskID: UUID) -> [Task] {
+        var createdSubtasks: [Task] = []
+        for title in titles {
+            if let subtask = createSubtask(title: title, parentTaskID: parentTaskID) {
+                createdSubtasks.append(subtask)
+            }
+        }
+        return createdSubtasks
+    }
+
+    /// Fetch subtasks for a parent task
+    func fetchSubtasks(forParentID parentID: UUID) -> [Task] {
+        let context = persistenceController.viewContext
+        let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "parentTaskID == %@", parentID as CVarArg)
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \TaskEntity.subtaskOrder, ascending: true),
+            NSSortDescriptor(keyPath: \TaskEntity.createdAt, ascending: true)
+        ]
+
+        do {
+            let entities = try context.fetch(request)
+            return entities.map { $0.toDomainModel() }
+        } catch {
+            print("Failed to fetch subtasks: \(error)")
+            return []
+        }
+    }
+
+    /// Promote a subtask to a standalone task
+    func promoteSubtaskToTask(_ subtask: Task) {
+        guard subtask.isSubtask, let parentID = subtask.parentTaskID else { return }
+
+        let context = persistenceController.viewContext
+        let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", subtask.id as CVarArg)
+
+        do {
+            guard let entity = try context.fetch(request).first else { return }
+            entity.parentTask = nil
+            entity.parentTaskID = nil
+            entity.subtaskOrder = 0
+            entity.updatedAt = Date()
+
+            persistenceController.save()
+
+            // Update parent status after removing this subtask
+            updateParentStatusAfterSubtaskChange(parentID: parentID)
+
+            fetchAllTasks()
+        } catch {
+            self.error = error
+            print("Failed to promote subtask: \(error)")
+        }
+    }
+
+    /// Check if parent task should be auto-completed when a subtask is completed
+    /// Returns true if parent was auto-completed
+    @discardableResult
+    func checkAutoCompleteParent(subtaskID: UUID) -> Bool {
+        let context = persistenceController.viewContext
+
+        // Find the subtask
+        let subtaskRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        subtaskRequest.predicate = NSPredicate(format: "id == %@", subtaskID as CVarArg)
+
+        guard let subtaskEntity = try? context.fetch(subtaskRequest).first,
+              let parentEntity = subtaskEntity.parentTask,
+              let parentID = parentEntity.id else {
+            return false
+        }
+
+        // Check if all subtasks are completed
+        let allSubtasksCompleted = (parentEntity.subtasks as? Set<TaskEntity>)?.allSatisfy { $0.isCompleted } ?? false
+
+        if allSubtasksCompleted && !parentEntity.isCompleted {
+            parentEntity.isCompleted = true
+            parentEntity.statusRaw = TaskStatus.completed.rawValue
+            parentEntity.completedAt = Date()
+            parentEntity.updatedAt = Date()
+
+            persistenceController.save()
+            fetchAllTasks()
+
+            // Post notification for UI to show celebration
+            NotificationCenter.default.post(
+                name: .parentTaskAutoCompleted,
+                object: nil,
+                userInfo: ["parentTaskID": parentID, "parentTitle": parentEntity.title ?? ""]
+            )
+
+            return true
+        }
+
+        return false
+    }
+
+    /// Toggle subtask completion with auto-complete check
+    func toggleSubtaskCompletion(_ subtask: Task) {
+        var updatedTask = subtask
+        if subtask.isCompleted {
+            updatedTask = subtask.uncompleted()
+        } else {
+            updatedTask = subtask.completed()
+        }
+        updateTask(updatedTask)
+
+        // Check for auto-completion of parent when subtask is completed
+        if updatedTask.isCompleted {
+            // First try auto-complete (all subtasks done)
+            if !checkAutoCompleteParent(subtaskID: subtask.id) {
+                // If not auto-completed, at least mark parent as in-progress
+                markParentInProgressIfNeeded(subtaskID: subtask.id)
+            }
+        } else {
+            // If subtask is uncompleted, ensure parent is also uncompleted
+            uncompleteParentIfNeeded(subtaskID: subtask.id)
+        }
+    }
+
+    /// Mark parent task as in-progress when a subtask is completed (but not all)
+    private func markParentInProgressIfNeeded(subtaskID: UUID) {
+        let context = persistenceController.viewContext
+
+        // Find the subtask to get its parentTaskID
+        let subtaskRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        subtaskRequest.predicate = NSPredicate(format: "id == %@", subtaskID as CVarArg)
+
+        guard let subtaskEntity = try? context.fetch(subtaskRequest).first,
+              let parentTaskID = subtaskEntity.parentTaskID else {
+            return
+        }
+
+        // Find the parent task
+        let parentRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        parentRequest.predicate = NSPredicate(format: "id == %@", parentTaskID as CVarArg)
+
+        guard let parentEntity = try? context.fetch(parentRequest).first,
+              parentEntity.statusRaw == TaskStatus.pending.rawValue else {
+            return
+        }
+
+        // Parent is pending but now has a completed subtask - mark as in progress
+        parentEntity.statusRaw = TaskStatus.inProgress.rawValue
+        parentEntity.updatedAt = Date()
+
+        persistenceController.save()
+        fetchAllTasks()
+    }
+
+    /// Update parent status after a subtask is deleted or promoted
+    private func updateParentStatusAfterSubtaskChange(parentID: UUID) {
+        let context = persistenceController.viewContext
+
+        let parentRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        parentRequest.predicate = NSPredicate(format: "id == %@", parentID as CVarArg)
+
+        guard let parentEntity = try? context.fetch(parentRequest).first else {
+            return
+        }
+
+        // Get remaining subtasks
+        let subtaskEntities = parentEntity.subtasks as? Set<TaskEntity> ?? []
+
+        // If no subtasks remain, set to pending (or keep current if no subtasks to track)
+        if subtaskEntities.isEmpty {
+            // No subtasks - parent status based on its own completion
+            // Keep as-is since the parent might have been manually completed
+            return
+        }
+
+        // Check completion status of remaining subtasks
+        let completedCount = subtaskEntities.filter { $0.isCompleted }.count
+        let totalCount = subtaskEntities.count
+
+        let newStatus: TaskStatus
+        if completedCount == totalCount {
+            newStatus = .completed
+        } else if completedCount > 0 {
+            newStatus = .inProgress
+        } else {
+            newStatus = .pending
+        }
+
+        let currentStatus = TaskStatus(rawValue: parentEntity.statusRaw) ?? .pending
+        if currentStatus != newStatus {
+            parentEntity.statusRaw = newStatus.rawValue
+            parentEntity.isCompleted = (newStatus == .completed)
+            if newStatus == .completed {
+                parentEntity.completedAt = Date()
+            } else {
+                parentEntity.completedAt = nil
+            }
+            parentEntity.updatedAt = Date()
+            persistenceController.save()
+        }
+    }
+
+    /// Update parent task status when a subtask is uncompleted
+    private func uncompleteParentIfNeeded(subtaskID: UUID) {
+        let context = persistenceController.viewContext
+
+        // Find the subtask to get its parentTaskID
+        let subtaskRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        subtaskRequest.predicate = NSPredicate(format: "id == %@", subtaskID as CVarArg)
+
+        guard let subtaskEntity = try? context.fetch(subtaskRequest).first,
+              let parentTaskID = subtaskEntity.parentTaskID else {
+            return
+        }
+
+        // Find the parent task
+        let parentRequest: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        parentRequest.predicate = NSPredicate(format: "id == %@", parentTaskID as CVarArg)
+
+        guard let parentEntity = try? context.fetch(parentRequest).first else {
+            return
+        }
+
+        // Check how many subtasks are still completed
+        let subtaskEntities = parentEntity.subtasks as? Set<TaskEntity> ?? []
+        let completedCount = subtaskEntities.filter { $0.isCompleted }.count
+
+        // Determine new status based on completed subtask count
+        let newStatus: TaskStatus
+        if completedCount == subtaskEntities.count && completedCount > 0 {
+            // All completed - shouldn't happen here, but handle it
+            newStatus = .completed
+        } else if completedCount > 0 {
+            // Some completed - in progress
+            newStatus = .inProgress
+        } else {
+            // None completed - pending
+            newStatus = .pending
+        }
+
+        // Only update if status changed
+        let currentStatus = TaskStatus(rawValue: parentEntity.statusRaw) ?? .pending
+        if currentStatus != newStatus {
+            parentEntity.statusRaw = newStatus.rawValue
+            parentEntity.isCompleted = (newStatus == .completed)
+            if newStatus != .completed {
+                parentEntity.completedAt = nil
+            }
+            parentEntity.updatedAt = Date()
+
+            persistenceController.save()
+            fetchAllTasks()
+        }
+    }
+
+    /// Reorder subtasks
+    func reorderSubtasks(_ subtasks: [Task], parentID: UUID) {
+        let context = persistenceController.viewContext
+
+        for (index, subtask) in subtasks.enumerated() {
+            let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+            request.predicate = NSPredicate(format: "id == %@", subtask.id as CVarArg)
+
+            if let entity = try? context.fetch(request).first {
+                entity.subtaskOrder = Int32(index)
+                entity.updatedAt = Date()
+            }
+        }
+
+        persistenceController.save()
+        fetchAllTasks()
+    }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let parentTaskAutoCompleted = Notification.Name("parentTaskAutoCompleted")
 }
 
 // MARK: - TaskEntity to Domain Model
 
 extension TaskEntity {
-    func toDomainModel() -> Task {
+    func toDomainModel(includeSubtasks: Bool = true) -> Task {
         var recurringRule: RecurringRule?
         if let ruleEntity = self.recurringRule {
             recurringRule = RecurringRule(
@@ -507,6 +863,14 @@ extension TaskEntity {
             status = TaskStatus(rawValue: statusRaw) ?? .pending
         }
 
+        // Convert subtasks (avoiding infinite recursion by not including nested subtasks)
+        var subtaskModels: [Task] = []
+        if includeSubtasks, let subtaskEntities = subtasks as? Set<TaskEntity> {
+            subtaskModels = subtaskEntities
+                .sorted { ($0.subtaskOrder, $0.createdAt ?? Date()) < ($1.subtaskOrder, $1.createdAt ?? Date()) }
+                .map { $0.toDomainModel(includeSubtasks: false) }
+        }
+
         return Task(
             id: id ?? UUID(),
             title: title ?? "",
@@ -524,7 +888,10 @@ extension TaskEntity {
             completedAt: completedAt,
             createdAt: createdAt ?? Date(),
             updatedAt: updatedAt ?? Date(),
-            recurringRule: recurringRule
+            recurringRule: recurringRule,
+            parentTaskID: parentTaskID,
+            subtasks: subtaskModels,
+            subtaskOrder: subtaskOrder
         )
     }
 }

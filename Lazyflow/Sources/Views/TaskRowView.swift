@@ -15,6 +15,9 @@ struct TaskRowView: View {
     var onDelete: ((Task) -> Void)?
     var onStartWorking: ((Task) -> Void)?
     var onStopWorking: ((Task) -> Void)?
+    var hideSubtaskBadge: Bool = false
+    var expandableSubtaskBadge: AnyView? = nil
+    var showProgressRing: Bool = false  // Show subtask progress on checkbox
 
     @State private var isPressed = false
     @State private var isPulsing = false
@@ -48,7 +51,7 @@ struct TaskRowView: View {
                 Button {
                     onTap()
                 } label: {
-                    HStack(spacing: 0) {
+                    HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
                         VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             // Title
                             Text(task.title)
@@ -60,6 +63,7 @@ struct TaskRowView: View {
                                 )
                                 .strikethrough(task.isCompleted, color: Color.Lazyflow.textTertiary)
                                 .lineLimit(2)
+                                .truncationMode(.tail)
                                 .multilineTextAlignment(.leading)
 
                             // Metadata row
@@ -67,8 +71,9 @@ struct TaskRowView: View {
                                 metadataRow
                             }
                         }
+                        .layoutPriority(1)
 
-                        Spacer()
+                        Spacer(minLength: 0)
 
                         // Recurring indicator with frequency
                         if task.isRecurring {
@@ -81,6 +86,7 @@ struct TaskRowView: View {
                                 }
                             }
                             .foregroundColor(Color.Lazyflow.textTertiary)
+                            .layoutPriority(2)
                         }
                     }
                     .contentShape(Rectangle())
@@ -218,6 +224,28 @@ struct TaskRowView: View {
 
     private var checkboxView: some View {
         ZStack {
+            // Progress ring for subtasks (background track) - outermost layer
+            if showProgressRing && !task.isCompleted {
+                // Track (background)
+                Circle()
+                    .stroke(Color.Lazyflow.accent.opacity(0.35), lineWidth: 3)
+                    .frame(width: 32, height: 32)
+
+                // Progress arc (only when there's progress)
+                if task.subtaskProgress > 0 {
+                    Circle()
+                        .trim(from: 0, to: task.subtaskProgress)
+                        .stroke(
+                            task.allSubtasksCompleted ? Color.Lazyflow.success : Color.Lazyflow.accent,
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                        )
+                        .frame(width: 32, height: 32)
+                        .rotationEffect(.degrees(-90))
+                        .animation(DesignSystem.Animation.standard, value: task.subtaskProgress)
+                }
+            }
+
+            // Main checkbox circle
             Circle()
                 .strokeBorder(
                     task.isCompleted ? Color.Lazyflow.success :
@@ -272,11 +300,18 @@ struct TaskRowView: View {
     // MARK: - Metadata
 
     private var hasMetadata: Bool {
-        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil
+        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil
     }
 
     private var metadataRow: some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
+            // Subtask progress - either expandable badge or regular badge
+            if let expandableBadge = expandableSubtaskBadge {
+                expandableBadge
+            } else if task.hasSubtasks && !hideSubtaskBadge {
+                SubtaskProgressBadge(task: task)
+            }
+
             // Category
             if task.category != .uncategorized && !task.isCompleted {
                 CategoryBadge(category: task.category)
