@@ -5,6 +5,14 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/connectwithprakash/lazyflow/compare/v1.1.0...v1.2.0) (2026-01-18)
+
+
+### Features
+
+* add subtask support with auto-completion ([#13](https://github.com/connectwithprakash/lazyflow/issues/13)) ([#100](https://github.com/connectwithprakash/lazyflow/issues/100)) ([490a25b](https://github.com/connectwithprakash/lazyflow/commit/490a25b8426d0126b552ca3963a1a76fb0f9d4b1))
+* **ci:** add automated TestFlight deployment on release ([d4df9da](https://github.com/connectwithprakash/lazyflow/commit/d4df9da27028df8414a18721454ed95e85cc0471))
+
 ## [1.1.0](https://github.com/connectwithprakash/lazyflow/compare/v1.0.1...v1.1.0) (2026-01-07)
 
 
