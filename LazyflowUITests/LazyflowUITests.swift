@@ -20,24 +20,39 @@ final class LazyflowUITests: XCTestCase {
 
     // MARK: - Helper Methods
 
-    /// Reliably types text into a text field by ensuring keyboard focus is active.
-    /// This addresses XCUITest's keyboard focus timing issues.
+    /// Reliably types text into a text field using paste workaround.
+    /// This bypasses XCUITest's keyboard focus issues with SwiftUI TextFields.
+    /// Reference: https://fatbobman.com/en/posts/textfield-event-focus-keyboard/
     private func tapAndTypeText(_ element: XCUIElement, text: String) {
         XCTAssertTrue(element.waitForExistence(timeout: 3), "Text field should exist")
 
+        // Copy text to pasteboard
+        UIPasteboard.general.string = text
+
         // Tap the element to focus it
         element.tap()
+        Thread.sleep(forTimeInterval: 0.3)
 
-        // Wait for keyboard to appear by checking for any key
-        let keyboard = app.keyboards.firstMatch
-        if !keyboard.waitForExistence(timeout: 2) {
-            // If keyboard didn't appear, try tapping again
-            element.tap()
-            _ = keyboard.waitForExistence(timeout: 2)
+        // Double-tap to select all (if any existing text) and show menu
+        element.doubleTap()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Try to paste using the menu
+        let pasteMenuItem = app.menuItems["Paste"]
+        if pasteMenuItem.waitForExistence(timeout: 2) {
+            pasteMenuItem.tap()
+        } else {
+            // Fallback: try typing directly if paste menu doesn't appear
+            let keyboard = app.keyboards.firstMatch
+            if keyboard.waitForExistence(timeout: 2) {
+                app.typeText(text)
+            } else {
+                // Last resort: coordinate tap and type
+                element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                Thread.sleep(forTimeInterval: 0.5)
+                app.typeText(text)
+            }
         }
-
-        // Type the text
-        element.typeText(text)
     }
 
     override func tearDownWithError() throws {
@@ -101,8 +116,11 @@ final class LazyflowUITests: XCTestCase {
             tomorrowButton.tap()
         }
 
-        // Tap Add button
-        app.buttons["Add"].tap()
+        // Tap Add button in navigation bar (not the subtask Add button)
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
 
         // Navigate to Upcoming to see the task
         app.tabBars.buttons["Upcoming"].tap()
@@ -125,8 +143,11 @@ final class LazyflowUITests: XCTestCase {
             tomorrowButton.tap()
         }
 
-        // Add the task
-        app.buttons["Add"].tap()
+        // Add the task via navigation bar button (not subtask Add button)
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
 
         // Navigate to Upcoming to see the task (since due date is tomorrow)
         app.tabBars.buttons["Upcoming"].tap()
@@ -152,7 +173,11 @@ final class LazyflowUITests: XCTestCase {
             tomorrowButton.tap()
         }
 
-        app.buttons["Add"].tap()
+        // Add the task via navigation bar button
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
 
         // Navigate to Upcoming to see the task (since we used Tomorrow)
         app.tabBars.buttons["Upcoming"].tap()
@@ -310,7 +335,11 @@ final class LazyflowUITests: XCTestCase {
             tomorrowButton.tap()
         }
 
-        app.buttons["Add"].tap()
+        // Add the task via navigation bar button
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
 
         // Navigate to Upcoming to see the task
         app.tabBars.buttons["Upcoming"].tap()
@@ -761,7 +790,12 @@ final class LazyflowUITests: XCTestCase {
         let titleField = app.textFields["What do you need to do?"]
         titleField.tap()
         titleField.typeText("Searchable test task")
-        app.buttons["Add"].tap()
+
+        // Add the task via navigation bar button
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
 
         // Look for search field or search button
         let searchField = app.searchFields.firstMatch
@@ -808,14 +842,16 @@ final class LazyflowUITests: XCTestCase {
         if addSubtaskButton.waitForExistence(timeout: 3) && addSubtaskButton.isHittable {
             addSubtaskButton.tap()
 
-            // Find subtask input field
+            // Find subtask input field and use helper for reliable keyboard focus
             let subtaskField = app.textFields.matching(NSPredicate(format: "placeholderValue CONTAINS[c] 'subtask' OR identifier CONTAINS[c] 'subtask'")).firstMatch
             if subtaskField.waitForExistence(timeout: 2) && subtaskField.isHittable {
-                subtaskField.tap()
-                subtaskField.typeText("First Subtask")
+                tapAndTypeText(subtaskField, text: "First Subtask")
 
                 // Submit the subtask (press return)
-                app.keyboards.buttons["Return"].tap()
+                let returnKey = app.keyboards.buttons["Return"]
+                if returnKey.waitForExistence(timeout: 2) {
+                    returnKey.tap()
+                }
             }
         }
 
@@ -1012,52 +1048,46 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Upcoming"].exists)
     }
 
-    // MARK: - Undo Tests
+    // MARK: - Task Creation with Subtasks
 
-    /// Test that tasks with subtasks can be created in Today view
-    /// Note: Full undo delete with subtasks restoration is tested in unit tests (TaskServiceTests)
-    /// UI tests for swipe delete are unreliable, so we verify the core flow here
-    func testCreateTaskWithSubtasksInTodayView() throws {
-        // Navigate to Today (where undo support exists)
+    /// Test creating a task with subtasks from Today tab
+    func testCreateTaskWithSubtaskFromTodayTab() throws {
+        // Navigate to Today
         app.tabBars.buttons["Today"].tap()
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 3))
 
-        // Create a task with subtasks
+        // Open add task sheet
         app.buttons["Add task"].tap()
         XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
 
+        // Enter task title
         let titleField = app.textFields["What do you need to do?"]
         XCTAssertTrue(titleField.waitForExistence(timeout: 3))
         titleField.tap()
-        titleField.typeText("Parent Task with Subtasks")
+        titleField.typeText("Parent Task")
 
-        // Set due date to Today so it appears in Today view
-        let todayButton = app.buttons["Today"].firstMatch
-        if todayButton.exists && todayButton.isHittable {
-            todayButton.tap()
+        // Set due date to Tomorrow
+        let tomorrowButton = app.buttons["Tomorrow"]
+        if tomorrowButton.exists && tomorrowButton.isHittable {
+            tomorrowButton.tap()
         }
 
-        // Look for subtasks section and add subtasks
-        let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus' OR label CONTAINS[c] 'Add subtask'")).firstMatch
-
-        // Scroll down if needed
-        for _ in 0..<3 {
-            if addSubtaskButton.exists && addSubtaskButton.isHittable {
-                break
-            }
-            app.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
-        }
-
-        // Add first subtask if button is available
+        // Add a subtask (avoid scrolling - swipes dismiss sheets)
+        let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus.circle'")).firstMatch
         if addSubtaskButton.waitForExistence(timeout: 3) && addSubtaskButton.isHittable {
             addSubtaskButton.tap()
 
-            let subtaskField = app.textFields.matching(NSPredicate(format: "placeholderValue CONTAINS[c] 'subtask' OR identifier CONTAINS[c] 'subtask'")).firstMatch
+            let subtaskField = app.textFields["Add subtask"]
             if subtaskField.waitForExistence(timeout: 2) && subtaskField.isHittable {
-                subtaskField.tap()
-                subtaskField.typeText("Subtask One")
-                app.keyboards.buttons["Return"].tap()
+                // Use paste workaround for reliable text entry
+                tapAndTypeText(subtaskField, text: "My Subtask")
+
+                // Confirm subtask with checkmark
+                let checkmark = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'checkmark.circle'")).firstMatch
+                if checkmark.waitForExistence(timeout: 2) && checkmark.isHittable {
+                    checkmark.tap()
+                }
+                Thread.sleep(forTimeInterval: 0.5)
             }
         }
 
@@ -1067,15 +1097,11 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
-        // Wait for task to appear in Today view
-        Thread.sleep(forTimeInterval: 1.0)
-        let taskText = app.staticTexts["Parent Task with Subtasks"].firstMatch
-        XCTAssertTrue(taskText.waitForExistence(timeout: 5), "Task with subtasks should appear in Today view")
+        // Navigate to Upcoming to verify
+        app.tabBars.buttons["Upcoming"].tap()
 
-        // Verify the task exists - this confirms our flat list structure works
-        XCTAssertTrue(app.staticTexts["Parent Task with Subtasks"].firstMatch.exists, "Parent task should be visible")
-
-        // Note: Swipe delete and undo functionality is verified in unit tests
-        // (testUndoDeleteTaskWithSubtasks, testDeleteWithAllowUndoDoesNotImmediatelySave)
+        // Verify task appears
+        let taskText = app.staticTexts["Parent Task"].firstMatch
+        XCTAssertTrue(taskText.waitForExistence(timeout: 5), "Task with subtask should appear in Upcoming view")
     }
 }
