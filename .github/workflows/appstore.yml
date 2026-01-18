@@ -23,26 +23,22 @@ jobs:
           mkdir -p fastlane/keys
           echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > fastlane/keys/AuthKey_FM4R243635.p8
 
-      - name: Update Release Notes from CHANGELOG
+      - name: Validate Release Notes
         run: |
-          # Extract latest version's release notes from CHANGELOG.md
           VERSION=$(grep -m1 'MARKETING_VERSION' Lazyflow.xcodeproj/project.pbxproj | head -1 | sed 's/.*= \(.*\);/\1/')
-          echo "Extracting release notes for version $VERSION"
+          echo "Current version: $VERSION"
 
-          # Get content between first two ## headers (latest release)
-          NOTES=$(awk '/^## \[/{if(found) exit; found=1; next} found && /^### /{p=1} p' CHANGELOG.md | head -20)
-
-          # If no structured notes found, use a simpler extraction
-          if [ -z "$NOTES" ]; then
-            NOTES=$(awk '/^## \['"$VERSION"'\]/{found=1; next} found && /^## \[/{exit} found' CHANGELOG.md | grep -E '^\* |^- ' | head -10 | sed 's/^\* /- /' | sed 's/^- \*\*[^*]*\*\*: /- /')
+          # Check that release_notes.txt contains the current version
+          if ! grep -q "$VERSION" fastlane/metadata/en-US/release_notes.txt; then
+            echo "::error::Release notes not updated for version $VERSION"
+            echo ""
+            echo "Please update fastlane/metadata/en-US/release_notes.txt before submitting."
+            echo "Current content:"
+            cat fastlane/metadata/en-US/release_notes.txt
+            exit 1
           fi
 
-          # Write to release notes file
-          echo "What's New in $VERSION:" > fastlane/metadata/en-US/release_notes.txt
-          echo "" >> fastlane/metadata/en-US/release_notes.txt
-          echo "$NOTES" >> fastlane/metadata/en-US/release_notes.txt
-
-          echo "Release notes:"
+          echo "Release notes validated for version $VERSION:"
           cat fastlane/metadata/en-US/release_notes.txt
 
       - name: Prepare App Store Screenshots
