@@ -21,6 +21,8 @@ struct TaskRowView: View {
 
     @State private var isPressed = false
     @State private var isPulsing = false
+    @State private var elapsedTimeText: String = "0:00"
+    @State private var timerCancellable: Timer?
 
     // MARK: - Haptic Feedback
     private let impactLight = UIImpactFeedbackGenerator(style: .light)
@@ -300,7 +302,7 @@ struct TaskRowView: View {
     // MARK: - Metadata
 
     private var hasMetadata: Bool {
-        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil
+        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil || task.isInProgress || (task.isCompleted && task.startedAt != nil)
     }
 
     private var metadataRow: some View {
@@ -310,6 +312,36 @@ struct TaskRowView: View {
                 expandableBadge
             } else if task.hasSubtasks && !hideSubtaskBadge {
                 SubtaskProgressBadge(task: task)
+            }
+
+            // Time tracking - live timer for in-progress, duration for completed
+            if task.isInProgress {
+                HStack(spacing: 4) {
+                    Image(systemName: "stopwatch")
+                        .font(.caption2)
+                    Text(elapsedTimeText)
+                        .font(DesignSystem.Typography.caption2)
+                        .monospacedDigit()
+                }
+                .foregroundColor(Color.Lazyflow.accent)
+                .onAppear { startTimer() }
+                .onDisappear { stopTimer() }
+                .onChange(of: task.isInProgress) { _, newValue in
+                    if newValue {
+                        startTimer()
+                    } else {
+                        stopTimer()
+                    }
+                }
+            } else if task.isCompleted, let actualDuration = task.formattedActualDuration {
+                HStack(spacing: 4) {
+                    Image(systemName: "stopwatch")
+                        .font(.caption2)
+                    Text(actualDuration)
+                        .font(DesignSystem.Typography.caption2)
+                        .monospacedDigit()
+                }
+                .foregroundColor(Color.Lazyflow.textTertiary)
             }
 
             // Category
@@ -322,8 +354,8 @@ struct TaskRowView: View {
                 DueDateBadge(date: dueDate, isOverdue: task.isOverdue)
             }
 
-            // Duration
-            if let duration = task.formattedDuration {
+            // Estimated Duration (only show if not tracking time)
+            if !task.isInProgress && !task.isCompleted, let duration = task.formattedDuration {
                 HStack(spacing: 4) {
                     Image(systemName: "clock")
                         .font(.caption2)
@@ -339,6 +371,28 @@ struct TaskRowView: View {
                     .font(.system(size: 10))
                     .foregroundColor(Color.Lazyflow.textTertiary)
             }
+        }
+    }
+
+    // MARK: - Timer Methods
+
+    private func startTimer() {
+        updateElapsedTime()
+        timerCancellable = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            updateElapsedTime()
+        }
+    }
+
+    private func stopTimer() {
+        timerCancellable?.invalidate()
+        timerCancellable = nil
+    }
+
+    private func updateElapsedTime() {
+        if let elapsed = task.elapsedTime {
+            elapsedTimeText = Task.formatDurationAsTimer(elapsed)
+        } else {
+            elapsedTimeText = "0:00"
         }
     }
 

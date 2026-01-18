@@ -204,7 +204,10 @@ struct TaskDetailView: View {
                 if originalTask.isCompleted, let actualDuration = originalTask.formattedActualDuration {
                     Section("Time Spent") {
                         HStack {
-                            Label(actualDuration, systemImage: "clock.fill")
+                            Text(actualDuration)
+                                .font(DesignSystem.Typography.title3)
+                                .fontWeight(.medium)
+                                .monospacedDigit()
                                 .foregroundColor(Color.Lazyflow.textPrimary)
 
                             Spacer()

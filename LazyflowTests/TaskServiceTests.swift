@@ -753,7 +753,7 @@ final class TaskServiceTests: XCTestCase {
             startedAt: startedAt
         )
 
-        XCTAssertEqual(task.formattedActualDuration, "1h 35m")
+        XCTAssertEqual(task.formattedActualDuration, "1:35") // Timer format H:MM
     }
 
     func testFormattedActualDuration_HoursOnly() throws {
@@ -767,7 +767,7 @@ final class TaskServiceTests: XCTestCase {
             startedAt: startedAt
         )
 
-        XCTAssertEqual(task.formattedActualDuration, "2h")
+        XCTAssertEqual(task.formattedActualDuration, "2:00") // Timer format H:MM
     }
 
     func testFormattedActualDuration_MinutesOnly() throws {
@@ -781,7 +781,7 @@ final class TaskServiceTests: XCTestCase {
             startedAt: startedAt
         )
 
-        XCTAssertEqual(task.formattedActualDuration, "30m")
+        XCTAssertEqual(task.formattedActualDuration, "30:00") // Timer format M:SS
     }
 
     func testFormattedActualDuration_LessThanMinute() throws {
@@ -795,7 +795,7 @@ final class TaskServiceTests: XCTestCase {
             startedAt: startedAt
         )
 
-        XCTAssertEqual(task.formattedActualDuration, "<1m")
+        XCTAssertEqual(task.formattedActualDuration, "0:45") // Timer format M:SS
     }
 
     func testFormattedActualDuration_NilWithoutStartedAt() throws {
