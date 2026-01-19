@@ -54,6 +54,9 @@ jobs:
       - name: Update version across project
         run: ./scripts/bump-version.sh ${{ needs.release-please.outputs.version }}
 
+      - name: Generate App Store release notes from CHANGELOG
+        run: ./scripts/generate-release-notes.sh ${{ needs.release-please.outputs.version }}
+
       - name: Commit version update
         run: |
           git config user.name "github-actions[bot]"
