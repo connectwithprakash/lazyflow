@@ -14,6 +14,7 @@
 		1332E186487C65027636259E /* TaskViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55CAA946FCF526BB2AFEAE68 /* TaskViewModelTests.swift */; };
 		13E9D197333A8203696DD6EE /* DailySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5F23987492CF9DBF92700E /* DailySummaryView.swift */; };
 		1AEF9E445A28C5311FA7CB01 /* Lazyflow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 8B2FA8AC80A06886EF5CEFF0 /* Lazyflow.xcdatamodeld */; };
+		1BD7293BE9EE744157820093 /* MoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04DF22918F4E6EDC348C2ED /* MoreView.swift */; };
 		1D7E8E345D9D7605EC8B9503 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FD268CF434D2866A63A99A /* ContentView.swift */; };
 		209BA1B6F191D44710C74DDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C19F41E89A7D7A23F7315459 /* Assets.xcassets */; };
 		24B063791C443A5473445EC6 /* TaskList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E48CA4F360C3D54A5D9A74 /* TaskList.swift */; };
@@ -260,6 +261,7 @@
 		A7B1349EEB55473E75B6E480 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A87E8C6CE81AAE400BCBDCC6 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		AD3779FB89C2D0CF1362806A /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
+		B04DF22918F4E6EDC348C2ED /* MoreView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MoreView.swift; path = Lazyflow/Sources/Views/MoreView.swift; sourceTree = "<group>"; };
 		B263F189EA72FAE978FD5299 /* Priority.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Priority.swift; sourceTree = "<group>"; };
 		B946560D0CEB75826E5C410B /* AICorrection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICorrection.swift; sourceTree = "<group>"; };
 		BA9491C5FB87F5A97BA893FF /* LazyflowWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LazyflowWidget.entitlements; sourceTree = "<group>"; };
@@ -386,6 +388,7 @@
 			children = (
 				D24C309AFA3CB5EF4F9F98C0 /* SubtaskDetailView.swift */,
 				37EE9B4E1E57C27373DF4BDE /* HistoryView.swift */,
+				B04DF22918F4E6EDC348C2ED /* MoreView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -972,6 +975,7 @@
 				6189C5BE2392A2DE65F6D26E /* SubtaskDetailView.swift in Sources */,
 				F3CDE4F38C7E3602E18DAF6F /* HistoryView.swift in Sources */,
 				FB7A32A88B3679FF63D91F64 /* HistoryViewModel.swift in Sources */,
+				1BD7293BE9EE744157820093 /* MoreView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1088,6 +1092,7 @@
 				CODE_SIGN_ENTITLEMENTS = LazyflowWatch/LazyflowWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LazyflowWatch/Info.plist;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lazyflow.app;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1097,6 +1102,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchsimulator watchos";
 				TARGETED_DEVICE_FAMILY = 4;
 			};
 			name = Release;
@@ -1205,6 +1211,7 @@
 				CODE_SIGN_ENTITLEMENTS = LazyflowWatch/LazyflowWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LazyflowWatch/Info.plist;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lazyflow.app;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1214,6 +1221,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchsimulator watchos";
 				TARGETED_DEVICE_FAMILY = 4;
 			};
 			name = Debug;
