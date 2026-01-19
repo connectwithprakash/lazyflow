@@ -3,8 +3,7 @@ import Combine
 
 /// Preset date ranges for quick filtering
 enum DateRangePreset: String, CaseIterable, Identifiable {
-    case last7Days = "Last 7 Days"
-    case last30Days = "Last 30 Days"
+    case recent = "Recent"
     case thisMonth = "This Month"
     case lastMonth = "Last Month"
     case custom = "Custom"
@@ -24,6 +23,39 @@ struct TaskDateGroup: Identifiable, Equatable {
     }
 }
 
+/// Statistics for a time period
+struct PeriodStats {
+    let completedCount: Int
+    let previousCount: Int
+    let percentChange: Int
+
+    var trend: Trend {
+        if percentChange > 0 { return .up }
+        if percentChange < 0 { return .down }
+        return .neutral
+    }
+
+    enum Trend {
+        case up, down, neutral
+
+        var icon: String {
+            switch self {
+            case .up: return "arrow.up.right"
+            case .down: return "arrow.down.right"
+            case .neutral: return "minus"
+            }
+        }
+
+        var color: String {
+            switch self {
+            case .up: return "success"
+            case .down: return "error"
+            case .neutral: return "textSecondary"
+            }
+        }
+    }
+}
+
 /// ViewModel for the History view - displays completed tasks with filtering
 @MainActor
 final class HistoryViewModel: ObservableObject {
@@ -39,7 +71,7 @@ final class HistoryViewModel: ObservableObject {
     @Published var selectedListID: UUID?
     @Published var selectedPriority: Priority?
     @Published var searchQuery: String = ""
-    @Published var selectedPreset: DateRangePreset = .last7Days
+    @Published var selectedPreset: DateRangePreset = .recent
 
     // Flag to prevent date observers from resetting preset during programmatic changes
     private var isSettingPresetDates = false
@@ -64,17 +96,58 @@ final class HistoryViewModel: ObservableObject {
         taskListService.lists
     }
 
+    /// Stats for the current period
+    var periodStats: PeriodStats {
+        let calendar = Calendar.current
+        let daysBetween = calendar.dateComponents([.day], from: startDate, to: endDate).day ?? 7
+        let periodLength = max(daysBetween + 1, 1)
+
+        // Calculate previous period
+        let previousEndDate = calendar.date(byAdding: .day, value: -1, to: startDate) ?? startDate
+        let previousStartDate = calendar.date(byAdding: .day, value: -periodLength, to: previousEndDate) ?? previousEndDate
+
+        let previousStartOfDay = calendar.startOfDay(for: previousStartDate)
+        let previousEndOfDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: previousEndDate)) ?? previousEndDate
+
+        // Count tasks in previous period (without filters for fair comparison)
+        let previousCount = taskService.tasks.filter { task in
+            guard task.isCompleted, let completedAt = task.completedAt else { return false }
+            return completedAt >= previousStartOfDay && completedAt < previousEndOfDay
+        }.count
+
+        let currentCount = totalCompletedCount
+        let percentChange: Int
+        if previousCount == 0 {
+            percentChange = currentCount > 0 ? 100 : 0
+        } else {
+            percentChange = Int(((Double(currentCount) - Double(previousCount)) / Double(previousCount)) * 100)
+        }
+
+        return PeriodStats(
+            completedCount: currentCount,
+            previousCount: previousCount,
+            percentChange: percentChange
+        )
+    }
+
+    /// Formatted date range string
+    var dateRangeText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+    }
+
     // MARK: - Initialization
 
     init(taskService: TaskService = .shared, taskListService: TaskListService = .init()) {
         self.taskService = taskService
         self.taskListService = taskListService
 
-        // Default to last 7 days
+        // Default to this week (last 7 days)
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         self.endDate = today
-        self.startDate = calendar.date(byAdding: .day, value: -7, to: today) ?? today
+        self.startDate = calendar.date(byAdding: .day, value: -6, to: today) ?? today
 
         setupBindings()
     }
@@ -203,20 +276,19 @@ final class HistoryViewModel: ObservableObject {
         selectedPreset = preset
 
         switch preset {
-        case .last7Days:
-            startDate = calendar.date(byAdding: .day, value: -7, to: today) ?? today
-            endDate = today
-
-        case .last30Days:
-            startDate = calendar.date(byAdding: .day, value: -30, to: today) ?? today
+        case .recent:
+            // Last 7 days including today
+            startDate = calendar.date(byAdding: .day, value: -6, to: today) ?? today
             endDate = today
 
         case .thisMonth:
+            // From start of current month to today
             let components = calendar.dateComponents([.year, .month], from: today)
             startDate = calendar.date(from: components) ?? today
             endDate = today
 
         case .lastMonth:
+            // Full previous month
             let lastMonth = calendar.date(byAdding: .month, value: -1, to: today) ?? today
             let components = calendar.dateComponents([.year, .month], from: lastMonth)
             startDate = calendar.date(from: components) ?? lastMonth

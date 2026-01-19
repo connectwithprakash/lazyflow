@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// View showing completed tasks history with date filtering and search
+/// View showing completed tasks history with stats and filtering
 struct HistoryView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var viewModel = HistoryViewModel()
     @State private var selectedTask: Task?
     @State private var showFilters = false
+    @State private var isSearchActive = false
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         if horizontalSizeClass == .regular {
@@ -41,12 +43,26 @@ struct HistoryView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            if !isSearchActive {
+                Button {
+                    withAnimation {
+                        isSearchActive = true
+                        isSearchFocused = true
+                    }
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(Color.Lazyflow.accent)
+                }
+                .accessibilityLabel("Search")
+            }
+        }
+
         ToolbarItem(placement: .navigationBarTrailing) {
             Button {
                 showFilters = true
             } label: {
                 Image(systemName: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                    .font(.title3)
                     .foregroundColor(Color.Lazyflow.accent)
             }
             .accessibilityLabel("Filters")
@@ -57,133 +73,180 @@ struct HistoryView: View {
 
     private var historyContent: some View {
         VStack(spacing: 0) {
-            // Date range picker
-            dateRangeHeader
-
-            // Search bar
-            searchBar
-
-            if viewModel.completedTasks.isEmpty {
-                emptyStateView
-                    .frame(maxHeight: .infinity)
-            } else {
-                taskListView
+            // Search bar (shown only when active)
+            if isSearchActive {
+                searchBar
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.adaptiveBackground)
-        .refreshable {
-            viewModel.refreshTasks()
-        }
-    }
 
-    // MARK: - Date Range Header
-
-    private var dateRangeHeader: some View {
-        VStack(spacing: DesignSystem.Spacing.md) {
-            // Date pickers - centered
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                DatePicker(
-                    "From",
-                    selection: $viewModel.startDate,
-                    in: ...viewModel.endDate,
-                    displayedComponents: .date
-                )
-                .labelsHidden()
-                .datePickerStyle(.compact)
-
-                Image(systemName: "arrow.right")
-                    .font(.caption)
-                    .foregroundColor(Color.Lazyflow.textTertiary)
-
-                DatePicker(
-                    "To",
-                    selection: $viewModel.endDate,
-                    in: viewModel.startDate...,
-                    displayedComponents: .date
-                )
-                .labelsHidden()
-                .datePickerStyle(.compact)
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-
-            // Preset buttons - evenly distributed with equal widths
-            HStack(spacing: DesignSystem.Spacing.xs) {
-                ForEach(DateRangePreset.allCases.filter { $0 != .custom }) { preset in
-                    presetButton(preset)
+            Group {
+                if viewModel.completedTasks.isEmpty {
+                    VStack(spacing: 0) {
+                        statsHeader
+                        emptyStateView
+                            .frame(maxHeight: .infinity)
+                    }
+                } else {
+                    taskListView
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .padding(DesignSystem.Spacing.md)
-        .background(Color.adaptiveSurface)
-        .cornerRadius(DesignSystem.CornerRadius.large)
-        .padding(.horizontal, DesignSystem.Spacing.lg)
-        .padding(.top, DesignSystem.Spacing.sm)
+        .background(Color.adaptiveBackground)
     }
 
-    private func presetButton(_ preset: DateRangePreset) -> some View {
+    private var searchBar: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+
+                TextField("Search completed tasks...", text: $viewModel.searchQuery)
+                    .font(DesignSystem.Typography.body)
+                    .textFieldStyle(.plain)
+                    .autocorrectionDisabled()
+                    .submitLabel(.search)
+                    .focused($isSearchFocused)
+
+                if !viewModel.searchQuery.isEmpty {
+                    Button {
+                        viewModel.searchQuery = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                    .fill(Color.Lazyflow.textPrimary.opacity(0.08))
+            )
+
+            Button("Cancel") {
+                withAnimation {
+                    isSearchActive = false
+                    isSearchFocused = false
+                    viewModel.searchQuery = ""
+                }
+            }
+            .font(DesignSystem.Typography.body)
+            .foregroundColor(Color.Lazyflow.accent)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+        .padding(.vertical, DesignSystem.Spacing.sm)
+    }
+
+    // MARK: - Stats Header
+
+    private var statsHeader: some View {
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            // Main stat
+            VStack(spacing: DesignSystem.Spacing.sm) {
+                HStack(alignment: .firstTextBaseline, spacing: DesignSystem.Spacing.sm) {
+                    Text("\(viewModel.periodStats.completedCount)")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundColor(Color.Lazyflow.textPrimary)
+
+                    Text(viewModel.periodStats.completedCount == 1 ? "task" : "tasks")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                }
+
+                // Trend indicator below (always reserve space to prevent layout shift)
+                trendBadge
+                    .opacity(viewModel.periodStats.previousCount > 0 || viewModel.periodStats.completedCount > 0 ? 1 : 0)
+            }
+
+            // Date range tabs - direct tap
+            dateRangeTabs
+        }
+        .padding(DesignSystem.Spacing.lg)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var trendBadge: some View {
+        let stats = viewModel.periodStats
+        let trendColor: Color = {
+            switch stats.trend {
+            case .up: return Color.Lazyflow.success
+            case .down: return Color.Lazyflow.error
+            case .neutral: return Color.Lazyflow.textSecondary
+            }
+        }()
+
+        return HStack(spacing: DesignSystem.Spacing.xs) {
+            Image(systemName: stats.trend.icon)
+                .font(.caption)
+
+            Text("\(abs(stats.percentChange))%")
+                .font(DesignSystem.Typography.caption1)
+                .fontWeight(.medium)
+
+            Text("vs last \(periodName)")
+                .font(DesignSystem.Typography.caption1)
+                .foregroundColor(Color.Lazyflow.textTertiary)
+        }
+        .foregroundColor(trendColor)
+    }
+
+    private var periodName: String {
+        switch viewModel.selectedPreset {
+        case .recent: return "week"
+        case .thisMonth: return "month"
+        case .lastMonth: return "month"
+        case .custom: return "period"
+        }
+    }
+
+    private var dateRangeTabs: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            ForEach(DateRangePreset.allCases.filter { $0 != .custom }) { preset in
+                dateRangeTab(preset)
+            }
+        }
+    }
+
+    private func dateRangeTab(_ preset: DateRangePreset) -> some View {
         let isSelected = viewModel.selectedPreset == preset
+
         return Button {
             viewModel.setPresetDateRange(preset)
         } label: {
             Text(preset.rawValue)
-                .font(DesignSystem.Typography.caption1)
+                .font(DesignSystem.Typography.subheadline)
                 .fontWeight(isSelected ? .semibold : .medium)
                 .foregroundColor(isSelected ? .white : Color.Lazyflow.accent)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .padding(.horizontal, DesignSystem.Spacing.sm)
+                .padding(.horizontal, DesignSystem.Spacing.md)
                 .padding(.vertical, DesignSystem.Spacing.sm)
                 .frame(maxWidth: .infinity)
                 .background(
                     isSelected
                         ? Color.Lazyflow.accent
-                        : Color.Lazyflow.accent.opacity(0.15)
+                        : Color.Lazyflow.accent.opacity(0.1)
                 )
                 .cornerRadius(DesignSystem.CornerRadius.medium)
         }
-    }
-
-    // MARK: - Search Bar
-
-    private var searchBar: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(Color.Lazyflow.textTertiary)
-
-            TextField("Search", text: $viewModel.searchQuery)
-                .font(DesignSystem.Typography.body)
-                .textFieldStyle(.plain)
-
-            if !viewModel.searchQuery.isEmpty {
-                Button {
-                    viewModel.searchQuery = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(Color.Lazyflow.textTertiary)
-                }
-            }
-
-            // Count badge
-            Text("\(viewModel.totalCompletedCount) found")
-                .font(DesignSystem.Typography.caption1)
-                .foregroundColor(Color.Lazyflow.textSecondary)
-                .padding(.horizontal, DesignSystem.Spacing.sm)
-                .padding(.vertical, DesignSystem.Spacing.xs)
-                .background(Color.Lazyflow.accent.opacity(0.1))
-                .cornerRadius(DesignSystem.CornerRadius.small)
-        }
-        .padding(DesignSystem.Spacing.md)
-        .background(Color.adaptiveSurface)
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-        .padding(.horizontal, DesignSystem.Spacing.lg)
-        .padding(.vertical, DesignSystem.Spacing.sm)
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
     }
 
     // MARK: - Task List
 
     private var taskListView: some View {
         List {
+            // Stats header as first section
+            Section {
+                statsHeader
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+            .listRowSeparator(.hidden)
+
+            // Task groups
             ForEach(viewModel.groupedTasks) { group in
                 Section {
                     ForEach(group.tasks) { task in
@@ -213,31 +276,34 @@ struct HistoryView: View {
 
     private func dateSectionHeader(date: Date, taskCount: Int) -> some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(date.shortWeekdayName.uppercased())
-                    .font(DesignSystem.Typography.caption2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.Lazyflow.accent)
+            Text(formatSectionDate(date))
+                .font(DesignSystem.Typography.headline)
+                .foregroundColor(Color.Lazyflow.textPrimary)
 
-                Text("\(Calendar.current.component(.day, from: date))")
-                    .font(DesignSystem.Typography.title2)
-                    .foregroundColor(Color.Lazyflow.textPrimary)
-            }
-            .frame(width: 44)
+            Text("·")
+                .font(DesignSystem.Typography.caption1)
+                .foregroundColor(Color.Lazyflow.textTertiary)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(date.relativeFormatted)
-                    .font(DesignSystem.Typography.headline)
-                    .foregroundColor(Color.Lazyflow.textPrimary)
-
-                Text("\(taskCount) task\(taskCount == 1 ? "" : "s") completed")
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-            }
+            Text("\(taskCount)")
+                .font(DesignSystem.Typography.subheadline)
+                .foregroundColor(Color.Lazyflow.textSecondary)
 
             Spacer()
         }
-        .padding(.vertical, DesignSystem.Spacing.xs)
+        .padding(.vertical, DesignSystem.Spacing.sm)
+    }
+
+    private func formatSectionDate(_ date: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) {
+            return "Today"
+        } else if calendar.isDateInYesterday(date) {
+            return "Yesterday"
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "EEEE, MMM d"
+            return formatter.string(from: date)
+        }
     }
 
     // MARK: - Empty State
@@ -265,14 +331,13 @@ struct HistoryTaskRow: View {
             HStack(spacing: DesignSystem.Spacing.md) {
                 // Completed checkmark
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.title2)
+                    .font(.title3)
                     .foregroundColor(Color.Lazyflow.success)
 
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                     Text(task.title)
                         .font(DesignSystem.Typography.body)
                         .foregroundColor(Color.Lazyflow.textPrimary)
-                        .strikethrough(true, color: Color.Lazyflow.textTertiary)
 
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         if let completedAt = task.completedAt {
@@ -331,6 +396,23 @@ struct HistoryFiltersSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Date Range Section
+                Section("Date Range") {
+                    DatePicker(
+                        "From",
+                        selection: $viewModel.startDate,
+                        in: ...viewModel.endDate,
+                        displayedComponents: .date
+                    )
+
+                    DatePicker(
+                        "To",
+                        selection: $viewModel.endDate,
+                        in: viewModel.startDate...,
+                        displayedComponents: .date
+                    )
+                }
+
                 // Priority Filter
                 Section("Priority") {
                     Picker("Priority", selection: $viewModel.selectedPriority) {
@@ -375,7 +457,7 @@ struct HistoryFiltersSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
     }
 }
 

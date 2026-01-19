@@ -40,9 +40,10 @@ final class HistoryViewModelTests: XCTestCase {
     func testInitialDateRange_IsLast7Days() {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: today)!
+        // Last 7 days including today = today + 6 previous days
+        let sixDaysAgo = calendar.date(byAdding: .day, value: -6, to: today)!
 
-        XCTAssertEqual(calendar.startOfDay(for: viewModel.startDate), sevenDaysAgo)
+        XCTAssertEqual(calendar.startOfDay(for: viewModel.startDate), sixDaysAgo)
         XCTAssertEqual(calendar.startOfDay(for: viewModel.endDate), today)
     }
 
@@ -199,37 +200,29 @@ final class HistoryViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.completedTasks.count, 1)
     }
 
-    func testPresetDateRange_Last7Days() {
+    func testPresetDateRange_Recent() {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 
-        viewModel.setPresetDateRange(.last7Days)
+        viewModel.setPresetDateRange(.recent)
 
-        let expectedStart = calendar.date(byAdding: .day, value: -7, to: today)!
-        XCTAssertEqual(calendar.startOfDay(for: viewModel.startDate), expectedStart)
-        XCTAssertEqual(calendar.startOfDay(for: viewModel.endDate), today)
-    }
-
-    func testPresetDateRange_Last30Days() {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-
-        viewModel.setPresetDateRange(.last30Days)
-
-        let expectedStart = calendar.date(byAdding: .day, value: -30, to: today)!
+        // This week = last 7 days including today (so -6 days from today)
+        let expectedStart = calendar.date(byAdding: .day, value: -6, to: today)!
         XCTAssertEqual(calendar.startOfDay(for: viewModel.startDate), expectedStart)
         XCTAssertEqual(calendar.startOfDay(for: viewModel.endDate), today)
     }
 
     func testPresetDateRange_ThisMonth() {
         let calendar = Calendar.current
-        let today = Date()
+        let today = calendar.startOfDay(for: Date())
 
         viewModel.setPresetDateRange(.thisMonth)
 
+        // This month = from start of current month to today
         let components = calendar.dateComponents([.year, .month], from: today)
         let expectedStart = calendar.date(from: components)!
         XCTAssertEqual(calendar.startOfDay(for: viewModel.startDate), expectedStart)
+        XCTAssertEqual(calendar.startOfDay(for: viewModel.endDate), today)
     }
 
     // MARK: - Statistics Tests
