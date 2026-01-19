@@ -18,6 +18,7 @@ struct ContentView: View {
         case today = "Today"
         case calendar = "Calendar"
         case upcoming = "Upcoming"
+        case history = "History"
         case lists = "Lists"
         case settings = "Settings"
 
@@ -28,6 +29,7 @@ struct ContentView: View {
             case .today: return "star.fill"
             case .calendar: return "calendar"
             case .upcoming: return "calendar.badge.clock"
+            case .history: return "clock.arrow.circlepath"
             case .lists: return "folder.fill"
             case .settings: return "gear"
             }
@@ -65,6 +67,7 @@ struct ContentView: View {
                 case "today": selectedTab = .today
                 case "calendar": selectedTab = .calendar
                 case "upcoming": selectedTab = .upcoming
+                case "history": selectedTab = .history
                 case "lists": selectedTab = .lists
                 case "settings": selectedTab = .settings
                 default: break
@@ -133,6 +136,7 @@ struct ContentView: View {
                 sidebarRow(for: .today)
                 sidebarRow(for: .calendar)
                 sidebarRow(for: .upcoming)
+                sidebarRow(for: .history)
             }
 
             Section("Organize") {
@@ -178,6 +182,8 @@ struct ContentView: View {
             CalendarView()
         case .upcoming:
             UpcomingView()
+        case .history:
+            HistoryView()
         case .lists:
             ListsView()
         case .settings:
@@ -210,6 +216,12 @@ struct ContentView: View {
                 }
                 .tag(Tab.upcoming)
 
+            HistoryView()
+                .tabItem {
+                    Label(Tab.history.rawValue, systemImage: Tab.history.icon)
+                }
+                .tag(Tab.history)
+
             ListsView()
                 .tabItem {
                     Label(Tab.lists.rawValue, systemImage: Tab.lists.icon)
@@ -236,6 +248,8 @@ struct ContentView: View {
             selectedTab = .calendar
         case "upcoming":
             selectedTab = .upcoming
+        case "history":
+            selectedTab = .history
         case "lists":
             selectedTab = .lists
         case "settings":

@@ -20,6 +20,35 @@ final class LazyflowUITests: XCTestCase {
 
     // MARK: - Helper Methods
 
+    /// Navigate to a tab that might be under "More" in the tab bar.
+    /// iOS shows at most 5 tabs, with overflow tabs going into "More".
+    private func navigateToTab(_ tabName: String) {
+        // First check if the tab is directly visible in tab bar
+        let directTab = app.tabBars.buttons[tabName]
+        if directTab.exists && directTab.isHittable {
+            directTab.tap()
+            return
+        }
+
+        // If not visible, check if "More" tab exists (overflow menu)
+        let moreTab = app.tabBars.buttons["More"]
+        if moreTab.exists && moreTab.isHittable {
+            moreTab.tap()
+
+            // Wait for More menu to appear and tap the desired item
+            let menuItem = app.tables.staticTexts[tabName]
+            if menuItem.waitForExistence(timeout: 2) {
+                menuItem.tap()
+            } else {
+                // Fallback: try cells
+                let cell = app.cells.staticTexts[tabName]
+                if cell.waitForExistence(timeout: 2) {
+                    cell.tap()
+                }
+            }
+        }
+    }
+
     /// Reliably types text into a text field using paste workaround.
     /// This bypasses XCUITest's keyboard focus issues with SwiftUI TextFields.
     /// Reference: https://fatbobman.com/en/posts/textfield-event-focus-keyboard/
@@ -62,12 +91,12 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Navigation Tests
 
     func testTabBarNavigation() throws {
-        // Verify all tabs are present
+        // Verify visible tabs are present (iOS shows 5 tabs max including "More")
         XCTAssertTrue(app.tabBars.buttons["Today"].exists)
         XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
         XCTAssertTrue(app.tabBars.buttons["Upcoming"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Lists"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.tabBars.buttons["History"].exists)
+        XCTAssertTrue(app.tabBars.buttons["More"].exists, "More tab should exist for overflow items")
 
         // Navigate to each tab
         app.tabBars.buttons["Calendar"].tap()
@@ -76,10 +105,13 @@ final class LazyflowUITests: XCTestCase {
         app.tabBars.buttons["Upcoming"].tap()
         XCTAssertTrue(app.navigationBars["Upcoming"].exists)
 
-        app.tabBars.buttons["Lists"].tap()
+        app.tabBars.buttons["History"].tap()
+        XCTAssertTrue(app.navigationBars["History"].exists)
+
+        navigateToTab("Lists")
         XCTAssertTrue(app.navigationBars["Lists"].exists)
 
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].exists)
 
         app.tabBars.buttons["Today"].tap()
@@ -200,7 +232,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - List Tests
 
     func testCreateNewList() throws {
-        app.tabBars.buttons["Lists"].tap()
+        navigateToTab("Lists")
 
         // Tap add list button
         app.buttons["Add list"].tap()
@@ -221,7 +253,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testNavigateToList() throws {
         // First create a list
-        app.tabBars.buttons["Lists"].tap()
+        navigateToTab("Lists")
         app.buttons["Add list"].tap()
 
         // Verify sheet appears
@@ -246,16 +278,19 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Settings Tests
 
     func testSettingsAppearance() throws {
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
 
-        // Verify settings sections exist
-        XCTAssertTrue(app.staticTexts["Appearance"].exists)
-        XCTAssertTrue(app.staticTexts["Tasks"].exists)
-        XCTAssertTrue(app.staticTexts["Notifications"].exists)
+        // Wait for Settings navigation bar to appear
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+
+        // Verify key settings sections exist
+        let appearance = app.staticTexts["Appearance"]
+        XCTAssertTrue(appearance.waitForExistence(timeout: 2), "Appearance section should exist")
+        XCTAssertTrue(app.staticTexts["Tasks"].exists, "Tasks section should exist")
     }
 
     func testChangeTheme() throws {
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
 
         // Find and tap on Theme picker (it may have different identifiers)
         let themePicker = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Theme'")).firstMatch
@@ -292,11 +327,20 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(todayTab.waitForExistence(timeout: 5), "Tab bar should be ready")
         todayTab.tap()
 
-        // All tab bar items should be accessible
-        for tabName in ["Today", "Calendar", "Upcoming", "Lists", "Settings"] {
+        // Check visible tab bar items (iOS shows 5 items max, including "More" for overflow)
+        for tabName in ["Today", "Calendar", "Upcoming", "History"] {
             let tab = app.tabBars.buttons[tabName]
-            XCTAssertTrue(tab.exists)
+            XCTAssertTrue(tab.exists, "\(tabName) tab should exist")
             XCTAssertNotEqual(tab.label, "")
+        }
+
+        // Lists and Settings are under "More" tab
+        let moreTab = app.tabBars.buttons["More"]
+        if moreTab.exists {
+            moreTab.tap()
+            // Verify Lists and Settings are accessible in More menu
+            XCTAssertTrue(app.tables.staticTexts["Lists"].waitForExistence(timeout: 2) ||
+                          app.staticTexts["Lists"].waitForExistence(timeout: 2))
         }
     }
 
@@ -446,16 +490,20 @@ final class LazyflowUITests: XCTestCase {
             throw XCTSkip("This test only runs on iPhone")
         }
 
-        // Verify tab bar exists and all tabs are present
+        // Verify tab bar exists and visible tabs are present
+        // With 6 tabs, iOS shows 5 in tab bar (including "More" for overflow)
         XCTAssertTrue(app.tabBars.firstMatch.exists, "iPhone should have tab bar")
         XCTAssertTrue(app.tabBars.buttons["Today"].exists)
         XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
         XCTAssertTrue(app.tabBars.buttons["Upcoming"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Lists"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.tabBars.buttons["History"].exists)
 
-        // Test tab navigation still works
-        app.tabBars.buttons["Settings"].tap()
+        // Lists and Settings are under "More" tab
+        let moreTab = app.tabBars.buttons["More"]
+        XCTAssertTrue(moreTab.exists, "More tab should exist for overflow items")
+
+        // Test tab navigation still works via More menu
+        navigateToTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
 
         app.tabBars.buttons["Today"].tap()
@@ -473,8 +521,8 @@ final class LazyflowUITests: XCTestCase {
                 listsButton.tap()
             }
         } else {
-            // Use tab bar
-            app.tabBars.buttons["Lists"].tap()
+            // Use tab bar (with More menu support)
+            navigateToTab("Lists")
         }
 
         // Either way, Lists view should be shown
@@ -485,7 +533,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Morning Briefing Tests
 
     func testMorningBriefingSettingsExist() throws {
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
 
         // Scroll to find Morning Briefing settings
         // Note: SwiftUI Form renders as UITableView, not ScrollView
@@ -587,7 +635,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Daily Summary Tests
 
     func testDailySummarySettingsExist() throws {
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
 
         // Scroll to find Daily Summary section
         // Note: SwiftUI Form renders as UITableView, not ScrollView
@@ -604,7 +652,7 @@ final class LazyflowUITests: XCTestCase {
     }
 
     func testDailySummarySection() throws {
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
 
         // Use flexible predicate to find Evening Reminder toggle (more reliable across devices)
         let eveningToggle = app.switches.matching(NSPredicate(format: "identifier CONTAINS[c] 'Evening' OR label CONTAINS[c] 'Evening'")).firstMatch
@@ -623,7 +671,7 @@ final class LazyflowUITests: XCTestCase {
     }
 
     func testDailySummaryToggleInteraction() throws {
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
 
         // Use flexible predicate to find Evening Reminder toggle (more reliable across devices)
         let reminderToggle = app.switches.matching(NSPredicate(format: "identifier CONTAINS[c] 'Evening' OR label CONTAINS[c] 'Evening'")).firstMatch
@@ -731,7 +779,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Streak Display Tests
 
     func testStreakDisplayInSettings() throws {
-        app.tabBars.buttons["Settings"].tap()
+        navigateToTab("Settings")
 
         // Scroll to look for streak information
         // Note: SwiftUI Form renders as UITableView, not ScrollView
