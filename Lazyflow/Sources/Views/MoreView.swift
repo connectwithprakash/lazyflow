@@ -25,6 +25,7 @@ struct MoreView: View {
                             subtitle: "Organize your tasks"
                         )
                     }
+                    .accessibilityIdentifier("ListsCard")
 
                     // MARK: - Insights Section
                     sectionHeader("Insights")
@@ -72,6 +73,7 @@ struct MoreView: View {
                             subtitle: "Customize your experience"
                         )
                     }
+                    .accessibilityIdentifier("SettingsCard")
 
                     Spacer(minLength: DesignSystem.Spacing.xxl)
 

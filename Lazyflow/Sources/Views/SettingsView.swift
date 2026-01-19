@@ -14,25 +14,15 @@ struct SettingsView: View {
     @State private var showAISettings = false
 
     var body: some View {
-        if horizontalSizeClass == .regular {
-            // iPad: No NavigationStack (provided by split view), centered form
-            settingsForm
-                .frame(maxWidth: 700)
-                .frame(maxWidth: .infinity)
-                .navigationTitle("Settings")
-                .sheet(isPresented: $showAbout) { AboutView() }
-                .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
-                .sheet(isPresented: $showAISettings) { AISettingsView() }
-        } else {
-            // iPhone: Full NavigationStack
-            NavigationStack {
-                settingsForm
-                    .navigationTitle("Settings")
-                    .sheet(isPresented: $showAbout) { AboutView() }
-                    .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
-                    .sheet(isPresented: $showAISettings) { AISettingsView() }
-            }
-        }
+        // No NavigationStack - parent provides navigation context
+        // iPad: NavigationSplitView, iPhone: MoreView's NavigationStack
+        settingsForm
+            .frame(maxWidth: horizontalSizeClass == .regular ? 700 : .infinity)
+            .frame(maxWidth: .infinity)
+            .navigationTitle("Settings")
+            .sheet(isPresented: $showAbout) { AboutView() }
+            .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
+            .sheet(isPresented: $showAISettings) { AISettingsView() }
     }
 
     private var settingsForm: some View {

@@ -20,32 +20,50 @@ final class LazyflowUITests: XCTestCase {
 
     // MARK: - Helper Methods
 
-    /// Navigate to a tab that might be under "More" in the tab bar.
-    /// iOS shows at most 5 tabs, with overflow tabs going into "More".
+    /// Navigate to a tab or a view accessible via the More hub.
+    /// Direct tabs: Today, Calendar, Upcoming, History, More
+    /// Via More hub: Lists, Settings
     private func navigateToTab(_ tabName: String) {
-        // First check if the tab is directly visible in tab bar
-        let directTab = app.tabBars.buttons[tabName]
-        if directTab.exists && directTab.isHittable {
-            directTab.tap()
+        // Direct tabs in the tab bar
+        let directTabs = ["Today", "Calendar", "Upcoming", "History", "More"]
+
+        if directTabs.contains(tabName) {
+            let directTab = app.tabBars.buttons[tabName]
+            if directTab.exists && directTab.isHittable {
+                directTab.tap()
+            }
             return
         }
 
-        // If not visible, check if "More" tab exists (overflow menu)
+        // Lists and Settings are accessed via More hub
         let moreTab = app.tabBars.buttons["More"]
-        if moreTab.exists && moreTab.isHittable {
-            moreTab.tap()
+        guard moreTab.exists && moreTab.isHittable else { return }
+        moreTab.tap()
 
-            // Wait for More menu to appear and tap the desired item
-            let menuItem = app.tables.staticTexts[tabName]
-            if menuItem.waitForExistence(timeout: 2) {
-                menuItem.tap()
-            } else {
-                // Fallback: try cells
-                let cell = app.cells.staticTexts[tabName]
-                if cell.waitForExistence(timeout: 2) {
-                    cell.tap()
-                }
+        // Wait for More view to load
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Find the card text - may need to scroll
+        let cardText = app.staticTexts[tabName]
+
+        // Try to find and tap card, scrolling if necessary
+        for _ in 0..<3 {
+            if cardText.waitForExistence(timeout: 1) && cardText.isHittable {
+                // Tap via coordinate to ensure it triggers NavigationLink
+                let coordinate = cardText.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                coordinate.tap()
+                Thread.sleep(forTimeInterval: 0.5)
+                return
             }
+
+            // Scroll down to find the card
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        // Final attempt after scrolling
+        if cardText.exists {
+            cardText.tap()
         }
     }
 
