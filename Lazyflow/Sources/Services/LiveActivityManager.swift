@@ -204,7 +204,7 @@ final class LiveActivityManager: ObservableObject {
                 nextTask: nextTask?.title,
                 nextPriority: nextTask?.priority.rawValue ?? 0,
                 inProgressTask: inProgressTask?.title,
-                inProgressStartedAt: inProgressTask?.updatedAt,  // Use updatedAt as proxy for when task went in-progress
+                inProgressStartedAt: inProgressTask?.startedAt,
                 inProgressPriority: inProgressTask?.priority.rawValue ?? 0,
                 inProgressEstimatedDuration: inProgressTask?.estimatedDuration
             )

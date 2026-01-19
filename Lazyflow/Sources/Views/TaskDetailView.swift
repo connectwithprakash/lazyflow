@@ -200,6 +200,27 @@ struct TaskDetailView: View {
                     }
                 }
 
+                // Time Tracking (for completed tasks with startedAt)
+                if originalTask.isCompleted, let actualDuration = originalTask.formattedActualDuration {
+                    Section("Time Spent") {
+                        HStack {
+                            Text(actualDuration)
+                                .font(DesignSystem.Typography.title3)
+                                .fontWeight(.medium)
+                                .monospacedDigit()
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+
+                            Spacer()
+
+                            if let estimated = originalTask.formattedDuration {
+                                Text("Est: \(estimated)")
+                                    .font(DesignSystem.Typography.subheadline)
+                                    .foregroundColor(Color.Lazyflow.textSecondary)
+                            }
+                        }
+                    }
+                }
+
                 // Recurring
                 Section {
                     Toggle("Repeat", isOn: $viewModel.isRecurring.animation())

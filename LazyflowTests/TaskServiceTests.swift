@@ -535,7 +535,7 @@ final class TaskServiceTests: XCTestCase {
         XCTAssertNil(subtask)
     }
 
-    // MARK: - Undo Tests
+// MARK: - Undo Tests
 
     func testUndoDeleteTaskWithSubtasks() throws {
         // Create a parent task with subtasks
@@ -640,5 +640,192 @@ final class TaskServiceTests: XCTestCase {
         XCTAssertEqual(subtasks.count, 2, "Should have 2 subtasks after undo")
         XCTAssertTrue(subtasks.contains { $0.title == "Subtask 1" }, "Subtask 1 should be restored")
         XCTAssertTrue(subtasks.contains { $0.title == "Subtask 2" }, "Subtask 2 should be restored")
+    }
+
+    // MARK: - Time Tracking (startedAt) Tests
+
+    func testStartWorking_SetsStartedAt() throws {
+        let task = taskService.createTask(title: "Task to start")
+        XCTAssertNil(task.startedAt)
+
+        taskService.startWorking(on: task)
+
+        let updatedTask = taskService.tasks.first { $0.id == task.id }
+        XCTAssertNotNil(updatedTask?.startedAt)
+        XCTAssertTrue(updatedTask?.isInProgress ?? false)
+    }
+
+    func testStopWorking_PreservesStartedAt() throws {
+        let task = taskService.createTask(title: "Task to stop")
+        taskService.startWorking(on: task)
+
+        let inProgressTask = taskService.tasks.first { $0.id == task.id }!
+        let originalStartedAt = inProgressTask.startedAt
+
+        taskService.stopWorking(on: inProgressTask)
+
+        let stoppedTask = taskService.tasks.first { $0.id == task.id }
+        XCTAssertFalse(stoppedTask?.isInProgress ?? true)
+        XCTAssertEqual(stoppedTask?.startedAt, originalStartedAt)
+    }
+
+    func testResumeWorking_PreservesOriginalStartedAt() throws {
+        let task = taskService.createTask(title: "Task to resume")
+
+        // Start working
+        taskService.startWorking(on: task)
+        let firstStart = taskService.tasks.first { $0.id == task.id }!
+        let originalStartedAt = firstStart.startedAt
+
+        // Stop working
+        taskService.stopWorking(on: firstStart)
+
+        // Wait briefly to ensure time difference
+        Thread.sleep(forTimeInterval: 0.1)
+
+        // Resume working
+        let stoppedTask = taskService.tasks.first { $0.id == task.id }!
+        taskService.startWorking(on: stoppedTask)
+
+        let resumedTask = taskService.tasks.first { $0.id == task.id }
+        // Original startedAt should be preserved (not updated to new time)
+        XCTAssertEqual(resumedTask?.startedAt, originalStartedAt)
+        XCTAssertTrue(resumedTask?.isInProgress ?? false)
+    }
+
+    func testCompleteTask_PreservesStartedAt() throws {
+        let task = taskService.createTask(title: "Task to complete")
+        taskService.startWorking(on: task)
+
+        let inProgressTask = taskService.tasks.first { $0.id == task.id }!
+        let originalStartedAt = inProgressTask.startedAt
+
+        taskService.toggleTaskCompletion(inProgressTask)
+
+        let completedTask = taskService.tasks.first { $0.id == task.id }
+        XCTAssertTrue(completedTask?.isCompleted ?? false)
+        XCTAssertEqual(completedTask?.startedAt, originalStartedAt)
+        XCTAssertNotNil(completedTask?.completedAt)
+    }
+
+    func testUncompleteTask_ClearsStartedAt() throws {
+        let task = taskService.createTask(title: "Task to uncomplete")
+        taskService.startWorking(on: task)
+
+        let inProgressTask = taskService.tasks.first { $0.id == task.id }!
+        taskService.toggleTaskCompletion(inProgressTask)
+
+        let completedTask = taskService.tasks.first { $0.id == task.id }!
+        XCTAssertNotNil(completedTask.startedAt)
+
+        // Uncomplete the task
+        taskService.toggleTaskCompletion(completedTask)
+
+        let uncompletedTask = taskService.tasks.first { $0.id == task.id }
+        XCTAssertFalse(uncompletedTask?.isCompleted ?? true)
+        XCTAssertNil(uncompletedTask?.startedAt)
+        XCTAssertNil(uncompletedTask?.completedAt)
+    }
+
+    func testActualDuration_CalculatesCorrectly() throws {
+        // Create a task with known startedAt and completedAt
+        let startedAt = Date()
+        let completedAt = startedAt.addingTimeInterval(3600) // 1 hour later
+
+        let task = Task(
+            title: "Timed Task",
+            completedAt: completedAt,
+            startedAt: startedAt
+        )
+
+        XCTAssertNotNil(task.actualDuration)
+        XCTAssertEqual(task.actualDuration ?? 0, 3600, accuracy: 1)
+    }
+
+    func testFormattedActualDuration_HoursAndMinutes() throws {
+        let startedAt = Date()
+        let completedAt = startedAt.addingTimeInterval(5700) // 1h 35m
+
+        let task = Task(
+            title: "Long Task",
+            status: .completed,
+            completedAt: completedAt,
+            startedAt: startedAt
+        )
+
+        XCTAssertEqual(task.formattedActualDuration, "1:35") // Timer format H:MM
+    }
+
+    func testFormattedActualDuration_HoursOnly() throws {
+        let startedAt = Date()
+        let completedAt = startedAt.addingTimeInterval(7200) // 2h
+
+        let task = Task(
+            title: "Two Hour Task",
+            status: .completed,
+            completedAt: completedAt,
+            startedAt: startedAt
+        )
+
+        XCTAssertEqual(task.formattedActualDuration, "2:00") // Timer format H:MM
+    }
+
+    func testFormattedActualDuration_MinutesOnly() throws {
+        let startedAt = Date()
+        let completedAt = startedAt.addingTimeInterval(1800) // 30m
+
+        let task = Task(
+            title: "Short Task",
+            status: .completed,
+            completedAt: completedAt,
+            startedAt: startedAt
+        )
+
+        XCTAssertEqual(task.formattedActualDuration, "30:00") // Timer format M:SS
+    }
+
+    func testFormattedActualDuration_LessThanMinute() throws {
+        let startedAt = Date()
+        let completedAt = startedAt.addingTimeInterval(45) // 45 seconds
+
+        let task = Task(
+            title: "Quick Task",
+            status: .completed,
+            completedAt: completedAt,
+            startedAt: startedAt
+        )
+
+        XCTAssertEqual(task.formattedActualDuration, "0:45") // Timer format M:SS
+    }
+
+    func testFormattedActualDuration_NilWithoutStartedAt() throws {
+        let task = Task(
+            title: "Task without tracking",
+            status: .completed,
+            completedAt: Date()
+        )
+
+        XCTAssertNil(task.actualDuration)
+        XCTAssertNil(task.formattedActualDuration)
+    }
+
+    func testStartWorkingOnNewTask_StopsCurrentInProgress() throws {
+        let task1 = taskService.createTask(title: "Task 1")
+        let task2 = taskService.createTask(title: "Task 2")
+
+        taskService.startWorking(on: task1)
+
+        let task1InProgress = taskService.tasks.first { $0.id == task1.id }
+        XCTAssertTrue(task1InProgress?.isInProgress ?? false)
+
+        taskService.startWorking(on: task2)
+
+        let task1After = taskService.tasks.first { $0.id == task1.id }
+        let task2After = taskService.tasks.first { $0.id == task2.id }
+
+        XCTAssertFalse(task1After?.isInProgress ?? true)
+        XCTAssertTrue(task2After?.isInProgress ?? false)
+        // Task 1's startedAt should be preserved
+        XCTAssertNotNil(task1After?.startedAt)
     }
 }
