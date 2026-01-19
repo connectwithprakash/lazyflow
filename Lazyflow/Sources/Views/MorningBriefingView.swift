@@ -440,7 +440,7 @@ struct MorningBriefingView: View {
 
     private func refreshBriefing() async {
         isLoading = true
-        briefing = await summaryService.generateMorningBriefing()
+        briefing = await summaryService.forceRefreshMorningBriefing()
         isLoading = false
     }
 }

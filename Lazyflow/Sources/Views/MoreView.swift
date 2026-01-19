@@ -89,6 +89,10 @@ struct MoreView: View {
             .sheet(isPresented: $showDailySummary) {
                 DailySummaryView()
             }
+            .onAppear {
+                // Preload insights data in background so it's ready when user taps
+                summaryService.preloadInsightsData()
+            }
         }
     }
 
