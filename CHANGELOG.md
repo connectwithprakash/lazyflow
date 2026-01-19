@@ -5,6 +5,13 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1](https://github.com/connectwithprakash/lazyflow/compare/v1.3.0...v1.3.1) (2026-01-19)
+
+
+### Bug Fixes
+
+* correct image paths for History in design system ([0a23188](https://github.com/connectwithprakash/lazyflow/commit/0a23188e2e8567dece8c40015c9ad2a3b8c32848))
+
 ## [1.3.0](https://github.com/connectwithprakash/lazyflow/compare/v1.2.2...v1.3.0) (2026-01-19)
 
 
