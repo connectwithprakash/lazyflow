@@ -1,7 +1,7 @@
 [build]
   publish = "docs/site/"
-  # Only build when docs/site changes on main branch (typically release merges)
-  ignore = "[ \"$BRANCH\" != \"main\" ] || git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- docs/site/"
+  # Only build on main branch - skip all other branches to save build minutes
+  ignore = "[ \"$BRANCH\" != \"main\" ]"
 
 [build.processing]
   skip_processing = true

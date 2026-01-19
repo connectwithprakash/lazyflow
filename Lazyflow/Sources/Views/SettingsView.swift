@@ -12,34 +12,17 @@ struct SettingsView: View {
     @State private var showAbout = false
     @State private var showNotificationSettings = false
     @State private var showAISettings = false
-    @State private var showDailySummary = false
-    @State private var showMorningBriefing = false
-    @StateObject private var summaryService = DailySummaryService.shared
 
     var body: some View {
-        if horizontalSizeClass == .regular {
-            // iPad: No NavigationStack (provided by split view), centered form
-            settingsForm
-                .frame(maxWidth: 700)
-                .frame(maxWidth: .infinity)
-                .navigationTitle("Settings")
-                .sheet(isPresented: $showAbout) { AboutView() }
-                .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
-                .sheet(isPresented: $showAISettings) { AISettingsView() }
-                .sheet(isPresented: $showDailySummary) { DailySummaryView() }
-                .sheet(isPresented: $showMorningBriefing) { MorningBriefingView() }
-        } else {
-            // iPhone: Full NavigationStack
-            NavigationStack {
-                settingsForm
-                    .navigationTitle("Settings")
-                    .sheet(isPresented: $showAbout) { AboutView() }
-                    .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
-                    .sheet(isPresented: $showAISettings) { AISettingsView() }
-                    .sheet(isPresented: $showDailySummary) { DailySummaryView() }
-                    .sheet(isPresented: $showMorningBriefing) { MorningBriefingView() }
-            }
-        }
+        // No NavigationStack - parent provides navigation context
+        // iPad: NavigationSplitView, iPhone: MoreView's NavigationStack
+        settingsForm
+            .frame(maxWidth: horizontalSizeClass == .regular ? 700 : .infinity)
+            .frame(maxWidth: .infinity)
+            .navigationTitle("Settings")
+            .sheet(isPresented: $showAbout) { AboutView() }
+            .sheet(isPresented: $showNotificationSettings) { NotificationSettingsView() }
+            .sheet(isPresented: $showAISettings) { AISettingsView() }
     }
 
     private var settingsForm: some View {
@@ -80,52 +63,17 @@ struct SettingsView: View {
                     }
                 }
 
-                // Morning Briefing
+                // Morning Briefing Notifications
                 Section {
-                    Button {
-                        showMorningBriefing = true
-                    } label: {
-                        HStack {
-                            Label("View Morning Briefing", systemImage: "sun.max.fill")
-                                .foregroundColor(Color.Lazyflow.textPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(Color.Lazyflow.textTertiary)
-                        }
-                    }
-
                     MorningBriefingNotificationToggle()
                 } header: {
                     Text("Morning Briefing")
                 } footer: {
-                    Text("Start your day with yesterday's recap, today's priorities, and weekly progress. The prompt card appears in Today view between 5 AM and 12 PM.")
+                    Text("Get a notification to view your morning briefing. Access it anytime from More > Morning Briefing.")
                 }
 
-                // Daily Summary
+                // Daily Summary Notifications
                 Section {
-                    Button {
-                        showDailySummary = true
-                    } label: {
-                        HStack {
-                            Label("View Today's Summary", systemImage: "chart.bar.doc.horizontal")
-                                .foregroundColor(Color.Lazyflow.textPrimary)
-                            Spacer()
-                            if summaryService.streakData.currentStreak > 0 {
-                                HStack(spacing: DesignSystem.Spacing.xs) {
-                                    Image(systemName: "flame.fill")
-                                        .foregroundColor(.orange)
-                                    Text("\(summaryService.streakData.currentStreak)")
-                                        .font(DesignSystem.Typography.footnote)
-                                        .foregroundColor(Color.Lazyflow.textSecondary)
-                                }
-                            }
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(Color.Lazyflow.textTertiary)
-                        }
-                    }
-
                     DailySummaryNotificationToggle()
 
                     Picker("Show Prompt After", selection: $summaryPromptHour) {
@@ -136,7 +84,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Daily Summary")
                 } footer: {
-                    Text("Review your daily productivity and track your streak. The prompt card appears in Today view after the selected time.")
+                    Text("Get a notification and prompt card to review your day. Access your summary anytime from More > Daily Summary.")
                 }
 
                 // Live Activity

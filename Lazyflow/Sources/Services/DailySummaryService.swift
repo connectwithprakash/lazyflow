@@ -12,6 +12,12 @@ final class DailySummaryService: ObservableObject {
     @Published private(set) var isGeneratingSummary: Bool = false
     @Published private(set) var summaryHistory: [DailySummaryData] = []
 
+    // MARK: - Cached Data for Preloading
+
+    @Published private(set) var cachedMorningBriefing: MorningBriefingData?
+    @Published private(set) var isPreloading: Bool = false
+    private var morningBriefingCacheDate: Date?
+
     // MARK: - Dependencies
 
     private let taskService: TaskService
@@ -308,10 +314,89 @@ final class DailySummaryService: ObservableObject {
         return cached.tasksCompleted != currentCompleted || cached.totalTasksPlanned != currentPlanned
     }
 
+    // MARK: - Preloading
+
+    /// Preload morning briefing and daily summary data in the background
+    /// Call this when MoreView appears to have data ready when user taps
+    func preloadInsightsData() {
+        guard !isPreloading else { return }
+
+        _Concurrency.Task {
+            await MainActor.run { isPreloading = true }
+            defer {
+                _Concurrency.Task { @MainActor in
+                    isPreloading = false
+                }
+            }
+
+            // Preload morning briefing if cache is stale or missing
+            if morningBriefingNeedsRefresh() {
+                let briefing = await generateMorningBriefingInternal()
+                await MainActor.run {
+                    cachedMorningBriefing = briefing
+                    morningBriefingCacheDate = Date()
+                }
+            }
+
+            // Preload today's summary if not already generated
+            if todaySummary == nil || needsRefresh(for: Date()) {
+                let summary = await generateSummary(for: Date())
+                await MainActor.run {
+                    todaySummary = summary
+                }
+            }
+        }
+    }
+
+    /// Check if morning briefing cache needs refresh
+    /// Only refreshes on a new day - users can manually refresh via the refresh button
+    private func morningBriefingNeedsRefresh() -> Bool {
+        guard let cacheDate = morningBriefingCacheDate,
+              cachedMorningBriefing != nil else {
+            return true
+        }
+
+        // Only refresh if it's a different day - morning briefing data is stable for the day
+        let calendar = Calendar.current
+        return !calendar.isDate(cacheDate, inSameDayAs: Date())
+    }
+
+    /// Get cached morning briefing if available, otherwise generate new one
+    func getMorningBriefing() async -> MorningBriefingData {
+        // Return cached if fresh
+        if !morningBriefingNeedsRefresh(), let cached = cachedMorningBriefing {
+            return cached
+        }
+
+        // Generate and cache
+        let briefing = await generateMorningBriefingInternal()
+        await MainActor.run {
+            cachedMorningBriefing = briefing
+            morningBriefingCacheDate = Date()
+        }
+        return briefing
+    }
+
+    /// Force refresh morning briefing, bypassing cache (for manual refresh button)
+    func forceRefreshMorningBriefing() async -> MorningBriefingData {
+        let briefing = await generateMorningBriefingInternal()
+        await MainActor.run {
+            cachedMorningBriefing = briefing
+            morningBriefingCacheDate = Date()
+        }
+        return briefing
+    }
+
     // MARK: - Morning Briefing Generation
 
     /// Generate morning briefing with yesterday's recap, today's plan, and weekly stats
     func generateMorningBriefing() async -> MorningBriefingData {
+        // Use cached version if fresh, otherwise generate new
+        return await getMorningBriefing()
+    }
+
+    /// Internal method to generate morning briefing (always generates fresh)
+    private func generateMorningBriefingInternal() async -> MorningBriefingData {
         await MainActor.run { isGeneratingSummary = true }
         defer {
             _Concurrency.Task { @MainActor in
