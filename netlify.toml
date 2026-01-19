@@ -1,16 +1,10 @@
 [build]
   publish = "docs/site/"
+  # Only build when docs/site changes on main branch (typically release merges)
+  ignore = "[ \"$BRANCH\" != \"main\" ] || git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- docs/site/"
 
 [build.processing]
   skip_processing = true
-
-# Disable deploy previews to save build minutes
-[context.deploy-preview]
-  ignore = "exit 0"
-
-# Disable branch deploys to save build minutes
-[context.branch-deploy]
-  ignore = "exit 0"
 
 [[headers]]
   for = "/*"
