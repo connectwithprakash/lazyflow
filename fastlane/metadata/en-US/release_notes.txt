@@ -1,8 +1,5 @@
-What's New in 1.2.2:
+What's New in 1.3.0:
 
-- Subtasks: Break down complex tasks into smaller steps
-- Auto-complete parent tasks when all subtasks are done
-- AI-powered subtask suggestions
-- Track progress with visual indicators
-- Fixed swipe actions on tasks with subtasks
-- Improved undo - now restores tasks with all subtasks
+• Add task history view with date filtering
+• Add time tracking with startedAt timestamp
+• Bug fixes and stability improvements
