@@ -50,16 +50,16 @@ jobs:
             name=$(basename "$f" .png)
             # Determine device type by filename prefix
             case "$name" in
-              07-*|08-*|09-*)
-                # iPad screenshots (07-09)
+              08-*|09-*|10-*)
+                # iPad screenshots (08-10)
                 cp "$f" "fastlane/screenshots/en-US/iPad Pro (12.9-inch) (3rd generation)-${name}.png"
                 ;;
-              10-*)
-                # Watch screenshots (10+)
+              11-*)
+                # Watch screenshots (11+)
                 cp "$f" "fastlane/screenshots/en-US/Apple Watch Series 4-${name}.png"
                 ;;
               *)
-                # iPhone screenshots (01-06)
+                # iPhone screenshots (01-07)
                 cp "$f" "fastlane/screenshots/en-US/iPhone 6.5-${name}.png"
                 ;;
             esac
