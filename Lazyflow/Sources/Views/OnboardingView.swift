@@ -8,6 +8,7 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @State private var calendarPermissionGranted = false
     @State private var notificationPermissionGranted = false
+    @State private var emergencyMode = false
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
@@ -32,74 +33,93 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Skip button
-            HStack {
-                Spacer()
-                if currentPage < pages.count {
-                    Button("Skip") {
-                        completeOnboarding()
+                    // Skip button
+                    HStack {
+                        Spacer()
+                        if currentPage < pages.count {
+                            Button("Skip") {
+                                completeOnboarding()
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(Color.Lazyflow.textSecondary)
+                            .padding()
+                        }
                     }
-                    .font(.subheadline)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-                    .padding()
-                }
-            }
 
-            Spacer()
+                    Spacer()
 
-            // Content
-            TabView(selection: $currentPage) {
-                ForEach(0..<pages.count, id: \.self) { index in
-                    OnboardingPageView(page: pages[index])
-                        .tag(index)
-                }
+                    // Content
+                    GeometryReader { geometry in
+                        TabView(selection: $currentPage) {
+                            ForEach(0..<pages.count, id: \.self) { index in
+                                OnboardingPageView(page: pages[index])
+                                    .tag(index)
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                            }
 
-                // Final page: Permissions
-                PermissionsPageView(
-                    calendarGranted: $calendarPermissionGranted,
-                    notificationsGranted: $notificationPermissionGranted
-                )
-                .tag(pages.count)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            // NOTE: Don't add .animation() here - it conflicts with UIPageViewController's
-            // built-in swipe animations and causes stuttering/freezing
-
-            Spacer()
-
-            // Page indicator
-            HStack(spacing: 8) {
-                ForEach(0...pages.count, id: \.self) { index in
-                    Circle()
-                        .fill(index == currentPage ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary.opacity(0.3))
-                        .frame(width: 8, height: 8)
-                        .animation(.easeInOut, value: currentPage)
-                }
-            }
-            .padding(.bottom, 24)
-
-            // Action button
-            Button {
-                if currentPage < pages.count {
-                    withAnimation {
-                        currentPage += 1
+                            // Final page: Permissions
+                            PermissionsPageView(
+                                calendarGranted: $calendarPermissionGranted,
+                                notificationsGranted: $notificationPermissionGranted
+                            )
+                            .tag(pages.count)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .never))
+                        .frame(width: geometry.size.width, height: geometry.size.height)
                     }
-                } else {
-                    completeOnboarding()
-                }
-            } label: {
-                Text(currentPage < pages.count ? "Continue" : "Get Started")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.Lazyflow.accent)
-                    .cornerRadius(12)
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
+                    // NOTE: Don't add .animation() here - it conflicts with UIPageViewController's
+                    // built-in swipe animations and causes stuttering/freezing
+
+                    Spacer()
+
+                    // Page indicator
+                    HStack(spacing: 8) {
+                        ForEach(0...pages.count, id: \.self) { index in
+                            Circle()
+                                .fill(index == currentPage ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary.opacity(0.3))
+                                .frame(width: 8, height: 8)
+                                .animation(.easeInOut, value: currentPage)
+                        }
+                    }
+                    .padding(.bottom, 24)
+
+                    // Action button
+                    Button {
+                        // In emergency mode (after 3 sec on iPad), always skip to app
+                        if emergencyMode {
+                            completeOnboarding()
+                        } else if currentPage < pages.count {
+                            withAnimation {
+                                currentPage += 1
+                            }
+                        } else {
+                            completeOnboarding()
+                        }
+                    } label: {
+                        Text(emergencyMode ? "Get Started" : (currentPage < pages.count ? "Continue" : "Get Started"))
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(emergencyMode ? Color.red : Color.Lazyflow.accent)
+                            .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
         }
         .background(Color.adaptiveBackground)
+        .onAppear {
+            // Safety net: after 3 seconds on iPad, make button skip to app
+            // This ensures if TabView is broken, user can still access the app
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    if !hasCompletedOnboarding {
+                        emergencyMode = true
+                    }
+                }
+            }
+        }
     }
 
     private func completeOnboarding() {
