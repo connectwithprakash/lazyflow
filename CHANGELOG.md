@@ -5,6 +5,13 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2](https://github.com/connectwithprakash/lazyflow/compare/v1.3.1...v1.3.2) (2026-01-20)
+
+
+### Bug Fixes
+
+* correct screenshot device type mapping in App Store workflow ([e504292](https://github.com/connectwithprakash/lazyflow/commit/e504292f21e74a82eb0de554e3713cc0a79a3e6f))
+
 ## [1.3.1](https://github.com/connectwithprakash/lazyflow/compare/v1.3.0...v1.3.1) (2026-01-20)
 
 
