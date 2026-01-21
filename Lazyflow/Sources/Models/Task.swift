@@ -45,6 +45,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var estimatedDuration: TimeInterval?
     var completedAt: Date?
     var startedAt: Date?
+    var accumulatedDuration: TimeInterval  // Total time spent across all work sessions
     var createdAt: Date
     var updatedAt: Date
     var recurringRule: RecurringRule?
@@ -103,6 +104,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         estimatedDuration: TimeInterval? = nil,
         completedAt: Date? = nil,
         startedAt: Date? = nil,
+        accumulatedDuration: TimeInterval = 0,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         recurringRule: RecurringRule? = nil,
@@ -125,6 +127,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.estimatedDuration = estimatedDuration
         self.completedAt = completedAt
         self.startedAt = startedAt
+        self.accumulatedDuration = accumulatedDuration
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.recurringRule = recurringRule
@@ -150,6 +153,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         estimatedDuration: TimeInterval? = nil,
         completedAt: Date? = nil,
         startedAt: Date? = nil,
+        accumulatedDuration: TimeInterval = 0,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         recurringRule: RecurringRule? = nil,
@@ -173,6 +177,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
             estimatedDuration: estimatedDuration,
             completedAt: completedAt,
             startedAt: startedAt,
+            accumulatedDuration: accumulatedDuration,
             createdAt: createdAt,
             updatedAt: updatedAt,
             recurringRule: recurringRule,
@@ -267,10 +272,10 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         return Self.formatDurationAsTimer(duration)
     }
 
-    /// Current elapsed time since startedAt (for in-progress tasks)
+    /// Current elapsed time including accumulated duration (for in-progress tasks)
     var elapsedTime: TimeInterval? {
         guard let started = startedAt, !isCompleted else { return nil }
-        return Date().timeIntervalSince(started)
+        return accumulatedDuration + Date().timeIntervalSince(started)
     }
 
     /// Formatted elapsed time for in-progress tasks
@@ -294,45 +299,51 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Create a completed copy of this task
-    /// Preserves startedAt for time tracking
+    /// Finalizes accumulated duration for time tracking
     func completed() -> Task {
         var copy = self
         copy.status = .completed
         copy.completedAt = Date()
-        // startedAt is preserved for time tracking
-        copy.updatedAt = Date()
-        return copy
-    }
-
-    /// Create an uncompleted copy of this task
-    /// Clears startedAt since we're resetting the task
-    func uncompleted() -> Task {
-        var copy = self
-        copy.status = .pending
-        copy.completedAt = nil
-        copy.startedAt = nil
-        copy.updatedAt = Date()
-        return copy
-    }
-
-    /// Create an in-progress copy of this task
-    /// Sets startedAt only if not already set (preserves original start time)
-    func inProgress() -> Task {
-        var copy = self
-        copy.status = .inProgress
-        if copy.startedAt == nil {
-            copy.startedAt = Date()
+        // Finalize accumulated duration if task was in progress
+        if let started = copy.startedAt {
+            copy.accumulatedDuration += Date().timeIntervalSince(started)
         }
         copy.updatedAt = Date()
         return copy
     }
 
+    /// Create an uncompleted copy of this task
+    /// Clears startedAt and accumulated duration since we're resetting the task
+    func uncompleted() -> Task {
+        var copy = self
+        copy.status = .pending
+        copy.completedAt = nil
+        copy.startedAt = nil
+        copy.accumulatedDuration = 0
+        copy.updatedAt = Date()
+        return copy
+    }
+
+    /// Create an in-progress copy of this task
+    /// Resets startedAt to track new work session
+    func inProgress() -> Task {
+        var copy = self
+        copy.status = .inProgress
+        // Always reset startedAt to track the new work session
+        copy.startedAt = Date()
+        copy.updatedAt = Date()
+        return copy
+    }
+
     /// Create a pending copy of this task (stop progress)
-    /// Preserves startedAt for time tracking continuity
+    /// Accumulates time spent before pausing
     func stopProgress() -> Task {
         var copy = self
         copy.status = .pending
-        // startedAt is preserved for time tracking continuity
+        // Accumulate time spent in current work session
+        if let started = copy.startedAt {
+            copy.accumulatedDuration += Date().timeIntervalSince(started)
+        }
         copy.updatedAt = Date()
         return copy
     }
