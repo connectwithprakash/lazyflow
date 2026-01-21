@@ -357,6 +357,7 @@ struct TodayView: View {
             Section {
                 ForEach(viewModel.overdueTasks) { task in
                     flatTaskRows(task: task, isCompleted: false)
+                        .id(task.id)
                 }
             } header: {
                 // Only show header when there are overdue tasks
@@ -371,6 +372,7 @@ struct TodayView: View {
             Section {
                 ForEach(viewModel.todayTasks) { task in
                     flatTaskRows(task: task, isCompleted: false)
+                        .id(task.id)
                 }
             } header: {
                 // Only show header when there are today tasks
@@ -385,6 +387,7 @@ struct TodayView: View {
             Section {
                 ForEach(viewModel.completedTodayTasks) { task in
                     flatTaskRows(task: task, isCompleted: true)
+                        .id(task.id)
                 }
             } header: {
                 // Only show header when there are completed tasks
