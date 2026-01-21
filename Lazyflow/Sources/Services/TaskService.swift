@@ -269,6 +269,7 @@ final class TaskService: ObservableObject {
             entity.isArchived = task.isArchived
             entity.completedAt = task.completedAt
             entity.startedAt = task.startedAt
+            entity.accumulatedDuration = task.accumulatedDuration
             entity.estimatedDuration = task.estimatedDuration ?? 0
             entity.linkedEventID = task.linkedEventID
             entity.updatedAt = Date()
@@ -1013,6 +1014,7 @@ extension TaskEntity {
             estimatedDuration: estimatedDuration > 0 ? estimatedDuration : nil,
             completedAt: completedAt,
             startedAt: startedAt,
+            accumulatedDuration: accumulatedDuration,
             createdAt: createdAt ?? Date(),
             updatedAt: updatedAt ?? Date(),
             recurringRule: recurringRule,

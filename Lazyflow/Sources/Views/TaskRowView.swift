@@ -185,6 +185,21 @@ struct TaskRowView: View {
                 TaskDragPreview(task: task)
             }
         }
+        .onAppear {
+            if task.isInProgress {
+                startTimer()
+            }
+        }
+        .onDisappear {
+            stopTimer()
+        }
+        .onChange(of: task.isInProgress) { _, newValue in
+            if newValue {
+                startTimer()
+            } else {
+                stopTimer()
+            }
+        }
     }
 
     // MARK: - Accessibility
@@ -324,15 +339,6 @@ struct TaskRowView: View {
                         .monospacedDigit()
                 }
                 .foregroundColor(Color.Lazyflow.accent)
-                .onAppear { startTimer() }
-                .onDisappear { stopTimer() }
-                .onChange(of: task.isInProgress) { _, newValue in
-                    if newValue {
-                        startTimer()
-                    } else {
-                        stopTimer()
-                    }
-                }
             } else if task.isCompleted, let actualDuration = task.formattedActualDuration {
                 HStack(spacing: 4) {
                     Image(systemName: "stopwatch")
@@ -377,6 +383,8 @@ struct TaskRowView: View {
     // MARK: - Timer Methods
 
     private func startTimer() {
+        // Stop any existing timer first to prevent multiple timers
+        stopTimer()
         updateElapsedTime()
         timerCancellable = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             updateElapsedTime()
@@ -386,6 +394,10 @@ struct TaskRowView: View {
     private func stopTimer() {
         timerCancellable?.invalidate()
         timerCancellable = nil
+        // Reset the displayed time when stopping
+        if !task.isInProgress {
+            elapsedTimeText = "0:00"
+        }
     }
 
     private func updateElapsedTime() {

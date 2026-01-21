@@ -18,6 +18,7 @@
         <attribute name="priorityRaw" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
         <attribute name="reminderDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="startedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="accumulatedDuration" attributeType="Double" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="statusRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="subtaskOrder" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="title" optional="YES" attributeType="String" defaultValueString=""/>
