@@ -810,7 +810,7 @@ struct AISettingsView: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Apple Intelligence")
-                                .font(DesignSystem.Typography.bodyBold)
+                                .font(DesignSystem.Typography.headline)
                                 .foregroundColor(Color.Lazyflow.textPrimary)
 
                             Text("On-device • Private • Free")
@@ -907,11 +907,6 @@ struct AISettingsView: View {
                     Text("Batch Analysis")
                 } footer: {
                     Text("Automatically categorize and estimate duration for tasks without a category.")
-                }
-
-                // Provider Info
-                Section("About \(llmService.selectedProvider.displayName)") {
-                    providerInfoContent
                 }
             }
             .navigationTitle("AI Settings")

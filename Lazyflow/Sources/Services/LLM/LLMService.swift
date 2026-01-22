@@ -387,3 +387,60 @@ final class LLMService: ObservableObject {
         return nil
     }
 }
+
+// MARK: - LLM Response Models
+
+struct TaskEstimate {
+    let estimatedMinutes: Int
+    let confidence: Confidence
+    let reasoning: String
+
+    enum Confidence {
+        case low, medium, high
+    }
+
+    var estimatedDuration: TimeInterval {
+        TimeInterval(estimatedMinutes * 60)
+    }
+}
+
+struct PrioritySuggestion {
+    let priority: Priority
+    let reasoning: String
+}
+
+struct TaskOrderSuggestion {
+    let task: Task
+    let suggestedPosition: Int
+}
+
+struct TaskAnalysis {
+    let estimatedMinutes: Int
+    let suggestedPriority: Priority
+    let bestTime: BestTime
+    let suggestedCategory: TaskCategory
+    let subtasks: [String]
+    let tips: String
+    let refinedTitle: String?
+    let suggestedDescription: String?
+
+    enum BestTime: String {
+        case morning = "Morning"
+        case afternoon = "Afternoon"
+        case evening = "Evening"
+        case anytime = "Anytime"
+    }
+
+    static var `default`: TaskAnalysis {
+        TaskAnalysis(
+            estimatedMinutes: 30,
+            suggestedPriority: .medium,
+            bestTime: .anytime,
+            suggestedCategory: .uncategorized,
+            subtasks: [],
+            tips: "",
+            refinedTitle: nil,
+            suggestedDescription: nil
+        )
+    }
+}
