@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Global search view for finding tasks
 struct SearchView: View {
-    @StateObject private var taskService = TaskService()
+    @StateObject private var taskService = TaskService.shared
     @State private var searchText = ""
     @State private var selectedTask: Task?
     @FocusState private var isSearchFocused: Bool

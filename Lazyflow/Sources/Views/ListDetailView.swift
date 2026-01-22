@@ -4,7 +4,7 @@ import SwiftUI
 struct ListDetailView: View {
     let list: TaskList
 
-    @StateObject private var taskService = TaskService()
+    @StateObject private var taskService = TaskService.shared
     @State private var selectedTask: Task?
     @State private var showAddTask = false
     @State private var showEditList = false
