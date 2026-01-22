@@ -1,14 +1,3 @@
-What's New in 1.3.2:
+What's New in 1.3.3:
 
-New Features:
-• Break down complex tasks with subtasks and track progress
-• View completed tasks in the new History tab with date filtering
-• Track time spent on tasks with built-in timer
-• See exactly how long you've worked on each task
-
-Bug Fixes:
-• Fixed timer display flickering when pausing and resuming tasks
-• Fixed timer counting paused time - now accurately tracks only active work time
-• Fixed swipe actions on tasks with subtasks
-• Fixed iPad onboarding blank screen issue
-• Improved overall stability and performance
+• China App Store compliance - Remove external LLM providers
