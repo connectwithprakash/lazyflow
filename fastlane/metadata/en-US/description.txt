@@ -18,8 +18,8 @@ Calendar Integration
 - Schedule tasks as time blocks
 
 AI-Powered Productivity
-- Multi-provider LLM support
-- Apple Intelligence, Claude, OpenAI
+- Powered by Apple Intelligence
+- 100% on-device, private, and free
 - Smart task suggestions
 - Automatic categorization
 - "What should I do next?" recommendations
@@ -52,6 +52,6 @@ Privacy First
 - All data stored locally on device
 - Optional iCloud sync
 - No tracking or analytics
-- Bring your own API keys for AI features
+- AI runs entirely on-device with Apple Intelligence
 
 Lazyflow is open source under the MIT License. View the code on GitHub.

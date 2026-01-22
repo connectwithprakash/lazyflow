@@ -8,7 +8,6 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @State private var calendarPermissionGranted = false
     @State private var notificationPermissionGranted = false
-    @State private var emergencyMode = false
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
@@ -86,10 +85,7 @@ struct OnboardingView: View {
 
                     // Action button
                     Button {
-                        // In emergency mode (after 3 sec on iPad), always skip to app
-                        if emergencyMode {
-                            completeOnboarding()
-                        } else if currentPage < pages.count {
+                        if currentPage < pages.count {
                             withAnimation {
                                 currentPage += 1
                             }
@@ -97,29 +93,18 @@ struct OnboardingView: View {
                             completeOnboarding()
                         }
                     } label: {
-                        Text(emergencyMode ? "Get Started" : (currentPage < pages.count ? "Continue" : "Get Started"))
+                        Text(currentPage < pages.count ? "Continue" : "Get Started")
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(emergencyMode ? Color.red : Color.Lazyflow.accent)
+                            .background(Color.Lazyflow.accent)
                             .cornerRadius(12)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)
         }
         .background(Color.adaptiveBackground)
-        .onAppear {
-            // Safety net: after 3 seconds on iPad, make button skip to app
-            // This ensures if TabView is broken, user can still access the app
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    if !hasCompletedOnboarding {
-                        emergencyMode = true
-                    }
-                }
-            }
-        }
     }
 
     private func completeOnboarding() {

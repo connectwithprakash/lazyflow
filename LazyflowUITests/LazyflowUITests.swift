@@ -13,9 +13,13 @@ final class LazyflowUITests: XCTestCase {
         app.terminate()
         app.launch()
 
-        // Wait for app to be fully ready - tab bar indicates UI is loaded
+        // Wait for app to be fully ready
+        // iPhone uses tab bar, iPad uses NavigationSplitView with sidebar
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "App should launch and show tab bar")
+        let sidebarTitle = app.navigationBars["Lazyflow"]
+
+        let isReady = tabBar.waitForExistence(timeout: 10) || sidebarTitle.waitForExistence(timeout: 10)
+        XCTAssertTrue(isReady, "App should launch and show main UI (tab bar on iPhone or sidebar on iPad)")
     }
 
     // MARK: - Helper Methods
@@ -1134,9 +1138,9 @@ final class LazyflowUITests: XCTestCase {
 
         // Set due date to Tomorrow
         let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        XCTAssertTrue(tomorrowButton.waitForExistence(timeout: 3), "Tomorrow button should exist")
+        tomorrowButton.tap()
+        Thread.sleep(forTimeInterval: 0.3) // Allow UI to update
 
         // Add a subtask (avoid scrolling - swipes dismiss sheets)
         let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus.circle'")).firstMatch
@@ -1163,11 +1167,16 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
+        // Wait for task to be saved and sheet to dismiss
+        Thread.sleep(forTimeInterval: 1.5)
+        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 3), "Should return to Today view after saving")
+
         // Navigate to Upcoming to verify
         app.tabBars.buttons["Upcoming"].tap()
+        Thread.sleep(forTimeInterval: 1.0) // Allow view to load and fetch data
 
-        // Verify task appears
+        // Verify task appears - using longer timeout for potential data fetch delay
         let taskText = app.staticTexts["Parent Task"].firstMatch
-        XCTAssertTrue(taskText.waitForExistence(timeout: 5), "Task with subtask should appear in Upcoming view")
+        XCTAssertTrue(taskText.waitForExistence(timeout: 8), "Task with subtask should appear in Upcoming view")
     }
 }

@@ -34,7 +34,7 @@ Lazyflow is an AI-powered, calendar-integrated todo app for iOS. The core value 
 - **Database:** Core Data (offline-first)
 - **Cloud:** CloudKit (iCloud sync)
 - **Calendar:** EventKit (Apple Calendar integration)
-- **AI:** Anthropic Claude API (task estimation/prioritization)
+- **AI:** Apple Intelligence (on-device task estimation/prioritization)
 - **Minimum iOS:** 16.0, Target: iOS 17.0+
 
 ## Architecture
@@ -76,6 +76,7 @@ MVVM with Combine for reactive data flow:
 - **v0.2.0:** Calendar integration, time blocking, EventKit sync
 - **v0.3.0:** AI prioritization (Apple Intelligence, Claude, OpenAI), ML categorization
 - **v0.4.0:** Smart reschedule when meetings conflict, conflict detection
+- **v1.3.3:** Removed external LLM providers (Claude, OpenAI) - Now Apple Intelligence only
 - **v0.5.0:** Siri Shortcuts via App Intents
 - **v0.6.0:** Home Screen Widgets (small, medium, large)
 - **v0.7.0:** Live Activities & Dynamic Island

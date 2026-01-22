@@ -3,7 +3,7 @@ import SwiftUI
 /// View showing upcoming tasks grouped by date
 struct UpcomingView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @StateObject private var taskService = TaskService()
+    @StateObject private var taskService = TaskService.shared
     @State private var selectedTask: Task?
     @State private var showAddTask = false
     @State private var taskToSchedule: Task?
@@ -98,6 +98,10 @@ struct UpcomingView: View {
             }
         }
         .refreshable {
+            taskService.fetchAllTasks()
+        }
+        .onAppear {
+            // Explicitly fetch tasks when view appears to ensure fresh data
             taskService.fetchAllTasks()
         }
     }

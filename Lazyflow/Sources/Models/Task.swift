@@ -325,12 +325,15 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Create an in-progress copy of this task
-    /// Resets startedAt to track new work session
+    /// Sets startedAt on first start, preserves it when resuming
     func inProgress() -> Task {
         var copy = self
         copy.status = .inProgress
-        // Always reset startedAt to track the new work session
-        copy.startedAt = Date()
+        // Only set startedAt if not already set (first time starting)
+        // When resuming after a pause, preserve the original startedAt
+        if copy.startedAt == nil {
+            copy.startedAt = Date()
+        }
         copy.updatedAt = Date()
         return copy
     }
