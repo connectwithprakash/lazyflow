@@ -19,77 +19,43 @@ final class LLMService: ObservableObject {
     // MARK: - Providers
 
     private let appleProvider = AppleFoundationModelsProvider()
-    private let anthropicProvider = AnthropicProvider()
-    private let openaiProvider = OpenAIProvider()
 
     private var currentProvider: LLMProvider {
-        switch selectedProvider {
-        case .apple: return appleProvider
-        case .anthropic: return anthropicProvider
-        case .openai: return openaiProvider
-        }
+        return appleProvider
     }
 
     // MARK: - Initialization
 
     private init() {
-        // Load saved provider preference
-        if let savedProvider = UserDefaults.standard.string(forKey: "llm_provider"),
-           let provider = LLMProviderType(rawValue: savedProvider) {
-            self.selectedProvider = provider
-        } else {
-            // Default to Apple if available, otherwise Anthropic
-            self.selectedProvider = appleProvider.isAvailable ? .apple : .anthropic
-        }
+        // Always use Apple Intelligence (only provider)
+        self.selectedProvider = .apple
+
+        // Clean up old API keys from removed providers
+        UserDefaults.standard.removeObject(forKey: "anthropic_api_key")
+        UserDefaults.standard.removeObject(forKey: "openai_api_key")
+        UserDefaults.standard.set("apple", forKey: "llm_provider")
     }
 
     // MARK: - Provider Management
 
     /// Get all available providers
     var availableProviders: [LLMProviderType] {
-        LLMProviderType.allCases.filter { type in
-            switch type {
-            case .apple: return appleProvider.isAvailable
-            case .anthropic: return true
-            case .openai: return true
-            }
-        }
+        return appleProvider.isAvailable ? [.apple] : []
     }
 
     /// Check if current provider is ready to use
     var isReady: Bool {
-        switch selectedProvider {
-        case .apple:
-            return appleProvider.isAvailable
-        case .anthropic:
-            return anthropicProvider.hasAPIKey
-        case .openai:
-            return openaiProvider.hasAPIKey
-        }
+        return appleProvider.isAvailable
     }
 
-    /// Set API key for a provider
+    /// Set API key for a provider (Apple Intelligence doesn't need API key)
     func setAPIKey(_ key: String, for provider: LLMProviderType) {
-        switch provider {
-        case .apple:
-            break // No API key needed
-        case .anthropic:
-            anthropicProvider.setAPIKey(key)
-        case .openai:
-            openaiProvider.setAPIKey(key)
-        }
+        // No-op: Apple Intelligence doesn't require API keys
     }
 
-    /// Check if provider has API key configured
+    /// Check if provider has API key configured (Apple Intelligence always ready)
     func hasAPIKey(for provider: LLMProviderType) -> Bool {
-        switch provider {
-        case .apple:
-            return true
-        case .anthropic:
-            return anthropicProvider.hasAPIKey
-        case .openai:
-            return openaiProvider.hasAPIKey
-        }
+        return true // Apple Intelligence doesn't require API keys
     }
 
     // MARK: - Task Analysis

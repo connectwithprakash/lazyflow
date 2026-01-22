@@ -792,38 +792,46 @@ struct AISettingsView: View {
     @AppStorage("aiEstimateDuration") private var aiEstimateDuration: Bool = true
     @AppStorage("aiSuggestPriority") private var aiSuggestPriority: Bool = true
 
-    @State private var anthropicKeyInput: String = ""
-    @State private var openaiKeyInput: String = ""
-    @State private var isTestingConnection = false
-    @State private var connectionTestResult: ConnectionTestResult?
     @State private var isBatchAnalyzing = false
     @State private var batchAnalysisProgress: Int = 0
     @State private var batchAnalysisTotal: Int = 0
     @State private var showBatchReviewSheet = false
     @State private var batchResults: [BatchAnalysisResult] = []
 
-    enum ConnectionTestResult {
-        case success
-        case failure(String)
-    }
-
     var body: some View {
         NavigationStack {
             Form {
-                // Provider Selection
+                // Apple Intelligence Info
                 Section {
-                    ForEach(llmService.availableProviders) { provider in
-                        providerRow(for: provider)
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: "apple.logo")
+                            .font(.title2)
+                            .foregroundColor(Color.Lazyflow.accent)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Apple Intelligence")
+                                .font(DesignSystem.Typography.bodyBold)
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+
+                            Text("On-device • Private • Free")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+
+                        Spacer()
+
+                        if llmService.isReady {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(Color.Lazyflow.success)
+                        } else {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .foregroundColor(Color.Lazyflow.warning)
+                        }
                     }
                 } header: {
                     Text("AI Provider")
                 } footer: {
-                    Text(providerFooterText)
-                }
-
-                // API Key Section (shown for non-Apple providers)
-                if llmService.selectedProvider != .apple {
-                    apiKeySection
+                    Text("AI features are powered by Apple Intelligence, running entirely on your device. No data leaves your device. Requires iOS 18.4 or later.")
                 }
 
                 // AI Features Section
@@ -930,242 +938,7 @@ struct AISettingsView: View {
         taskService.tasks.filter { $0.category == .uncategorized && !$0.isCompleted }.count
     }
 
-    // MARK: - Provider Row
-
-    @ViewBuilder
-    private func providerRow(for provider: LLMProviderType) -> some View {
-        Button {
-            withAnimation {
-                llmService.selectedProvider = provider
-                connectionTestResult = nil
-            }
-        } label: {
-            HStack {
-                Image(systemName: provider.iconName)
-                    .foregroundColor(Color.Lazyflow.accent)
-                    .frame(width: 24)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(provider.displayName)
-                        .foregroundColor(Color.Lazyflow.textPrimary)
-                    Text(provider.description)
-                        .font(DesignSystem.Typography.caption1)
-                        .foregroundColor(Color.Lazyflow.textSecondary)
-                }
-
-                Spacer()
-
-                if llmService.selectedProvider == provider {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(Color.Lazyflow.accent)
-                } else if provider.requiresAPIKey && !llmService.hasAPIKey(for: provider) {
-                    Text("Needs key")
-                        .font(DesignSystem.Typography.caption2)
-                        .foregroundColor(Color.Lazyflow.textTertiary)
-                }
-            }
-        }
-    }
-
-    // MARK: - API Key Section
-
-    @ViewBuilder
-    private var apiKeySection: some View {
-        Section {
-            switch llmService.selectedProvider {
-            case .anthropic:
-                SecureField("Anthropic API Key", text: $anthropicKeyInput)
-                    .textContentType(.password)
-                    .autocapitalization(.none)
-                    .autocorrectionDisabled()
-
-                if llmService.hasAPIKey(for: .anthropic) {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(Color.Lazyflow.success)
-                        Text("API key configured")
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                    }
-                }
-
-                saveButton(for: .anthropic, keyInput: anthropicKeyInput)
-
-            case .openai:
-                SecureField("OpenAI API Key", text: $openaiKeyInput)
-                    .textContentType(.password)
-                    .autocapitalization(.none)
-                    .autocorrectionDisabled()
-
-                if llmService.hasAPIKey(for: .openai) {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(Color.Lazyflow.success)
-                        Text("API key configured")
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                    }
-                }
-
-                saveButton(for: .openai, keyInput: openaiKeyInput)
-
-            case .apple:
-                EmptyView()
-            }
-
-            if let result = connectionTestResult {
-                switch result {
-                case .success:
-                    Label("Connection successful", systemImage: "checkmark.circle.fill")
-                        .foregroundColor(Color.Lazyflow.success)
-                case .failure(let message):
-                    Label(message, systemImage: "xmark.circle.fill")
-                        .foregroundColor(Color.Lazyflow.error)
-                        .font(DesignSystem.Typography.footnote)
-                }
-            }
-        } header: {
-            Text("\(llmService.selectedProvider.displayName) API")
-        } footer: {
-            Text(apiKeyFooterText)
-        }
-    }
-
-    @ViewBuilder
-    private func saveButton(for provider: LLMProviderType, keyInput: String) -> some View {
-        Button {
-            saveAPIKey(for: provider, key: keyInput)
-        } label: {
-            HStack {
-                if isTestingConnection {
-                    ProgressView()
-                        .padding(.trailing, DesignSystem.Spacing.xs)
-                }
-                Text(llmService.hasAPIKey(for: provider) ? "Update API Key" : "Save API Key")
-            }
-        }
-        .disabled(keyInput.isEmpty || isTestingConnection)
-    }
-
-    // MARK: - Provider Info
-
-    @ViewBuilder
-    private var providerInfoContent: some View {
-        switch llmService.selectedProvider {
-        case .apple:
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                Label {
-                    Text("On-Device Processing")
-                        .font(DesignSystem.Typography.subheadline)
-                } icon: {
-                    Image(systemName: "iphone")
-                        .foregroundColor(Color.Lazyflow.accent)
-                }
-                Text("All AI processing happens on your device. Your data never leaves your phone.")
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-            }
-            .padding(.vertical, DesignSystem.Spacing.xs)
-
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                Label {
-                    Text("Free & Private")
-                        .font(DesignSystem.Typography.subheadline)
-                } icon: {
-                    Image(systemName: "lock.shield")
-                        .foregroundColor(Color.Lazyflow.accent)
-                }
-                Text("No API key required. No usage costs. Maximum privacy.")
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-            }
-            .padding(.vertical, DesignSystem.Spacing.xs)
-
-        case .anthropic:
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                Label {
-                    Text("Claude 3 Haiku")
-                        .font(DesignSystem.Typography.subheadline)
-                } icon: {
-                    Image(systemName: "brain.head.profile")
-                        .foregroundColor(Color.Lazyflow.accent)
-                }
-                Text("Fast and cost-effective model optimized for task analysis.")
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-            }
-            .padding(.vertical, DesignSystem.Spacing.xs)
-
-        case .openai:
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                Label {
-                    Text("GPT-4.1 Mini")
-                        .font(DesignSystem.Typography.subheadline)
-                } icon: {
-                    Image(systemName: "globe")
-                        .foregroundColor(Color.Lazyflow.accent)
-                }
-                Text("OpenAI's fast and affordable model for everyday tasks.")
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-            }
-            .padding(.vertical, DesignSystem.Spacing.xs)
-        }
-    }
-
-    // MARK: - Helper Text
-
-    private var providerFooterText: String {
-        switch llmService.selectedProvider {
-        case .apple:
-            return "Apple Intelligence runs entirely on-device. Requires iOS 18.4 or later."
-        case .anthropic:
-            return "Uses Anthropic's Claude API. Requires an API key from console.anthropic.com"
-        case .openai:
-            return "Uses OpenAI's API. Requires an API key from platform.openai.com"
-        }
-    }
-
-    private var apiKeyFooterText: String {
-        switch llmService.selectedProvider {
-        case .anthropic:
-            return "Get your API key from console.anthropic.com. Your key is stored securely on device."
-        case .openai:
-            return "Get your API key from platform.openai.com. Your key is stored securely on device."
-        case .apple:
-            return ""
-        }
-    }
-
-    // MARK: - Actions
-
-    private func saveAPIKey(for provider: LLMProviderType, key: String) {
-        guard !key.isEmpty else { return }
-        isTestingConnection = true
-        connectionTestResult = nil
-
-        llmService.setAPIKey(key, for: provider)
-
-        // Test the connection
-        _Concurrency.Task {
-            do {
-                _ = try await llmService.estimateTaskDuration(title: "Test task", notes: nil)
-                await MainActor.run {
-                    connectionTestResult = .success
-                    // Clear the input field
-                    switch provider {
-                    case .anthropic: anthropicKeyInput = ""
-                    case .openai: openaiKeyInput = ""
-                    case .apple: break
-                    }
-                    isTestingConnection = false
-                }
-            } catch {
-                await MainActor.run {
-                    connectionTestResult = .failure(error.localizedDescription)
-                    isTestingConnection = false
-                }
-            }
-        }
-    }
+    // MARK: - Batch Analysis
 
     private func runBatchAnalysis() {
         let uncategorizedTasks = taskService.tasks.filter { $0.category == .uncategorized && !$0.isCompleted }

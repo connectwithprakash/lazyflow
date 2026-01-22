@@ -32,39 +32,30 @@ extension LLMProvider {
 /// Enum of supported LLM providers
 enum LLMProviderType: String, CaseIterable, Codable, Identifiable {
     case apple = "apple"
-    case anthropic = "anthropic"
-    case openai = "openai"
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
         case .apple: return "Apple Intelligence"
-        case .anthropic: return "Anthropic Claude"
-        case .openai: return "OpenAI GPT"
         }
     }
 
     var description: String {
         switch self {
         case .apple: return "On-device, free, private"
-        case .anthropic: return "Claude 3 Haiku, requires API key"
-        case .openai: return "GPT-4.1 Mini, requires API key"
         }
     }
 
     var iconName: String {
         switch self {
         case .apple: return "apple.logo"
-        case .anthropic: return "brain.head.profile"
-        case .openai: return "globe"
         }
     }
 
     var requiresAPIKey: Bool {
         switch self {
         case .apple: return false
-        case .anthropic, .openai: return true
         }
     }
 }

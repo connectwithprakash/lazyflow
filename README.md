@@ -56,7 +56,7 @@ open Lazyflow.xcodeproj
 - **UI**: SwiftUI
 - **Data**: Core Data + CloudKit
 - **Calendar**: EventKit
-- **AI**: Apple Intelligence, Claude, OpenAI
+- **AI**: Apple Intelligence (on-device)
 
 ### Deployment
 
