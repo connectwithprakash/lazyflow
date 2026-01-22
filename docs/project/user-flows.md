@@ -518,28 +518,17 @@ Edit Task --> List Picker
 
 ### 11. Configure AI Provider (v0.3.0)
 
-**Goal**: Choose and configure LLM provider for AI features
+**Goal**: View AI provider information
 
 ```
 [Settings View]
     |
-    +-> Tap "AI Provider"
+    +-> AI Provider section shows:
         |
-        +-> [AI Provider Selection]
-            |
-            +-- Apple Intelligence (default if available)
-            |   +-- Free, on-device
-            |   +-- No API key needed
-            |
-            +-- Anthropic Claude
-            |   +-- Requires API key
-            |   +-> Tap to configure
-            |       +-> [API Key Entry Sheet]
-            |
-            +-- OpenAI GPT
-                +-- Requires API key
-                +-> Tap to configure
-                    +-> [API Key Entry Sheet]
+        +-- Apple Intelligence (on-device)
+            +-- Free, no configuration needed
+            +-- Complete privacy - no data leaves device
+            +-- Always available on supported devices
 ```
 
 **Design Decisions**:

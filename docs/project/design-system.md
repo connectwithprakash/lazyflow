@@ -507,19 +507,20 @@ Radius: medium
 Icon: sparkles, Accent color
 ```
 
-### LLM Provider Picker
+### AI Provider Information
 
 ```
 +------------------------------------+
 |  AI Provider                       |
 |------------------------------------|
-|  (*) Apple Intelligence            |  Free, on-device
-|  ( ) Anthropic Claude              |  API key required
-|  ( ) OpenAI GPT                    |  API key required
+|  Apple Intelligence                |
+|  • On-device processing            |
+|  • Complete privacy                |
+|  • Always available                |
 +------------------------------------+
 
-Style: List with radio selection
-Subtitle: Provider description
+Style: Informational section
+Note: Read-only, no configuration needed
 ```
 
 ---

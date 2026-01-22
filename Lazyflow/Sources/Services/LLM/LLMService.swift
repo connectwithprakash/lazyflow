@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 /// Unified service for LLM-powered task analysis
-/// Supports multiple providers: Apple Intelligence, Anthropic, OpenAI
+/// Uses Apple Intelligence for on-device AI processing
 final class LLMService: ObservableObject {
     static let shared = LLMService()
 
