@@ -943,23 +943,45 @@ final class PersistenceController: @unchecked Sendable {
         let context = viewContext
         let inboxID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
-        // Find all lists named "Inbox" or marked as default that don't have the canonical ID
-        let request: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "(name == %@ OR isDefault == YES) AND id != %@", "Inbox", inboxID as CVarArg)
-
+        // First, let's see all lists for debugging
+        let allListsRequest: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
         do {
-            let duplicates = try context.fetch(request)
-            if !duplicates.isEmpty {
-                print("Removing \(duplicates.count) duplicate Inbox list(s)")
+            let allLists = try context.fetch(allListsRequest)
+            print("[InboxCleanup] Total lists in database: \(allLists.count)")
 
-                // Get the canonical inbox to move tasks to
-                let inboxRequest: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
-                inboxRequest.predicate = NSPredicate(format: "id == %@", inboxID as CVarArg)
-                let canonicalInbox = try context.fetch(inboxRequest).first
+            // Log first 20 lists to understand what they are
+            for (index, list) in allLists.prefix(20).enumerated() {
+                print("[InboxCleanup] List \(index): name='\(list.name ?? "nil")' isDefault=\(list.isDefault) id=\(list.id?.uuidString.prefix(8) ?? "nil")")
+            }
+
+            // Find all Inbox-like lists (by name or isDefault flag)
+            let inboxLists = allLists.filter { entity in
+                let name = entity.name?.lowercased() ?? ""
+                return name.contains("inbox") || entity.isDefault
+            }
+
+            print("[InboxCleanup] Found \(inboxLists.count) Inbox-like lists")
+
+            // Keep only the FIRST one, delete all others
+            let duplicates = Array(inboxLists.dropFirst())
+
+            print("[InboxCleanup] Found \(duplicates.count) duplicate Inbox list(s) to remove")
+
+            if !duplicates.isEmpty {
+                // Keep the first inbox as the canonical one
+                let canonicalInbox = inboxLists.first!
+
+                // Ensure it has the correct canonical ID
+                if canonicalInbox.id != inboxID {
+                    print("[InboxCleanup] Updating canonical Inbox ID from \(canonicalInbox.id?.uuidString ?? "nil") to \(inboxID)")
+                    canonicalInbox.id = inboxID
+                }
 
                 for duplicate in duplicates {
+                    print("[InboxCleanup] Removing duplicate: \(duplicate.name ?? "nil") (id: \(duplicate.id?.uuidString ?? "nil"))")
                     // Move tasks from duplicate to canonical inbox
                     if let tasks = duplicate.tasks as? Set<TaskEntity> {
+                        print("[InboxCleanup]   Moving \(tasks.count) tasks to canonical Inbox")
                         for task in tasks {
                             task.list = canonicalInbox
                         }
@@ -967,9 +989,10 @@ final class PersistenceController: @unchecked Sendable {
                     context.delete(duplicate)
                 }
                 save()
+                print("[InboxCleanup] Cleanup complete")
             }
         } catch {
-            print("Failed to remove duplicate Inbox lists: \(error)")
+            print("[InboxCleanup] Failed: \(error)")
         }
     }
 }
