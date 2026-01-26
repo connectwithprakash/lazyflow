@@ -34,6 +34,8 @@ final class TaskListService: ObservableObject {
         NotificationCenter.default.publisher(for: .cloudKitSyncDidComplete)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
+                // Clean up any duplicate Inbox lists that may have synced from iCloud
+                self?.persistenceController.removeDuplicateInboxLists()
                 self?.fetchAllLists()
             }
             .store(in: &cancellables)

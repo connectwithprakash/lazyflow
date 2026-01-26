@@ -939,7 +939,7 @@ final class PersistenceController: @unchecked Sendable {
     }
 
     /// Remove duplicate Inbox lists, keeping only the one with the canonical UUID
-    private func removeDuplicateInboxLists() {
+    func removeDuplicateInboxLists() {
         let context = viewContext
         let inboxID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
