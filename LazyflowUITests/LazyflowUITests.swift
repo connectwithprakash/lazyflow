@@ -24,10 +24,38 @@ final class LazyflowUITests: XCTestCase {
 
     // MARK: - Helper Methods
 
+    /// Navigate to Today tab. Works on both iPhone (tab bar) and iPad (sidebar).
+    private func navigateToToday() {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            let todayButton = app.buttons["Today"]
+            if todayButton.waitForExistence(timeout: 2) && todayButton.isHittable {
+                todayButton.tap()
+            }
+        } else {
+            let todayTab = app.tabBars.buttons["Today"]
+            if todayTab.exists && todayTab.isHittable {
+                todayTab.tap()
+            }
+        }
+    }
+
     /// Navigate to a tab or a view accessible via the More hub.
     /// Direct tabs: Today, Calendar, Upcoming, History, More
     /// Via More hub: Lists, Settings
+    /// On iPad: Uses sidebar navigation buttons
+    /// On iPhone: Uses tab bar + More hub
     private func navigateToTab(_ tabName: String) {
+        // iPad uses sidebar navigation - all views are direct buttons
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            let sidebarButton = app.buttons[tabName]
+            if sidebarButton.waitForExistence(timeout: 2) && sidebarButton.isHittable {
+                sidebarButton.tap()
+                Thread.sleep(forTimeInterval: 0.5)
+            }
+            return
+        }
+
+        // iPhone uses tab bar + More hub
         // Direct tabs in the tab bar
         let directTabs = ["Today", "Calendar", "Upcoming", "History", "More"]
 
@@ -113,6 +141,10 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Navigation Tests
 
     func testTabBarNavigation() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone (iPad uses sidebar navigation)")
+        }
+
         // Verify visible tabs are present (iOS shows 5 tabs max including "More")
         XCTAssertTrue(app.tabBars.buttons["Today"].exists)
         XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
@@ -121,10 +153,10 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["More"].exists, "More tab should exist for overflow items")
 
         // Navigate to each tab
-        app.tabBars.buttons["Calendar"].tap()
+        navigateToTab("Calendar")
         XCTAssertTrue(app.navigationBars["Calendar"].exists)
 
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
         XCTAssertTrue(app.navigationBars["Upcoming"].exists)
 
         app.tabBars.buttons["History"].tap()
@@ -136,7 +168,7 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].exists)
 
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         XCTAssertTrue(app.navigationBars["Today"].exists)
     }
 
@@ -144,7 +176,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testAddTaskFlow() throws {
         // Navigate to Today view
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
 
         // Wait for view to load
         Thread.sleep(forTimeInterval: 0.5)
@@ -177,14 +209,14 @@ final class LazyflowUITests: XCTestCase {
         addButton.tap()
 
         // Navigate to Upcoming to see the task
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
 
         // Verify task appears in list (increased timeout for physical device reliability)
         XCTAssertTrue(app.staticTexts["Test Task from UI Test"].waitForExistence(timeout: 5))
     }
 
     func testAddTaskWithDueDate() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         app.buttons["Add task"].tap()
 
         let titleField = app.textFields["What do you need to do?"]
@@ -204,7 +236,7 @@ final class LazyflowUITests: XCTestCase {
         addButton.tap()
 
         // Navigate to Upcoming to see the task (since due date is tomorrow)
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
 
         // Verify task appears in Upcoming
         XCTAssertTrue(app.staticTexts["Task with due date"].waitForExistence(timeout: 3))
@@ -214,7 +246,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testCompleteTask() throws {
         // First create a task
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         app.buttons["Add task"].tap()
 
         let titleField = app.textFields["What do you need to do?"]
@@ -234,7 +266,7 @@ final class LazyflowUITests: XCTestCase {
         addButton.tap()
 
         // Navigate to Upcoming to see the task (since we used Tomorrow)
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
 
         // Wait for task to appear
         let taskText = app.staticTexts["Task to complete"]
@@ -334,9 +366,8 @@ final class LazyflowUITests: XCTestCase {
 
     func testAccessibilityLabels() throws {
         // Verify important elements have accessibility labels
-        let todayTab = app.tabBars.buttons["Today"]
-        XCTAssertTrue(todayTab.waitForExistence(timeout: 5), "Tab bar should be ready")
-        todayTab.tap()
+        navigateToToday()
+        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 5), "Today view should be ready")
 
         let addButton = app.buttons["Add task"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 3))
@@ -345,38 +376,46 @@ final class LazyflowUITests: XCTestCase {
 
     func testVoiceOverSupport() throws {
         // This test verifies that key elements are accessible to VoiceOver
-        let todayTab = app.tabBars.buttons["Today"]
-        XCTAssertTrue(todayTab.waitForExistence(timeout: 5), "Tab bar should be ready")
-        todayTab.tap()
+        navigateToToday()
+        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 5), "Today view should be ready")
 
-        // Check visible tab bar items (iOS shows 5 items max, including "More" for overflow)
-        for tabName in ["Today", "Calendar", "Upcoming", "History"] {
-            let tab = app.tabBars.buttons[tabName]
-            XCTAssertTrue(tab.exists, "\(tabName) tab should exist")
-            XCTAssertNotEqual(tab.label, "")
-        }
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            // Check visible tab bar items (iOS shows 5 items max, including "More" for overflow)
+            for tabName in ["Today", "Calendar", "Upcoming", "History"] {
+                let tab = app.tabBars.buttons[tabName]
+                XCTAssertTrue(tab.exists, "\(tabName) tab should exist")
+                XCTAssertNotEqual(tab.label, "")
+            }
 
-        // Lists and Settings are under "More" tab
-        let moreTab = app.tabBars.buttons["More"]
-        if moreTab.exists {
-            moreTab.tap()
-            // Verify Lists and Settings are accessible in More menu
-            XCTAssertTrue(app.tables.staticTexts["Lists"].waitForExistence(timeout: 2) ||
-                          app.staticTexts["Lists"].waitForExistence(timeout: 2))
+            // Lists and Settings are under "More" tab
+            let moreTab = app.tabBars.buttons["More"]
+            if moreTab.exists {
+                moreTab.tap()
+                // Verify Lists and Settings are accessible in More menu
+                XCTAssertTrue(app.tables.staticTexts["Lists"].waitForExistence(timeout: 2) ||
+                              app.staticTexts["Lists"].waitForExistence(timeout: 2))
+            }
+        } else {
+            // iPad: Check sidebar buttons
+            for tabName in ["Today", "Calendar", "Upcoming", "History", "Lists", "Settings"] {
+                let button = app.buttons[tabName]
+                XCTAssertTrue(button.exists, "\(tabName) button should exist in sidebar")
+                XCTAssertNotEqual(button.label, "")
+            }
         }
     }
 
     // MARK: - Conflict Detection Tests
 
     func testConflictsBannerAppears() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 2))
         // Conflicts banner appears when there are scheduling conflicts
         // This test verifies the view loads without crashing
     }
 
     func testPushToTomorrowSwipeAction() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
 
         // Wait for view to load
         Thread.sleep(forTimeInterval: 0.5)
@@ -408,7 +447,7 @@ final class LazyflowUITests: XCTestCase {
         addButton.tap()
 
         // Navigate to Upcoming to see the task
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
 
         // Task should appear (increased timeout for physical device reliability)
         XCTAssertTrue(app.staticTexts["Task to push"].waitForExistence(timeout: 5))
@@ -528,7 +567,7 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
 
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 2))
     }
 
@@ -573,7 +612,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testMorningBriefingPromptCard() throws {
         // Navigate to Today view
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
 
         // The morning briefing prompt card may appear in the morning hours
         // If it appears, verify it has the expected content
@@ -592,7 +631,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testMorningBriefingViewContent() throws {
         // Navigate to Today view
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
 
         // Try to access morning briefing through settings or direct navigation
         // First check if there's a briefing card to tap
@@ -624,7 +663,7 @@ final class LazyflowUITests: XCTestCase {
     }
 
     func testMorningBriefingRefresh() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
 
         let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
         if briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable {
@@ -737,7 +776,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Task Category Tests
 
     func testTaskCategorySelection() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         app.buttons["Add task"].tap()
 
         // Verify add task sheet appears
@@ -770,7 +809,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Priority Tests
 
     func testTaskPrioritySelection() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         app.buttons["Add task"].tap()
 
         XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 2))
@@ -820,9 +859,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Calendar Integration Tests
 
     func testCalendarViewNavigation() throws {
-        let calendarTab = app.tabBars.buttons["Calendar"]
-        XCTAssertTrue(calendarTab.waitForExistence(timeout: 5), "Calendar tab should exist")
-        calendarTab.tap()
+        navigateToTab("Calendar")
 
         // Verify calendar view loads
         XCTAssertTrue(app.navigationBars["Calendar"].waitForExistence(timeout: 5))
@@ -837,7 +874,7 @@ final class LazyflowUITests: XCTestCase {
     }
 
     func testCalendarDateSelection() throws {
-        app.tabBars.buttons["Calendar"].tap()
+        navigateToTab("Calendar")
         XCTAssertTrue(app.navigationBars["Calendar"].waitForExistence(timeout: 5))
 
         // Try to tap on a date
@@ -853,7 +890,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Search Tests
 
     func testSearchFunctionality() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
 
         // First create a task to search for
         app.buttons["Add task"].tap()
@@ -885,7 +922,7 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Subtask Tests
 
     func testAddSubtaskInAddTaskView() throws {
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         app.buttons["Add task"].tap()
 
         // Verify add task sheet appears
@@ -934,7 +971,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testSubtaskDisplayInTaskDetail() throws {
         // First create a task
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         app.buttons["Add task"].tap()
 
         let titleField = app.textFields["What do you need to do?"]
@@ -955,7 +992,7 @@ final class LazyflowUITests: XCTestCase {
         addButton.tap()
 
         // Navigate to Upcoming to see the task
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
 
         // Wait for task to appear
         let taskText = app.staticTexts["Task for Subtask Test"]
@@ -992,7 +1029,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testAddSubtaskInTaskDetail() throws {
         // First create a task
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         app.buttons["Add task"].tap()
 
         let titleField = app.textFields["What do you need to do?"]
@@ -1013,7 +1050,7 @@ final class LazyflowUITests: XCTestCase {
         addButton.tap()
 
         // Navigate to Upcoming to see the task
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
 
         // Wait for task to appear
         let taskText = app.staticTexts["Task with Subtasks Detail"]
@@ -1068,7 +1105,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testSubtaskProgressBadge() throws {
         // This test verifies that the subtask progress badge appears when a task has subtasks
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
 
         // Look for any task row with subtask progress indicator (e.g., "0/2" or "1/3")
         let progressIndicator = app.staticTexts.matching(NSPredicate(format: "label MATCHES '\\\\d+/\\\\d+'")).firstMatch
@@ -1080,7 +1117,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testExpandCollapseSubtasks() throws {
         // Navigate to Upcoming view where tasks with subtasks may appear
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
         XCTAssertTrue(app.navigationBars["Upcoming"].waitForExistence(timeout: 3))
 
         // Look for expand/collapse chevron indicator
@@ -1101,7 +1138,7 @@ final class LazyflowUITests: XCTestCase {
 
     func testCompleteSubtaskInTaskRow() throws {
         // Navigate to Upcoming to find tasks with subtasks
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
         XCTAssertTrue(app.navigationBars["Upcoming"].waitForExistence(timeout: 3))
 
         // Look for a subtask checkbox
@@ -1123,7 +1160,7 @@ final class LazyflowUITests: XCTestCase {
     /// Test creating a task with subtasks from Today tab
     func testCreateTaskWithSubtaskFromTodayTab() throws {
         // Navigate to Today
-        app.tabBars.buttons["Today"].tap()
+        navigateToToday()
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 3))
 
         // Open add task sheet
@@ -1172,7 +1209,7 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 3), "Should return to Today view after saving")
 
         // Navigate to Upcoming to verify
-        app.tabBars.buttons["Upcoming"].tap()
+        navigateToTab("Upcoming")
         Thread.sleep(forTimeInterval: 1.0) // Allow view to load and fetch data
 
         // Verify task appears - using longer timeout for potential data fetch delay
