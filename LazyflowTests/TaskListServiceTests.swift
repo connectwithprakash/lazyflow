@@ -181,6 +181,77 @@ final class TaskListServiceTests: XCTestCase {
         XCTAssertLessThan(list2.order, list3.order)
     }
 
+    // MARK: - Duplicate Inbox Prevention Tests
+
+    func testOnlyOneInboxInLists() throws {
+        // Verify only one Inbox exists in the lists
+        taskListService.fetchAllLists()
+
+        let inboxLists = taskListService.lists.filter { $0.name == "Inbox" || $0.isDefault }
+
+        XCTAssertEqual(inboxLists.count, 1, "Should have exactly one Inbox list")
+    }
+
+    func testDuplicateInboxCleanup() throws {
+        // Manually create a duplicate Inbox to simulate race condition
+        let context = persistenceController.viewContext
+
+        let duplicateInbox = TaskListEntity(context: context)
+        duplicateInbox.id = UUID() // Different ID than canonical
+        duplicateInbox.name = "Inbox"
+        duplicateInbox.colorHex = "#5A6C71"
+        duplicateInbox.iconName = "tray"
+        duplicateInbox.order = 99
+        duplicateInbox.isDefault = true
+        duplicateInbox.createdAt = Date()
+
+        persistenceController.save()
+
+        // Now create a new TaskListService which should clean up duplicates
+        let newService = TaskListService(persistenceController: persistenceController)
+
+        // Should only have one Inbox after cleanup
+        let inboxLists = newService.lists.filter { $0.name == "Inbox" || $0.isDefault }
+
+        XCTAssertEqual(inboxLists.count, 1, "Duplicate Inbox should be cleaned up")
+
+        // The remaining Inbox should be the canonical one
+        let canonicalID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        XCTAssertEqual(inboxLists.first?.id, canonicalID, "Should keep the canonical Inbox")
+    }
+
+    func testDuplicateInboxCleanup_MovesTasksToCanonicalInbox() throws {
+        let taskService = TaskService(persistenceController: persistenceController)
+        let context = persistenceController.viewContext
+
+        // Create a duplicate Inbox
+        let duplicateInbox = TaskListEntity(context: context)
+        let duplicateID = UUID()
+        duplicateInbox.id = duplicateID
+        duplicateInbox.name = "Inbox"
+        duplicateInbox.colorHex = "#5A6C71"
+        duplicateInbox.iconName = "tray"
+        duplicateInbox.order = 99
+        duplicateInbox.isDefault = true
+        duplicateInbox.createdAt = Date()
+
+        persistenceController.save()
+
+        // Create a task in the duplicate Inbox
+        let task = taskService.createTask(title: "Task in Duplicate", listID: duplicateID)
+
+        // Create a new TaskListService which triggers cleanup
+        let _ = TaskListService(persistenceController: persistenceController)
+
+        // Fetch the task again
+        taskService.fetchAllTasks()
+        let updatedTask = taskService.tasks.first { $0.id == task.id }
+
+        // Task should now be in the canonical Inbox
+        let canonicalID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        XCTAssertEqual(updatedTask?.listID, canonicalID, "Task should be moved to canonical Inbox")
+    }
+
     // MARK: - Performance Tests
 
     func testFetchPerformance() throws {

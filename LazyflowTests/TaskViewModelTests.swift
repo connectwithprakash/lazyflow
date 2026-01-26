@@ -293,6 +293,39 @@ final class TaskViewModelTests: XCTestCase {
         XCTAssertEqual(savedTask?.category, .work)
     }
 
+    func testCategoryChange_EditExistingTask() async throws {
+        // Create task with initial category
+        let existingTask = taskService.createTask(
+            title: "Task",
+            category: .personal
+        )
+
+        // Edit and change category
+        let editViewModel = TaskViewModel(taskService: taskService, task: existingTask)
+        XCTAssertEqual(editViewModel.category, .personal)
+
+        editViewModel.category = .work
+
+        try await _Concurrency.Task.sleep(nanoseconds: 100_000_000)
+
+        let savedTask = editViewModel.save()
+
+        XCTAssertEqual(savedTask?.category, .work)
+    }
+
+    func testAllCategoriesAvailable() {
+        // Verify all categories can be set
+        let allCategories: [TaskCategory] = [
+            .uncategorized, .work, .personal, .health,
+            .finance, .shopping, .errands, .learning, .home
+        ]
+
+        for category in allCategories {
+            viewModel.category = category
+            XCTAssertEqual(viewModel.category, category)
+        }
+    }
+
     // MARK: - Estimated Duration Tests
 
     func testEstimatedDuration() async throws {
@@ -348,6 +381,53 @@ final class TaskViewModelTests: XCTestCase {
         let savedTask = viewModel.save()
 
         XCTAssertEqual(savedTask?.listID, createdList.id)
+    }
+
+    func testListAssignment_MoveTaskBetweenLists() async throws {
+        // Create two lists
+        let taskListService = TaskListService(persistenceController: persistenceController)
+        let list1 = taskListService.createList(name: "List 1")
+        let list2 = taskListService.createList(name: "List 2")
+
+        // Create task in list 1
+        let existingTask = taskService.createTask(
+            title: "Task",
+            listID: list1.id
+        )
+
+        // Edit and move to list 2
+        let editViewModel = TaskViewModel(taskService: taskService, task: existingTask)
+        XCTAssertEqual(editViewModel.selectedListID, list1.id)
+
+        editViewModel.selectedListID = list2.id
+
+        try await _Concurrency.Task.sleep(nanoseconds: 100_000_000)
+
+        let savedTask = editViewModel.save()
+
+        XCTAssertEqual(savedTask?.listID, list2.id)
+    }
+
+    func testListAssignment_RemoveFromList() async throws {
+        // Create a list
+        let taskListService = TaskListService(persistenceController: persistenceController)
+        let list = taskListService.createList(name: "Test List")
+
+        // Create task in list
+        let existingTask = taskService.createTask(
+            title: "Task",
+            listID: list.id
+        )
+
+        // Edit and remove from list
+        let editViewModel = TaskViewModel(taskService: taskService, task: existingTask)
+        editViewModel.selectedListID = nil
+
+        try await _Concurrency.Task.sleep(nanoseconds: 100_000_000)
+
+        let savedTask = editViewModel.save()
+
+        XCTAssertNil(savedTask?.listID)
     }
 
     // MARK: - Recurring Rule Tests

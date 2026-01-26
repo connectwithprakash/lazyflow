@@ -6,6 +6,7 @@ struct TaskDetailView: View {
     @StateObject private var viewModel: TaskViewModel
     @StateObject private var llmService = LLMService.shared
     @StateObject private var taskService = TaskService.shared
+    @StateObject private var listService = TaskListService()
     @FocusState private var isTitleFocused: Bool
 
     @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
@@ -178,6 +179,17 @@ struct TaskDetailView: View {
                     }
                 }
 
+                // Category
+                Section {
+                    Picker("Category", selection: $viewModel.category) {
+                        ForEach(TaskCategory.allCases) { category in
+                            Label(category.displayName, systemImage: category.iconName)
+                                .foregroundColor(category.color)
+                                .tag(category)
+                        }
+                    }
+                }
+
                 // Duration
                 Section("Estimated Duration") {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -258,6 +270,22 @@ struct TaskDetailView: View {
                                 ),
                                 displayedComponents: .date
                             )
+                        }
+                    }
+                }
+
+                // List
+                Section {
+                    Picker("List", selection: $viewModel.selectedListID) {
+                        Text("No List").tag(nil as UUID?)
+                        ForEach(listService.lists) { list in
+                            HStack {
+                                Circle()
+                                    .fill(list.color)
+                                    .frame(width: 12, height: 12)
+                                Text(list.name)
+                            }
+                            .tag(list.id as UUID?)
                         }
                     }
                 }

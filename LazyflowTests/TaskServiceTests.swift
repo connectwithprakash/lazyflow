@@ -535,6 +535,55 @@ final class TaskServiceTests: XCTestCase {
         XCTAssertNil(subtask)
     }
 
+    func testSubtasksInheritParentListChange() throws {
+        // Create a list
+        let listService = TaskListService(persistenceController: persistenceController)
+        let list1 = listService.createList(name: "List 1")
+        let list2 = listService.createList(name: "List 2")
+
+        // Create parent task in list 1 with subtasks
+        let parent = taskService.createTask(title: "Parent Task", listID: list1.id)
+        taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+        taskService.createSubtask(title: "Subtask 2", parentTaskID: parent.id)
+
+        // Verify subtasks don't have explicit list (they inherit from parent contextually)
+        let subtasksBefore = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasksBefore.count, 2)
+
+        // Move parent to list 2
+        var updatedParent = parent
+        updatedParent = parent.updated(listID: list2.id)
+        taskService.updateTask(updatedParent)
+
+        // Verify subtasks now have list 2
+        let subtasksAfter = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasksAfter.count, 2)
+        for subtask in subtasksAfter {
+            XCTAssertEqual(subtask.listID, list2.id, "Subtask should inherit parent's new list")
+        }
+    }
+
+    func testSubtasksInheritParentListRemoval() throws {
+        // Create a list
+        let listService = TaskListService(persistenceController: persistenceController)
+        let list = listService.createList(name: "Test List")
+
+        // Create parent task in list with subtasks
+        let parent = taskService.createTask(title: "Parent Task", listID: list.id)
+        taskService.createSubtask(title: "Subtask 1", parentTaskID: parent.id)
+
+        // Remove parent from list (set to nil)
+        // Note: .some(nil) is needed because listID is UUID?? (double optional)
+        // Passing nil directly means "don't change", while .some(nil) means "set to nil"
+        let updatedParent = parent.updated(listID: .some(nil))
+        taskService.updateTask(updatedParent)
+
+        // Verify subtasks also have no list
+        let subtasksAfter = taskService.fetchSubtasks(forParentID: parent.id)
+        XCTAssertEqual(subtasksAfter.count, 1)
+        XCTAssertNil(subtasksAfter.first?.listID, "Subtask should have no list when parent is removed from list")
+    }
+
 // MARK: - Undo Tests
 
     func testUndoDeleteTaskWithSubtasks() throws {
