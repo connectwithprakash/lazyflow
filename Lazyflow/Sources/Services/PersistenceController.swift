@@ -909,15 +909,18 @@ final class PersistenceController: @unchecked Sendable {
         }
 
         let context = viewContext
+        let inboxID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+
+        // Check for Inbox by its specific UUID to prevent race condition duplicates
         let request: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "isDefault == YES")
+        request.predicate = NSPredicate(format: "id == %@", inboxID as CVarArg)
 
         do {
-            let defaultLists = try context.fetch(request)
-            if defaultLists.isEmpty {
+            let existingInbox = try context.fetch(request)
+            if existingInbox.isEmpty {
                 // Create Inbox
                 let inbox = TaskListEntity(context: context)
-                inbox.id = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+                inbox.id = inboxID
                 inbox.name = "Inbox"
                 inbox.colorHex = "#5A6C71"
                 inbox.iconName = "tray"
@@ -927,8 +930,46 @@ final class PersistenceController: @unchecked Sendable {
 
                 save()
             }
+
+            // Clean up any duplicate Inbox lists (from previous race conditions)
+            removeDuplicateInboxLists()
         } catch {
             print("Failed to check for default lists: \(error)")
+        }
+    }
+
+    /// Remove duplicate Inbox lists, keeping only the one with the canonical UUID
+    private func removeDuplicateInboxLists() {
+        let context = viewContext
+        let inboxID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+
+        // Find all lists named "Inbox" or marked as default that don't have the canonical ID
+        let request: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "(name == %@ OR isDefault == YES) AND id != %@", "Inbox", inboxID as CVarArg)
+
+        do {
+            let duplicates = try context.fetch(request)
+            if !duplicates.isEmpty {
+                print("Removing \(duplicates.count) duplicate Inbox list(s)")
+
+                // Get the canonical inbox to move tasks to
+                let inboxRequest: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
+                inboxRequest.predicate = NSPredicate(format: "id == %@", inboxID as CVarArg)
+                let canonicalInbox = try context.fetch(inboxRequest).first
+
+                for duplicate in duplicates {
+                    // Move tasks from duplicate to canonical inbox
+                    if let tasks = duplicate.tasks as? Set<TaskEntity> {
+                        for task in tasks {
+                            task.list = canonicalInbox
+                        }
+                    }
+                    context.delete(duplicate)
+                }
+                save()
+            }
+        } catch {
+            print("Failed to remove duplicate Inbox lists: \(error)")
         }
     }
 }
