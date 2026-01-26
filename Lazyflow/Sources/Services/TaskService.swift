@@ -277,12 +277,19 @@ final class TaskService: ObservableObject {
             entity.subtaskOrder = task.subtaskOrder
 
             // Update list relationship
+            let oldListID = entity.list?.id
             if let listID = task.listID {
                 let listRequest: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
                 listRequest.predicate = NSPredicate(format: "id == %@", listID as CVarArg)
                 entity.list = try? context.fetch(listRequest).first
             } else {
                 entity.list = nil
+            }
+
+            // If list changed and this is a parent task, update subtasks to same list
+            let listChanged = oldListID != task.listID
+            if listChanged && entity.parentTaskID == nil {
+                updateSubtasksListID(parentID: task.id, newListID: task.listID, context: context)
             }
 
             // Update recurring rule
@@ -666,6 +673,32 @@ final class TaskService: ObservableObject {
         } catch {
             print("Failed to fetch subtasks: \(error)")
             return []
+        }
+    }
+
+    /// Update all subtasks to inherit parent's list assignment
+    private func updateSubtasksListID(parentID: UUID, newListID: UUID?, context: NSManagedObjectContext) {
+        let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "parentTaskID == %@ AND isSoftDeleted == NO", parentID as CVarArg)
+
+        do {
+            let subtaskEntities = try context.fetch(request)
+
+            // Get the new list entity if there's a listID
+            var newListEntity: TaskListEntity?
+            if let listID = newListID {
+                let listRequest: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
+                listRequest.predicate = NSPredicate(format: "id == %@", listID as CVarArg)
+                newListEntity = try? context.fetch(listRequest).first
+            }
+
+            // Update each subtask's list
+            for subtaskEntity in subtaskEntities {
+                subtaskEntity.list = newListEntity
+                subtaskEntity.updatedAt = Date()
+            }
+        } catch {
+            print("Failed to update subtasks list: \(error)")
         }
     }
 
