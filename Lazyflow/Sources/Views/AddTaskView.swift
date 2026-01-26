@@ -5,6 +5,7 @@ struct AddTaskView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: TaskViewModel
     @StateObject private var listService = TaskListService()
+    @StateObject private var categoryService = CategoryService.shared
     @StateObject private var llmService = LLMService.shared
     @FocusState private var isTitleFocused: Bool
 
@@ -268,19 +269,33 @@ struct AddTaskView: View {
 
                 // Category
                 Menu {
+                    // System categories
                     ForEach(TaskCategory.allCases) { category in
                         Button {
-                            viewModel.category = category
+                            viewModel.selectSystemCategory(category)
                         } label: {
                             Label(category.displayName, systemImage: category.iconName)
                         }
                     }
+
+                    // Custom categories (if any)
+                    if !categoryService.categories.isEmpty {
+                        Divider()
+
+                        ForEach(categoryService.categories) { customCategory in
+                            Button {
+                                viewModel.selectCustomCategory(customCategory.id)
+                            } label: {
+                                Label(customCategory.displayName, systemImage: customCategory.iconName)
+                            }
+                        }
+                    }
                 } label: {
                     QuickActionButtonContent(
-                        icon: viewModel.category.iconName,
-                        title: viewModel.category == .uncategorized ? "Category" : viewModel.category.displayName,
-                        isSelected: viewModel.category != .uncategorized,
-                        color: viewModel.category.color
+                        icon: categoryDisplayIcon,
+                        title: categoryDisplayName,
+                        isSelected: viewModel.hasCategorySelected,
+                        color: categoryDisplayColor
                     )
                 }
 
@@ -505,11 +520,38 @@ struct AddTaskView: View {
         return "List"
     }
 
+    // MARK: - Category Display
+
+    private var categoryDisplayName: String {
+        // Custom category takes precedence
+        if let customID = viewModel.customCategoryID,
+           let custom = categoryService.getCategory(byID: customID) {
+            return custom.displayName
+        }
+        return viewModel.category == .uncategorized ? "Category" : viewModel.category.displayName
+    }
+
+    private var categoryDisplayIcon: String {
+        if let customID = viewModel.customCategoryID,
+           let custom = categoryService.getCategory(byID: customID) {
+            return custom.iconName
+        }
+        return viewModel.category.iconName
+    }
+
+    private var categoryDisplayColor: Color {
+        if let customID = viewModel.customCategoryID,
+           let custom = categoryService.getCategory(byID: customID) {
+            return custom.color
+        }
+        return viewModel.category.color
+    }
+
     // MARK: - Selected Options
 
     private var hasSelectedOptions: Bool {
         viewModel.hasDueDate || viewModel.priority != .none || viewModel.hasReminder ||
-        viewModel.category != .uncategorized || viewModel.estimatedDuration != nil || !pendingSubtasks.isEmpty
+        viewModel.hasCategorySelected || viewModel.estimatedDuration != nil || !pendingSubtasks.isEmpty
     }
 
     private var selectedOptionsView: some View {
@@ -533,12 +575,12 @@ struct AddTaskView: View {
                     )
                 }
 
-                if viewModel.category != .uncategorized {
+                if viewModel.hasCategorySelected {
                     SelectedOptionChip(
-                        icon: viewModel.category.iconName,
-                        title: viewModel.category.displayName,
-                        color: viewModel.category.color,
-                        onRemove: { viewModel.category = .uncategorized }
+                        icon: categoryDisplayIcon,
+                        title: categoryDisplayName,
+                        color: categoryDisplayColor,
+                        onRemove: { viewModel.clearCategory() }
                     )
                 }
 

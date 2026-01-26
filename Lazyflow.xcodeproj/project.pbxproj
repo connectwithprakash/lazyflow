@@ -51,6 +51,7 @@
 		738C0EF9D5999920D27633EC /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9CF8B88B573FE889545383 /* NotificationServiceTests.swift */; };
 		74F222D6BB7724A7A20F52D6 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27865BC616420F3596100C78 /* WatchConnectivityService.swift */; };
 		7823D0C83819A502BE009352 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCEEDCCC7E90A6148060ACD /* SearchView.swift */; };
+		7852FB5E5E963816417CCBAB /* CategoryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B92B449FEFCFB65EC566ABC /* CategoryServiceTests.swift */; };
 		7910923F95010B898A909F3F /* LazyflowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8769C43782895FD84F8B04A /* LazyflowUITests.swift */; };
 		7D67DC8DFE777ACCCB8BAB0A /* CalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */; };
 		7DA39286A48480A61E66CCF0 /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF4C4543097EBF9234F97 /* WidgetDataStore.swift */; };
@@ -63,6 +64,7 @@
 		868C5108CBC9EEC25ABE4CE7 /* ListsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 868AB7877C9C7AEA584AECC2 /* ListsViewModel.swift */; };
 		8866988C5945766F87C8620D /* TaskActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28E22B96CFCEC9E8C7E4324F /* TaskActivityAttributes.swift */; };
 		89C5AA721859327B73862644 /* DailySummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B2071A23A13F5E9CB0EC8A /* DailySummaryService.swift */; };
+		8A0F81E92CEFDEBF408A25DD /* CategoryManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0573FE305CFEC8FC96B0D48 /* CategoryManagementView.swift */; };
 		95827FBAC980E3A947F735B9 /* AILearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7F2C216BBD762299BF4223 /* AILearningService.swift */; };
 		960D42712BB18131AB8DC9D6 /* AICorrection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B946560D0CEB75826E5C410B /* AICorrection.swift */; };
 		9729127186DBAAD1615E0FDA /* LLMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34293063E78842624055CD8C /* LLMProvider.swift */; };
@@ -111,12 +113,14 @@
 		F17F638CD450DED1113D0D65 /* RecurringRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F018E899F22FF4A0E0F8001 /* RecurringRule.swift */; };
 		F3CDE4F38C7E3602E18DAF6F /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37EE9B4E1E57C27373DF4BDE /* HistoryView.swift */; };
 		F3DD5D78DA037DC32D7D4B4D /* LazyflowUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */; };
+		F5197B43E520107422F453F8 /* CategoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074327A6E958D1C63453B02D /* CategoryService.swift */; };
 		F6538631367C9A9E80D16A5E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB436CC06BC124AF3305385B /* DesignSystem.swift */; };
 		F847E633D5AD71A505F65E36 /* LazyflowWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F93DA1CCE51B65E74DAB2FA3 /* SmartRescheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61776C1CF42FB28B3323BF50 /* SmartRescheduleServiceTests.swift */; };
 		FB4C171E524EA0FF9A7AD456 /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D7E695AE8A50888BB2CF464 /* Task.swift */; };
 		FB7A32A88B3679FF63D91F64 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE9C1B893E6D33EFB68B1B1 /* HistoryViewModel.swift */; };
 		FD56FCF2F09EA9046439B39A /* TaskTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD9381F83ADC609FB4E5790 /* TaskTimelineProvider.swift */; };
+		FDDD4A8B8AA7110057385535 /* CustomCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018BABE9766F92A0FE24061D /* CustomCategory.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -177,6 +181,8 @@
 
 /* Begin PBXFileReference section */
 		002395269F0E8026C0A2A79D /* DynamicIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicIslandView.swift; sourceTree = "<group>"; };
+		018BABE9766F92A0FE24061D /* CustomCategory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CustomCategory.swift; path = Lazyflow/Sources/Models/CustomCategory.swift; sourceTree = "<group>"; };
+		074327A6E958D1C63453B02D /* CategoryService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CategoryService.swift; path = Lazyflow/Sources/Services/CategoryService.swift; sourceTree = "<group>"; };
 		0966885EA526F6266DACE369 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
 		096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
 		0C5F23987492CF9DBF92700E /* DailySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryView.swift; sourceTree = "<group>"; };
@@ -226,6 +232,7 @@
 		72A0FCB4B915FD258190C3F4 /* WatchTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTaskRowView.swift; sourceTree = "<group>"; };
 		759DF447CB9E87A4077D9134 /* UndoToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoToast.swift; sourceTree = "<group>"; };
 		795DC26627EBE7C54E1A28A1 /* ConflictDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictDetectionService.swift; sourceTree = "<group>"; };
+		7B92B449FEFCFB65EC566ABC /* CategoryServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryServiceTests.swift; sourceTree = "<group>"; };
 		7C9CF8B88B573FE889545383 /* NotificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceTests.swift; sourceTree = "<group>"; };
 		8210DCBCD9408BFE2E2B7407 /* TaskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDetailView.swift; sourceTree = "<group>"; };
 		83FD268CF434D2866A63A99A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -273,6 +280,7 @@
 		D3391545EB6E7A4277AF8D35 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
 		D54995645C2EE5455A31488E /* Lazyflow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lazyflow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
+		E0573FE305CFEC8FC96B0D48 /* CategoryManagementView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CategoryManagementView.swift; path = Lazyflow/Sources/Views/CategoryManagementView.swift; sourceTree = "<group>"; };
 		E05FD4433FE32DC60940D39F /* SubtaskProgressBadge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SubtaskProgressBadge.swift; sourceTree = "<group>"; };
 		E8B3A75210BFBE685534AE28 /* AppleFoundationModelsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleFoundationModelsProvider.swift; sourceTree = "<group>"; };
 		E8C28B175A2ABFA5B21D7837 /* TaskListService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListService.swift; sourceTree = "<group>"; };
@@ -349,6 +357,8 @@
 			children = (
 				53F0045C2DE5A28D0C9F2112 /* Views */,
 				CB0C9EBF52CCE4241098820A /* ViewModels */,
+				68F1DB025B0413CB48C92D40 /* Models */,
+				C7AF097A60CFDCAF882E9877 /* Services */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -383,6 +393,7 @@
 				D24C309AFA3CB5EF4F9F98C0 /* SubtaskDetailView.swift */,
 				37EE9B4E1E57C27373DF4BDE /* HistoryView.swift */,
 				B04DF22918F4E6EDC348C2ED /* MoreView.swift */,
+				E0573FE305CFEC8FC96B0D48 /* CategoryManagementView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -434,6 +445,7 @@
 				61776C1CF42FB28B3323BF50 /* SmartRescheduleServiceTests.swift */,
 				D306089AAB63803F626C7041 /* ListsViewModelTests.swift */,
 				719F5DEC450F907CA28DC83A /* HistoryViewModelTests.swift */,
+				7B92B449FEFCFB65EC566ABC /* CategoryServiceTests.swift */,
 			);
 			path = LazyflowTests;
 			sourceTree = "<group>";
@@ -444,6 +456,14 @@
 				FDD9381F83ADC609FB4E5790 /* TaskTimelineProvider.swift */,
 			);
 			path = Providers;
+			sourceTree = "<group>";
+		};
+		68F1DB025B0413CB48C92D40 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				018BABE9766F92A0FE24061D /* CustomCategory.swift */,
+			);
+			name = Models;
 			sourceTree = "<group>";
 		};
 		783C51C0303BC5F36C409FE7 /* Extensions */ = {
@@ -586,6 +606,14 @@
 			);
 			name = LiveActivity;
 			path = LazyflowWidget/LiveActivity;
+			sourceTree = "<group>";
+		};
+		C7AF097A60CFDCAF882E9877 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				074327A6E958D1C63453B02D /* CategoryService.swift */,
+			);
+			name = Services;
 			sourceTree = "<group>";
 		};
 		CB0C9EBF52CCE4241098820A /* ViewModels */ = {
@@ -874,6 +902,7 @@
 				F93DA1CCE51B65E74DAB2FA3 /* SmartRescheduleServiceTests.swift in Sources */,
 				D6E6BBDD58560FF9FC3005E2 /* ListsViewModelTests.swift in Sources */,
 				8592BAFE8C071099BE362125 /* HistoryViewModelTests.swift in Sources */,
+				7852FB5E5E963816417CCBAB /* CategoryServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -964,6 +993,9 @@
 				F3CDE4F38C7E3602E18DAF6F /* HistoryView.swift in Sources */,
 				FB7A32A88B3679FF63D91F64 /* HistoryViewModel.swift in Sources */,
 				1BD7293BE9EE744157820093 /* MoreView.swift in Sources */,
+				FDDD4A8B8AA7110057385535 /* CustomCategory.swift in Sources */,
+				F5197B43E520107422F453F8 /* CategoryService.swift in Sources */,
+				8A0F81E92CEFDEBF408A25DD /* CategoryManagementView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

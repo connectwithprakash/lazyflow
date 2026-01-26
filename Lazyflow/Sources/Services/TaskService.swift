@@ -189,6 +189,7 @@ final class TaskService: ObservableObject {
         reminderDate: Date? = nil,
         priority: Priority = .none,
         category: TaskCategory = .uncategorized,
+        customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         estimatedDuration: TimeInterval? = nil,
         recurringRule: RecurringRule? = nil
@@ -204,6 +205,7 @@ final class TaskService: ObservableObject {
         entity.reminderDate = reminderDate
         entity.priorityRaw = priority.rawValue
         entity.categoryRaw = category.rawValue
+        entity.customCategoryID = customCategoryID
         entity.isCompleted = false
         entity.isArchived = false
         entity.estimatedDuration = estimatedDuration ?? 0
@@ -264,6 +266,7 @@ final class TaskService: ObservableObject {
             entity.reminderDate = task.reminderDate
             entity.priorityRaw = task.priority.rawValue
             entity.categoryRaw = task.category.rawValue
+            entity.customCategoryID = task.customCategoryID
             entity.statusRaw = task.status.rawValue
             entity.isCompleted = task.isCompleted
             entity.isArchived = task.isArchived
@@ -628,6 +631,7 @@ final class TaskService: ObservableObject {
         entity.dueTime = dueTime ?? parentEntity.dueTime
         entity.priorityRaw = priority?.rawValue ?? parentEntity.priorityRaw
         entity.categoryRaw = parentEntity.categoryRaw
+        entity.customCategoryID = parentEntity.customCategoryID  // Inherit custom category from parent
         entity.isCompleted = false
         entity.statusRaw = TaskStatus.pending.rawValue
         entity.isArchived = false
@@ -1042,6 +1046,7 @@ extension TaskEntity {
             isArchived: isArchived,
             priority: Priority(rawValue: priorityRaw) ?? .none,
             category: TaskCategory(rawValue: categoryRaw) ?? .uncategorized,
+            customCategoryID: customCategoryID,
             listID: list?.id,
             linkedEventID: linkedEventID,
             estimatedDuration: estimatedDuration > 0 ? estimatedDuration : nil,

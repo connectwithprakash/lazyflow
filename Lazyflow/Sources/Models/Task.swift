@@ -40,6 +40,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
     var priority: Priority
     var category: TaskCategory
+    var customCategoryID: UUID?  // When set, takes precedence over system category
     var listID: UUID?
     var linkedEventID: String?
     var estimatedDuration: TimeInterval?
@@ -99,6 +100,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         isArchived: Bool = false,
         priority: Priority = .none,
         category: TaskCategory = .uncategorized,
+        customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         linkedEventID: String? = nil,
         estimatedDuration: TimeInterval? = nil,
@@ -122,6 +124,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.isArchived = isArchived
         self.priority = priority
         self.category = category
+        self.customCategoryID = customCategoryID
         self.listID = listID
         self.linkedEventID = linkedEventID
         self.estimatedDuration = estimatedDuration
@@ -148,6 +151,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         isArchived: Bool = false,
         priority: Priority = .none,
         category: TaskCategory = .uncategorized,
+        customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         linkedEventID: String? = nil,
         estimatedDuration: TimeInterval? = nil,
@@ -172,6 +176,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
             isArchived: isArchived,
             priority: priority,
             category: category,
+            customCategoryID: customCategoryID,
             listID: listID,
             linkedEventID: linkedEventID,
             estimatedDuration: estimatedDuration,
@@ -360,6 +365,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         reminderDate: Date?? = nil,
         priority: Priority? = nil,
         category: TaskCategory? = nil,
+        customCategoryID: UUID?? = nil,
         listID: UUID?? = nil,
         estimatedDuration: TimeInterval?? = nil,
         recurringRule: RecurringRule?? = nil,
@@ -376,6 +382,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         if let reminderDate = reminderDate { copy.reminderDate = reminderDate }
         if let priority = priority { copy.priority = priority }
         if let category = category { copy.category = category }
+        if let customCategoryID = customCategoryID { copy.customCategoryID = customCategoryID }
         if let listID = listID { copy.listID = listID }
         if let estimatedDuration = estimatedDuration { copy.estimatedDuration = estimatedDuration }
         if let recurringRule = recurringRule { copy.recurringRule = recurringRule }
@@ -385,6 +392,11 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
 
         copy.updatedAt = Date()
         return copy
+    }
+
+    /// Whether task has a custom category assigned
+    var hasCustomCategory: Bool {
+        customCategoryID != nil
     }
 }
 
