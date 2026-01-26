@@ -266,6 +266,24 @@ struct AddTaskView: View {
                     )
                 }
 
+                // Category
+                Menu {
+                    ForEach(TaskCategory.allCases) { category in
+                        Button {
+                            viewModel.category = category
+                        } label: {
+                            Label(category.displayName, systemImage: category.iconName)
+                        }
+                    }
+                } label: {
+                    QuickActionButtonContent(
+                        icon: viewModel.category.iconName,
+                        title: viewModel.category == .uncategorized ? "Category" : viewModel.category.displayName,
+                        isSelected: viewModel.category != .uncategorized,
+                        color: viewModel.category.color
+                    )
+                }
+
                 // List
                 QuickActionButton(
                     icon: "folder",
