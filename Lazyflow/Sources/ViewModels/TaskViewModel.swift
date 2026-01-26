@@ -14,6 +14,7 @@ final class TaskViewModel: ObservableObject {
     @Published var hasReminder: Bool = false
     @Published var priority: Priority = .none
     @Published var category: TaskCategory = .uncategorized
+    @Published var customCategoryID: UUID?  // When set, takes precedence over system category
     @Published var selectedListID: UUID?
     @Published var estimatedDuration: TimeInterval?
     @Published var isRecurring: Bool = false
@@ -51,6 +52,7 @@ final class TaskViewModel: ObservableObject {
         hasReminder = task.reminderDate != nil
         priority = task.priority
         category = task.category
+        customCategoryID = task.customCategoryID
         selectedListID = task.listID
         estimatedDuration = task.estimatedDuration
 
@@ -98,6 +100,7 @@ final class TaskViewModel: ObservableObject {
                 reminderDate: hasReminder ? reminderDate : nil,
                 priority: priority,
                 category: category,
+                customCategoryID: customCategoryID,
                 listID: selectedListID,
                 estimatedDuration: estimatedDuration,
                 recurringRule: recurringRule
@@ -113,6 +116,7 @@ final class TaskViewModel: ObservableObject {
                 reminderDate: hasReminder ? reminderDate : nil,
                 priority: priority,
                 category: category,
+                customCategoryID: customCategoryID,
                 listID: selectedListID,
                 estimatedDuration: estimatedDuration,
                 recurringRule: recurringRule
@@ -151,6 +155,31 @@ final class TaskViewModel: ObservableObject {
         dueDate = nil
         hasDueTime = false
         dueTime = nil
+    }
+
+    // MARK: - Category Selection
+
+    /// Select a system category (clears custom category)
+    func selectSystemCategory(_ category: TaskCategory) {
+        self.category = category
+        self.customCategoryID = nil
+    }
+
+    /// Select a custom category
+    func selectCustomCategory(_ categoryID: UUID) {
+        self.category = .uncategorized  // Reset system category
+        self.customCategoryID = categoryID
+    }
+
+    /// Clear category selection (back to uncategorized)
+    func clearCategory() {
+        self.category = .uncategorized
+        self.customCategoryID = nil
+    }
+
+    /// Whether any category (system or custom) is selected
+    var hasCategorySelected: Bool {
+        category != .uncategorized || customCategoryID != nil
     }
 }
 

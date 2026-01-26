@@ -47,6 +47,22 @@ struct SettingsView: View {
                     }
                 }
 
+                // Categories
+                Section("Categories") {
+                    NavigationLink {
+                        CategoryManagementView()
+                    } label: {
+                        HStack {
+                            Label("Manage Categories", systemImage: "tag")
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+                            Spacer()
+                            Text("\(CategoryService.shared.categories.count) custom")
+                                .font(DesignSystem.Typography.footnote)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                    }
+                }
+
                 // Notifications
                 Section("Notifications") {
                     Button {
@@ -985,6 +1001,7 @@ struct AISettingsView: View {
                 notes: result.analysis.suggestedDescription,
                 priority: result.analysis.suggestedPriority,
                 category: result.analysis.suggestedCategory,
+                customCategoryID: result.analysis.suggestedCustomCategoryID,
                 estimatedDuration: TimeInterval(result.analysis.estimatedMinutes * 60)
             )
             taskService.updateTask(updatedTask)
@@ -1058,6 +1075,31 @@ struct BatchAnalysisReviewSheet: View {
 struct BatchAnalysisResultRow: View {
     @Binding var result: BatchAnalysisResult
 
+    // Category display helpers
+    private var categoryDisplayName: String {
+        if let customID = result.analysis.suggestedCustomCategoryID,
+           let custom = CategoryService.shared.getCategory(byID: customID) {
+            return custom.displayName
+        }
+        return result.analysis.suggestedCategory.displayName
+    }
+
+    private var categoryDisplayIcon: String {
+        if let customID = result.analysis.suggestedCustomCategoryID,
+           let custom = CategoryService.shared.getCategory(byID: customID) {
+            return custom.iconName
+        }
+        return result.analysis.suggestedCategory.iconName
+    }
+
+    private var categoryDisplayColor: Color {
+        if let customID = result.analysis.suggestedCustomCategoryID,
+           let custom = CategoryService.shared.getCategory(byID: customID) {
+            return custom.color
+        }
+        return result.analysis.suggestedCategory.color
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
             // Checkbox
@@ -1094,16 +1136,16 @@ struct BatchAnalysisResultRow: View {
                 HStack(spacing: DesignSystem.Spacing.sm) {
                     // Category
                     Label {
-                        Text(result.analysis.suggestedCategory.displayName)
+                        Text(categoryDisplayName)
                             .font(DesignSystem.Typography.caption2)
                     } icon: {
-                        Image(systemName: result.analysis.suggestedCategory.iconName)
+                        Image(systemName: categoryDisplayIcon)
                             .font(.system(size: 10))
                     }
-                    .foregroundColor(result.analysis.suggestedCategory.color)
+                    .foregroundColor(categoryDisplayColor)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
-                    .background(result.analysis.suggestedCategory.color.opacity(0.15))
+                    .background(categoryDisplayColor.opacity(0.15))
                     .cornerRadius(4)
 
                     // Priority (if not none)

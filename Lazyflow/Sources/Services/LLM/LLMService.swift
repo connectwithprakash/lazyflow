@@ -209,6 +209,13 @@ final class LLMService: ObservableObject {
         // Get learning context from user corrections
         let learningContext = AILearningService.shared.getCorrectionsContext()
 
+        // Build category list including custom categories
+        let systemCategories = "work|personal|health|finance|shopping|errands|learning|home"
+        let customCategories = CategoryService.shared.categories.map { $0.name.lowercased() }
+        let allCategories = customCategories.isEmpty
+            ? systemCategories
+            : systemCategories + "|" + customCategories.joined(separator: "|")
+
         var prompt = """
         Analyze this task completely:
 
@@ -240,7 +247,7 @@ final class LLMService: ObservableObject {
             "estimated_minutes": <number>,
             "suggested_priority": "<none|low|medium|high|urgent>",
             "best_time": "<morning|afternoon|evening|anytime>",
-            "category": "<work|personal|health|finance|shopping|errands|learning|home>",
+            "category": "<\(allCategories)>",
             "refined_title": "<improved title or null if original is good>",
             "suggested_description": "<helpful description or null if not needed>",
             "subtasks": [<list of suggested subtask strings>],
@@ -335,7 +342,11 @@ final class LLMService: ObservableObject {
         }
 
         let categoryStr = json["category"] as? String ?? "uncategorized"
-        let category: TaskCategory
+
+        // Try to match system category first
+        var category: TaskCategory = .uncategorized
+        var customCategoryID: UUID?
+
         switch categoryStr.lowercased() {
         case "work": category = .work
         case "personal": category = .personal
@@ -345,7 +356,12 @@ final class LLMService: ObservableObject {
         case "errands": category = .errands
         case "learning": category = .learning
         case "home": category = .home
-        default: category = .uncategorized
+        default:
+            // Check if it matches a custom category name
+            if let customCategory = CategoryService.shared.getCategory(byName: categoryStr) {
+                customCategoryID = customCategory.id
+                category = .uncategorized  // System category stays uncategorized when custom is used
+            }
         }
 
         let subtasks = json["subtasks"] as? [String] ?? []
@@ -360,6 +376,7 @@ final class LLMService: ObservableObject {
             suggestedPriority: priority,
             bestTime: bestTime,
             suggestedCategory: category,
+            suggestedCustomCategoryID: customCategoryID,
             subtasks: subtasks,
             tips: tips,
             refinedTitle: refinedTitle,
@@ -419,6 +436,7 @@ struct TaskAnalysis {
     let suggestedPriority: Priority
     let bestTime: BestTime
     let suggestedCategory: TaskCategory
+    let suggestedCustomCategoryID: UUID?  // When AI suggests a custom category
     let subtasks: [String]
     let tips: String
     let refinedTitle: String?
@@ -437,6 +455,7 @@ struct TaskAnalysis {
             suggestedPriority: .medium,
             bestTime: .anytime,
             suggestedCategory: .uncategorized,
+            suggestedCustomCategoryID: nil,
             subtasks: [],
             tips: "",
             refinedTitle: nil,
