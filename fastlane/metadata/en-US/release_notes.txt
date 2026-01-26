@@ -1,4 +1,13 @@
 What's New in 1.4.0:
 
-• Add Categories top-level view with UI test fixes
-• Add category and list pickers to task views
+Custom Categories:
+• Create your own categories with custom names, colors, and icons
+• Organize tasks exactly the way you want
+• Access categories from the new Categories view in More tab
+• Drag to reorder, tap to edit, swipe to delete
+• AI suggestions now include your custom categories
+• Categories sync automatically across all your devices via iCloud
+
+Bug Fixes:
+• Fixed tasks created from calendar events showing as conflicts
+• Improved overall stability
