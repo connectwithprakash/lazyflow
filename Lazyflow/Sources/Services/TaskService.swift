@@ -192,7 +192,8 @@ final class TaskService: ObservableObject {
         customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         estimatedDuration: TimeInterval? = nil,
-        recurringRule: RecurringRule? = nil
+        recurringRule: RecurringRule? = nil,
+        linkedEventID: String? = nil
     ) -> Task {
         let context = persistenceController.viewContext
 
@@ -209,6 +210,7 @@ final class TaskService: ObservableObject {
         entity.isCompleted = false
         entity.isArchived = false
         entity.estimatedDuration = estimatedDuration ?? 0
+        entity.linkedEventID = linkedEventID
         entity.createdAt = Date()
         entity.updatedAt = Date()
 

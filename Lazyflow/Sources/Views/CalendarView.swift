@@ -202,7 +202,8 @@ struct CalendarView: View {
             priority: task.priority,
             listID: task.listID,
             estimatedDuration: task.estimatedDuration,
-            recurringRule: task.recurringRule
+            recurringRule: task.recurringRule,
+            linkedEventID: task.linkedEventID
         )
     }
 
@@ -213,7 +214,8 @@ struct CalendarView: View {
             dueDate: event.startDate,
             dueTime: event.startDate,
             priority: .medium,
-            estimatedDuration: event.duration
+            estimatedDuration: event.duration,
+            linkedEventID: event.id
         )
 
         // Haptic feedback
