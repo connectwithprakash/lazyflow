@@ -5,6 +5,14 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/connectwithprakash/lazyflow/compare/v1.3.3...v1.4.0) (2026-01-26)
+
+
+### Features
+
+* Add Categories top-level view with UI test fixes ([#66](https://github.com/connectwithprakash/lazyflow/issues/66)) ([#138](https://github.com/connectwithprakash/lazyflow/issues/138)) ([8079f4c](https://github.com/connectwithprakash/lazyflow/commit/8079f4c3aaaf53eb0e3adea15fee81b3332f03d4))
+* Add category and list pickers to task views ([#129](https://github.com/connectwithprakash/lazyflow/issues/129)) ([7f7da15](https://github.com/connectwithprakash/lazyflow/commit/7f7da15724a100f9686d57c03e118af4a9a49986)), closes [#131](https://github.com/connectwithprakash/lazyflow/issues/131)
+
 ## [1.3.3](https://github.com/connectwithprakash/lazyflow/compare/v1.3.2...v1.3.3) (2026-01-22)
 
 
