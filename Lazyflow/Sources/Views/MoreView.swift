@@ -27,6 +27,19 @@ struct MoreView: View {
                     }
                     .accessibilityIdentifier("ListsCard")
 
+                    // Categories Card
+                    NavigationLink {
+                        CategoriesView()
+                    } label: {
+                        MoreCard(
+                            icon: "tag.fill",
+                            iconColor: .purple,
+                            title: "Categories",
+                            subtitle: "Browse tasks by category"
+                        )
+                    }
+                    .accessibilityIdentifier("CategoriesCard")
+
                     // MARK: - Insights Section
                     sectionHeader("Insights")
                         .padding(.top, DesignSystem.Spacing.sm)

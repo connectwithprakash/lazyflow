@@ -29,7 +29,12 @@ struct AddTaskView: View {
     @State private var originalDurationBeforeAI: TimeInterval?
     @State private var originalPriorityBeforeAI: Priority = .none
 
-    init(defaultDueDate: Date? = nil, defaultListID: UUID? = nil) {
+    init(
+        defaultDueDate: Date? = nil,
+        defaultListID: UUID? = nil,
+        defaultCategory: TaskCategory? = nil,
+        defaultCustomCategoryID: UUID? = nil
+    ) {
         let vm = TaskViewModel()
         if let date = defaultDueDate {
             vm.hasDueDate = true
@@ -37,6 +42,11 @@ struct AddTaskView: View {
         }
         if let listID = defaultListID {
             vm.selectedListID = listID
+        }
+        if let customCategoryID = defaultCustomCategoryID {
+            vm.selectCustomCategory(customCategoryID)
+        } else if let category = defaultCategory {
+            vm.selectSystemCategory(category)
         }
         _viewModel = StateObject(wrappedValue: vm)
     }
