@@ -97,9 +97,11 @@ platform :ios do
     )
 
     # Upload to TestFlight
+    changelog = File.read("./fastlane/metadata/en-US/testflight_notes.txt") rescue nil
     upload_to_testflight(
       api_key: api_key,
-      skip_waiting_for_build_processing: true
+      skip_waiting_for_build_processing: true,
+      changelog: changelog
     )
   end
 
