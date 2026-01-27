@@ -56,7 +56,7 @@ struct AddTaskView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            ScrollView {
                 // Main input area
                 VStack(spacing: DesignSystem.Spacing.md) {
                     // Title field with AI button
@@ -161,9 +161,8 @@ struct AddTaskView: View {
                 }
                 .padding(.bottom, DesignSystem.Spacing.lg)
                 .background(Color.adaptiveSurface)
-
-                Spacer()
             }
+            .scrollDismissesKeyboard(.interactively)
             .background(Color.adaptiveBackground)
             .navigationTitle("New Task")
             .navigationBarTitleDisplayMode(.inline)
