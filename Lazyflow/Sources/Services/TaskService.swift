@@ -386,11 +386,16 @@ final class TaskService: ObservableObject {
 
         var updatedTask = task.incrementIntradayCompletion()
 
+        // Cancel the next scheduled notification since user completed early
+        NotificationService.shared.cancelNextIntradayReminder(for: task.id)
+
         // Check if all completions for today are done
         if updatedTask.isIntradayCompleteForToday {
             // Mark the task as completed for today
             updatedTask.status = .completed
             updatedTask.completedAt = Date()
+            // Cancel all remaining intraday notifications for today
+            NotificationService.shared.cancelIntradayReminders(for: task.id)
         }
 
         updateTask(updatedTask)

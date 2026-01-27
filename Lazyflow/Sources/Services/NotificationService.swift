@@ -293,6 +293,37 @@ final class NotificationService: @unchecked Sendable {
         notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 
+    /// Cancel the next upcoming intraday notification for a task (called when user completes an instance)
+    func cancelNextIntradayReminder(for taskID: UUID) {
+        let taskIDString = taskID.uuidString
+
+        notificationCenter.getPendingNotificationRequests { [weak self] requests in
+            // Find all intraday notifications for this task
+            let intradayRequests = requests.filter { request in
+                request.identifier.hasPrefix("\(taskIDString)-intraday-")
+            }
+
+            guard !intradayRequests.isEmpty else { return }
+
+            // Sort by trigger date to find the next one
+            let sortedRequests = intradayRequests.sorted { req1, req2 in
+                guard let trigger1 = req1.trigger as? UNCalendarNotificationTrigger,
+                      let trigger2 = req2.trigger as? UNCalendarNotificationTrigger,
+                      let date1 = trigger1.nextTriggerDate(),
+                      let date2 = trigger2.nextTriggerDate() else {
+                    return false
+                }
+                return date1 < date2
+            }
+
+            // Cancel the next (earliest) one
+            if let nextRequest = sortedRequests.first {
+                self?.notificationCenter.removePendingNotificationRequests(withIdentifiers: [nextRequest.identifier])
+                print("Cancelled next intraday notification for task: \(taskIDString)")
+            }
+        }
+    }
+
     /// Reschedule all intraday notifications (call on app wake/background refresh)
     func rescheduleAllIntradayReminders(tasks: [Task]) {
         for task in tasks {
