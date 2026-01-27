@@ -278,6 +278,75 @@ struct SubtaskPeekPreview: View {
     }
 }
 
+// MARK: - Intraday Progress Badge
+
+/// Badge showing intraday completion progress (e.g., "2/3" for "Take medication 3x daily")
+struct IntradayProgressBadge: View {
+    let completedCount: Int
+    let targetCount: Int
+
+    /// Initialize from a task with intraday recurring rule
+    init(task: Task) {
+        self.completedCount = task.currentIntradayCompletions
+        self.targetCount = task.intradayTargetToday
+    }
+
+    /// Initialize with explicit counts
+    init(completedCount: Int, targetCount: Int) {
+        self.completedCount = completedCount
+        self.targetCount = targetCount
+    }
+
+    private var progress: Double {
+        guard targetCount > 0 else { return 0 }
+        return Double(completedCount) / Double(targetCount)
+    }
+
+    private var isComplete: Bool {
+        targetCount > 0 && completedCount >= targetCount
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            // Repeat icon to indicate this is an intraday recurring task
+            Image(systemName: "repeat")
+                .font(.system(size: 10))
+
+            // Progress circle
+            ZStack {
+                Circle()
+                    .stroke(Color.Lazyflow.textTertiary.opacity(0.3), lineWidth: 2)
+                    .frame(width: 14, height: 14)
+
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(
+                        isComplete ? Color.Lazyflow.success : Color.Lazyflow.accent,
+                        style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                    )
+                    .frame(width: 14, height: 14)
+                    .rotationEffect(.degrees(-90))
+
+                if isComplete {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundColor(Color.Lazyflow.success)
+                }
+            }
+
+            // Count text
+            Text("\(completedCount)/\(targetCount)")
+                .font(DesignSystem.Typography.caption2)
+                .foregroundColor(
+                    isComplete
+                        ? Color.Lazyflow.success
+                        : Color.Lazyflow.textTertiary
+                )
+        }
+        .accessibilityLabel("\(completedCount) of \(targetCount) completed today")
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Progress Badge") {
@@ -321,6 +390,18 @@ struct SubtaskPeekPreview: View {
                 isExpanded: true,
                 onToggle: {}
             )
+        }
+
+        Divider()
+
+        Text("Intraday Progress Badges")
+            .font(.headline)
+
+        HStack(spacing: 20) {
+            IntradayProgressBadge(completedCount: 0, targetCount: 3)
+            IntradayProgressBadge(completedCount: 1, targetCount: 3)
+            IntradayProgressBadge(completedCount: 2, targetCount: 3)
+            IntradayProgressBadge(completedCount: 3, targetCount: 3)
         }
     }
     .padding()

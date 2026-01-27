@@ -51,6 +51,10 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var updatedAt: Date
     var recurringRule: RecurringRule?
 
+    // MARK: - Intraday Completion Tracking
+    var intradayCompletionsToday: Int
+    var lastIntradayCompletionDate: Date?
+
     // MARK: - Subtask Support
     var parentTaskID: UUID?
     var subtasks: [Task]
@@ -89,6 +93,63 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         return completedSubtaskCount == subtasks.count
     }
 
+    // MARK: - Intraday Progress
+
+    /// Whether this is an intraday recurring task
+    var isIntradayTask: Bool {
+        recurringRule?.isIntraday ?? false
+    }
+
+    /// Target completions for today (based on recurring rule)
+    var intradayTargetToday: Int {
+        guard let rule = recurringRule, rule.isIntraday else { return 0 }
+
+        switch rule.frequency {
+        case .hourly:
+            // Calculate how many times based on hour interval and active hours
+            let times = rule.calculateIntradayTimes(for: Date())
+            return times.count
+        case .timesPerDay:
+            return rule.timesPerDay ?? 3
+        default:
+            return 0
+        }
+    }
+
+    /// Current intraday completions (auto-resets if date changed)
+    var currentIntradayCompletions: Int {
+        guard let lastDate = lastIntradayCompletionDate else {
+            return 0
+        }
+        // Reset if not same day
+        if !Calendar.current.isDate(lastDate, inSameDayAs: Date()) {
+            return 0
+        }
+        return intradayCompletionsToday
+    }
+
+    /// Progress string for intraday tasks (e.g., "2/3")
+    var intradayProgressString: String? {
+        guard isIntradayTask else { return nil }
+        let target = intradayTargetToday
+        guard target > 0 else { return nil }
+        return "\(currentIntradayCompletions)/\(target)"
+    }
+
+    /// Progress as value from 0.0 to 1.0 for intraday tasks
+    var intradayProgress: Double {
+        guard isIntradayTask else { return 0 }
+        let target = intradayTargetToday
+        guard target > 0 else { return 0 }
+        return min(1.0, Double(currentIntradayCompletions) / Double(target))
+    }
+
+    /// Whether all intraday completions are done for today
+    var isIntradayCompleteForToday: Bool {
+        guard isIntradayTask else { return false }
+        return currentIntradayCompletions >= intradayTargetToday
+    }
+
     init(
         id: UUID = UUID(),
         title: String,
@@ -110,6 +171,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         recurringRule: RecurringRule? = nil,
+        intradayCompletionsToday: Int = 0,
+        lastIntradayCompletionDate: Date? = nil,
         parentTaskID: UUID? = nil,
         subtasks: [Task] = [],
         subtaskOrder: Int32 = 0
@@ -134,6 +197,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.recurringRule = recurringRule
+        self.intradayCompletionsToday = intradayCompletionsToday
+        self.lastIntradayCompletionDate = lastIntradayCompletionDate
         self.parentTaskID = parentTaskID
         self.subtasks = subtasks
         self.subtaskOrder = subtaskOrder
@@ -161,6 +226,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         recurringRule: RecurringRule? = nil,
+        intradayCompletionsToday: Int = 0,
+        lastIntradayCompletionDate: Date? = nil,
         parentTaskID: UUID? = nil,
         subtasks: [Task] = [],
         subtaskOrder: Int32 = 0
@@ -186,6 +253,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
             createdAt: createdAt,
             updatedAt: updatedAt,
             recurringRule: recurringRule,
+            intradayCompletionsToday: intradayCompletionsToday,
+            lastIntradayCompletionDate: lastIntradayCompletionDate,
             parentTaskID: parentTaskID,
             subtasks: subtasks,
             subtaskOrder: subtaskOrder
@@ -352,6 +421,33 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         if let started = copy.startedAt {
             copy.accumulatedDuration += Date().timeIntervalSince(started)
         }
+        copy.updatedAt = Date()
+        return copy
+    }
+
+    /// Increment intraday completion count
+    /// Resets count if it's a new day
+    func incrementIntradayCompletion() -> Task {
+        var copy = self
+        let now = Date()
+
+        // Reset if new day
+        if let lastDate = copy.lastIntradayCompletionDate,
+           !Calendar.current.isDate(lastDate, inSameDayAs: now) {
+            copy.intradayCompletionsToday = 0
+        }
+
+        copy.intradayCompletionsToday += 1
+        copy.lastIntradayCompletionDate = now
+        copy.updatedAt = now
+        return copy
+    }
+
+    /// Reset intraday completion count (for new day or manual reset)
+    func resetIntradayCompletions() -> Task {
+        var copy = self
+        copy.intradayCompletionsToday = 0
+        copy.lastIntradayCompletionDate = nil
         copy.updatedAt = Date()
         return copy
     }

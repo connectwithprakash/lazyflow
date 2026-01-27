@@ -23,6 +23,14 @@ final class TaskViewModel: ObservableObject {
     @Published var recurringDaysOfWeek: [Int] = []
     @Published var recurringEndDate: Date?
 
+    // Intraday recurring properties
+    @Published var hourInterval: Int = 2
+    @Published var timesPerDay: Int = 3
+    @Published var specificTimes: [Date] = []
+    @Published var useSpecificTimes: Bool = false
+    @Published var activeHoursStart: Date = TaskViewModel.defaultActiveHoursStart
+    @Published var activeHoursEnd: Date = TaskViewModel.defaultActiveHoursEnd
+
     @Published var isValid: Bool = false
     @Published var isSaving: Bool = false
 
@@ -62,6 +70,14 @@ final class TaskViewModel: ObservableObject {
             recurringInterval = rule.interval
             recurringDaysOfWeek = rule.daysOfWeek ?? []
             recurringEndDate = rule.endDate
+
+            // Load intraday fields
+            hourInterval = rule.hourInterval ?? 2
+            timesPerDay = rule.timesPerDay ?? 3
+            specificTimes = rule.specificTimes ?? []
+            useSpecificTimes = rule.specificTimes != nil && !rule.specificTimes!.isEmpty
+            activeHoursStart = rule.activeHoursStart ?? TaskViewModel.defaultActiveHoursStart
+            activeHoursEnd = rule.activeHoursEnd ?? TaskViewModel.defaultActiveHoursEnd
         }
     }
 
@@ -83,11 +99,24 @@ final class TaskViewModel: ObservableObject {
 
         var recurringRule: RecurringRule?
         if isRecurring {
+            // Determine intraday fields based on frequency
+            let isIntraday = recurringFrequency == .hourly || recurringFrequency == .timesPerDay
+            let ruleHourInterval = recurringFrequency == .hourly ? hourInterval : nil
+            let ruleTimesPerDay = recurringFrequency == .timesPerDay ? timesPerDay : nil
+            let ruleSpecificTimes = (recurringFrequency == .timesPerDay && useSpecificTimes) ? specificTimes : nil
+            let ruleActiveStart = isIntraday ? activeHoursStart : nil
+            let ruleActiveEnd = isIntraday ? activeHoursEnd : nil
+
             recurringRule = RecurringRule(
                 frequency: recurringFrequency,
                 interval: recurringInterval,
                 daysOfWeek: recurringDaysOfWeek.isEmpty ? nil : recurringDaysOfWeek,
-                endDate: recurringEndDate
+                endDate: recurringEndDate,
+                hourInterval: ruleHourInterval,
+                timesPerDay: ruleTimesPerDay,
+                specificTimes: ruleSpecificTimes,
+                activeHoursStart: ruleActiveStart,
+                activeHoursEnd: ruleActiveEnd
             )
         }
 
@@ -131,6 +160,19 @@ final class TaskViewModel: ObservableObject {
 
     var isEditing: Bool {
         existingTask != nil
+    }
+
+    /// Whether the existing task has subtasks (used to prevent intraday recurring on tasks with subtasks)
+    var hasSubtasks: Bool {
+        existingTask?.hasSubtasks ?? false
+    }
+
+    /// Frequencies available for this task (excludes intraday if task has subtasks)
+    var availableFrequencies: [RecurringFrequency] {
+        if hasSubtasks {
+            return RecurringFrequency.allCases.filter { $0 != .hourly && $0 != .timesPerDay }
+        }
+        return Array(RecurringFrequency.allCases)
     }
 
     // MARK: - Quick Actions
@@ -183,9 +225,25 @@ final class TaskViewModel: ObservableObject {
     }
 }
 
-// MARK: - Duration Presets
+// MARK: - Defaults and Presets
 
 extension TaskViewModel {
+    /// Default active hours start (8:00 AM)
+    static var defaultActiveHoursStart: Date {
+        var components = DateComponents()
+        components.hour = 8
+        components.minute = 0
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    /// Default active hours end (10:00 PM)
+    static var defaultActiveHoursEnd: Date {
+        var components = DateComponents()
+        components.hour = 22
+        components.minute = 0
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
     static let durationPresets: [(String, TimeInterval)] = [
         ("15 min", 15 * 60),
         ("30 min", 30 * 60),

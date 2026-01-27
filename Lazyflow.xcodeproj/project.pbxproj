@@ -35,6 +35,7 @@
 		4884FDF6305640157B5BEA77 /* MorningBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61EC4AC29B50F17794EC5BF7 /* MorningBriefingView.swift */; };
 		4B8FBFDD3F89F43BF36A288B /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87E8C6CE81AAE400BCBDCC6 /* NotificationService.swift */; };
 		514462FECCB375A2E0CDECF6 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A8720AD9E15D86484861BD /* TodayView.swift */; };
+		53AC0090B9938DA00BAD5242 /* RecurringRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D31AA8106956A3E5AB5E060 /* RecurringRuleTests.swift */; };
 		584AEAA632B8FBA89C12CCFF /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3391545EB6E7A4277AF8D35 /* ListsView.swift */; };
 		59458963ACA0ED5B8963E1B1 /* LazyflowComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500B294690B749F58C76D79 /* LazyflowComplication.swift */; };
 		5C8B310FDC4166428B8F113F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE8A0C85317637E68DD7F26 /* Assets.xcassets */; };
@@ -195,6 +196,7 @@
 		14A21AD04C5407E342830D9E /* TaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModel.swift; sourceTree = "<group>"; };
 		155736724278218CAF5DFFA5 /* LazyflowWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LazyflowWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BDFA6859BC13DEBC35D1CEF /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
+		1D31AA8106956A3E5AB5E060 /* RecurringRuleTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringRuleTests.swift; sourceTree = "<group>"; };
 		1EDA02F17F284A77E160221A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FE8A0C85317637E68DD7F26 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2191176F2DC72BA5B861C6C8 /* TaskListServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListServiceTests.swift; sourceTree = "<group>"; };
@@ -452,6 +454,7 @@
 				D306089AAB63803F626C7041 /* ListsViewModelTests.swift */,
 				719F5DEC450F907CA28DC83A /* HistoryViewModelTests.swift */,
 				7B92B449FEFCFB65EC566ABC /* CategoryServiceTests.swift */,
+				1D31AA8106956A3E5AB5E060 /* RecurringRuleTests.swift */,
 			);
 			path = LazyflowTests;
 			sourceTree = "<group>";
@@ -912,6 +915,7 @@
 				D6E6BBDD58560FF9FC3005E2 /* ListsViewModelTests.swift in Sources */,
 				8592BAFE8C071099BE362125 /* HistoryViewModelTests.swift in Sources */,
 				7852FB5E5E963816417CCBAB /* CategoryServiceTests.swift in Sources */,
+				53AC0090B9938DA00BAD5242 /* RecurringRuleTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
