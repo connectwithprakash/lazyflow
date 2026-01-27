@@ -391,6 +391,8 @@ struct AddTaskView: View {
             }
 
             // Recurring
+            // TODO: [Design Milestone] Revisit show/hide toggle behavior for recurring options.
+            // Consider: direct toggle vs two-step enable, smart toggle based on state.
             QuickActionButton(
                 icon: "repeat",
                 title: viewModel.isRecurring ? viewModel.recurringFrequency.displayName : "Repeat",
