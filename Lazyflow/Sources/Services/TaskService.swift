@@ -226,11 +226,7 @@ final class TaskService: ObservableObject {
         // Create recurring rule if provided
         if let rule = recurringRule {
             let ruleEntity = RecurringRuleEntity(context: context)
-            ruleEntity.id = rule.id
-            ruleEntity.frequencyRaw = rule.frequency.rawValue
-            ruleEntity.interval = Int16(rule.interval)
-            ruleEntity.daysOfWeekArray = rule.daysOfWeek
-            ruleEntity.endDate = rule.endDate
+            ruleEntity.update(from: rule)
             entity.recurringRule = ruleEntity
         }
 
@@ -300,17 +296,10 @@ final class TaskService: ObservableObject {
             // Update recurring rule
             if let rule = task.recurringRule {
                 if let existingRule = entity.recurringRule {
-                    existingRule.frequencyRaw = rule.frequency.rawValue
-                    existingRule.interval = Int16(rule.interval)
-                    existingRule.daysOfWeekArray = rule.daysOfWeek
-                    existingRule.endDate = rule.endDate
+                    existingRule.update(from: rule)
                 } else {
                     let ruleEntity = RecurringRuleEntity(context: context)
-                    ruleEntity.id = rule.id
-                    ruleEntity.frequencyRaw = rule.frequency.rawValue
-                    ruleEntity.interval = Int16(rule.interval)
-                    ruleEntity.daysOfWeekArray = rule.daysOfWeek
-                    ruleEntity.endDate = rule.endDate
+                    ruleEntity.update(from: rule)
                     entity.recurringRule = ruleEntity
                 }
             } else {
@@ -1004,16 +993,7 @@ extension Notification.Name {
 
 extension TaskEntity {
     func toDomainModel(includeSubtasks: Bool = true) -> Task {
-        var recurringRule: RecurringRule?
-        if let ruleEntity = self.recurringRule {
-            recurringRule = RecurringRule(
-                id: ruleEntity.id ?? UUID(),
-                frequency: RecurringFrequency(rawValue: ruleEntity.frequencyRaw) ?? .daily,
-                interval: Int(ruleEntity.interval),
-                daysOfWeek: ruleEntity.daysOfWeekArray,
-                endDate: ruleEntity.endDate
-            )
-        }
+        let recurringRule = self.recurringRule?.toRecurringRule()
 
         // Handle status with backward compatibility for legacy isCompleted field
         let status: TaskStatus

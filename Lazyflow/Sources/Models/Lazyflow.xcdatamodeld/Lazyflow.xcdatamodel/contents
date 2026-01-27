@@ -48,11 +48,16 @@
         <relationship name="tasks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TaskEntity" inverseName="list" inverseEntity="TaskEntity"/>
     </entity>
     <entity name="RecurringRuleEntity" representedClassName="RecurringRuleEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="activeHoursEnd" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="activeHoursStart" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="daysOfWeek" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromData" customClassName="NSArray"/>
         <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="frequencyRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="hourInterval" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="interval" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="specificTimes" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromData" customClassName="NSArray"/>
+        <attribute name="timesPerDay" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="task" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskEntity" inverseName="recurringRule" inverseEntity="TaskEntity"/>
     </entity>
 </model>
