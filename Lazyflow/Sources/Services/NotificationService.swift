@@ -167,14 +167,151 @@ final class NotificationService: @unchecked Sendable {
         }
     }
 
+    // MARK: - Intraday Notifications
+
+    /// Maximum notifications per intraday task (to leave budget for other tasks)
+    private static let maxIntradayNotificationsPerTask = 10
+
+    /// Schedule intraday reminders for a task with an intraday recurring rule
+    /// Uses a rolling 24-hour window and respects iOS notification budget
+    func scheduleIntradayReminders(for task: Task) {
+        guard let rule = task.recurringRule, rule.isIntraday else { return }
+
+        // Cancel existing intraday notifications for this task
+        cancelIntradayReminders(for: task.id)
+
+        _Concurrency.Task {
+            let status = await checkPermissionStatus()
+
+            switch status {
+            case .notDetermined:
+                let granted = await requestPermission()
+                if granted {
+                    await scheduleIntradayNotifications(for: task, rule: rule)
+                }
+            case .authorized, .provisional, .ephemeral:
+                await scheduleIntradayNotifications(for: task, rule: rule)
+            case .denied:
+                print("Notification permission denied for intraday reminders")
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    /// Internal method to schedule intraday notifications
+    private func scheduleIntradayNotifications(for task: Task, rule: RecurringRule) async {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Calculate times for today and tomorrow (rolling 24-hour window)
+        let todayTimes = rule.calculateIntradayTimes(for: now)
+        let tomorrowTimes = rule.calculateIntradayTimes(for: calendar.date(byAdding: .day, value: 1, to: now) ?? now)
+
+        // Combine and filter to future times only
+        var allTimes = todayTimes.filter { $0 > now }
+        allTimes.append(contentsOf: tomorrowTimes)
+
+        // Limit to budget
+        let timesToSchedule = Array(allTimes.prefix(Self.maxIntradayNotificationsPerTask))
+
+        for (index, time) in timesToSchedule.enumerated() {
+            await scheduleIntradayNotification(
+                taskID: task.id,
+                title: task.title,
+                reminderTime: time,
+                index: index,
+                rule: rule
+            )
+        }
+
+        if !timesToSchedule.isEmpty {
+            print("Scheduled \(timesToSchedule.count) intraday notifications for task: \(task.title)")
+        }
+    }
+
+    /// Schedule a single intraday notification
+    private func scheduleIntradayNotification(
+        taskID: UUID,
+        title: String,
+        reminderTime: Date,
+        index: Int,
+        rule: RecurringRule
+    ) async {
+        let content = UNMutableNotificationContent()
+        content.title = intradayNotificationTitle(for: rule)
+        content.body = title
+        content.sound = .default
+        content.userInfo = [
+            "taskID": taskID.uuidString,
+            "isIntraday": true,
+            "intradayIndex": index
+        ]
+        content.categoryIdentifier = "INTRADAY_REMINDER"
+
+        let triggerDate = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute],
+            from: reminderTime
+        )
+        let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+
+        let identifier = "\(taskID.uuidString)-intraday-\(index)"
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            print("Failed to schedule intraday notification: \(error)")
+        }
+    }
+
+    /// Generate appropriate notification title based on intraday rule
+    private func intradayNotificationTitle(for rule: RecurringRule) -> String {
+        switch rule.frequency {
+        case .hourly:
+            let hours = rule.hourInterval ?? 2
+            return hours == 1 ? "Hourly Reminder" : "Every \(hours) Hours"
+        case .timesPerDay:
+            let count = rule.timesPerDay ?? 3
+            return "Daily Reminder (\(count)x/day)"
+        default:
+            return "Task Reminder"
+        }
+    }
+
+    /// Cancel all intraday reminders for a specific task
+    func cancelIntradayReminders(for taskID: UUID) {
+        // Cancel up to maxIntradayNotificationsPerTask notifications
+        var identifiers: [String] = []
+        for i in 0..<Self.maxIntradayNotificationsPerTask {
+            identifiers.append("\(taskID.uuidString)-intraday-\(i)")
+        }
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+
+    /// Reschedule all intraday notifications (call on app wake/background refresh)
+    func rescheduleAllIntradayReminders(tasks: [Task]) {
+        for task in tasks {
+            if let rule = task.recurringRule, rule.isIntraday, !task.isCompleted {
+                scheduleIntradayReminders(for: task)
+            }
+        }
+    }
+
     // MARK: - Cancel Notifications
 
-    /// Cancel a specific task reminder
+    /// Cancel a specific task reminder (including intraday)
     func cancelTaskReminder(taskID: UUID) {
         notificationCenter.removePendingNotificationRequests(withIdentifiers: [
             taskID.uuidString,
             "\(taskID.uuidString)-before"
         ])
+        // Also cancel any intraday reminders
+        cancelIntradayReminders(for: taskID)
     }
 
     /// Cancel all pending notifications
@@ -374,11 +511,20 @@ final class NotificationService: @unchecked Sendable {
             options: []
         )
 
+        // Intraday reminder category with complete and snooze actions
+        let intradayReminderCategory = UNNotificationCategory(
+            identifier: "INTRADAY_REMINDER",
+            actions: [completeAction, snoozeAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+
         notificationCenter.setNotificationCategories([
             taskReminderCategory,
             taskUpcomingCategory,
             dailySummaryCategory,
-            morningBriefingCategory
+            morningBriefingCategory,
+            intradayReminderCategory
         ])
     }
 }
