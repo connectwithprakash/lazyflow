@@ -649,6 +649,14 @@ final class TaskService: ObservableObject {
             return nil
         }
 
+        // Prevent adding subtasks to intraday recurring tasks
+        if let recurringRule = parentEntity.recurringRule,
+           let frequency = RecurringFrequency(rawValue: recurringRule.frequencyRaw),
+           (frequency == .hourly || frequency == .timesPerDay) {
+            print("Cannot add subtasks to intraday recurring tasks")
+            return nil
+        }
+
         // If parent is completed, adding a new subtask should uncomplete it
         if parentEntity.isCompleted {
             parentEntity.isCompleted = false

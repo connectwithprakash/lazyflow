@@ -162,6 +162,19 @@ final class TaskViewModel: ObservableObject {
         existingTask != nil
     }
 
+    /// Whether the existing task has subtasks (used to prevent intraday recurring on tasks with subtasks)
+    var hasSubtasks: Bool {
+        existingTask?.hasSubtasks ?? false
+    }
+
+    /// Frequencies available for this task (excludes intraday if task has subtasks)
+    var availableFrequencies: [RecurringFrequency] {
+        if hasSubtasks {
+            return RecurringFrequency.allCases.filter { $0 != .hourly && $0 != .timesPerDay }
+        }
+        return Array(RecurringFrequency.allCases)
+    }
+
     // MARK: - Quick Actions
 
     func setDueToday() {

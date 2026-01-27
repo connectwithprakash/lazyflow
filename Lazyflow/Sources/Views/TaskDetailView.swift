@@ -64,8 +64,8 @@ struct TaskDetailView: View {
                         .lineLimit(3...6)
                 }
 
-                // Subtasks Section (only for non-subtasks)
-                if !originalTask.isSubtask {
+                // Subtasks Section (only for non-subtasks and non-intraday tasks)
+                if !originalTask.isSubtask && !originalTask.isIntradayTask {
                     Section {
                         // Header with progress
                         HStack {
@@ -239,7 +239,7 @@ struct TaskDetailView: View {
 
                     if viewModel.isRecurring {
                         Picker("Frequency", selection: $viewModel.recurringFrequency) {
-                            ForEach(RecurringFrequency.allCases) { frequency in
+                            ForEach(viewModel.availableFrequencies) { frequency in
                                 Text(frequency.displayName).tag(frequency)
                             }
                         }
