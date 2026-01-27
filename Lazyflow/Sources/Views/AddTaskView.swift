@@ -23,6 +23,7 @@ struct AddTaskView: View {
     @State private var newSubtaskTitle = ""
     @State private var showDurationPicker = false
     @State private var showRecurringOptions = false
+    @State private var showReminderPicker = false
 
     // Store original values before AI analysis for un-apply
     @State private var originalTitleBeforeAI: String = ""
@@ -130,6 +131,13 @@ struct AddTaskView: View {
                     // Recurring options (expandable)
                     if showRecurringOptions {
                         recurringOptionsSection
+                            .padding(.horizontal)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    // Reminder picker (expandable)
+                    if showReminderPicker {
+                        reminderPickerSection
                             .padding(.horizontal)
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
@@ -342,13 +350,20 @@ struct AddTaskView: View {
                 // Reminder
                 QuickActionButton(
                     icon: "bell",
-                    title: viewModel.hasReminder ? "Reminder" : "Remind",
-                    isSelected: viewModel.hasReminder,
+                    title: viewModel.hasReminder ? formatReminderTime(viewModel.reminderDate) : "Remind",
+                    isSelected: viewModel.hasReminder || showReminderPicker,
                     color: Color.Lazyflow.info
                 ) {
-                    viewModel.hasReminder.toggle()
-                    if viewModel.hasReminder {
-                        viewModel.reminderDate = viewModel.dueDate ?? Date()
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showReminderPicker.toggle()
+                        if showReminderPicker {
+                            showDurationPicker = false
+                            showRecurringOptions = false
+                            if !viewModel.hasReminder {
+                                viewModel.hasReminder = true
+                                viewModel.reminderDate = viewModel.dueDate ?? Date()
+                            }
+                        }
                     }
                 }
             }
@@ -370,6 +385,7 @@ struct AddTaskView: View {
                     showDurationPicker.toggle()
                     if showDurationPicker {
                         showRecurringOptions = false
+                        showReminderPicker = false
                     }
                 }
             }
@@ -385,6 +401,7 @@ struct AddTaskView: View {
                     showRecurringOptions.toggle()
                     if showRecurringOptions {
                         showDurationPicker = false
+                        showReminderPicker = false
                     }
                 }
             }
@@ -514,6 +531,61 @@ struct AddTaskView: View {
         .padding(DesignSystem.Spacing.md)
         .background(Color.secondary.opacity(0.05))
         .cornerRadius(DesignSystem.CornerRadius.medium)
+    }
+
+    // MARK: - Reminder Picker Section
+
+    private var reminderPickerSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            // Toggle
+            Toggle("Set Reminder", isOn: $viewModel.hasReminder.animation())
+                .font(DesignSystem.Typography.subheadline)
+
+            if viewModel.hasReminder {
+                // Date and Time picker
+                DatePicker(
+                    "Remind at",
+                    selection: Binding(
+                        get: { viewModel.reminderDate ?? Date() },
+                        set: { viewModel.reminderDate = $0 }
+                    ),
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+                .font(DesignSystem.Typography.subheadline)
+
+                // Quick options
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Text("Quick Options")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        ReminderQuickOption(title: "Morning", time: "9:00 AM") {
+                            setReminderTime(hour: 9, minute: 0)
+                        }
+                        ReminderQuickOption(title: "Noon", time: "12:00 PM") {
+                            setReminderTime(hour: 12, minute: 0)
+                        }
+                        ReminderQuickOption(title: "Evening", time: "6:00 PM") {
+                            setReminderTime(hour: 18, minute: 0)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(DesignSystem.Spacing.md)
+        .background(Color.secondary.opacity(0.05))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+    }
+
+    private func setReminderTime(hour: Int, minute: Int) {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month, .day], from: viewModel.reminderDate ?? Date())
+        components.hour = hour
+        components.minute = minute
+        if let newDate = calendar.date(from: components) {
+            viewModel.reminderDate = newDate
+        }
     }
 
     // MARK: - Subtasks Section
@@ -788,7 +860,7 @@ struct AddTaskView: View {
                 if viewModel.hasReminder {
                     SelectedOptionChip(
                         icon: "bell.fill",
-                        title: "Reminder",
+                        title: formatReminderTime(viewModel.reminderDate),
                         color: Color.Lazyflow.info,
                         onRemove: { viewModel.hasReminder = false }
                     )
@@ -828,6 +900,28 @@ struct AddTaskView: View {
                 return "\(hours)h \(remainingMinutes)m"
             }
         }
+    }
+
+    private func formatReminderTime(_ date: Date?) -> String {
+        guard let date = date else { return "Remind" }
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateStyle = .none
+        timeFormatter.timeStyle = .short
+        let timeString = timeFormatter.string(from: date)
+
+        // If today, just show time
+        if Calendar.current.isDateInToday(date) {
+            return timeString
+        }
+        // If tomorrow, show "Tomorrow" + time
+        if Calendar.current.isDateInTomorrow(date) {
+            return "Tomorrow \(timeString)"
+        }
+        // Otherwise show short date + time
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .short
+        dateFormatter.timeStyle = .none
+        return "\(dateFormatter.string(from: date)) \(timeString)"
     }
 }
 
@@ -1658,6 +1752,32 @@ struct WeekdayButton: View {
                     Circle()
                         .fill(isSelected ? Color.Lazyflow.accent : Color.secondary.opacity(0.1))
                 )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Reminder Quick Option
+
+struct ReminderQuickOption: View {
+    let title: String
+    let time: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Text(title)
+                    .font(DesignSystem.Typography.caption1)
+                    .fontWeight(.medium)
+                Text(time)
+                    .font(DesignSystem.Typography.caption2)
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(DesignSystem.CornerRadius.small)
         }
         .buttonStyle(PlainButtonStyle())
     }
