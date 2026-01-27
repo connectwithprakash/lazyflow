@@ -47,22 +47,6 @@ struct SettingsView: View {
                     }
                 }
 
-                // Categories
-                Section("Categories") {
-                    NavigationLink {
-                        CategoryManagementView()
-                    } label: {
-                        HStack {
-                            Label("Manage Categories", systemImage: "tag")
-                                .foregroundColor(Color.Lazyflow.textPrimary)
-                            Spacer()
-                            Text("\(CategoryService.shared.categories.count) custom")
-                                .font(DesignSystem.Typography.footnote)
-                                .foregroundColor(Color.Lazyflow.textSecondary)
-                        }
-                    }
-                }
-
                 // Notifications
                 Section("Notifications") {
                     Button {
