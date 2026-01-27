@@ -281,8 +281,8 @@ final class RecurringRuleTests: XCTestCase {
 
         let rule = RecurringRule(
             frequency: .hourly,
-            hourInterval: 2,
-            endDate: yesterday
+            endDate: yesterday,
+            hourInterval: 2
         )
 
         let next = rule.nextOccurrence(from: Date())
@@ -353,9 +353,10 @@ final class RecurringRuleTests: XCTestCase {
     }
 
     func testRecurringRule_Equatable_WithIntradayFields() {
-        let rule1 = RecurringRule(frequency: .hourly, hourInterval: 2)
-        let rule2 = RecurringRule(frequency: .hourly, hourInterval: 2)
-        let rule3 = RecurringRule(frequency: .hourly, hourInterval: 3)
+        let sharedID = UUID()
+        let rule1 = RecurringRule(id: sharedID, frequency: .hourly, hourInterval: 2)
+        let rule2 = RecurringRule(id: sharedID, frequency: .hourly, hourInterval: 2)
+        let rule3 = RecurringRule(id: sharedID, frequency: .hourly, hourInterval: 3)
 
         XCTAssertEqual(rule1, rule2)
         XCTAssertNotEqual(rule1, rule3)
@@ -463,5 +464,252 @@ final class RecurringRuleTests: XCTestCase {
     func testIsIntraday_Weekly_False() {
         let rule = RecurringRule(frequency: .weekly)
         XCTAssertFalse(rule.isIntraday)
+    }
+}
+
+// MARK: - Task Intraday Completion Tracking Tests
+
+final class TaskIntradayCompletionTests: XCTestCase {
+
+    // MARK: - Basic Property Tests
+
+    func testTask_IntradayCompletionsToday_Default() {
+        let task = Task(title: "Test Task")
+        XCTAssertEqual(task.intradayCompletionsToday, 0)
+    }
+
+    func testTask_LastIntradayCompletionDate_Default() {
+        let task = Task(title: "Test Task")
+        XCTAssertNil(task.lastIntradayCompletionDate)
+    }
+
+    func testTask_IsIntradayTask_True() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(title: "Take medication", recurringRule: rule)
+        XCTAssertTrue(task.isIntradayTask)
+    }
+
+    func testTask_IsIntradayTask_False_NonRecurring() {
+        let task = Task(title: "Regular task")
+        XCTAssertFalse(task.isIntradayTask)
+    }
+
+    func testTask_IsIntradayTask_False_DailyRecurring() {
+        let rule = RecurringRule(frequency: .daily)
+        let task = Task(title: "Daily task", recurringRule: rule)
+        XCTAssertFalse(task.isIntradayTask)
+    }
+
+    // MARK: - Intraday Target Tests
+
+    func testTask_IntradayTargetToday_TimesPerDay() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(title: "Take medication", recurringRule: rule)
+        XCTAssertEqual(task.intradayTargetToday, 3)
+    }
+
+    func testTask_IntradayTargetToday_Hourly() {
+        let calendar = Calendar.current
+
+        var startComponents = DateComponents()
+        startComponents.hour = 8
+        let start = calendar.date(from: startComponents)!
+
+        var endComponents = DateComponents()
+        endComponents.hour = 20
+        let end = calendar.date(from: endComponents)!
+
+        // 8 AM to 8 PM with 2-hour intervals: 8, 10, 12, 14, 16, 18, 20 = 7 times
+        let rule = RecurringRule(
+            frequency: .hourly,
+            hourInterval: 2,
+            activeHoursStart: start,
+            activeHoursEnd: end
+        )
+        let task = Task(title: "Drink water", recurringRule: rule)
+        XCTAssertEqual(task.intradayTargetToday, 7)
+    }
+
+    func testTask_IntradayTargetToday_NonIntraday() {
+        let task = Task(title: "Regular task")
+        XCTAssertEqual(task.intradayTargetToday, 0)
+    }
+
+    // MARK: - Current Completions Tests
+
+    func testTask_CurrentIntradayCompletions_Today() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: Date()
+        )
+        XCTAssertEqual(task.currentIntradayCompletions, 2)
+    }
+
+    func testTask_CurrentIntradayCompletions_Yesterday_Resets() {
+        let calendar = Calendar.current
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: Date())!
+
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: yesterday
+        )
+        XCTAssertEqual(task.currentIntradayCompletions, 0)
+    }
+
+    func testTask_CurrentIntradayCompletions_NoLastDate() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: nil
+        )
+        XCTAssertEqual(task.currentIntradayCompletions, 0)
+    }
+
+    // MARK: - Progress String Tests
+
+    func testTask_IntradayProgressString_HasProgress() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: Date()
+        )
+        XCTAssertEqual(task.intradayProgressString, "2/3")
+    }
+
+    func testTask_IntradayProgressString_NonIntraday() {
+        let task = Task(title: "Regular task")
+        XCTAssertNil(task.intradayProgressString)
+    }
+
+    // MARK: - Progress Ratio Tests
+
+    func testTask_IntradayProgress_PartiallyComplete() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 4)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: Date()
+        )
+        XCTAssertEqual(task.intradayProgress, 0.5, accuracy: 0.01)
+    }
+
+    func testTask_IntradayProgress_Complete() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 3,
+            lastIntradayCompletionDate: Date()
+        )
+        XCTAssertEqual(task.intradayProgress, 1.0, accuracy: 0.01)
+    }
+
+    func testTask_IntradayProgress_Zero() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(title: "Take medication", recurringRule: rule)
+        XCTAssertEqual(task.intradayProgress, 0.0, accuracy: 0.01)
+    }
+
+    // MARK: - Completion Status Tests
+
+    func testTask_IsIntradayCompleteForToday_True() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 3,
+            lastIntradayCompletionDate: Date()
+        )
+        XCTAssertTrue(task.isIntradayCompleteForToday)
+    }
+
+    func testTask_IsIntradayCompleteForToday_False() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: Date()
+        )
+        XCTAssertFalse(task.isIntradayCompleteForToday)
+    }
+
+    func testTask_IsIntradayCompleteForToday_NonIntraday() {
+        let task = Task(title: "Regular task")
+        XCTAssertFalse(task.isIntradayCompleteForToday)
+    }
+
+    // MARK: - Increment Completion Tests
+
+    func testTask_IncrementIntradayCompletion() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(title: "Take medication", recurringRule: rule)
+
+        let updated = task.incrementIntradayCompletion()
+
+        XCTAssertEqual(updated.intradayCompletionsToday, 1)
+        XCTAssertNotNil(updated.lastIntradayCompletionDate)
+        XCTAssertTrue(Calendar.current.isDateInToday(updated.lastIntradayCompletionDate!))
+    }
+
+    func testTask_IncrementIntradayCompletion_FromExisting() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 1,
+            lastIntradayCompletionDate: Date()
+        )
+
+        let updated = task.incrementIntradayCompletion()
+
+        XCTAssertEqual(updated.intradayCompletionsToday, 2)
+    }
+
+    func testTask_IncrementIntradayCompletion_FromYesterday() {
+        let calendar = Calendar.current
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: Date())!
+
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: yesterday
+        )
+
+        let updated = task.incrementIntradayCompletion()
+
+        // Should reset and start from 1, not 3
+        XCTAssertEqual(updated.intradayCompletionsToday, 1)
+        XCTAssertTrue(Calendar.current.isDateInToday(updated.lastIntradayCompletionDate!))
+    }
+
+    // MARK: - Reset Completion Tests
+
+    func testTask_ResetIntradayCompletions() {
+        let rule = RecurringRule(frequency: .timesPerDay, timesPerDay: 3)
+        let task = Task(
+            title: "Take medication",
+            recurringRule: rule,
+            intradayCompletionsToday: 2,
+            lastIntradayCompletionDate: Date()
+        )
+
+        let updated = task.resetIntradayCompletions()
+
+        XCTAssertEqual(updated.intradayCompletionsToday, 0)
+        XCTAssertNil(updated.lastIntradayCompletionDate)
     }
 }

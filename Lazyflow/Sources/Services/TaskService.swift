@@ -276,6 +276,8 @@ final class TaskService: ObservableObject {
             entity.updatedAt = Date()
             entity.parentTaskID = task.parentTaskID
             entity.subtaskOrder = task.subtaskOrder
+            entity.intradayCompletionsToday = Int16(task.intradayCompletionsToday)
+            entity.lastIntradayCompletionDate = task.lastIntradayCompletionDate
 
             // Update list relationship
             let oldListID = entity.list?.id
@@ -344,6 +346,12 @@ final class TaskService: ObservableObject {
 
     /// Toggle task completion status
     func toggleTaskCompletion(_ task: Task) {
+        // For intraday tasks that aren't yet complete for today, increment completion instead
+        if task.isIntradayTask && !task.isCompleted && !task.isIntradayCompleteForToday {
+            incrementIntradayCompletion(task)
+            return
+        }
+
         var updatedTask = task
         if task.isCompleted {
             updatedTask = task.uncompleted()
@@ -369,6 +377,46 @@ final class TaskService: ObservableObject {
             }
         }
         updateTask(updatedTask)
+    }
+
+    /// Increment intraday completion count for a recurring intraday task
+    /// This is used when user taps to mark one instance of an intraday task (e.g., "Drink water every 2 hours")
+    func incrementIntradayCompletion(_ task: Task) {
+        guard task.isIntradayTask else { return }
+
+        var updatedTask = task.incrementIntradayCompletion()
+
+        // Check if all completions for today are done
+        if updatedTask.isIntradayCompleteForToday {
+            // Mark the task as completed for today
+            updatedTask.status = .completed
+            updatedTask.completedAt = Date()
+        }
+
+        updateTask(updatedTask)
+    }
+
+    /// Reset intraday completions for a task (called at the start of a new day)
+    func resetIntradayCompletions(_ task: Task) {
+        guard task.isIntradayTask else { return }
+
+        var updatedTask = task.resetIntradayCompletions()
+
+        // If task was completed yesterday, reset it to pending for today
+        if updatedTask.status == .completed {
+            updatedTask.status = .pending
+            updatedTask.completedAt = nil
+        }
+
+        updateTask(updatedTask)
+    }
+
+    /// Reset all intraday task completions (called at the start of a new day)
+    func resetAllIntradayCompletions() {
+        let intradayTasks = tasks.filter { $0.isIntradayTask }
+        for task in intradayTasks {
+            resetIntradayCompletions(task)
+        }
     }
 
     /// Move task to a different list
@@ -1038,6 +1086,8 @@ extension TaskEntity {
             createdAt: createdAt ?? Date(),
             updatedAt: updatedAt ?? Date(),
             recurringRule: recurringRule,
+            intradayCompletionsToday: Int(intradayCompletionsToday),
+            lastIntradayCompletionDate: lastIntradayCompletionDate,
             parentTaskID: parentTaskID,
             subtasks: subtaskModels,
             subtaskOrder: subtaskOrder

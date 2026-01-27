@@ -317,7 +317,7 @@ struct TaskRowView: View {
     // MARK: - Metadata
 
     private var hasMetadata: Bool {
-        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil || task.isInProgress || (task.isCompleted && task.startedAt != nil)
+        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil || task.isInProgress || (task.isCompleted && task.startedAt != nil) || task.isIntradayTask
     }
 
     private var metadataRow: some View {
@@ -327,6 +327,11 @@ struct TaskRowView: View {
                 expandableBadge
             } else if task.hasSubtasks && !hideSubtaskBadge {
                 SubtaskProgressBadge(task: task)
+            }
+
+            // Intraday progress badge for recurring intraday tasks
+            if task.isIntradayTask && !task.isCompleted {
+                IntradayProgressBadge(task: task)
             }
 
             // Time tracking - live timer for in-progress, duration for completed

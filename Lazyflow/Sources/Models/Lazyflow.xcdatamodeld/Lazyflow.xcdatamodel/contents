@@ -32,6 +32,8 @@
         <attribute name="subtaskOrder" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="title" optional="YES" attributeType="String" defaultValueString=""/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="intradayCompletionsToday" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastIntradayCompletionDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="list" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskListEntity" inverseName="tasks" inverseEntity="TaskListEntity"/>
         <relationship name="parentTask" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskEntity" inverseName="subtasks" inverseEntity="TaskEntity"/>
         <relationship name="recurringRule" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="RecurringRuleEntity" inverseName="task" inverseEntity="RecurringRuleEntity"/>
