@@ -239,26 +239,49 @@ struct TaskRowView: View {
 
     // MARK: - Checkbox View
 
+    /// Whether to show the progress ring (for subtasks or intraday tasks)
+    private var shouldShowProgressRing: Bool {
+        if task.isCompleted { return false }
+        // Show for subtasks when enabled, or always for intraday tasks
+        return (showProgressRing && task.hasSubtasks) || task.isIntradayTask
+    }
+
+    /// The progress value for the ring (subtask or intraday progress)
+    private var progressRingValue: Double {
+        if task.isIntradayTask {
+            return task.intradayProgress
+        }
+        return task.subtaskProgress
+    }
+
+    /// Whether the progress is complete
+    private var isProgressComplete: Bool {
+        if task.isIntradayTask {
+            return task.isIntradayCompleteForToday
+        }
+        return task.allSubtasksCompleted
+    }
+
     private var checkboxView: some View {
         ZStack {
-            // Progress ring for subtasks (background track) - outermost layer
-            if showProgressRing && !task.isCompleted {
+            // Progress ring for subtasks or intraday tasks (background track) - outermost layer
+            if shouldShowProgressRing {
                 // Track (background)
                 Circle()
                     .stroke(Color.Lazyflow.accent.opacity(0.35), lineWidth: 3)
                     .frame(width: 32, height: 32)
 
                 // Progress arc (only when there's progress)
-                if task.subtaskProgress > 0 {
+                if progressRingValue > 0 {
                     Circle()
-                        .trim(from: 0, to: task.subtaskProgress)
+                        .trim(from: 0, to: progressRingValue)
                         .stroke(
-                            task.allSubtasksCompleted ? Color.Lazyflow.success : Color.Lazyflow.accent,
+                            isProgressComplete ? Color.Lazyflow.success : Color.Lazyflow.accent,
                             style: StrokeStyle(lineWidth: 3, lineCap: .round)
                         )
                         .frame(width: 32, height: 32)
                         .rotationEffect(.degrees(-90))
-                        .animation(DesignSystem.Animation.standard, value: task.subtaskProgress)
+                        .animation(DesignSystem.Animation.standard, value: progressRingValue)
                 }
             }
 
@@ -317,7 +340,7 @@ struct TaskRowView: View {
     // MARK: - Metadata
 
     private var hasMetadata: Bool {
-        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil || task.isInProgress || (task.isCompleted && task.startedAt != nil) || task.isIntradayTask
+        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil || task.isInProgress || (task.isCompleted && task.startedAt != nil)
     }
 
     private var metadataRow: some View {
@@ -327,11 +350,6 @@ struct TaskRowView: View {
                 expandableBadge
             } else if task.hasSubtasks && !hideSubtaskBadge {
                 SubtaskProgressBadge(task: task)
-            }
-
-            // Intraday progress badge for recurring intraday tasks
-            if task.isIntradayTask && !task.isCompleted {
-                IntradayProgressBadge(task: task)
             }
 
             // Time tracking - live timer for in-progress, duration for completed
