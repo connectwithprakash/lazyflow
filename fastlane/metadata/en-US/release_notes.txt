@@ -1,4 +1,4 @@
-What's New in 1.4.0:
+What's New in 1.5.0:
 
 Custom Categories:
 • Create your own categories with custom names, colors, and icons
@@ -7,6 +7,18 @@ Custom Categories:
 • Drag to reorder, tap to edit, swipe to delete
 • AI suggestions now include your custom categories
 • Categories sync automatically across all your devices via iCloud
+
+Intraday Recurring Tasks:
+• Set tasks to repeat every few hours (e.g., "Drink water every 2 hours")
+• Or set tasks to repeat X times per day (e.g., "Take medication 3x daily")
+• Configure active hours to control when reminders are sent
+• Visual progress ring shows completion progress (2/3 done today)
+• Notifications automatically cancel when you complete early
+
+Add Task Improvements:
+• New duration picker to estimate how long tasks take
+• Improved recurring task options with all frequencies
+• Better keyboard handling - content scrolls when keyboard appears
 
 Bug Fixes:
 • Fixed tasks created from calendar events showing as conflicts
