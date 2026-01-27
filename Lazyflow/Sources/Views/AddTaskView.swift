@@ -502,6 +502,21 @@ struct AddTaskView: View {
                     }
                 }
 
+                // Hourly options
+                if viewModel.recurringFrequency == .hourly {
+                    hourlyOptionsView
+                }
+
+                // Times per day options
+                if viewModel.recurringFrequency == .timesPerDay {
+                    timesPerDayOptionsView
+                }
+
+                // Active hours (for intraday frequencies)
+                if viewModel.recurringFrequency == .hourly || viewModel.recurringFrequency == .timesPerDay {
+                    activeHoursView
+                }
+
                 // End date
                 Toggle("End Date", isOn: Binding(
                     get: { viewModel.recurringEndDate != nil },
@@ -531,6 +546,167 @@ struct AddTaskView: View {
         .padding(DesignSystem.Spacing.md)
         .background(Color.secondary.opacity(0.05))
         .cornerRadius(DesignSystem.CornerRadius.medium)
+    }
+
+    // MARK: - Hourly Options View
+
+    private var hourlyOptionsView: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            Text("Repeat Interval")
+                .font(DesignSystem.Typography.caption1)
+                .foregroundColor(Color.Lazyflow.textSecondary)
+
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Text("Every")
+                    .font(DesignSystem.Typography.subheadline)
+
+                Picker("Hours", selection: $viewModel.hourInterval) {
+                    ForEach(1...12, id: \.self) { hour in
+                        Text("\(hour)").tag(hour)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 60)
+
+                Text("hour\(viewModel.hourInterval == 1 ? "" : "s")")
+                    .font(DesignSystem.Typography.subheadline)
+
+                Spacer()
+            }
+
+            Text("e.g., \"Drink water\", \"Take a break\"")
+                .font(DesignSystem.Typography.caption2)
+                .foregroundColor(Color.Lazyflow.textTertiary)
+        }
+    }
+
+    // MARK: - Times Per Day Options View
+
+    private var timesPerDayOptionsView: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Picker("Times", selection: $viewModel.timesPerDay) {
+                    ForEach(2...12, id: \.self) { count in
+                        Text("\(count)").tag(count)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 60)
+
+                Text("times per day")
+                    .font(DesignSystem.Typography.subheadline)
+
+                Spacer()
+            }
+
+            // Toggle for specific times vs auto-distribute
+            Toggle("Set specific times", isOn: $viewModel.useSpecificTimes.animation())
+                .font(DesignSystem.Typography.subheadline)
+
+            if viewModel.useSpecificTimes {
+                specificTimesEditor
+            } else {
+                Text("Reminders will be evenly distributed during active hours")
+                    .font(DesignSystem.Typography.caption2)
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+            }
+        }
+    }
+
+    // MARK: - Specific Times Editor
+
+    private var specificTimesEditor: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            ForEach(0..<viewModel.timesPerDay, id: \.self) { index in
+                HStack {
+                    Text("Time \(index + 1)")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                        .frame(width: 60, alignment: .leading)
+
+                    DatePicker(
+                        "",
+                        selection: specificTimeBinding(for: index),
+                        displayedComponents: .hourAndMinute
+                    )
+                    .labelsHidden()
+                }
+            }
+        }
+        .padding(.top, DesignSystem.Spacing.xs)
+    }
+
+    private func specificTimeBinding(for index: Int) -> Binding<Date> {
+        Binding(
+            get: {
+                if index < viewModel.specificTimes.count {
+                    return viewModel.specificTimes[index]
+                }
+                // Default times distributed throughout the day
+                let calendar = Calendar.current
+                var components = DateComponents()
+                components.hour = 8 + (index * (12 / max(viewModel.timesPerDay, 1)))
+                components.minute = 0
+                return calendar.date(from: components) ?? Date()
+            },
+            set: { newValue in
+                // Ensure array has enough elements
+                while viewModel.specificTimes.count <= index {
+                    let calendar = Calendar.current
+                    var components = DateComponents()
+                    let nextIndex = viewModel.specificTimes.count
+                    components.hour = 8 + (nextIndex * (12 / max(viewModel.timesPerDay, 1)))
+                    components.minute = 0
+                    viewModel.specificTimes.append(calendar.date(from: components) ?? Date())
+                }
+                viewModel.specificTimes[index] = newValue
+            }
+        )
+    }
+
+    // MARK: - Active Hours View
+
+    private var activeHoursView: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            Text("Active Hours")
+                .font(DesignSystem.Typography.caption1)
+                .foregroundColor(Color.Lazyflow.textSecondary)
+
+            HStack(spacing: DesignSystem.Spacing.md) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("From")
+                        .font(DesignSystem.Typography.caption2)
+                        .foregroundColor(Color.Lazyflow.textTertiary)
+
+                    DatePicker(
+                        "",
+                        selection: $viewModel.activeHoursStart,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .labelsHidden()
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("To")
+                        .font(DesignSystem.Typography.caption2)
+                        .foregroundColor(Color.Lazyflow.textTertiary)
+
+                    DatePicker(
+                        "",
+                        selection: $viewModel.activeHoursEnd,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .labelsHidden()
+                }
+
+                Spacer()
+            }
+
+            Text("Reminders only during these hours")
+                .font(DesignSystem.Typography.caption2)
+                .foregroundColor(Color.Lazyflow.textTertiary)
+        }
+        .padding(.top, DesignSystem.Spacing.sm)
     }
 
     // MARK: - Reminder Picker Section
@@ -818,6 +994,17 @@ struct AddTaskView: View {
         viewModel.isRecurring || !pendingSubtasks.isEmpty
     }
 
+    private var recurringDisplayTitle: String {
+        switch viewModel.recurringFrequency {
+        case .hourly:
+            return "Every \(viewModel.hourInterval)h"
+        case .timesPerDay:
+            return "\(viewModel.timesPerDay)x/day"
+        default:
+            return viewModel.recurringFrequency.displayName
+        }
+    }
+
     private var selectedOptionsView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: DesignSystem.Spacing.sm) {
@@ -869,7 +1056,7 @@ struct AddTaskView: View {
                 if viewModel.isRecurring {
                     SelectedOptionChip(
                         icon: "repeat",
-                        title: viewModel.recurringFrequency.displayName,
+                        title: recurringDisplayTitle,
                         color: Color.Lazyflow.info,
                         onRemove: { viewModel.isRecurring = false }
                     )

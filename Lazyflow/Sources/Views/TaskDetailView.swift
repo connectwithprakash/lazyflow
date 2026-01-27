@@ -256,6 +256,62 @@ struct TaskDetailView: View {
                             weekdayPicker
                         }
 
+                        // Hourly options
+                        if viewModel.recurringFrequency == .hourly {
+                            HStack {
+                                Text("Every")
+                                Picker("Hours", selection: $viewModel.hourInterval) {
+                                    ForEach(1...12, id: \.self) { hour in
+                                        Text("\(hour)").tag(hour)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                Text("hour\(viewModel.hourInterval == 1 ? "" : "s")")
+                                Spacer()
+                            }
+                        }
+
+                        // Times per day options
+                        if viewModel.recurringFrequency == .timesPerDay {
+                            HStack {
+                                Picker("Times", selection: $viewModel.timesPerDay) {
+                                    ForEach(2...12, id: \.self) { count in
+                                        Text("\(count)").tag(count)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                Text("times per day")
+                                Spacer()
+                            }
+
+                            Toggle("Set specific times", isOn: $viewModel.useSpecificTimes.animation())
+
+                            if viewModel.useSpecificTimes {
+                                ForEach(0..<viewModel.timesPerDay, id: \.self) { index in
+                                    DatePicker(
+                                        "Time \(index + 1)",
+                                        selection: specificTimeBinding(for: index),
+                                        displayedComponents: .hourAndMinute
+                                    )
+                                }
+                            }
+                        }
+
+                        // Active hours (for intraday frequencies)
+                        if viewModel.recurringFrequency == .hourly || viewModel.recurringFrequency == .timesPerDay {
+                            DatePicker(
+                                "Active from",
+                                selection: $viewModel.activeHoursStart,
+                                displayedComponents: .hourAndMinute
+                            )
+
+                            DatePicker(
+                                "Active until",
+                                selection: $viewModel.activeHoursEnd,
+                                displayedComponents: .hourAndMinute
+                            )
+                        }
+
                         Toggle("End Date", isOn: Binding(
                             get: { viewModel.recurringEndDate != nil },
                             set: { if !$0 { viewModel.recurringEndDate = nil } else { viewModel.recurringEndDate = Date().addingDays(30) } }
@@ -462,6 +518,36 @@ struct TaskDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Specific Time Binding Helper
+
+    private func specificTimeBinding(for index: Int) -> Binding<Date> {
+        Binding(
+            get: {
+                if index < viewModel.specificTimes.count {
+                    return viewModel.specificTimes[index]
+                }
+                // Default times distributed throughout the day
+                let calendar = Calendar.current
+                var components = DateComponents()
+                components.hour = 8 + (index * (12 / max(viewModel.timesPerDay, 1)))
+                components.minute = 0
+                return calendar.date(from: components) ?? Date()
+            },
+            set: { newValue in
+                // Ensure array has enough elements
+                while viewModel.specificTimes.count <= index {
+                    let calendar = Calendar.current
+                    var components = DateComponents()
+                    let nextIndex = viewModel.specificTimes.count
+                    components.hour = 8 + (nextIndex * (12 / max(viewModel.timesPerDay, 1)))
+                    components.minute = 0
+                    viewModel.specificTimes.append(calendar.date(from: components) ?? Date())
+                }
+                viewModel.specificTimes[index] = newValue
+            }
+        )
     }
 
     // MARK: - Weekday Picker
