@@ -1,7 +1,7 @@
 [build]
   publish = "docs/site/"
-  # Only build on main branch - skip all other branches to save build minutes
-  ignore = "[ \"$BRANCH\" != \"main\" ]"
+  # Skip build if docs/site/ hasn't changed (saves build minutes)
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- docs/site/"
 
 [build.processing]
   skip_processing = true
