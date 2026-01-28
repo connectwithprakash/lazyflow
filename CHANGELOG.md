@@ -5,6 +5,13 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1](https://github.com/connectwithprakash/lazyflow/compare/v1.5.0...v1.5.1) (2026-01-28)
+
+
+### Bug Fixes
+
+* Only deploy when docs/site changes to save Netlify build minutes ([958d27f](https://github.com/connectwithprakash/lazyflow/commit/958d27fbee41162e74dba37373880760a9e9183f))
+
 ## [1.5.0](https://github.com/connectwithprakash/lazyflow/compare/v1.4.0...v1.5.0) (2026-01-28)
 
 
