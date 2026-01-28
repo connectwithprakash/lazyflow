@@ -37,6 +37,7 @@ This file provides guidance to Claude Code (claude.com/claude-code) when working
 8. **Document:** Iteratively review `docs/` and update relevant documentation:
    - `docs/project/` - Check roadmap, user-flows, design-system for updates
    - `fastlane/metadata/en-US/release_notes.txt` - Add to What's New
+   - `fastlane/metadata/en-US/promotional_text.txt` - Update promotional text
    - `README.md` - Update if major features change app capabilities
    - Screenshots (if UI changed):
      - Take screenshots in iOS Simulator (iPhone 17 Pro) in both light and dark modes
