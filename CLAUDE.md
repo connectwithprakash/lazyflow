@@ -23,6 +23,29 @@ This file provides guidance to Claude Code (claude.com/claude-code) when working
 - Research solutions when encountering issues
 - Follow Swift/iOS community best practices
 
+**DEVELOPMENT WORKFLOW:**
+1. **Start fresh:** Always pull `origin/main` before starting work
+2. **Branch:** Create a branch linked to GitHub issue (e.g., `feat/123-feature-name` or `fix/123-bug-name`)
+3. **Plan:** Think thoroughly about the implementation approach before coding
+4. **TDD:** Write tests first, then implement to make them pass
+5. **Implement:** Code the feature/fix iteratively
+6. **Test:**
+   - Run unit tests
+   - Run UI tests on iPhone 17 Pro and iPad simulators
+   - Manual testing on physical iPhone
+7. **Commit:** Create small, iterative commits with clear messages
+8. **Document:** Iteratively review `docs/` and update relevant documentation:
+   - `docs/project/` - Check roadmap, user-flows, design-system for updates
+   - `fastlane/metadata/en-US/release_notes.txt` - Add to What's New
+   - `README.md` - Update if major features change app capabilities
+   - Screenshots (if UI changed):
+     - Take screenshots in iOS Simulator (iPhone 17 Pro) in both light and dark modes
+     - Save to `docs/site/assets/screenshots/light/` and `docs/site/assets/screenshots/dark/`
+     - Use numbered naming convention (e.g., `21-feature-name.png`)
+     - Add to `docs/site/design/index.html` (not the main landing page)
+     - Update the design system version in the footer
+9. **PR:** Do NOT create PR without explicit permission from the user
+
 ## Project Overview
 
 Lazyflow is an AI-powered, calendar-integrated todo app for iOS. The core value proposition is helping us plan our day - see calendar events alongside tasks, schedule tasks as time blocks, and get AI-powered "What should I do next?" recommendations with daily summaries.
