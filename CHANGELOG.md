@@ -5,6 +5,20 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0](https://github.com/connectwithprakash/lazyflow/compare/v1.4.0...v1.5.0) (2026-01-28)
+
+
+### Features
+
+* Add intraday recurring tasks (hourly reminders) ([#145](https://github.com/connectwithprakash/lazyflow/issues/145)) ([2a45637](https://github.com/connectwithprakash/lazyflow/commit/2a45637b2ee08f4ff35858cd1d1a91ae55f98dd0))
+* **add-task:** Add duration, recurring, and improved reminder options ([#141](https://github.com/connectwithprakash/lazyflow/issues/141)) ([5bc2642](https://github.com/connectwithprakash/lazyflow/commit/5bc2642da6e05d073ceda34edacfffc64ff36c97))
+
+
+### Bug Fixes
+
+* Reduce verbose logging in InboxCleanup function ([b7d81e9](https://github.com/connectwithprakash/lazyflow/commit/b7d81e9e4021356472e627a47227aa34f09eea9b))
+* **ui:** Enable scrolling in AddTaskView when keyboard is visible ([#147](https://github.com/connectwithprakash/lazyflow/issues/147)) ([8cf6d3e](https://github.com/connectwithprakash/lazyflow/commit/8cf6d3ee9114e92650e11776a762350cedf89385))
+
 ## [1.4.0](https://github.com/connectwithprakash/lazyflow/compare/v1.3.3...v1.4.0) (2026-01-26)
 
 
