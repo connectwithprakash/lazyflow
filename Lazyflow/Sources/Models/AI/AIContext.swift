@@ -71,13 +71,30 @@ struct AIContext {
         }
         context += "\n"
 
-        // User patterns
+        // User patterns - categories with details
         let topCategories = userPatterns.topCategories(limit: 3)
         if !topCategories.isEmpty {
             context += "Most used categories: \(topCategories.joined(separator: ", "))\n"
+
+            // Add duration and time patterns for top categories
+            for category in topCategories {
+                var details: [String] = []
+
+                if let avgDuration = userPatterns.averageDuration(for: category) {
+                    details.append("avg \(avgDuration) min")
+                }
+
+                if let preferredTime = userPatterns.preferredTime(for: category) {
+                    details.append("usually \(preferredTime)")
+                }
+
+                if !details.isEmpty {
+                    context += "  - \(category): \(details.joined(separator: ", "))\n"
+                }
+            }
         }
 
-        // Time preferences
+        // Task-specific keyword matching
         if let taskContext = taskContext {
             let keywords = AICorrection.extractKeywords(from: taskContext.title)
             for keyword in keywords {

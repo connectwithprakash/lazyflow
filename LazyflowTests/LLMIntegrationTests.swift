@@ -189,7 +189,9 @@ final class LLMIntegrationTests: XCTestCase {
 
         print("")
         print("=== AFTER (#134): Running with user history ===")
-        print("Context: work(5x morning, 90min), personal(4x evening, 20min), errands(3x, 45min), health(3x morning, 30min)")
+        let afterContext = AIContextService.shared.buildContext()
+        print("Context string sent to AI:")
+        print(afterContext.toPromptString())
         print("")
 
         for task in tasks {
