@@ -358,6 +358,9 @@ final class TaskService: ObservableObject {
         } else {
             updatedTask = task.completed()
 
+            // Record completion for AI context learning
+            AIContextService.shared.recordTaskCompletion(task)
+
             // Handle recurring task completion
             if let rule = task.recurringRule, let dueDate = task.dueDate {
                 if let nextDate = rule.nextOccurrence(from: dueDate) {
