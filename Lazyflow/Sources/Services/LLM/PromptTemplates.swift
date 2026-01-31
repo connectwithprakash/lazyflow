@@ -182,20 +182,14 @@ enum PromptTemplates {
 
         Available categories: \(allCategories)
 
-        Example:
-        Task: "Prepare presentation for Monday meeting"
-        Response: {
-            "estimated_minutes": 90,
-            "suggested_priority": "high",
-            "best_time": "morning",
-            "category": "work",
-            "refined_title": null,
-            "suggested_description": "Create slides and rehearse key points",
-            "subtasks": ["Outline main points", "Create slides", "Practice delivery"],
-            "tips": "Start with the conclusion first."
-        }
+        Examples:
+        Task: "Call mom"
+        Response: {"estimated_minutes": 15, "suggested_priority": "medium", "best_time": "evening", "category": "personal", "refined_title": null, "suggested_description": null, "subtasks": [], "tips": "Find a quiet spot."}
 
-        Provide analysis with subtasks limited to 3 items maximum:
+        Task: "Prepare presentation for Monday meeting"
+        Response: {"estimated_minutes": 90, "suggested_priority": "high", "best_time": "morning", "category": "work", "refined_title": null, "suggested_description": "Create slides and rehearse key points", "subtasks": ["Outline main points", "Create slides", "Practice delivery"], "tips": "Start with the conclusion."}
+
+        Provide analysis. Only include subtasks for complex tasks that benefit from breakdown:
         {
             "estimated_minutes": <number between 5 and 480>,
             "suggested_priority": "<none|low|medium|high|urgent>",
@@ -203,7 +197,7 @@ enum PromptTemplates {
             "category": "<one of the available categories>",
             "refined_title": "<improved title or null if original is good>",
             "suggested_description": "<helpful description or null if not needed>",
-            "subtasks": [<up to 3 actionable subtask strings>],
+            "subtasks": [<empty array for simple tasks, up to 3 items for complex tasks>],
             "tips": "<one brief productivity tip, 10 words or less>"
         }
         """
