@@ -137,16 +137,13 @@ final class LLMService: ObservableObject {
     }
 
     private func buildFullAnalysisPrompt(task: Task) -> String {
-        // Get learning context from user corrections
-        let learningContext = AILearningService.shared.getCorrectionsContext()
-
-        // Get custom category names
-        let customCategories = CategoryService.shared.categories.map { $0.name }
+        // Get unified context from AIContextService
+        let context = AIContextService.shared.buildContext(for: task)
 
         return PromptTemplates.buildFullAnalysisPrompt(
             task: task,
-            learningContext: learningContext,
-            customCategories: customCategories
+            learningContext: context.toPromptString(),
+            customCategories: context.customCategories
         )
     }
 
