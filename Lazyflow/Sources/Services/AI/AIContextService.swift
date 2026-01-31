@@ -24,6 +24,19 @@ final class AIContextService: ObservableObject {
         self.userPatterns = UserPatterns.load()
     }
 
+    // MARK: - Pattern Management
+
+    /// Reload patterns from UserDefaults (useful after external changes)
+    func reloadPatterns() {
+        userPatterns = UserPatterns.load()
+    }
+
+    /// Reset patterns (useful for testing)
+    func resetPatterns() {
+        userPatterns = UserPatterns()
+        userPatterns.save()
+    }
+
     // MARK: - Context Building
 
     /// Build complete AI context for task analysis

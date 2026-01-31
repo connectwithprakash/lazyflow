@@ -3,6 +3,14 @@ import XCTest
 
 final class AIContextTests: XCTestCase {
 
+    // MARK: - Setup/Teardown
+
+    override func tearDown() {
+        super.tearDown()
+        // Reset shared state to avoid order-dependent test behavior
+        AIContextService.shared.resetPatterns()
+    }
+
     // MARK: - UserPatterns Tests
 
     func testUserPatterns_RecordCompletion() {
@@ -205,5 +213,19 @@ final class AIContextTests: XCTestCase {
 
         XCTAssertGreaterThanOrEqual(quality, 0.0)
         XCTAssertLessThanOrEqual(quality, 1.0)
+    }
+
+    // MARK: - Integration Test for Context Output
+
+    func testActualContextString_PrintsOutput() {
+        // Build context and print what AI actually receives
+        let context = AIContextService.shared.buildContext()
+        let contextString = context.toPromptString()
+
+        print("=== ACTUAL CONTEXT STRING SENT TO AI ===")
+        print(contextString)
+        print("=========================================")
+
+        XCTAssertFalse(contextString.isEmpty)
     }
 }
