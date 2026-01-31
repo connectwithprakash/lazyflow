@@ -254,6 +254,67 @@ final class PromptTemplatesTests: XCTestCase {
         """
         let result = PromptTemplates.parseDurationResponse(response)
 
-        XCTAssertGreaterThan(result.estimatedMinutes, 0, "Should not allow negative duration")
+        XCTAssertGreaterThanOrEqual(result.estimatedMinutes, 5, "Should clamp to minimum 5 minutes")
+    }
+
+    func testParseDurationResponse_BelowMinimumRange() {
+        // Values 2-4 should be clamped to 5 (prompt specifies 5-480)
+        let response = """
+        {"estimated_minutes": 3, "confidence": "medium", "reasoning": "Quick task."}
+        """
+        let result = PromptTemplates.parseDurationResponse(response)
+
+        XCTAssertEqual(result.estimatedMinutes, 5, "Should clamp values below 5 to minimum 5")
+    }
+
+    func testParseDurationResponse_DecimalValue() {
+        // Model might return decimal - should round to Int
+        let response = """
+        {"estimated_minutes": 45.5, "confidence": "high", "reasoning": "Estimate with decimal."}
+        """
+        let result = PromptTemplates.parseDurationResponse(response)
+
+        XCTAssertEqual(result.estimatedMinutes, 46, "Should round decimal to nearest Int")
+    }
+
+    func testParseDurationResponse_DecimalValueRoundDown() {
+        let response = """
+        {"estimated_minutes": 45.4, "confidence": "high", "reasoning": "Estimate with decimal."}
+        """
+        let result = PromptTemplates.parseDurationResponse(response)
+
+        XCTAssertEqual(result.estimatedMinutes, 45, "Should round decimal down when < .5")
+    }
+
+    func testParseFullAnalysisResponse_BelowMinimumRange() {
+        let response = """
+        {
+            "estimated_minutes": 2,
+            "suggested_priority": "low",
+            "best_time": "anytime",
+            "category": "personal",
+            "subtasks": [],
+            "tips": ""
+        }
+        """
+        let result = PromptTemplates.parseFullAnalysisResponse(response)
+
+        XCTAssertEqual(result.estimatedMinutes, 5, "Should clamp values below 5 to minimum 5")
+    }
+
+    func testParseFullAnalysisResponse_DecimalValue() {
+        let response = """
+        {
+            "estimated_minutes": 90.7,
+            "suggested_priority": "medium",
+            "best_time": "morning",
+            "category": "work",
+            "subtasks": [],
+            "tips": ""
+        }
+        """
+        let result = PromptTemplates.parseFullAnalysisResponse(response)
+
+        XCTAssertEqual(result.estimatedMinutes, 91, "Should round decimal to nearest Int")
     }
 }

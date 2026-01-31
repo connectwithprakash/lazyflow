@@ -50,6 +50,11 @@ This file provides guidance to AI coding agents when working with code in this r
       - Update the design system version in the footer
     - Deploy website: `netlify deploy --prod --dir=docs/site`
 11. **PR:** Do NOT push or create PR without explicit permission from the user
+12. **Review:** When PR review comments are received:
+    - Analyze each comment for validity (is it a real issue or misunderstanding?)
+    - For valid issues: fix the code, add tests if needed, push updates
+    - For invalid issues: respond with clear explanation why
+    - Re-run tests after any changes
 
 ## Project Overview
 

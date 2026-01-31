@@ -220,14 +220,18 @@ enum PromptTemplates {
             return TaskEstimate(estimatedMinutes: 30, confidence: .low, reasoning: "Could not parse response")
         }
 
-        var minutes = json["estimated_minutes"] as? Int ?? 30
-
-        // Cap at reasonable values
-        if minutes < 1 {
-            minutes = 5
-        } else if minutes > 480 {
-            minutes = 480
+        // Accept Int or Double (round decimals)
+        var minutes: Int
+        if let intValue = json["estimated_minutes"] as? Int {
+            minutes = intValue
+        } else if let doubleValue = json["estimated_minutes"] as? Double {
+            minutes = Int(doubleValue.rounded())
+        } else {
+            minutes = 30
         }
+
+        // Clamp to prompt-specified range (5-480 minutes)
+        minutes = max(5, min(480, minutes))
 
         let confidenceStr = json["confidence"] as? String ?? "low"
         let reasoning = json["reasoning"] as? String ?? ""
@@ -271,9 +275,17 @@ enum PromptTemplates {
             return TaskAnalysis.default
         }
 
-        var minutes = json["estimated_minutes"] as? Int ?? 30
-        if minutes < 1 { minutes = 5 }
-        if minutes > 480 { minutes = 480 }
+        // Accept Int or Double (round decimals)
+        var minutes: Int
+        if let intValue = json["estimated_minutes"] as? Int {
+            minutes = intValue
+        } else if let doubleValue = json["estimated_minutes"] as? Double {
+            minutes = Int(doubleValue.rounded())
+        } else {
+            minutes = 30
+        }
+        // Clamp to prompt-specified range (5-480 minutes)
+        minutes = max(5, min(480, minutes))
 
         let priorityStr = json["suggested_priority"] as? String ?? "medium"
         let priority: Priority
