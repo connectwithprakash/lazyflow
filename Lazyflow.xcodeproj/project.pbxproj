@@ -59,6 +59,7 @@
 		7D67DC8DFE777ACCCB8BAB0A /* CalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */; };
 		7DA39286A48480A61E66CCF0 /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF4C4543097EBF9234F97 /* WidgetDataStore.swift */; };
 		7F2C2B0C3C574AC99E818D9F /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F41C3B0383366E7103B4CF90 /* Date+Extensions.swift */; };
+		8071EDCDA3DD15043A1BB2C0 /* LLMIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ADAD1ACBAC91B938484104C /* LLMIntegrationTests.swift */; };
 		817598CAAB47B85A0E010F68 /* CreateTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE4810CD2553AFFD5304282 /* CreateTaskIntent.swift */; };
 		8225AC8314ECBEE21682818B /* LazyflowWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 155736724278218CAF5DFFA5 /* LazyflowWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		84AC41F31D9B77784C40FB43 /* LazyflowWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18A003B1DA91B6D86F47C66 /* LazyflowWidgetBundle.swift */; };
@@ -263,6 +264,7 @@
 		96B4790C4DFDF82098E35533 /* Lazyflow.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Lazyflow.xcdatamodel; sourceTree = "<group>"; };
 		995E5EE728F68F1923B8D461 /* WatchTodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTodayView.swift; sourceTree = "<group>"; };
 		9A6F193E9CEA6006BEA79268 /* CategoriesViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoriesViewModel.swift; sourceTree = "<group>"; };
+		9ADAD1ACBAC91B938484104C /* LLMIntegrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LLMIntegrationTests.swift; sourceTree = "<group>"; };
 		9C2C6D7CF3D5DE85D39BCFD9 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9D7E695AE8A50888BB2CF464 /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Task.swift; sourceTree = "<group>"; };
 		A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowTests.swift; sourceTree = "<group>"; };
@@ -460,6 +462,7 @@
 				7B92B449FEFCFB65EC566ABC /* CategoryServiceTests.swift */,
 				1D31AA8106956A3E5AB5E060 /* RecurringRuleTests.swift */,
 				85F74F47B7EDA48FBFEC06EE /* PromptTemplatesTests.swift */,
+				9ADAD1ACBAC91B938484104C /* LLMIntegrationTests.swift */,
 			);
 			path = LazyflowTests;
 			sourceTree = "<group>";
@@ -923,6 +926,7 @@
 				7852FB5E5E963816417CCBAB /* CategoryServiceTests.swift in Sources */,
 				53AC0090B9938DA00BAD5242 /* RecurringRuleTests.swift in Sources */,
 				05DB858C42201EAD93563B13 /* PromptTemplatesTests.swift in Sources */,
+				8071EDCDA3DD15043A1BB2C0 /* LLMIntegrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
