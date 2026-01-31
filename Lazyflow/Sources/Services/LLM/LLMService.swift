@@ -110,7 +110,7 @@ final class LLMService: ObservableObject {
         do {
             let response = try await currentProvider.complete(
                 prompt: prompt,
-                systemPrompt: systemPrompt ?? "You are a productivity assistant helping with task management. Respond in JSON format only."
+                systemPrompt: systemPrompt ?? PromptTemplates.taskAnalysisSystemPrompt
             )
             return response
         } catch {
@@ -122,183 +122,42 @@ final class LLMService: ObservableObject {
     // MARK: - Prompt Building
 
     private func buildEstimationPrompt(title: String, notes: String?) -> String {
-        var prompt = """
-        Estimate the duration for this task:
-
-        Task: \(title)
-        """
-
-        if let notes = notes, !notes.isEmpty {
-            prompt += "\nDetails: \(notes)"
-        }
-
-        prompt += """
-
-        Consider complexity, typical time for similar tasks, and any implied subtasks.
-
-        Respond in JSON format only:
-        {
-            "estimated_minutes": <number>,
-            "confidence": "<low|medium|high>",
-            "reasoning": "<brief explanation>"
-        }
-        """
-
-        return prompt
+        return PromptTemplates.buildDurationEstimationPrompt(title: title, notes: notes)
     }
 
     private func buildPriorityPrompt(title: String, notes: String?, dueDate: Date?) -> String {
-        var prompt = """
-        Suggest a priority level for this task:
-
-        Task: \(title)
-        """
-
-        if let notes = notes, !notes.isEmpty {
-            prompt += "\nDetails: \(notes)"
-        }
-
-        if let dueDate = dueDate {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            prompt += "\nDue: \(formatter.string(from: dueDate))"
-        }
-
-        prompt += """
-
-        Consider urgency, importance, and impact of delay.
-
-        Respond in JSON format only:
-        {
-            "priority": "<none|low|medium|high|urgent>",
-            "reasoning": "<brief explanation>"
-        }
-        """
-
-        return prompt
+        return PromptTemplates.buildPrioritySuggestionPrompt(title: title, notes: notes, dueDate: dueDate)
     }
 
     private func buildOrderingPrompt(tasks: [Task]) -> String {
-        let taskList = tasks.enumerated().map { index, task in
-            var item = "\(index + 1). \(task.title)"
-            if let dueDate = task.dueDate {
-                let formatter = DateFormatter()
-                formatter.dateStyle = .short
-                item += " (Due: \(formatter.string(from: dueDate)))"
-            }
-            item += " [Priority: \(task.priority.displayName)]"
-            return item
-        }.joined(separator: "\n")
-
-        return """
-        Suggest the optimal order to complete these tasks:
-
-        \(taskList)
-
-        Consider due dates, dependencies, energy levels, and quick wins.
-
-        Respond in JSON format only:
-        {
-            "order": [<task numbers in suggested order>],
-            "reasoning": "<brief explanation>"
+        let taskData = tasks.enumerated().map { index, task in
+            (index: index + 1, title: task.title, dueDate: task.dueDate, priority: task.priority.displayName)
         }
-        """
+        return PromptTemplates.buildTaskOrderingPrompt(tasks: taskData)
     }
 
     private func buildFullAnalysisPrompt(task: Task) -> String {
         // Get learning context from user corrections
         let learningContext = AILearningService.shared.getCorrectionsContext()
 
-        // Build category list including custom categories
-        let systemCategories = "work|personal|health|finance|shopping|errands|learning|home"
-        let customCategories = CategoryService.shared.categories.map { $0.name.lowercased() }
-        let allCategories = customCategories.isEmpty
-            ? systemCategories
-            : systemCategories + "|" + customCategories.joined(separator: "|")
+        // Get custom category names
+        let customCategories = CategoryService.shared.categories.map { $0.name }
 
-        var prompt = """
-        Analyze this task completely:
-
-        Title: \(task.title)
-        """
-
-        if let notes = task.notes, !notes.isEmpty {
-            prompt += "\nDetails: \(notes)"
-        }
-
-        if let dueDate = task.dueDate {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            prompt += "\nDue: \(formatter.string(from: dueDate))"
-        }
-
-        prompt += "\nCurrent Priority: \(task.priority.displayName)"
-
-        // Include learning context
-        prompt += "\n\n\(learningContext)"
-
-        prompt += """
-
-        Provide complete analysis including duration, priority, best time, category, refined title, suggested description, subtasks, and tips.
-        Consider the user preferences above when making suggestions.
-
-        Respond in JSON format only:
-        {
-            "estimated_minutes": <number>,
-            "suggested_priority": "<none|low|medium|high|urgent>",
-            "best_time": "<morning|afternoon|evening|anytime>",
-            "category": "<\(allCategories)>",
-            "refined_title": "<improved title or null if original is good>",
-            "suggested_description": "<helpful description or null if not needed>",
-            "subtasks": [<list of suggested subtask strings>],
-            "tips": "<productivity tip>"
-        }
-        """
-
-        return prompt
+        return PromptTemplates.buildFullAnalysisPrompt(
+            task: task,
+            learningContext: learningContext,
+            customCategories: customCategories
+        )
     }
 
     // MARK: - Response Parsing
 
     private func parseEstimationResponse(_ response: String) -> TaskEstimate {
-        guard let data = extractJSON(from: response),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return TaskEstimate(estimatedMinutes: 30, confidence: .low, reasoning: "Could not parse response")
-        }
-
-        let minutes = json["estimated_minutes"] as? Int ?? 30
-        let confidenceStr = json["confidence"] as? String ?? "low"
-        let reasoning = json["reasoning"] as? String ?? ""
-
-        let confidence: TaskEstimate.Confidence
-        switch confidenceStr.lowercased() {
-        case "high": confidence = .high
-        case "medium": confidence = .medium
-        default: confidence = .low
-        }
-
-        return TaskEstimate(estimatedMinutes: minutes, confidence: confidence, reasoning: reasoning)
+        return PromptTemplates.parseDurationResponse(response)
     }
 
     private func parsePriorityResponse(_ response: String) -> PrioritySuggestion {
-        guard let data = extractJSON(from: response),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return PrioritySuggestion(priority: .medium, reasoning: "Could not parse response")
-        }
-
-        let priorityStr = json["priority"] as? String ?? "medium"
-        let reasoning = json["reasoning"] as? String ?? ""
-
-        let priority: Priority
-        switch priorityStr.lowercased() {
-        case "urgent": priority = .urgent
-        case "high": priority = .high
-        case "medium": priority = .medium
-        case "low": priority = .low
-        default: priority = .none
-        }
-
-        return PrioritySuggestion(priority: priority, reasoning: reasoning)
+        return PromptTemplates.parsePriorityResponse(response)
     }
 
     private func parseOrderingResponse(_ response: String, tasks: [Task]) -> [TaskOrderSuggestion] {
@@ -315,73 +174,7 @@ final class LLMService: ObservableObject {
     }
 
     private func parseFullAnalysisResponse(_ response: String) -> TaskAnalysis {
-        guard let data = extractJSON(from: response),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return TaskAnalysis.default
-        }
-
-        let minutes = json["estimated_minutes"] as? Int ?? 30
-
-        let priorityStr = json["suggested_priority"] as? String ?? "medium"
-        let priority: Priority
-        switch priorityStr.lowercased() {
-        case "urgent": priority = .urgent
-        case "high": priority = .high
-        case "medium": priority = .medium
-        case "low": priority = .low
-        default: priority = .none
-        }
-
-        let bestTimeStr = json["best_time"] as? String ?? "anytime"
-        let bestTime: TaskAnalysis.BestTime
-        switch bestTimeStr.lowercased() {
-        case "morning": bestTime = .morning
-        case "afternoon": bestTime = .afternoon
-        case "evening": bestTime = .evening
-        default: bestTime = .anytime
-        }
-
-        let categoryStr = json["category"] as? String ?? "uncategorized"
-
-        // Try to match system category first
-        var category: TaskCategory = .uncategorized
-        var customCategoryID: UUID?
-
-        switch categoryStr.lowercased() {
-        case "work": category = .work
-        case "personal": category = .personal
-        case "health": category = .health
-        case "finance": category = .finance
-        case "shopping": category = .shopping
-        case "errands": category = .errands
-        case "learning": category = .learning
-        case "home": category = .home
-        default:
-            // Check if it matches a custom category name
-            if let customCategory = CategoryService.shared.getCategory(byName: categoryStr) {
-                customCategoryID = customCategory.id
-                category = .uncategorized  // System category stays uncategorized when custom is used
-            }
-        }
-
-        let subtasks = json["subtasks"] as? [String] ?? []
-        let tips = json["tips"] as? String ?? ""
-
-        // Parse new fields - handle null values
-        let refinedTitle = json["refined_title"] as? String
-        let suggestedDescription = json["suggested_description"] as? String
-
-        return TaskAnalysis(
-            estimatedMinutes: minutes,
-            suggestedPriority: priority,
-            bestTime: bestTime,
-            suggestedCategory: category,
-            suggestedCustomCategoryID: customCategoryID,
-            subtasks: subtasks,
-            tips: tips,
-            refinedTitle: refinedTitle,
-            suggestedDescription: suggestedDescription
-        )
+        return PromptTemplates.parseFullAnalysisResponse(response)
     }
 
     /// Extract JSON from response that might contain extra text
