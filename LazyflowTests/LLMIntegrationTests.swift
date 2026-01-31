@@ -226,6 +226,39 @@ final class LLMIntegrationTests: XCTestCase {
 
         print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════╝")
 
+        // Assert: Context with patterns should be richer than empty context
+        let beforeContext = AIContext.empty.toPromptString()
+        let afterContextStr = afterContext.toPromptString()
+        XCTAssertGreaterThan(
+            afterContextStr.count,
+            beforeContext.count,
+            "Context with user patterns should be longer than empty context"
+        )
+
+        // Assert: Context should include category details (avg duration, time preference)
+        XCTAssertTrue(
+            afterContextStr.contains("avg") || afterContextStr.contains("usually"),
+            "Context should include duration or time details for categories"
+        )
+
+        // Assert: At least one response field differs between before and after
+        // (LLM responses are non-deterministic, so we check if ANY difference exists)
+        var hasDifference = false
+        for i in 0..<tasks.count {
+            let b = beforeResults[i]
+            let a = afterResults[i]
+            if b.1 != a.1 || b.2 != a.2 || b.3 != a.3 || b.4 != a.4 {
+                hasDifference = true
+                break
+            }
+        }
+
+        // Note: Due to LLM non-determinism, we log but don't fail if no difference
+        // The primary assertion is that richer context is being sent
+        if !hasDifference {
+            print("Note: No response differences detected in this run (LLM non-determinism)")
+        }
+
         // Clean up
         AIContextService.shared.resetPatterns()
 
