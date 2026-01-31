@@ -57,12 +57,12 @@
           <mxGeometry x="40" y="360" width="220" height="20" as="geometry" />
         </mxCell>
 
-        <mxCell id="prompt-builder" value="Prompt Builder&#xa;&#xa;• System prompt&#xa;• User context injection&#xa;• Output format specs&#xa;• Few-shot examples" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
-          <mxGeometry x="60" y="390" width="180" height="100" as="geometry" />
+        <mxCell id="prompt-builder" value="Prompt Builder&#xa;&#xa;• Role-specific system prompt&#xa;• Safety guidelines&#xa;• Output format specs&#xa;• Few-shot examples&#xa;• Conditional output rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="390" width="180" height="110" as="geometry" />
         </mxCell>
 
-        <mxCell id="prompt-templates" value="Prompt Templates&#xa;&#xa;• Task analysis&#xa;• Category suggestion&#xa;• Priority estimation&#xa;• Duration estimation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
-          <mxGeometry x="260" y="390" width="180" height="100" as="geometry" />
+        <mxCell id="prompt-templates" value="Prompt Templates&#xa;&#xa;• Task analysis&#xa;• Priority estimation&#xa;• Duration estimation&#xa;• Response parsing&#xa;• Value clamping (5-480)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="260" y="390" width="180" height="110" as="geometry" />
         </mxCell>
 
         <!-- LLM Layer -->
@@ -87,8 +87,8 @@
           <mxGeometry x="560" y="450" width="150" height="20" as="geometry" />
         </mxCell>
 
-        <mxCell id="suggestions" value="AI Suggestions&#xa;&#xa;• Refined title&#xa;• Category&#xa;• Priority (1-4)&#xa;• Duration estimate&#xa;• Best time&#xa;• Subtasks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
-          <mxGeometry x="560" y="480" width="140" height="120" as="geometry" />
+        <mxCell id="suggestions" value="AI Suggestions&#xa;&#xa;• Refined title&#xa;• Category&#xa;• Priority (1-5)&#xa;• Duration (5-480 min)&#xa;• Best time&#xa;• Subtasks (complex only)&#xa;• Tips (&lt;10 words)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="480" width="140" height="130" as="geometry" />
         </mxCell>
 
         <mxCell id="category-proposal" value="Category Proposal&#xa;(#139)&#xa;&#xa;Suggest new category&#xa;when none match" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
