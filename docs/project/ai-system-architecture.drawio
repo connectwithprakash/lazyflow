@@ -1,0 +1,251 @@
+<mxfile host="app.diagrams.net" modified="2026-01-28T02:00:00.000Z" agent="Claude" version="21.0.0">
+  <diagram name="AI System Architecture" id="ai-system">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Lazyflow AI System Architecture (v1.6)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontColor=#218A8D;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="400" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- User Input Layer -->
+        <mxCell id="user-layer" value="User Input Layer" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="task-input" value="Task Input&#xa;(Title, Description)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="110" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="user-prefs" value="User Preferences&#xa;(Categories, Lists)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="220" y="110" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="calendar" value="Calendar Events&#xa;(EventKit)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="110" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Context Engineering Layer (#134) -->
+        <mxCell id="context-layer" value="Context Engineering Layer (#134)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="context-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="230" width="440" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="task-history" value="Task History&#xa;Analyzer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="250" width="90" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pattern-detect" value="User Pattern&#xa;Detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="185" y="250" width="90" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="time-context" value="Time &amp; Date&#xa;Context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="290" y="250" width="90" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="category-context" value="Category&#xa;Context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="395" y="250" width="90" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Prompt Engineering Layer (#133) -->
+        <mxCell id="prompt-layer" value="Prompt Engineering Layer (#133)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prompt-builder" value="Prompt Builder&#xa;&#xa;• System prompt&#xa;• User context injection&#xa;• Output format specs&#xa;• Few-shot examples" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="390" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prompt-templates" value="Prompt Templates&#xa;&#xa;• Task analysis&#xa;• Category suggestion&#xa;• Priority estimation&#xa;• Duration estimation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="260" y="390" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- LLM Layer -->
+        <mxCell id="llm-layer" value="LLM Layer (#125)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="560" y="200" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="llm-router" value="LLM Router&#xa;(Open Responses)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="230" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="apple-intel" value="Apple Intelligence&#xa;(On-Device)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="300" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="external-llm" value="External LLMs&#xa;(Claude, GPT, etc.)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;strokeDasharray=3;" vertex="1" parent="1">
+          <mxGeometry x="580" y="370" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- AI Output Layer -->
+        <mxCell id="output-layer" value="AI Output Layer" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="560" y="450" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="suggestions" value="AI Suggestions&#xa;&#xa;• Refined title&#xa;• Category&#xa;• Priority (1-4)&#xa;• Duration estimate&#xa;• Best time&#xa;• Subtasks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="480" width="140" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="category-proposal" value="Category Proposal&#xa;(#139)&#xa;&#xa;Suggest new category&#xa;when none match" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="480" width="140" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Refinement UI Layer (#135) -->
+        <mxCell id="ui-layer" value="Refinement UI Layer (#135)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="200" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="suggestion-cards" value="Suggestion Cards&#xa;&#xa;Accept / Modify / Reject&#xa;each AI suggestion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="550" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="inline-edit" value="Inline Editing&#xa;&#xa;Tap to modify&#xa;AI suggestions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="550" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Feedback Layer (#136) -->
+        <mxCell id="feedback-layer" value="Feedback Layer (#136)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="660" width="200" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="feedback-collect" value="Feedback Collection&#xa;&#xa;• Acceptance rate&#xa;• Modification patterns&#xa;• Rejection reasons" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="690" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="feedback-loop" value="Learning Loop&#xa;&#xa;Improve prompts&#xa;based on feedback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="690" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Data Store -->
+        <mxCell id="data-store" value="Core Data + CloudKit" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="250" width="100" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows - Input to Context -->
+        <mxCell id="arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="task-input" target="context-box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="user-prefs" target="context-box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="calendar" target="context-box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows - Context to Prompt -->
+        <mxCell id="arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="context-box" target="prompt-builder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows - Prompt to LLM -->
+        <mxCell id="arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="prompt-builder" target="llm-router">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="440" />
+              <mxPoint x="520" y="255" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrows - LLM Router to providers -->
+        <mxCell id="arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="llm-router" target="apple-intel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;strokeDasharray=3;" edge="1" parent="1" source="llm-router" target="external-llm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows - LLM to Output -->
+        <mxCell id="arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="apple-intel" target="suggestions">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="450" />
+              <mxPoint x="630" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrows - Output to UI -->
+        <mxCell id="arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;entryX=1;entryY=0.5;" edge="1" parent="1" source="suggestions" target="suggestion-cards">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="540" />
+              <mxPoint x="500" y="590" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrows - UI to Feedback -->
+        <mxCell id="arrow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="suggestion-cards" target="feedback-collect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows - Feedback loop back -->
+        <mxCell id="arrow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#218A8D;strokeWidth=2;dashed=1;" edge="1" parent="1" source="feedback-loop" target="prompt-templates">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="730" />
+              <mxPoint x="460" y="730" />
+              <mxPoint x="460" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Data Store connections -->
+        <mxCell id="arrow12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="data-store" target="task-history">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="850" y="200" />
+              <mxPoint x="40" y="200" />
+              <mxPoint x="40" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="620" width="200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="Legend" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="625" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="650" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend1-text" value="User Input / Data" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="647" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="675" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend2-text" value="Context (#134)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="672" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="700" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend3-text" value="Prompts (#133)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="697" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="725" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend4-text" value="LLM (#125)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="722" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="750" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend5-text" value="UI (#135)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="747" width="100" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
