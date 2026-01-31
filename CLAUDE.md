@@ -24,28 +24,32 @@ This file provides guidance to Claude Code (claude.com/claude-code) when working
 - Follow Swift/iOS community best practices
 
 **DEVELOPMENT WORKFLOW:**
-1. **Start fresh:** Always pull `origin/main` before starting work
+1. **Pull:** Always pull `origin/main` before starting work
 2. **Branch:** Create a branch linked to GitHub issue (e.g., `feat/123-feature-name` or `fix/123-bug-name`)
-3. **Plan:** Think thoroughly about the implementation approach before coding
-4. **TDD:** Write tests first, then implement to make them pass
-5. **Implement:** Code the feature/fix iteratively
-6. **Test:**
+3. **Research:** Read the GitHub issue thoroughly, explore related code, understand the problem space
+4. **Learn:** Search the web for best practices, patterns, and approaches given our tech stack (Swift, SwiftUI, Core Data, Apple Intelligence)
+5. **Plan:** Design the implementation approach, identify files to modify, verify assumptions
+6. **TDD:** Write tests first, then implement to make them pass
+7. **Implement:** Code the feature/fix iteratively with small commits
+8. **Test:**
    - Run unit tests
    - Run UI tests on iPhone 17 Pro and iPad simulators
-   - Manual testing on physical iPhone
-7. **Commit:** Create small, iterative commits with clear messages
-8. **Document:** Iteratively review `docs/` and update relevant documentation:
-   - `docs/project/` - Check roadmap, user-flows, design-system for updates
-   - `fastlane/metadata/en-US/release_notes.txt` - Add to What's New
-   - `fastlane/metadata/en-US/promotional_text.txt` - Update promotional text
-   - `README.md` - Update if major features change app capabilities
-   - Screenshots (if UI changed):
-     - Take screenshots in iOS Simulator (iPhone 17 Pro) in both light and dark modes
-     - Save to `docs/site/assets/screenshots/light/` and `docs/site/assets/screenshots/dark/`
-     - Use numbered naming convention (e.g., `21-feature-name.png`)
-     - Add to `docs/site/design/index.html` (not the main landing page)
-     - Update the design system version in the footer
-9. **PR:** Do NOT create PR without explicit permission from the user
+   - Manual testing on simulators
+   - Manual testing on physical iPhone (if available)
+9. **Commit:** Create small, iterative commits with clear messages
+10. **Document:** Iteratively review `docs/` and update relevant documentation:
+    - `docs/project/` - Check roadmap, user-flows, design-system for updates
+    - `fastlane/metadata/en-US/release_notes.txt` - Add to What's New
+    - `fastlane/metadata/en-US/promotional_text.txt` - Update promotional text
+    - `README.md` - Update if major features change app capabilities
+    - Screenshots (if UI changed):
+      - Take screenshots in iOS Simulator (iPhone 17 Pro) in both light and dark modes
+      - Save to `docs/site/assets/screenshots/light/` and `docs/site/assets/screenshots/dark/`
+      - Use numbered naming convention (e.g., `21-feature-name.png`)
+      - Add to `docs/site/design/index.html` (not the main landing page)
+      - Update the design system version in the footer
+    - Deploy website: `netlify deploy --prod --dir=docs/site`
+11. **PR:** Do NOT push or create PR without explicit permission from the user
 
 ## Project Overview
 
