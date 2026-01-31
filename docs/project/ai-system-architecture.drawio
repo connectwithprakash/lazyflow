@@ -36,19 +36,19 @@
           <mxGeometry x="60" y="230" width="440" height="100" as="geometry" />
         </mxCell>
 
-        <mxCell id="task-history" value="Task History&#xa;Analyzer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="task-history" value="Recent Tasks&#xa;(AIContext)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="80" y="250" width="90" height="60" as="geometry" />
         </mxCell>
 
-        <mxCell id="pattern-detect" value="User Pattern&#xa;Detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="pattern-detect" value="UserPatterns&#xa;(time/category)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="185" y="250" width="90" height="60" as="geometry" />
         </mxCell>
 
-        <mxCell id="time-context" value="Time &amp; Date&#xa;Context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="time-context" value="TimeContext&#xa;(hour/weekend)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="290" y="250" width="90" height="60" as="geometry" />
         </mxCell>
 
-        <mxCell id="category-context" value="Category&#xa;Context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="category-context" value="AILearning&#xa;(corrections)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="395" y="250" width="90" height="60" as="geometry" />
         </mxCell>
 
