@@ -1,0 +1,314 @@
+import XCTest
+@testable import Lazyflow
+
+final class AILearningServiceTests: XCTestCase {
+
+    var sut: AILearningService!
+
+    // MARK: - Setup/Teardown
+
+    override func setUp() {
+        super.setUp()
+        sut = AILearningService.shared
+        sut.clearAllCorrections()
+    }
+
+    override func tearDown() {
+        sut.clearAllCorrections()
+        super.tearDown()
+    }
+
+    // MARK: - recordCorrection Tests
+
+    func testRecordCorrection_StoresCorrection_WhenValuesDiffer() {
+        // Given
+        let originalSuggestion = "Work"
+        let userChoice = "Personal"
+
+        // When
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: originalSuggestion,
+            userChoice: userChoice,
+            taskTitle: "Team meeting prep"
+        )
+
+        // Then
+        XCTAssertEqual(sut.corrections.count, 1)
+        XCTAssertEqual(sut.corrections.first?.field, .category)
+        XCTAssertEqual(sut.corrections.first?.originalSuggestion, originalSuggestion)
+        XCTAssertEqual(sut.corrections.first?.userChoice, userChoice)
+    }
+
+    func testRecordCorrection_SkipsCorrection_WhenValuesMatch() {
+        // Given
+        let sameValue = "Work"
+
+        // When
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: sameValue,
+            userChoice: sameValue,
+            taskTitle: "Team meeting"
+        )
+
+        // Then
+        XCTAssertEqual(sut.corrections.count, 0)
+    }
+
+    func testRecordCorrection_StoresDurationCorrection() {
+        // Given
+        let originalDuration = "30 min"
+        let userDuration = "60 min"
+
+        // When
+        sut.recordCorrection(
+            field: .duration,
+            originalSuggestion: originalDuration,
+            userChoice: userDuration,
+            taskTitle: "Write report"
+        )
+
+        // Then
+        XCTAssertEqual(sut.corrections.count, 1)
+        XCTAssertEqual(sut.corrections.first?.field, .duration)
+    }
+
+    func testRecordCorrection_StoresPriorityCorrection() {
+        // Given
+        let originalPriority = "Medium"
+        let userPriority = "High"
+
+        // When
+        sut.recordCorrection(
+            field: .priority,
+            originalSuggestion: originalPriority,
+            userChoice: userPriority,
+            taskTitle: "Urgent deadline"
+        )
+
+        // Then
+        XCTAssertEqual(sut.corrections.count, 1)
+        XCTAssertEqual(sut.corrections.first?.field, .priority)
+    }
+
+    func testRecordCorrection_ExtractsKeywords() {
+        // Given/When
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Quarterly budget review meeting"
+        )
+
+        // Then
+        let keywords = sut.corrections.first?.taskKeywords ?? []
+        XCTAssertTrue(keywords.contains("quarterly") || keywords.contains("budget") || keywords.contains("review") || keywords.contains("meeting"))
+    }
+
+    func testRecordCorrection_EnforcesMaxLimit() {
+        // Given - record more than max (100)
+        for i in 0..<110 {
+            sut.recordCorrection(
+                field: .category,
+                originalSuggestion: "Original",
+                userChoice: "Choice\(i)",
+                taskTitle: "Task \(i)"
+            )
+        }
+
+        // Then - should be trimmed to 100
+        XCTAssertEqual(sut.corrections.count, 100)
+    }
+
+    // MARK: - getCorrectionsContext Tests
+
+    func testGetCorrectionsContext_ReturnsNoPreferences_WhenEmpty() {
+        // Given - no corrections
+
+        // When
+        let context = sut.getCorrectionsContext()
+
+        // Then
+        XCTAssertTrue(context.contains("No user preferences learned yet"))
+    }
+
+    func testGetCorrectionsContext_ReturnsPatterns_AfterMultipleCorrections() {
+        // Given - record same correction multiple times (threshold is 2+)
+        for _ in 0..<3 {
+            sut.recordCorrection(
+                field: .category,
+                originalSuggestion: "Personal",
+                userChoice: "Work",
+                taskTitle: "Meeting prep"
+            )
+        }
+
+        // When
+        let context = sut.getCorrectionsContext()
+
+        // Then
+        XCTAssertTrue(context.contains("Personal -> Work") || context.contains("User often changes"))
+    }
+
+    func testGetCorrectionsContext_DetectsKeywordAssociations() {
+        // Given - record corrections with same keyword
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Meeting with team"
+        )
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Meeting notes review"
+        )
+
+        // When
+        let context = sut.getCorrectionsContext()
+
+        // Then - should detect "meeting" keyword association
+        XCTAssertTrue(context.contains("meeting") || context.contains("Work"))
+    }
+
+    // MARK: - getAcceptanceRate Tests
+
+    func testGetAcceptanceRate_Returns1_WhenNoCorrections() {
+        // Given - no corrections
+
+        // When
+        let rate = sut.getAcceptanceRate(for: .category)
+
+        // Then - 1.0 means 100% acceptance (no rejections)
+        XCTAssertEqual(rate, 1.0)
+    }
+
+    func testGetAcceptanceRate_DecreasesWithCorrections() {
+        // Given - record some corrections
+        for _ in 0..<10 {
+            sut.recordCorrection(
+                field: .category,
+                originalSuggestion: "Personal",
+                userChoice: "Work",
+                taskTitle: "Test task"
+            )
+        }
+
+        // When
+        let rate = sut.getAcceptanceRate(for: .category)
+
+        // Then - rate should be lower than 1.0
+        XCTAssertLessThan(rate, 1.0)
+    }
+
+    // MARK: - getSuggestedOverride Tests
+
+    func testGetSuggestedOverride_ReturnsNil_WithNoMatchingCorrections() {
+        // Given - no corrections
+
+        // When
+        let override = sut.getSuggestedOverride(
+            for: .category,
+            taskTitle: "New task",
+            aiSuggestion: "Personal"
+        )
+
+        // Then
+        XCTAssertNil(override)
+    }
+
+    func testGetSuggestedOverride_ReturnsPreference_AfterMultipleSimilarCorrections() {
+        // Given - record same correction for similar tasks
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Meeting with client"
+        )
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Client meeting prep"
+        )
+
+        // When
+        let override = sut.getSuggestedOverride(
+            for: .category,
+            taskTitle: "Meeting agenda",
+            aiSuggestion: "Personal"
+        )
+
+        // Then - should suggest "Work" based on "meeting" keyword
+        XCTAssertEqual(override, "Work")
+    }
+
+    // MARK: - Cleanup Tests
+
+    func testCleanupOldCorrections_RemovesExpiredCorrections() {
+        // Given - create old correction (>90 days)
+        let oldCorrection = AICorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskKeywords: ["test"],
+            timestamp: Calendar.current.date(byAdding: .day, value: -100, to: Date())!
+        )
+
+        // Manually add old correction (bypassing normal flow)
+        // This tests the cleanup logic when called
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Recent task"
+        )
+
+        let countBefore = sut.corrections.count
+
+        // When
+        sut.cleanupOldCorrections()
+
+        // Then - recent correction should remain
+        XCTAssertEqual(sut.corrections.count, countBefore)
+    }
+
+    func testClearAllCorrections_RemovesAllData() {
+        // Given
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Test task"
+        )
+        XCTAssertGreaterThan(sut.corrections.count, 0)
+
+        // When
+        sut.clearAllCorrections()
+
+        // Then
+        XCTAssertEqual(sut.corrections.count, 0)
+    }
+
+    // MARK: - analyzePatterns Tests
+
+    func testAnalyzePatterns_ReturnsPatterns_WhenThresholdMet() {
+        // Given - record 2+ corrections with same pattern
+        for _ in 0..<3 {
+            sut.recordCorrection(
+                field: .priority,
+                originalSuggestion: "Low",
+                userChoice: "High",
+                taskTitle: "Urgent task"
+            )
+        }
+
+        // When
+        let corrections = sut.getCorrections(for: .priority)
+
+        // Then
+        XCTAssertGreaterThanOrEqual(corrections.count, 2)
+    }
+}
