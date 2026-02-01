@@ -1469,6 +1469,7 @@ struct ProviderConfigurationSheet: View {
     @State private var availableModels: [AvailableModel] = []
     @State private var isFetchingModels = false
     @State private var modelFetchError: String?
+    @State private var hasLoadedConfig = false
 
     private enum TestResult {
         case success
@@ -1710,6 +1711,10 @@ struct ProviderConfigurationSheet: View {
     }
 
     private func loadExistingConfig() {
+        // Only load once to prevent resetting fields when navigating back from model selection
+        guard !hasLoadedConfig else { return }
+        hasLoadedConfig = true
+
         // Load default or existing configuration
         let config: OpenResponsesConfig
 
