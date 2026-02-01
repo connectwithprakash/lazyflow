@@ -1825,23 +1825,22 @@ struct ModelSelectionView: View {
 
                                 Spacer()
 
-                                // Info button for details
-                                if model.description != nil {
-                                    Button {
-                                        selectedModelForDetail = model
-                                    } label: {
-                                        Image(systemName: "info.circle")
-                                            .foregroundColor(Color.Lazyflow.accent)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-
                                 // Checkmark for selected model
                                 if model.id == selectedModelId {
                                     Image(systemName: "checkmark")
                                         .foregroundColor(Color.Lazyflow.accent)
                                         .fontWeight(.semibold)
                                 }
+                            }
+                        }
+                        .swipeActions(edge: .trailing) {
+                            if model.description != nil {
+                                Button {
+                                    selectedModelForDetail = model
+                                } label: {
+                                    Label("Info", systemImage: "info.circle")
+                                }
+                                .tint(Color.Lazyflow.accent)
                             }
                         }
                     }
