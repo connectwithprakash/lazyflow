@@ -1,19 +1,49 @@
 import Foundation
 import SwiftUI
 
+/// Represents a duration accuracy record for learning estimation patterns
+struct DurationAccuracy: Codable, Identifiable {
+    let id: UUID
+    let taskCategory: String
+    let estimatedMinutes: Int
+    let actualMinutes: Int
+    let ratio: Double  // actual / estimated
+    let timestamp: Date
+
+    init(
+        id: UUID = UUID(),
+        taskCategory: String,
+        estimatedMinutes: Int,
+        actualMinutes: Int,
+        timestamp: Date = Date()
+    ) {
+        self.id = id
+        self.taskCategory = taskCategory
+        self.estimatedMinutes = estimatedMinutes
+        self.actualMinutes = actualMinutes
+        self.ratio = Double(actualMinutes) / Double(estimatedMinutes)
+        self.timestamp = timestamp
+    }
+}
+
 /// Service for tracking AI corrections and providing learning context
 final class AILearningService: ObservableObject {
     static let shared = AILearningService()
 
     private let correctionsKey = "aiCorrections"
+    private let durationAccuracyKey = "durationAccuracyData"
     private let maxCorrections = 100
+    private let maxAccuracyRecords = 100
     private let correctionExpiryDays = 90
 
     @Published private(set) var corrections: [AICorrection] = []
+    @Published private(set) var durationAccuracyRecords: [DurationAccuracy] = []
 
     private init() {
         loadCorrections()
+        loadDurationAccuracy()
         cleanupOldCorrections()
+        cleanupOldAccuracyRecords()
     }
 
     // MARK: - Recording Corrections
@@ -50,7 +80,7 @@ final class AILearningService: ObservableObject {
     /// Generate context string for LLM prompts based on user corrections
     func getCorrectionsContext() -> String {
         guard !corrections.isEmpty else {
-            return "No user preferences learned yet."
+            return ""
         }
 
         var context = "User preferences learned from past corrections:\n"
@@ -146,6 +176,70 @@ final class AILearningService: ObservableObject {
         return nil
     }
 
+    // MARK: - Duration Accuracy Tracking
+
+    /// Record duration accuracy when a task is completed with timer data
+    func recordDurationAccuracy(
+        category: String,
+        estimatedMinutes: Int,
+        actualMinutes: Int
+    ) {
+        // Skip if either value is zero or negative
+        guard estimatedMinutes > 0, actualMinutes > 0 else { return }
+
+        let accuracy = DurationAccuracy(
+            taskCategory: category.lowercased(),
+            estimatedMinutes: estimatedMinutes,
+            actualMinutes: actualMinutes
+        )
+
+        durationAccuracyRecords.append(accuracy)
+
+        // Trim to max records
+        if durationAccuracyRecords.count > maxAccuracyRecords {
+            durationAccuracyRecords = Array(durationAccuracyRecords.suffix(maxAccuracyRecords))
+        }
+
+        saveDurationAccuracy()
+    }
+
+    /// Generate context string for duration accuracy patterns
+    func getDurationAccuracyContext() -> String {
+        guard !durationAccuracyRecords.isEmpty else {
+            return ""
+        }
+
+        // Group by category and calculate average ratio
+        let grouped = Dictionary(grouping: durationAccuracyRecords) { $0.taskCategory }
+
+        var patterns: [String] = []
+
+        for (category, records) in grouped {
+            // Require at least 2 records to report a pattern
+            guard records.count >= 2 else { continue }
+
+            let averageRatio = records.map { $0.ratio }.reduce(0, +) / Double(records.count)
+            let formattedRatio = String(format: "%.1f", averageRatio)
+
+            if averageRatio > 1.1 {
+                patterns.append("\(category.capitalized) tasks: user takes \(formattedRatio)x longer than estimated")
+            } else if averageRatio < 0.9 {
+                patterns.append("\(category.capitalized) tasks: user takes \(formattedRatio)x of estimated time")
+            } else {
+                patterns.append("\(category.capitalized) tasks: estimates are accurate")
+            }
+        }
+
+        guard !patterns.isEmpty else { return "" }
+
+        var context = "\nDuration accuracy patterns:\n"
+        for pattern in patterns.prefix(5) {
+            context += "  - \(pattern)\n"
+        }
+
+        return context
+    }
+
     // MARK: - Persistence
 
     private func loadCorrections() {
@@ -160,6 +254,20 @@ final class AILearningService: ObservableObject {
     private func saveCorrections() {
         guard let data = try? JSONEncoder().encode(corrections) else { return }
         UserDefaults.standard.set(data, forKey: correctionsKey)
+    }
+
+    private func loadDurationAccuracy() {
+        guard let data = UserDefaults.standard.data(forKey: durationAccuracyKey),
+              let decoded = try? JSONDecoder().decode([DurationAccuracy].self, from: data) else {
+            durationAccuracyRecords = []
+            return
+        }
+        durationAccuracyRecords = decoded
+    }
+
+    private func saveDurationAccuracy() {
+        guard let data = try? JSONEncoder().encode(durationAccuracyRecords) else { return }
+        UserDefaults.standard.set(data, forKey: durationAccuracyKey)
     }
 
     // MARK: - Cleanup
@@ -180,9 +288,27 @@ final class AILearningService: ObservableObject {
         }
     }
 
-    /// Clear all corrections (for testing or user request)
+    /// Remove accuracy records older than the expiry period
+    func cleanupOldAccuracyRecords() {
+        let cutoffDate = Calendar.current.date(
+            byAdding: .day,
+            value: -correctionExpiryDays,
+            to: Date()
+        ) ?? Date()
+
+        let countBefore = durationAccuracyRecords.count
+        durationAccuracyRecords = durationAccuracyRecords.filter { $0.timestamp > cutoffDate }
+
+        if durationAccuracyRecords.count != countBefore {
+            saveDurationAccuracy()
+        }
+    }
+
+    /// Clear all corrections and accuracy data (for testing or user request)
     func clearAllCorrections() {
         corrections = []
+        durationAccuracyRecords = []
         saveCorrections()
+        UserDefaults.standard.removeObject(forKey: durationAccuracyKey)
     }
 }
