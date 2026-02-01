@@ -367,8 +367,18 @@ final class TaskService: ObservableObject {
                task.accumulatedDuration > 0 {
                 let estimatedMinutes = Int(estimatedDuration / 60)
                 let actualMinutes = Int(task.accumulatedDuration / 60)
+
+                // Use custom category name if available, otherwise system category
+                let categoryName: String
+                if let customCategoryID = task.customCategoryID,
+                   let customCategory = CategoryService.shared.getCategory(byID: customCategoryID) {
+                    categoryName = customCategory.name
+                } else {
+                    categoryName = task.category.displayName
+                }
+
                 AILearningService.shared.recordDurationAccuracy(
-                    category: task.category.displayName,
+                    category: categoryName,
                     estimatedMinutes: estimatedMinutes,
                     actualMinutes: actualMinutes
                 )

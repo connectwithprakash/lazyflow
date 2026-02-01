@@ -178,10 +178,10 @@ struct AddTaskView: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
-                        // Record AI corrections before saving (implicit feedback)
-                        recordAICorrections()
-
                         if let savedTask = viewModel.save() {
+                            // Record AI corrections after successful save (implicit feedback)
+                            recordAICorrections()
+
                             // Create subtasks if any were selected from AI suggestions
                             if !pendingSubtasks.isEmpty {
                                 let taskService = TaskService.shared
@@ -934,13 +934,31 @@ struct AddTaskView: View {
         let learningService = AILearningService.shared
         let taskTitle = viewModel.title
 
-        // Compare AI suggested category with user's final choice
-        if analysis.suggestedCategory != .uncategorized &&
-           analysis.suggestedCategory != viewModel.category {
+        // Compare AI suggested category with user's final choice (including custom categories)
+        let aiCategoryName: String?
+        let userCategoryName: String
+
+        if let aiCustomID = analysis.suggestedCustomCategoryID,
+           let aiCustomCategory = categoryService.getCategory(byID: aiCustomID) {
+            aiCategoryName = aiCustomCategory.name
+        } else if analysis.suggestedCategory != .uncategorized {
+            aiCategoryName = analysis.suggestedCategory.displayName
+        } else {
+            aiCategoryName = nil
+        }
+
+        if let userCustomID = viewModel.customCategoryID,
+           let userCustomCategory = categoryService.getCategory(byID: userCustomID) {
+            userCategoryName = userCustomCategory.name
+        } else {
+            userCategoryName = viewModel.category.displayName
+        }
+
+        if let aiCategory = aiCategoryName, aiCategory != userCategoryName {
             learningService.recordCorrection(
                 field: .category,
-                originalSuggestion: analysis.suggestedCategory.displayName,
-                userChoice: viewModel.category.displayName,
+                originalSuggestion: aiCategory,
+                userChoice: userCategoryName,
                 taskTitle: taskTitle
             )
         }

@@ -42,7 +42,7 @@ final class AIContextService: ObservableObject {
     /// Build complete AI context for task analysis
     func buildContext(for task: Task? = nil) -> AIContext {
         let recentTasks = fetchRecentTasks()
-        let correctionsSummary = learningService.getCorrectionsContext()
+        let correctionsSummary = learningService.getCorrectionsContext() + learningService.getDurationAccuracyContext()
         let customCategories = fetchCustomCategories()
         let timeContext = AIContext.TimeContext()
 
