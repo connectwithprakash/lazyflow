@@ -797,8 +797,7 @@ struct AISettingsView: View {
     @State private var batchAnalysisTotal: Int = 0
     @State private var showBatchReviewSheet = false
     @State private var batchResults: [BatchAnalysisResult] = []
-    @State private var showProviderConfig = false
-    @State private var configProviderType: LLMProviderType = .openRouter
+    @State private var configProviderType: LLMProviderType?
 
     var body: some View {
         NavigationStack {
@@ -904,8 +903,8 @@ struct AISettingsView: View {
                     onApply: applyBatchResults
                 )
             }
-            .sheet(isPresented: $showProviderConfig) {
-                ProviderConfigurationSheet(providerType: configProviderType)
+            .sheet(item: $configProviderType) { providerType in
+                ProviderConfigurationSheet(providerType: providerType)
             }
         }
     }
@@ -922,7 +921,6 @@ struct AISettingsView: View {
             } else {
                 // Need to configure first
                 configProviderType = provider
-                showProviderConfig = true
             }
         } label: {
             HStack(spacing: DesignSystem.Spacing.md) {
@@ -961,7 +959,6 @@ struct AISettingsView: View {
             if provider != .apple && llmService.availableProviders.contains(provider) {
                 Button {
                     configProviderType = provider
-                    showProviderConfig = true
                 } label: {
                     Label("Edit Configuration", systemImage: "pencil")
                 }

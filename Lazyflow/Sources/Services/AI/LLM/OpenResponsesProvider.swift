@@ -22,7 +22,7 @@ struct OpenResponsesConfig: Codable, Equatable {
         OpenResponsesConfig(
             endpoint: "http://localhost:11434/v1/responses",
             apiKey: nil,
-            model: "llama3.2"
+            model: "gemma2:2b"
         )
     }
 
