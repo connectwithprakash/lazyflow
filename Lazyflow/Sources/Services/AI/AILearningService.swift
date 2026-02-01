@@ -35,7 +35,7 @@ final class AILearningService: ObservableObject {
     private let impressionsKey = "aiImpressions"
     private let maxCorrections = 100
     private let maxAccuracyRecords = 100
-    private let maxImpressions = 100
+    private let maxImpressions = 200
     private let correctionExpiryDays = 90
 
     @Published private(set) var corrections: [AICorrection] = []
@@ -273,12 +273,13 @@ final class AILearningService: ObservableObject {
 
     /// Calculate correction rate (corrections / impressions) for the specified time window
     /// Returns 0 if no impressions to avoid division by zero
+    /// Capped at 1.0 since one impression can yield multiple corrections (category, priority, duration)
     func getCorrectionRate(lastDays: Int = 7) -> Double {
         let impressionCount = getImpressionCount(lastDays: lastDays)
         guard impressionCount > 0 else { return 0 }
 
         let correctionCount = getCorrectionCount(lastDays: lastDays)
-        return Double(correctionCount) / Double(impressionCount)
+        return min(1.0, Double(correctionCount) / Double(impressionCount))
     }
 
     // MARK: - Persistence

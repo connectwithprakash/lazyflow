@@ -446,13 +446,13 @@ final class AILearningServiceTests: XCTestCase {
     }
 
     func testRecordImpression_EnforcesMaxLimit() {
-        // Given - record more than max (100)
-        for _ in 0..<110 {
+        // Given - record more than max (200)
+        for _ in 0..<210 {
             sut.recordImpression()
         }
 
-        // Then - should be trimmed to 100
-        XCTAssertEqual(sut.impressions.count, 100)
+        // Then - should be trimmed to 200
+        XCTAssertEqual(sut.impressions.count, 200)
     }
 
     func testGetImpressionCount_ReturnsZero_WhenNoImpressions() {
@@ -531,6 +531,36 @@ final class AILearningServiceTests: XCTestCase {
 
         // Then - 2/4 = 0.5
         XCTAssertEqual(rate, 0.5, accuracy: 0.01)
+    }
+
+    func testGetCorrectionRate_CapsAtOne_WhenCorrectionsExceedImpressions() {
+        // Given - 1 impression, 3 corrections (one per field)
+        sut.recordImpression()
+
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Task 1"
+        )
+        sut.recordCorrection(
+            field: .priority,
+            originalSuggestion: "Low",
+            userChoice: "High",
+            taskTitle: "Task 1"
+        )
+        sut.recordCorrection(
+            field: .duration,
+            originalSuggestion: "30 min",
+            userChoice: "60 min",
+            taskTitle: "Task 1"
+        )
+
+        // When
+        let rate = sut.getCorrectionRate(lastDays: 7)
+
+        // Then - capped at 1.0 even though 3/1 = 3.0
+        XCTAssertEqual(rate, 1.0, accuracy: 0.01)
     }
 
     func testClearAllCorrections_AlsoClearsImpressions() {
