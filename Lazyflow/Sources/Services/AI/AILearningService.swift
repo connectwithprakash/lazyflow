@@ -33,22 +33,27 @@ final class AILearningService: ObservableObject {
     private let correctionsKey = "aiCorrections"
     private let durationAccuracyKey = "durationAccuracyData"
     private let impressionsKey = "aiImpressions"
+    private let refinementsKey = "aiRefinementRequests"
     private let maxCorrections = 100
     private let maxAccuracyRecords = 100
     private let maxImpressions = 200
+    private let maxRefinements = 200
     private let correctionExpiryDays = 90
 
     @Published private(set) var corrections: [AICorrection] = []
     @Published private(set) var durationAccuracyRecords: [DurationAccuracy] = []
     @Published private(set) var impressions: [Date] = []
+    @Published private(set) var refinementRequests: [Date] = []
 
     private init() {
         loadCorrections()
         loadDurationAccuracy()
         loadImpressions()
+        loadRefinements()
         cleanupOldCorrections()
         cleanupOldAccuracyRecords()
         cleanupOldImpressions()
+        cleanupOldRefinements()
     }
 
     // MARK: - Recording Corrections
@@ -282,6 +287,37 @@ final class AILearningService: ObservableObject {
         return min(1.0, Double(correctionCount) / Double(impressionCount))
     }
 
+    // MARK: - Refinement Request Tracking
+
+    /// Record when user requests alternative AI suggestions ("Try Again")
+    func recordRefinementRequest() {
+        refinementRequests.append(Date())
+
+        // Trim to max refinements
+        if refinementRequests.count > maxRefinements {
+            refinementRequests = Array(refinementRequests.suffix(maxRefinements))
+        }
+
+        saveRefinements()
+    }
+
+    /// Get count of refinement requests within the specified time window
+    func getRefinementCount(lastDays: Int = 7) -> Int {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -lastDays, to: Date()) ?? Date()
+        return refinementRequests.filter { $0 > cutoff }.count
+    }
+
+    /// Calculate refinement rate (refinements / impressions) for the specified time window
+    /// Returns 0 if no impressions to avoid division by zero
+    /// Capped at 1.0 since user can press "Try Again" multiple times per impression
+    func getRefinementRate(lastDays: Int = 7) -> Double {
+        let impressionCount = getImpressionCount(lastDays: lastDays)
+        guard impressionCount > 0 else { return 0 }
+
+        let refinementCount = getRefinementCount(lastDays: lastDays)
+        return min(1.0, Double(refinementCount) / Double(impressionCount))
+    }
+
     // MARK: - Persistence
 
     private func loadCorrections() {
@@ -324,6 +360,20 @@ final class AILearningService: ObservableObject {
     private func saveImpressions() {
         guard let data = try? JSONEncoder().encode(impressions) else { return }
         UserDefaults.standard.set(data, forKey: impressionsKey)
+    }
+
+    private func loadRefinements() {
+        guard let data = UserDefaults.standard.data(forKey: refinementsKey),
+              let decoded = try? JSONDecoder().decode([Date].self, from: data) else {
+            refinementRequests = []
+            return
+        }
+        refinementRequests = decoded
+    }
+
+    private func saveRefinements() {
+        guard let data = try? JSONEncoder().encode(refinementRequests) else { return }
+        UserDefaults.standard.set(data, forKey: refinementsKey)
     }
 
     // MARK: - Cleanup
@@ -376,13 +426,31 @@ final class AILearningService: ObservableObject {
         }
     }
 
-    /// Clear all corrections, accuracy data, and impressions (for testing or user request)
+    /// Remove refinement requests older than the expiry period
+    func cleanupOldRefinements() {
+        let cutoffDate = Calendar.current.date(
+            byAdding: .day,
+            value: -correctionExpiryDays,
+            to: Date()
+        ) ?? Date()
+
+        let countBefore = refinementRequests.count
+        refinementRequests = refinementRequests.filter { $0 > cutoffDate }
+
+        if refinementRequests.count != countBefore {
+            saveRefinements()
+        }
+    }
+
+    /// Clear all corrections, accuracy data, impressions, and refinements (for testing or user request)
     func clearAllCorrections() {
         corrections = []
         durationAccuracyRecords = []
         impressions = []
+        refinementRequests = []
         saveCorrections()
         UserDefaults.standard.removeObject(forKey: durationAccuracyKey)
         UserDefaults.standard.removeObject(forKey: impressionsKey)
+        UserDefaults.standard.removeObject(forKey: refinementsKey)
     }
 }

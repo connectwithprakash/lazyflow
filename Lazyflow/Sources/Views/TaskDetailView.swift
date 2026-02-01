@@ -26,6 +26,9 @@ struct TaskDetailView: View {
     @State private var originalDurationBeforeAI: TimeInterval?
     @State private var originalPriorityBeforeAI: Priority = .none
 
+    // Track if AI is regenerating suggestions
+    @State private var isRegeneratingAI: Bool = false
+
     private let originalTask: Task
 
     init(task: Task) {
@@ -428,7 +431,11 @@ struct TaskDetailView: View {
                             }
                             viewModel.category = .uncategorized
                         },
-                        pendingSubtasks: pendingSubtasksFromAI
+                        onTryAgain: {
+                            regenerateAISuggestions()
+                        },
+                        pendingSubtasks: pendingSubtasksFromAI,
+                        isRegenerating: isRegeneratingAI
                     )
                     .presentationDetents([.medium, .large])
                 }
@@ -529,6 +536,50 @@ struct TaskDetailView: View {
             } catch {
                 await MainActor.run {
                     isAnalyzing = false
+                }
+            }
+        }
+    }
+
+    /// Regenerate AI suggestions when user taps "Try Again"
+    private func regenerateAISuggestions() {
+        guard !viewModel.title.isEmpty else { return }
+        isRegeneratingAI = true
+
+        // Record the refinement request for analytics
+        AILearningService.shared.recordRefinementRequest()
+
+        _Concurrency.Task {
+            do {
+                // Create a temporary task for analysis
+                let tempTask = Task(
+                    id: originalTask.id,
+                    title: viewModel.title,
+                    notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
+                    dueDate: viewModel.hasDueDate ? viewModel.dueDate : nil,
+                    dueTime: viewModel.hasDueTime ? viewModel.dueTime : nil,
+                    reminderDate: viewModel.hasReminder ? viewModel.reminderDate : nil,
+                    isCompleted: originalTask.isCompleted,
+                    isArchived: originalTask.isArchived,
+                    priority: viewModel.priority,
+                    listID: viewModel.selectedListID,
+                    linkedEventID: originalTask.linkedEventID,
+                    estimatedDuration: viewModel.estimatedDuration,
+                    completedAt: originalTask.completedAt,
+                    createdAt: originalTask.createdAt,
+                    updatedAt: Date(),
+                    recurringRule: nil
+                )
+
+                let analysis = try await llmService.analyzeTask(tempTask)
+
+                await MainActor.run {
+                    aiAnalysis = analysis
+                    isRegeneratingAI = false
+                }
+            } catch {
+                await MainActor.run {
+                    isRegeneratingAI = false
                 }
             }
         }
