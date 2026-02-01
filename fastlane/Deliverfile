@@ -1,0 +1,25 @@
+# Deliverfile for Lazyflow
+# https://docs.fastlane.tools/actions/deliver/
+
+# IMPORTANT: Do NOT set price_tier here!
+# Setting price_tier can reset territory availability to all 175 countries.
+# See: https://github.com/fastlane/fastlane/discussions/21623
+#
+# Manage pricing in App Store Connect directly.
+
+# Phased release (gradual rollout over 7 days)
+phased_release(true)
+
+# Auto-release after approval
+automatic_release(true)
+
+# App Rating - Contains no objectionable content
+app_rating_config_path("./fastlane/rating_config.json")
+
+# TERRITORY EXCLUSION NOTE:
+# China (CHN) is excluded due to AI/LLM compliance requirements.
+# Territory management must be done via:
+#   1. App Store Connect UI (Pricing and Availability), OR
+#   2. Spaceship ConnectAPI (see set_territories lane in Fastfile)
+#
+# See fastlane/excluded_territories.json for details.

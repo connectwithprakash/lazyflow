@@ -797,41 +797,20 @@ struct AISettingsView: View {
     @State private var batchAnalysisTotal: Int = 0
     @State private var showBatchReviewSheet = false
     @State private var batchResults: [BatchAnalysisResult] = []
+    @State private var configProviderType: LLMProviderType?
 
     var body: some View {
         NavigationStack {
             Form {
-                // Apple Intelligence Info
+                // Provider Selection Section
                 Section {
-                    HStack(spacing: DesignSystem.Spacing.md) {
-                        Image(systemName: "apple.logo")
-                            .font(.title2)
-                            .foregroundColor(Color.Lazyflow.accent)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Apple Intelligence")
-                                .font(DesignSystem.Typography.headline)
-                                .foregroundColor(Color.Lazyflow.textPrimary)
-
-                            Text("On-device • Private • Free")
-                                .font(DesignSystem.Typography.caption1)
-                                .foregroundColor(Color.Lazyflow.textSecondary)
-                        }
-
-                        Spacer()
-
-                        if llmService.isReady {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(Color.Lazyflow.success)
-                        } else {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundColor(Color.Lazyflow.warning)
-                        }
+                    ForEach(LLMProviderType.allCases) { provider in
+                        providerRow(for: provider)
                     }
                 } header: {
                     Text("AI Provider")
                 } footer: {
-                    Text("AI features are powered by Apple Intelligence, running entirely on your device. No data leaves your device. Requires iOS 18.4 or later.")
+                    providerFooterText
                 }
 
                 // AI Features Section
@@ -924,6 +903,112 @@ struct AISettingsView: View {
                     onApply: applyBatchResults
                 )
             }
+            .sheet(item: $configProviderType) { providerType in
+                ProviderConfigurationSheet(providerType: providerType)
+            }
+        }
+    }
+
+    // MARK: - Provider UI
+
+    @ViewBuilder
+    private func providerRow(for provider: LLMProviderType) -> some View {
+        Button {
+            if provider == .apple {
+                llmService.selectedProvider = provider
+            } else if llmService.availableProviders.contains(provider) {
+                if llmService.selectedProvider == provider {
+                    // Already selected - tap again to edit
+                    configProviderType = provider
+                } else {
+                    // Select this provider
+                    llmService.selectedProvider = provider
+                }
+            } else {
+                // Need to configure first
+                configProviderType = provider
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Image(systemName: provider.iconName)
+                    .font(.title2)
+                    .foregroundColor(llmService.selectedProvider == provider ? Color.Lazyflow.accent : Color.Lazyflow.textSecondary)
+                    .frame(width: 32)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(provider.displayName)
+                            .font(DesignSystem.Typography.headline)
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+
+                        // Show "External" badge for providers that send data externally
+                        if provider.isExternal {
+                            Text("External")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Color.orange.opacity(0.8))
+                                .cornerRadius(4)
+                        }
+                    }
+
+                    Text(provider.description)
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                }
+
+                Spacer()
+
+                // Selection indicator
+                if llmService.selectedProvider == provider {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Color.Lazyflow.accent)
+                } else if llmService.availableProviders.contains(provider) {
+                    Image(systemName: "circle")
+                        .foregroundColor(Color.Lazyflow.textTertiary)
+                } else if provider != .apple {
+                    Text("Configure")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.accent)
+                }
+
+                // Edit chevron for configured non-Apple providers
+                if provider != .apple && llmService.availableProviders.contains(provider) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color.Lazyflow.textTertiary)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            if provider != .apple && llmService.availableProviders.contains(provider) {
+                Button {
+                    configProviderType = provider
+                } label: {
+                    Label("Edit Configuration", systemImage: "pencil")
+                }
+
+                Button(role: .destructive) {
+                    llmService.removeOpenResponsesProvider(type: provider)
+                } label: {
+                    Label("Remove Provider", systemImage: "trash")
+                }
+            }
+        }
+    }
+
+    private var providerFooterText: Text {
+        let provider = llmService.selectedProvider
+        switch provider {
+        case .apple:
+            return Text("Apple Intelligence runs entirely on your device. No data leaves your device. Requires iOS 18.4 or later.")
+        case .ollama:
+            return Text("Ollama runs locally on your Mac. Your data stays on your local network.")
+        case .custom:
+            return Text("⚠️ Custom endpoints may send your task data to external servers. Ensure you trust the endpoint provider.")
         }
     }
 
@@ -1364,6 +1449,561 @@ struct LiveActivityToggle: View {
             inProgressPriority: inProgressTask?.priority.rawValue ?? 0,
             inProgressEstimatedDuration: inProgressTask?.estimatedDuration
         )
+    }
+}
+
+// MARK: - Provider Configuration Sheet
+
+struct ProviderConfigurationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var llmService = LLMService.shared
+
+    let providerType: LLMProviderType
+
+    @State private var endpoint: String = ""
+    @State private var apiKey: String = ""
+    @State private var model: String = ""
+    @State private var isTesting = false
+    @State private var testResult: TestResult?
+    @State private var showDeleteConfirmation = false
+    @State private var showTestConfirmation = false
+    @State private var availableModels: [AvailableModel] = []
+    @State private var isFetchingModels = false
+    @State private var modelFetchError: String?
+    @State private var hasLoadedConfig = false
+
+    private enum TestResult {
+        case success
+        case failure(String)
+    }
+
+    private var isConfigured: Bool {
+        llmService.availableProviders.contains(providerType)
+    }
+
+    private var canSave: Bool {
+        !endpoint.isEmpty && !model.isEmpty
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                // Provider Info
+                Section {
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: providerType.iconName)
+                            .font(.title2)
+                            .foregroundColor(Color.Lazyflow.accent)
+                            .frame(width: 32)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(providerType.displayName)
+                                .font(DesignSystem.Typography.headline)
+
+                            Text(providerType.description)
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                    }
+                }
+
+                // Privacy Warning for external providers
+                if providerType.isExternal {
+                    Section {
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(Color.Lazyflow.warning)
+                            Text("Your task data will be sent to external servers when using this provider.")
+                                .font(DesignSystem.Typography.footnote)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                    }
+                }
+
+                // Configuration Fields
+                Section("Configuration") {
+                    TextField("Endpoint URL", text: $endpoint)
+                        .textContentType(.URL)
+                        .keyboardType(.URL)
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
+                        .onChange(of: endpoint) { _, _ in
+                            // Clear models when endpoint changes
+                            availableModels = []
+                            modelFetchError = nil
+                        }
+
+                    // Show API key field for providers that require it OR custom endpoints (optional)
+                    if providerType.requiresAPIKey || providerType == .custom {
+                        SecureField(providerType == .custom ? "API Key (optional)" : "API Key", text: $apiKey)
+                            .textContentType(.password)
+                            .autocapitalization(.none)
+                            .autocorrectionDisabled()
+                    }
+                }
+
+                // Model Selection
+                Section {
+                    if availableModels.isEmpty {
+                        // Manual entry with fetch button
+                        HStack {
+                            TextField("Model Name", text: $model)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+
+                            Button {
+                                fetchModels()
+                            } label: {
+                                if isFetchingModels {
+                                    ProgressView()
+                                        .frame(width: 20, height: 20)
+                                } else {
+                                    Image(systemName: "arrow.down.circle")
+                                        .foregroundColor(Color.Lazyflow.accent)
+                                }
+                            }
+                            .disabled(endpoint.isEmpty || isFetchingModels)
+                        }
+
+                        if let error = modelFetchError {
+                            Text(error)
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.error)
+                        }
+                    } else {
+                        // Model selection with NavigationLink
+                        NavigationLink {
+                            ModelSelectionView(
+                                models: availableModels,
+                                selectedModelId: $model
+                            )
+                        } label: {
+                            HStack {
+                                Text("Model")
+                                Spacer()
+                                if let selectedModel = availableModels.first(where: { $0.id == model }) {
+                                    Text(selectedModel.displayName)
+                                        .foregroundColor(Color.Lazyflow.textSecondary)
+                                        .lineLimit(1)
+                                } else {
+                                    Text("Select")
+                                        .foregroundColor(Color.Lazyflow.textTertiary)
+                                }
+                            }
+                        }
+
+                        Button {
+                            availableModels = []
+                            model = ""
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.counterclockwise")
+                                Text("Enter Manually")
+                            }
+                            .font(DesignSystem.Typography.footnote)
+                            .foregroundColor(Color.Lazyflow.accent)
+                        }
+                    }
+                } header: {
+                    Text("Model")
+                } footer: {
+                    if availableModels.isEmpty && providerType != .custom {
+                        Text("Tap the download icon to fetch available models from the server.")
+                    } else if !availableModels.isEmpty {
+                        let freeCount = availableModels.filter { $0.isFree }.count
+                        if freeCount > 0 && freeCount < availableModels.count {
+                            Text("\(availableModels.count) models available (\(freeCount) free)")
+                        } else {
+                            Text("\(availableModels.count) models available")
+                        }
+                    }
+                }
+
+                // Test Connection
+                Section {
+                    Button {
+                        // Show confirmation for external providers
+                        if providerType.isExternal {
+                            showTestConfirmation = true
+                        } else {
+                            testConnection()
+                        }
+                    } label: {
+                        HStack {
+                            if isTesting {
+                                ProgressView()
+                                    .frame(width: 20, height: 20)
+                            } else {
+                                Image(systemName: "network")
+                            }
+                            Text("Test Connection")
+                            Spacer()
+                            if let result = testResult {
+                                switch result {
+                                case .success:
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(Color.Lazyflow.success)
+                                case .failure:
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(Color.Lazyflow.error)
+                                }
+                            }
+                        }
+                    }
+                    .disabled(!canSave || isTesting)
+
+                    if case .failure(let message) = testResult {
+                        Text(message)
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.error)
+                    }
+                }
+
+                // Remove Provider (if configured)
+                if isConfigured {
+                    Section {
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "trash")
+                                Text("Remove Provider")
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Configure \(providerType.displayName)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveConfiguration()
+                    }
+                    .disabled(!canSave)
+                }
+            }
+            .onAppear {
+                loadExistingConfig()
+            }
+            .alert("Remove Provider", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Remove", role: .destructive) {
+                    llmService.removeOpenResponsesProvider(type: providerType)
+                    dismiss()
+                }
+            } message: {
+                Text("Are you sure you want to remove \(providerType.displayName)? You'll need to reconfigure it to use it again.")
+            }
+            .alert("Test Connection", isPresented: $showTestConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Test Anyway") {
+                    testConnection()
+                }
+            } message: {
+                Text("This will send a test request to \(providerType.displayName). Your task data may be sent to external servers.")
+            }
+        }
+    }
+
+    private func loadExistingConfig() {
+        // Only load once to prevent resetting fields when navigating back from model selection
+        guard !hasLoadedConfig else { return }
+        hasLoadedConfig = true
+
+        // Load default or existing configuration
+        let config: OpenResponsesConfig
+
+        if let existingConfig = llmService.getOpenResponsesConfig(for: providerType) {
+            config = existingConfig
+        } else {
+            // Use defaults based on provider type
+            switch providerType {
+            case .ollama:
+                config = .ollamaDefault
+            case .custom:
+                config = .customDefault
+            case .apple:
+                return // Apple doesn't need configuration
+            }
+        }
+
+        endpoint = config.endpoint
+        apiKey = config.apiKey ?? ""
+        model = config.model
+    }
+
+    private func testConnection() {
+        isTesting = true
+        testResult = nil
+
+        let config = OpenResponsesConfig(
+            endpoint: endpoint,
+            apiKey: apiKey.isEmpty ? nil : apiKey,
+            model: model
+        )
+
+        _Concurrency.Task {
+            do {
+                _ = try await llmService.testConnection(config: config)
+                await MainActor.run {
+                    testResult = .success
+                    isTesting = false
+                }
+            } catch {
+                await MainActor.run {
+                    testResult = .failure(error.localizedDescription)
+                    isTesting = false
+                }
+            }
+        }
+    }
+
+    private func saveConfiguration() {
+        let config = OpenResponsesConfig(
+            endpoint: endpoint,
+            apiKey: apiKey.isEmpty ? nil : apiKey,
+            model: model
+        )
+
+        llmService.configureOpenResponses(config: config, providerType: providerType)
+        llmService.selectedProvider = providerType
+        dismiss()
+    }
+
+    private func fetchModels() {
+        isFetchingModels = true
+        modelFetchError = nil
+
+        _Concurrency.Task {
+            do {
+                let models = try await OpenResponsesConfig.fetchAvailableModels(
+                    endpoint: endpoint,
+                    apiKey: apiKey.isEmpty ? nil : apiKey,
+                    for: providerType
+                )
+
+                await MainActor.run {
+                    availableModels = models
+                    isFetchingModels = false
+
+                    // Auto-select first model if current model is empty or not in list
+                    if model.isEmpty || !models.contains(where: { $0.id == model }) {
+                        model = models.first?.id ?? ""
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    modelFetchError = "Failed to fetch models: \(error.localizedDescription)"
+                    isFetchingModels = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Model Selection View
+
+/// View for selecting a model from available models, grouped by provider
+struct ModelSelectionView: View {
+    let models: [AvailableModel]
+    @Binding var selectedModelId: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var showFreeOnly = false
+    @State private var selectedModelForDetail: AvailableModel?
+    @State private var searchText = ""
+
+    /// Models filtered by search and free filter, grouped by provider
+    private var groupedModels: [(provider: String, models: [AvailableModel])] {
+        var filtered = models
+
+        // Apply free filter
+        if showFreeOnly {
+            filtered = filtered.filter { $0.isFree }
+        }
+
+        // Apply search filter
+        if !searchText.isEmpty {
+            let search = searchText.lowercased()
+            filtered = filtered.filter {
+                $0.name.lowercased().contains(search) ||
+                $0.id.lowercased().contains(search) ||
+                ($0.description?.lowercased().contains(search) ?? false)
+            }
+        }
+
+        let grouped = Dictionary(grouping: filtered) { $0.provider ?? "Other" }
+        return grouped.sorted { $0.key < $1.key }.map { (provider: $0.key, models: $0.value) }
+    }
+
+    var body: some View {
+        List {
+            // Free filter toggle (only show if there are both free and paid models)
+            let freeCount = models.filter { $0.isFree }.count
+            if freeCount > 0 && freeCount < models.count {
+                Section {
+                    Toggle("Show Free Models Only", isOn: $showFreeOnly)
+                } footer: {
+                    Text("\(freeCount) of \(models.count) models are free")
+                }
+            }
+
+            // Grouped models
+            ForEach(groupedModels, id: \.provider) { group in
+                Section(group.provider) {
+                    ForEach(group.models) { model in
+                        Button {
+                            selectedModelId = model.id
+                            dismiss()
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 4) {
+                                        Text(model.displayName)
+                                            .foregroundColor(Color.Lazyflow.textPrimary)
+                                        if model.isFree {
+                                            Text("FREE")
+                                                .font(.system(size: 9, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 4)
+                                                .padding(.vertical, 1)
+                                                .background(Color.Lazyflow.success)
+                                                .cornerRadius(3)
+                                        }
+                                    }
+                                    if let desc = model.description {
+                                        Text(desc)
+                                            .font(DesignSystem.Typography.caption2)
+                                            .foregroundColor(Color.Lazyflow.textTertiary)
+                                            .lineLimit(1)
+                                    }
+                                }
+
+                                Spacer()
+
+                                // Info indicator (visual hint for swipe)
+                                if model.description != nil {
+                                    Image(systemName: "info.circle")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Color.Lazyflow.textTertiary.opacity(0.6))
+                                }
+
+                                // Checkmark for selected model
+                                if model.id == selectedModelId {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(Color.Lazyflow.accent)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                        }
+                        .swipeActions(edge: .trailing) {
+                            if model.description != nil {
+                                Button {
+                                    selectedModelForDetail = model
+                                } label: {
+                                    Label("Info", systemImage: "info.circle")
+                                }
+                                .tint(Color.Lazyflow.accent)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Hint about swipe for details
+            if models.contains(where: { $0.description != nil }) {
+                Section {
+                } footer: {
+                    Text("Swipe left on a model for more details")
+                        .font(DesignSystem.Typography.caption2)
+                }
+            }
+        }
+        .searchable(text: $searchText, prompt: "Search models")
+        .navigationTitle("Select Model")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $selectedModelForDetail) { model in
+            ModelDetailSheet(model: model)
+        }
+    }
+}
+
+/// Sheet showing model details
+struct ModelDetailSheet: View {
+    let model: AvailableModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Model name
+                    HStack {
+                        Text(model.displayName)
+                            .font(DesignSystem.Typography.title2)
+                            .fontWeight(.semibold)
+                        if model.isFree {
+                            Text("FREE")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.Lazyflow.success)
+                                .cornerRadius(4)
+                        }
+                    }
+
+                    // Provider
+                    if let provider = model.provider {
+                        HStack {
+                            Text("Provider:")
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                            Text(provider)
+                        }
+                        .font(DesignSystem.Typography.subheadline)
+                    }
+
+                    // Model ID
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Model ID")
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.textSecondary)
+                        Text(model.id)
+                            .font(.system(.footnote, design: .monospaced))
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+                    }
+
+                    // Description
+                    if let description = model.description {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Description")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                            Text(description)
+                                .font(DesignSystem.Typography.body)
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("Model Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -223,6 +223,43 @@ export MATCH_PASSWORD="your-password"
 - **API keys** should be shared securely (e.g., 1Password, encrypted message)
 - The certificates repo is **private** - only team members have access
 
+## Regional Compliance
+
+### Excluded Territories
+
+Lazyflow excludes certain territories due to AI/LLM regulatory compliance:
+
+| Territory | Code | Reason |
+|-----------|------|--------|
+| China | CHN | Requires administrative license from MIIT for generative AI apps (CAC Interim Measures 2023) |
+
+### Managing Territories
+
+```bash
+# View excluded territories and reasons
+bundle exec fastlane show_excluded_territories
+
+# Apply territory exclusions via App Store Connect API
+bundle exec fastlane set_territories
+```
+
+**Important:** Do NOT set `price_tier` in Deliverfile - it can [reset territories to all 175 countries](https://github.com/fastlane/fastlane/discussions/21623).
+
+### Before App Store Submission
+
+1. **Run `set_territories` lane** to apply exclusions via API, OR
+2. **Manually verify in App Store Connect**:
+   - Go to App Store Connect → Pricing and Availability
+   - Ensure excluded territories are unchecked
+
+3. **The `submit_for_review` lane will remind you** to verify territories before submission
+
+### Adding/Removing Territories
+
+1. Update `fastlane/excluded_territories.json` with the territory code and reason
+2. Run `bundle exec fastlane set_territories` to apply changes
+3. Verify with `bundle exec fastlane show_excluded_territories`
+
 ## App Store Connect Setup
 
 Before first deployment, create the app on App Store Connect:

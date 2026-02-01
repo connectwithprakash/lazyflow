@@ -11,6 +11,7 @@
 		060FCFCAF48C8886212BD282 /* AppIcon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3C4824B59531F94012837CB8 /* AppIcon.svg */; };
 		06EDBEB5ECEB18959D52E6B8 /* LazyflowShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD94A2D660B93F6C3A2DB8A /* LazyflowShortcuts.swift */; };
 		07BE0276CAB5DAE53C44FCF5 /* LockScreenLiveActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2950BA8ACF067780F4117B32 /* LockScreenLiveActivityView.swift */; };
+		0AD8F10D1C575952D4AB2A80 /* OpenResponsesProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66431C6CC05493F4B240B86 /* OpenResponsesProviderTests.swift */; };
 		0D49EB156BC60C5D0A702E2A /* AIContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D9F9F321F952AFABCA389A /* AIContextTests.swift */; };
 		10BD944E6F15A52D43E67787 /* TaskViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A21AD04C5407E342830D9E /* TaskViewModel.swift */; };
 		10EB1B3A4A8B19D06C69DEE3 /* PromptTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4F4296DEC38E64C4B97279 /* PromptTemplates.swift */; };
@@ -34,6 +35,7 @@
 		392C364B24A7A749355B6E1B /* WidgetTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464273955722DB557CDC0BAD /* WidgetTask.swift */; };
 		3B3A363BC8B3FADAA3EA4971 /* AddSubtaskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7061D6A0755BE152415DD47B /* AddSubtaskSheet.swift */; };
 		3CA3AC9B9782422C062B1AF9 /* AILearningServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC067C3057C62C8D57278A7 /* AILearningServiceTests.swift */; };
+		3D3C04CF2EA74283A6B58D85 /* OpenResponsesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D173F80069C2670C68BBCC8 /* OpenResponsesProvider.swift */; };
 		47272E6F94D597DA2481FF37 /* TaskServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2A1BA3F316C06064B36EB8 /* TaskServiceTests.swift */; };
 		4884FDF6305640157B5BEA77 /* MorningBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61EC4AC29B50F17794EC5BF7 /* MorningBriefingView.swift */; };
 		4B8FBFDD3F89F43BF36A288B /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87E8C6CE81AAE400BCBDCC6 /* NotificationService.swift */; };
@@ -254,6 +256,7 @@
 		795DC26627EBE7C54E1A28A1 /* ConflictDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictDetectionService.swift; sourceTree = "<group>"; };
 		7B92B449FEFCFB65EC566ABC /* CategoryServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryServiceTests.swift; sourceTree = "<group>"; };
 		7C9CF8B88B573FE889545383 /* NotificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceTests.swift; sourceTree = "<group>"; };
+		7D173F80069C2670C68BBCC8 /* OpenResponsesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OpenResponsesProvider.swift; path = Lazyflow/Sources/Services/AI/LLM/OpenResponsesProvider.swift; sourceTree = "<group>"; };
 		8210DCBCD9408BFE2E2B7407 /* TaskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDetailView.swift; sourceTree = "<group>"; };
 		83FD268CF434D2866A63A99A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		841994A33067F846C2F3A746 /* LazyflowWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWatchApp.swift; sourceTree = "<group>"; };
@@ -314,6 +317,7 @@
 		F2A8720AD9E15D86484861BD /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		F41C3B0383366E7103B4CF90 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryServiceTests.swift; sourceTree = "<group>"; };
+		F66431C6CC05493F4B240B86 /* OpenResponsesProviderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenResponsesProviderTests.swift; sourceTree = "<group>"; };
 		F729BB9BDF9430A95176FDD8 /* LazyflowUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LazyflowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8769C43782895FD84F8B04A /* LazyflowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowUITests.swift; sourceTree = "<group>"; };
 		F891A77BAC392674B76D2FB9 /* UpcomingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingView.swift; sourceTree = "<group>"; };
@@ -351,6 +355,7 @@
 				45F5C76CEE2801426C21AAB0 /* LLMProvider.swift */,
 				63486A32FD7682A3260A045C /* LLMService.swift */,
 				AF4F4296DEC38E64C4B97279 /* PromptTemplates.swift */,
+				7D173F80069C2670C68BBCC8 /* OpenResponsesProvider.swift */,
 			);
 			name = LLM;
 			sourceTree = "<group>";
@@ -483,6 +488,7 @@
 				9ADAD1ACBAC91B938484104C /* LLMIntegrationTests.swift */,
 				30D9F9F321F952AFABCA389A /* AIContextTests.swift */,
 				5CC067C3057C62C8D57278A7 /* AILearningServiceTests.swift */,
+				F66431C6CC05493F4B240B86 /* OpenResponsesProviderTests.swift */,
 			);
 			path = LazyflowTests;
 			sourceTree = "<group>";
@@ -960,6 +966,7 @@
 				8071EDCDA3DD15043A1BB2C0 /* LLMIntegrationTests.swift in Sources */,
 				0D49EB156BC60C5D0A702E2A /* AIContextTests.swift in Sources */,
 				3CA3AC9B9782422C062B1AF9 /* AILearningServiceTests.swift in Sources */,
+				0AD8F10D1C575952D4AB2A80 /* OpenResponsesProviderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1060,6 +1067,7 @@
 				A88A3142FBD8E8E797328FA4 /* AICorrection.swift in Sources */,
 				B30BF9175F2DBB0A38A9775B /* AIContext.swift in Sources */,
 				CDA9E432A863EDE67ED19C1A /* UserPatterns.swift in Sources */,
+				3D3C04CF2EA74283A6B58D85 /* OpenResponsesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -156,6 +156,11 @@ platform :ios do
 
   desc "Submit latest TestFlight build to App Store Review"
   lane :submit_for_review do
+    # Reminder about excluded territories
+    UI.important("REMINDER: Verify excluded territories in App Store Connect before submission")
+    UI.message("China (CHN) should be excluded due to AI/LLM compliance requirements")
+    UI.message("Run 'fastlane show_excluded_territories' for details")
+
     # Get the latest TestFlight build info
     build_number = latest_testflight_build_number(api_key: api_key)
     version = get_version_number(xcodeproj: "Lazyflow.xcodeproj", target: "Lazyflow")
@@ -193,6 +198,108 @@ platform :ios do
   desc "Increment version number"
   lane :bump_version do |options|
     increment_version_number(bump_type: options[:type] || "patch")
+  end
+
+  desc "Show excluded territories for compliance"
+  lane :show_excluded_territories do
+    require 'json'
+    config_path = "./fastlane/excluded_territories.json"
+
+    if File.exist?(config_path)
+      config = JSON.parse(File.read(config_path))
+
+      UI.header("Excluded Territories")
+      config["excluded_territories"].each do |territory|
+        UI.message("#{territory['code']} - #{territory['name']}")
+        UI.message("  Reason: #{territory['reason']}")
+      end
+
+      UI.header("Notes")
+      config["notes"].each { |note| UI.message("- #{note}") }
+
+      UI.success("Last updated: #{config['last_updated']}")
+      UI.important("To modify territories, update excluded_territories.json and run 'fastlane set_territories'")
+    else
+      UI.error("excluded_territories.json not found")
+    end
+  end
+
+  desc "Set app territory availability (excludes China for compliance)"
+  lane :set_territories do
+    require 'json'
+
+    # Load excluded territories
+    config_path = "./fastlane/excluded_territories.json"
+    unless File.exist?(config_path)
+      UI.user_error!("excluded_territories.json not found")
+    end
+
+    config = JSON.parse(File.read(config_path))
+    # Support both ISO-2 (CN) and ISO-3 (CHN) codes - API format varies
+    excluded_codes = config["excluded_territories"].flat_map { |t|
+      [t["code"], t["code_alt"]].compact
+    }
+
+    UI.header("Setting Territory Availability")
+    UI.message("Excluded territory codes (trying both formats): #{excluded_codes.join(', ')}")
+
+    # Connect to App Store Connect via Spaceship
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: API_KEY_ID,
+      issuer_id: API_KEY_ISSUER_ID,
+      filepath: API_KEY_PATH
+    )
+
+    # Find the app
+    app = Spaceship::ConnectAPI::App.find("com.lazyflow.app")
+    UI.user_error!("App not found on App Store Connect") unless app
+
+    # Get all territories and exclude specified ones
+    # Territory.id is the ISO-2 country code (e.g., "CN", "US", "GB")
+    all_territories = Spaceship::ConnectAPI::Territory.all
+    UI.message("Total territories available: #{all_territories.count}")
+
+    # Log sample territory to verify structure
+    if all_territories.any?
+      sample = all_territories.first
+      UI.message("Sample territory - id: #{sample.id}")
+    end
+
+    included_territories = all_territories.reject { |t| excluded_codes.include?(t.id) }
+    UI.message("Territories after exclusion: #{included_territories.count}")
+
+    # Show what's being excluded and warn if no matches
+    excluded_territories = all_territories.select { |t| excluded_codes.include?(t.id) }
+    if excluded_territories.empty? && excluded_codes.any?
+      UI.important("Warning: No territories matched exclusion codes: #{excluded_codes.join(', ')}")
+      UI.message("Sample territory IDs: #{all_territories.first(10).map(&:id).join(', ')}")
+    else
+      excluded_territories.each do |t|
+        UI.important("Excluding: #{t.id}")
+      end
+    end
+
+    # Confirm before applying
+    unless ENV['CI']
+      UI.important("This will update territory availability in App Store Connect.")
+      unless UI.confirm("Proceed with territory update?")
+        UI.user_error!("Aborted by user")
+      end
+    end
+
+    # Update app availability
+    # Note: This uses the ConnectAPI to set territories
+    territory_ids = included_territories.map(&:id)
+
+    begin
+      app.update_app_available_territories(territory_ids: territory_ids)
+      UI.success("Territory availability updated successfully!")
+      UI.success("Excluded: #{excluded_codes.join(', ')}")
+    rescue => e
+      UI.error("Failed to update territories: #{e.message}")
+      UI.important("You may need to update territories manually in App Store Connect")
+      UI.important("Go to: App Store Connect > App > Pricing and Availability")
+    end
   end
 
   desc "Get current build info"

@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 /// Unified service for LLM-powered task analysis
-/// Uses Apple Intelligence for on-device AI processing
+/// Supports Apple Intelligence (default) and Open Responses compatible providers
 final class LLMService: ObservableObject {
     static let shared = LLMService()
 
@@ -12,50 +12,144 @@ final class LLMService: ObservableObject {
     @Published var errorMessage: String?
     @Published var selectedProvider: LLMProviderType {
         didSet {
-            UserDefaults.standard.set(selectedProvider.rawValue, forKey: "llm_provider")
+            // Only save if provider is available
+            if availableProviders.contains(selectedProvider) {
+                UserDefaults.standard.set(selectedProvider.rawValue, forKey: "llm_provider")
+            } else {
+                // Fall back to Apple if selected provider is not available
+                selectedProvider = .apple
+            }
         }
     }
 
     // MARK: - Providers
 
     private let appleProvider = AppleFoundationModelsProvider()
+    private var openResponsesProviders: [LLMProviderType: OpenResponsesProvider] = [:]
 
     private var currentProvider: LLMProvider {
-        return appleProvider
+        switch selectedProvider {
+        case .apple:
+            return appleProvider
+        case .ollama, .custom:
+            return openResponsesProviders[selectedProvider] ?? appleProvider
+        }
     }
 
     // MARK: - Initialization
 
     private init() {
-        // Always use Apple Intelligence (only provider)
-        self.selectedProvider = .apple
+        // Load saved provider preference
+        if let savedProvider = UserDefaults.standard.string(forKey: "llm_provider"),
+           let providerType = LLMProviderType(rawValue: savedProvider) {
+            self.selectedProvider = providerType
+        } else {
+            self.selectedProvider = .apple
+        }
 
-        // Clean up old API keys from removed providers
+        // Load any configured Open Responses providers
+        loadConfiguredProviders()
+
+        // Clean up old API keys from removed providers (pre-v1.4)
         UserDefaults.standard.removeObject(forKey: "anthropic_api_key")
         UserDefaults.standard.removeObject(forKey: "openai_api_key")
-        UserDefaults.standard.set("apple", forKey: "llm_provider")
+    }
+
+    /// Load configured Open Responses providers from storage
+    private func loadConfiguredProviders() {
+        for providerType in [LLMProviderType.ollama, .custom] {
+            if let config = OpenResponsesConfig.load(for: providerType) {
+                openResponsesProviders[providerType] = OpenResponsesProvider(config: config)
+            }
+        }
     }
 
     // MARK: - Provider Management
 
     /// Get all available providers
     var availableProviders: [LLMProviderType] {
-        return appleProvider.isAvailable ? [.apple] : []
+        var providers: [LLMProviderType] = []
+
+        // Apple Intelligence is always first if available
+        if appleProvider.isAvailable {
+            providers.append(.apple)
+        }
+
+        // Add configured Open Responses providers
+        for (type, provider) in openResponsesProviders {
+            if provider.isAvailable {
+                providers.append(type)
+            }
+        }
+
+        return providers
     }
 
     /// Check if current provider is ready to use
     var isReady: Bool {
-        return appleProvider.isAvailable
+        return currentProvider.isAvailable
     }
 
-    /// Set API key for a provider (Apple Intelligence doesn't need API key)
+    /// Configure an Open Responses provider
+    func configureOpenResponses(config: OpenResponsesConfig, providerType: LLMProviderType) {
+        guard providerType != .apple else { return }
+
+        // Save configuration
+        config.save(for: providerType)
+
+        // Create and store provider
+        openResponsesProviders[providerType] = OpenResponsesProvider(config: config)
+    }
+
+    /// Remove an Open Responses provider configuration
+    func removeOpenResponsesProvider(type: LLMProviderType) {
+        guard type != .apple else { return }
+
+        OpenResponsesConfig.delete(for: type)
+        openResponsesProviders.removeValue(forKey: type)
+
+        // If this was the selected provider, fall back to Apple
+        if selectedProvider == type {
+            selectedProvider = .apple
+        }
+    }
+
+    /// Get configuration for an Open Responses provider
+    func getOpenResponsesConfig(for providerType: LLMProviderType) -> OpenResponsesConfig? {
+        return OpenResponsesConfig.load(for: providerType)
+    }
+
+    /// Test connection to an Open Responses provider
+    func testConnection(config: OpenResponsesConfig) async throws -> Bool {
+        let provider = OpenResponsesProvider(config: config)
+        _ = try await provider.complete(prompt: "Hello", systemPrompt: nil)
+        return true
+    }
+
+    /// Set API key for a provider
     func setAPIKey(_ key: String, for provider: LLMProviderType) {
-        // No-op: Apple Intelligence doesn't require API keys
+        guard provider != .apple else { return }
+
+        if var config = OpenResponsesConfig.load(for: provider) {
+            config.apiKey = key
+            config.save(for: provider)
+            openResponsesProviders[provider] = OpenResponsesProvider(config: config)
+        }
     }
 
-    /// Check if provider has API key configured (Apple Intelligence always ready)
+    /// Check if provider has API key configured
     func hasAPIKey(for provider: LLMProviderType) -> Bool {
-        return true // Apple Intelligence doesn't require API keys
+        switch provider {
+        case .apple:
+            return true // Doesn't need API key
+        case .ollama:
+            return true // Local, doesn't need API key
+        case .custom:
+            if let config = OpenResponsesConfig.load(for: provider) {
+                return config.apiKey != nil && !config.apiKey!.isEmpty
+            }
+            return false
+        }
     }
 
     // MARK: - Task Analysis
