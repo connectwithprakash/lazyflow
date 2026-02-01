@@ -11,4 +11,4 @@ Smarter AI
 • AI learns from your preferences over time
 • Duration estimates adapt to your actual work pace
 • Improved suggestions powered by Apple Intelligence
-• Connect to alternative AI providers (OpenRouter, Ollama, custom endpoints)
+• Connect to alternative AI providers (Ollama, custom Open Responses endpoints)
