@@ -1004,8 +1004,6 @@ struct AISettingsView: View {
         switch provider {
         case .apple:
             return Text("Apple Intelligence runs entirely on your device. No data leaves your device. Requires iOS 18.4 or later.")
-        case .openRouter:
-            return Text("⚠️ OpenRouter sends your task data to external servers for AI processing. Your data will leave your device.")
         case .ollama:
             return Text("Ollama runs locally on your Mac. Your data stays on your local network.")
         case .custom:
@@ -1720,8 +1718,6 @@ struct ProviderConfigurationSheet: View {
         } else {
             // Use defaults based on provider type
             switch providerType {
-            case .openRouter:
-                config = .openRouterDefault
             case .ollama:
                 config = .ollamaDefault
             case .custom:

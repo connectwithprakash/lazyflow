@@ -31,7 +31,7 @@ final class LLMService: ObservableObject {
         switch selectedProvider {
         case .apple:
             return appleProvider
-        case .openRouter, .ollama, .custom:
+        case .ollama, .custom:
             return openResponsesProviders[selectedProvider] ?? appleProvider
         }
     }
@@ -57,7 +57,7 @@ final class LLMService: ObservableObject {
 
     /// Load configured Open Responses providers from storage
     private func loadConfiguredProviders() {
-        for providerType in [LLMProviderType.openRouter, .ollama, .custom] {
+        for providerType in [LLMProviderType.ollama, .custom] {
             if let config = OpenResponsesConfig.load(for: providerType) {
                 openResponsesProviders[providerType] = OpenResponsesProvider(config: config)
             }
@@ -144,7 +144,7 @@ final class LLMService: ObservableObject {
             return true // Doesn't need API key
         case .ollama:
             return true // Local, doesn't need API key
-        case .openRouter, .custom:
+        case .custom:
             if let config = OpenResponsesConfig.load(for: provider) {
                 return config.apiKey != nil && !config.apiKey!.isEmpty
             }

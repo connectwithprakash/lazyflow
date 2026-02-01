@@ -17,15 +17,6 @@ struct OpenResponsesConfig: Codable, Equatable {
 
     // MARK: - Default Configurations
 
-    /// Default configuration for OpenRouter
-    static var openRouterDefault: OpenResponsesConfig {
-        OpenResponsesConfig(
-            endpoint: "https://openrouter.ai/api/v1/responses",
-            apiKey: nil,
-            model: "openai/gpt-4o-mini"
-        )
-    }
-
     /// Default configuration for Ollama (local)
     static var ollamaDefault: OpenResponsesConfig {
         OpenResponsesConfig(
@@ -47,7 +38,7 @@ struct OpenResponsesConfig: Codable, Equatable {
     // MARK: - Model Discovery
 
     /// Fetch available models from the provider
-    /// Works with Ollama (/api/tags) and OpenRouter (/api/v1/models)
+    /// Works with Ollama (/api/tags) and Open Responses compatible (/api/v1/models)
     static func fetchAvailableModels(
         endpoint: String,
         apiKey: String?,
@@ -56,14 +47,12 @@ struct OpenResponsesConfig: Codable, Equatable {
         switch providerType {
         case .ollama:
             return try await fetchOllamaModels(endpoint: endpoint)
-        case .openRouter:
-            return try await fetchOpenRouterModels(apiKey: apiKey)
         case .custom:
-            // Try Ollama-style first, then OpenRouter-style
+            // Try Ollama-style first, then Open Responses compatible style
             if let models = try? await fetchOllamaModels(endpoint: endpoint), !models.isEmpty {
                 return models
             }
-            return try await fetchOpenRouterModels(endpoint: endpoint, apiKey: apiKey)
+            return try await fetchStandardModels(endpoint: endpoint, apiKey: apiKey)
         case .apple:
             return []
         }
@@ -93,8 +82,9 @@ struct OpenResponsesConfig: Codable, Equatable {
         }
     }
 
-    private static func fetchOpenRouterModels(
-        endpoint: String = "https://openrouter.ai/api/v1/models",
+    /// Fetch models using Open Responses compatible /v1/models endpoint
+    private static func fetchStandardModels(
+        endpoint: String,
         apiKey: String?
     ) async throws -> [AvailableModel] {
         let modelsURL = endpoint.contains("/models")
@@ -111,7 +101,7 @@ struct OpenResponsesConfig: Codable, Equatable {
         }
 
         let (data, _) = try await URLSession.shared.data(for: request)
-        let response = try JSONDecoder().decode(OpenRouterModelsResponse.self, from: data)
+        let response = try JSONDecoder().decode(ModelsListResponse.self, from: data)
 
         return response.data.compactMap { model in
             // Check if model is free (both prompt and completion pricing are "0")
@@ -179,24 +169,24 @@ private struct OllamaModel: Decodable {
     let size: Int64
 }
 
-private struct OpenRouterModelsResponse: Decodable {
-    let data: [OpenRouterModel]
+private struct ModelsListResponse: Decodable {
+    let data: [ModelInfo]
 }
 
-private struct OpenRouterModel: Decodable {
+private struct ModelInfo: Decodable {
     let id: String
     let name: String?
     let description: String?
-    let pricing: OpenRouterPricing?
+    let pricing: ModelPricing?
 }
 
-private struct OpenRouterPricing: Decodable {
+private struct ModelPricing: Decodable {
     let prompt: String?
     let completion: String?
 }
 
 /// LLM Provider using the Open Responses standard API
-/// Supports any Open Responses compatible service (OpenRouter, Ollama, etc.)
+/// Supports any Open Responses compatible service (Ollama, OpenAI, etc.)
 final class OpenResponsesProvider: LLMProvider {
     let id = "openResponses"
     let displayName = "Open Responses"

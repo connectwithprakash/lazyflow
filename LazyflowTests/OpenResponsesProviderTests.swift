@@ -72,16 +72,16 @@ final class OpenResponsesProviderTests: XCTestCase {
     }
 
     func testOpenResponsesConfig_DefaultEndpoints() {
-        // OpenRouter
-        XCTAssertEqual(
-            OpenResponsesConfig.openRouterDefault.endpoint,
-            "https://openrouter.ai/api/v1/responses"
-        )
-
         // Ollama local
         XCTAssertEqual(
             OpenResponsesConfig.ollamaDefault.endpoint,
             "http://localhost:11434/v1/responses"
+        )
+
+        // Custom (empty by default)
+        XCTAssertEqual(
+            OpenResponsesConfig.customDefault.endpoint,
+            ""
         )
     }
 
@@ -219,7 +219,7 @@ final class OpenResponsesProviderTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        sut = OpenResponsesProvider(config: .openRouterDefault)
+        sut = OpenResponsesProvider(config: .ollamaDefault)
 
         // When
         let content = try sut.parseResponse(data: responseJSON)
@@ -247,7 +247,7 @@ final class OpenResponsesProviderTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        sut = OpenResponsesProvider(config: .openRouterDefault)
+        sut = OpenResponsesProvider(config: .ollamaDefault)
 
         // When
         let content = try sut.parseResponse(data: responseJSON)
@@ -266,7 +266,7 @@ final class OpenResponsesProviderTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        sut = OpenResponsesProvider(config: .openRouterDefault)
+        sut = OpenResponsesProvider(config: .ollamaDefault)
 
         // Then
         XCTAssertThrowsError(try sut.parseResponse(data: responseJSON)) { error in
@@ -285,7 +285,7 @@ final class OpenResponsesProviderTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        sut = OpenResponsesProvider(config: .openRouterDefault)
+        sut = OpenResponsesProvider(config: .ollamaDefault)
 
         // Then
         XCTAssertThrowsError(try sut.parseResponse(data: errorJSON)) { error in
@@ -300,11 +300,6 @@ final class OpenResponsesProviderTests: XCTestCase {
     // MARK: - Provider Type Tests
 
     func testLLMProviderType_OpenResponses() {
-        // Test OpenRouter
-        XCTAssertEqual(LLMProviderType.openRouter.displayName, "OpenRouter")
-        XCTAssertTrue(LLMProviderType.openRouter.requiresAPIKey)
-        XCTAssertEqual(LLMProviderType.openRouter.iconName, "cloud")
-
         // Test Ollama
         XCTAssertEqual(LLMProviderType.ollama.displayName, "Ollama (Local)")
         XCTAssertFalse(LLMProviderType.ollama.requiresAPIKey)
@@ -318,8 +313,8 @@ final class OpenResponsesProviderTests: XCTestCase {
 
     func testLLMProviderType_Descriptions() {
         XCTAssertTrue(LLMProviderType.apple.description.contains("On-device"))
-        XCTAssertTrue(LLMProviderType.openRouter.description.contains("cloud"))
         XCTAssertTrue(LLMProviderType.ollama.description.contains("local"))
+        XCTAssertTrue(LLMProviderType.custom.description.contains("Open Responses"))
     }
 
     // MARK: - Integration with LLMService Tests
@@ -333,13 +328,13 @@ final class OpenResponsesProviderTests: XCTestCase {
         )
 
         // When
-        LLMService.shared.configureOpenResponses(config: config, providerType: .openRouter)
+        LLMService.shared.configureOpenResponses(config: config, providerType: .custom)
 
         // Then
-        XCTAssertTrue(LLMService.shared.availableProviders.contains(.openRouter))
+        XCTAssertTrue(LLMService.shared.availableProviders.contains(.custom))
 
         // Cleanup
-        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+        LLMService.shared.removeOpenResponsesProvider(type: .custom)
     }
 
     func testLLMService_SelectOpenResponsesProvider() {
@@ -349,27 +344,27 @@ final class OpenResponsesProviderTests: XCTestCase {
             apiKey: "test-key",
             model: "test-model"
         )
-        LLMService.shared.configureOpenResponses(config: config, providerType: .openRouter)
+        LLMService.shared.configureOpenResponses(config: config, providerType: .custom)
 
         // When
-        LLMService.shared.selectedProvider = .openRouter
+        LLMService.shared.selectedProvider = .custom
 
         // Then
-        XCTAssertEqual(LLMService.shared.selectedProvider, .openRouter)
+        XCTAssertEqual(LLMService.shared.selectedProvider, .custom)
 
         // Cleanup - reset to Apple
         LLMService.shared.selectedProvider = .apple
-        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+        LLMService.shared.removeOpenResponsesProvider(type: .custom)
     }
 
     func testLLMService_FallsBackToApple_WhenOpenResponsesUnavailable() {
-        // Given - no OpenRouter configured
-        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+        // Given - no Custom provider configured
+        LLMService.shared.removeOpenResponsesProvider(type: .custom)
 
-        // When - try to select OpenRouter
-        LLMService.shared.selectedProvider = .openRouter
+        // When - try to select Custom
+        LLMService.shared.selectedProvider = .custom
 
-        // Then - should fall back to Apple (or stay at Apple if OpenRouter not available)
+        // Then - should fall back to Apple (or stay at Apple if Custom not available)
         // The service should handle gracefully
         XCTAssertTrue(LLMService.shared.availableProviders.contains(.apple) || LLMService.shared.availableProviders.isEmpty)
     }
@@ -383,10 +378,10 @@ final class OpenResponsesProviderTests: XCTestCase {
             apiKey: "test-key",
             model: "model-a"
         )
-        LLMService.shared.configureOpenResponses(config: initialConfig, providerType: .openRouter)
+        LLMService.shared.configureOpenResponses(config: initialConfig, providerType: .custom)
 
         // Verify initial model
-        var loadedConfig = LLMService.shared.getOpenResponsesConfig(for: .openRouter)
+        var loadedConfig = LLMService.shared.getOpenResponsesConfig(for: .custom)
         XCTAssertEqual(loadedConfig?.model, "model-a")
 
         // When - change to model B
@@ -395,14 +390,14 @@ final class OpenResponsesProviderTests: XCTestCase {
             apiKey: "test-key",
             model: "model-b"
         )
-        LLMService.shared.configureOpenResponses(config: updatedConfig, providerType: .openRouter)
+        LLMService.shared.configureOpenResponses(config: updatedConfig, providerType: .custom)
 
         // Then - model B should be persisted
-        loadedConfig = LLMService.shared.getOpenResponsesConfig(for: .openRouter)
+        loadedConfig = LLMService.shared.getOpenResponsesConfig(for: .custom)
         XCTAssertEqual(loadedConfig?.model, "model-b")
 
         // Cleanup
-        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+        LLMService.shared.removeOpenResponsesProvider(type: .custom)
     }
 
     func testModelChange_SameEndpointDifferentModel() {
