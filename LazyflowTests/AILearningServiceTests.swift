@@ -311,4 +311,116 @@ final class AILearningServiceTests: XCTestCase {
         // Then
         XCTAssertGreaterThanOrEqual(corrections.count, 2)
     }
+
+    // MARK: - Duration Accuracy Tests
+
+    func testRecordDurationAccuracy_StoresAccuracy_WhenBothDurationsExist() {
+        // Given
+        let estimatedMinutes = 30
+        let actualMinutes = 45
+        let category = "Work"
+
+        // When
+        sut.recordDurationAccuracy(
+            category: category,
+            estimatedMinutes: estimatedMinutes,
+            actualMinutes: actualMinutes
+        )
+
+        // Then
+        XCTAssertEqual(sut.durationAccuracyRecords.count, 1)
+        XCTAssertEqual(sut.durationAccuracyRecords.first?.taskCategory, category.lowercased())
+        XCTAssertEqual(sut.durationAccuracyRecords.first?.estimatedMinutes, estimatedMinutes)
+        XCTAssertEqual(sut.durationAccuracyRecords.first?.actualMinutes, actualMinutes)
+    }
+
+    func testRecordDurationAccuracy_CalculatesRatio() {
+        // Given
+        let estimatedMinutes = 30
+        let actualMinutes = 60  // Took 2x longer
+
+        // When
+        sut.recordDurationAccuracy(
+            category: "Work",
+            estimatedMinutes: estimatedMinutes,
+            actualMinutes: actualMinutes
+        )
+
+        // Then
+        let ratio = sut.durationAccuracyRecords.first?.ratio ?? 0
+        XCTAssertEqual(ratio, 2.0, accuracy: 0.01)
+    }
+
+    func testRecordDurationAccuracy_SkipsZeroEstimate() {
+        // Given/When
+        sut.recordDurationAccuracy(
+            category: "Work",
+            estimatedMinutes: 0,
+            actualMinutes: 30
+        )
+
+        // Then - should not record
+        XCTAssertEqual(sut.durationAccuracyRecords.count, 0)
+    }
+
+    func testRecordDurationAccuracy_SkipsZeroActual() {
+        // Given/When
+        sut.recordDurationAccuracy(
+            category: "Work",
+            estimatedMinutes: 30,
+            actualMinutes: 0
+        )
+
+        // Then - should not record
+        XCTAssertEqual(sut.durationAccuracyRecords.count, 0)
+    }
+
+    func testRecordDurationAccuracy_EnforcesMaxLimit() {
+        // Given - record more than max (100)
+        for i in 0..<110 {
+            sut.recordDurationAccuracy(
+                category: "Work",
+                estimatedMinutes: 30,
+                actualMinutes: 30 + i
+            )
+        }
+
+        // Then - should be trimmed to 100
+        XCTAssertEqual(sut.durationAccuracyRecords.count, 100)
+    }
+
+    func testGetDurationAccuracyContext_ReturnsEmpty_WhenNoData() {
+        // Given - no accuracy data
+
+        // When
+        let context = sut.getDurationAccuracyContext()
+
+        // Then
+        XCTAssertTrue(context.isEmpty || context.contains("No duration"))
+    }
+
+    func testGetDurationAccuracyContext_ReturnsPattern_WithSufficientData() {
+        // Given - record 2+ accuracy entries for same category
+        sut.recordDurationAccuracy(category: "Work", estimatedMinutes: 30, actualMinutes: 45)
+        sut.recordDurationAccuracy(category: "Work", estimatedMinutes: 60, actualMinutes: 90)
+
+        // When
+        let context = sut.getDurationAccuracyContext()
+
+        // Then - should include Work category pattern
+        XCTAssertTrue(context.contains("Work") || context.contains("1.5"))
+    }
+
+    func testClearAllCorrections_AlsoClearsDurationAccuracy() {
+        // Given
+        sut.recordDurationAccuracy(category: "Work", estimatedMinutes: 30, actualMinutes: 45)
+        XCTAssertGreaterThan(sut.durationAccuracyRecords.count, 0)
+
+        // When
+        sut.clearAllCorrections()
+
+        // Then - both corrections and accuracy records should be cleared
+        XCTAssertEqual(sut.corrections.count, 0)
+        XCTAssertEqual(sut.durationAccuracyRecords.count, 0)
+    }
 }
