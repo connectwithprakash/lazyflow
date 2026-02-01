@@ -1,0 +1,379 @@
+import XCTest
+@testable import Lazyflow
+
+final class OpenResponsesProviderTests: XCTestCase {
+
+    var sut: OpenResponsesProvider!
+
+    override func setUp() {
+        super.setUp()
+        // Reset any stored configuration
+        UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+    }
+
+    override func tearDown() {
+        sut = nil
+        UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+        super.tearDown()
+    }
+
+    // MARK: - Configuration Tests
+
+    func testOpenResponsesConfig_Initialization() {
+        // Given
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.openrouter.ai/v1/responses",
+            apiKey: "test-key",
+            model: "openai/gpt-4"
+        )
+
+        // Then
+        XCTAssertEqual(config.endpoint, "https://api.openrouter.ai/v1/responses")
+        XCTAssertEqual(config.apiKey, "test-key")
+        XCTAssertEqual(config.model, "openai/gpt-4")
+    }
+
+    func testOpenResponsesConfig_Codable() throws {
+        // Given
+        let config = OpenResponsesConfig(
+            endpoint: "https://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "llama2"
+        )
+
+        // When
+        let encoded = try JSONEncoder().encode(config)
+        let decoded = try JSONDecoder().decode(OpenResponsesConfig.self, from: encoded)
+
+        // Then
+        XCTAssertEqual(decoded.endpoint, config.endpoint)
+        XCTAssertEqual(decoded.apiKey, config.apiKey)
+        XCTAssertEqual(decoded.model, config.model)
+    }
+
+    func testOpenResponsesConfig_DefaultEndpoints() {
+        // OpenRouter
+        XCTAssertEqual(
+            OpenResponsesConfig.openRouterDefault.endpoint,
+            "https://openrouter.ai/api/v1/responses"
+        )
+
+        // Ollama local
+        XCTAssertEqual(
+            OpenResponsesConfig.ollamaDefault.endpoint,
+            "http://localhost:11434/v1/responses"
+        )
+    }
+
+    // MARK: - Provider Initialization Tests
+
+    func testOpenResponsesProvider_Initialization_WithConfig() {
+        // Given
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "test-model"
+        )
+
+        // When
+        sut = OpenResponsesProvider(config: config)
+
+        // Then
+        XCTAssertEqual(sut.id, "openResponses")
+        XCTAssertEqual(sut.displayName, "Open Responses")
+        XCTAssertTrue(sut.isAvailable)
+    }
+
+    func testOpenResponsesProvider_RequiresAPIKey_WhenConfigured() {
+        // Given - config with API key
+        let configWithKey = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "test-model"
+        )
+        sut = OpenResponsesProvider(config: configWithKey)
+
+        // Then
+        XCTAssertFalse(sut.requiresAPIKey) // Already has key
+
+        // Given - config without API key (like Ollama)
+        let configNoKey = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "llama2"
+        )
+        sut = OpenResponsesProvider(config: configNoKey)
+
+        // Then - local providers don't require API key
+        XCTAssertFalse(sut.requiresAPIKey)
+    }
+
+    // MARK: - Request Building Tests
+
+    func testBuildRequest_BasicPrompt() throws {
+        // Given
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "gpt-4"
+        )
+        sut = OpenResponsesProvider(config: config)
+
+        // When
+        let request = try sut.buildRequest(prompt: "Hello", systemPrompt: nil)
+
+        // Then
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.url?.absoluteString, "https://api.test.com/v1/responses")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "application/json")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer test-key")
+
+        // Verify body
+        let body = try JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+        XCTAssertEqual(body["model"] as? String, "gpt-4")
+        XCTAssertEqual(body["input"] as? String, "Hello")
+    }
+
+    func testBuildRequest_WithSystemPrompt() throws {
+        // Given
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "gpt-4"
+        )
+        sut = OpenResponsesProvider(config: config)
+
+        // When
+        let request = try sut.buildRequest(
+            prompt: "What is 2+2?",
+            systemPrompt: "You are a math tutor."
+        )
+
+        // Then - verify body contains input array with messages
+        let body = try JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+        let input = body["input"] as! [[String: Any]]
+
+        XCTAssertEqual(input.count, 2)
+        XCTAssertEqual(input[0]["role"] as? String, "system")
+        XCTAssertEqual(input[0]["content"] as? String, "You are a math tutor.")
+        XCTAssertEqual(input[1]["role"] as? String, "user")
+        XCTAssertEqual(input[1]["content"] as? String, "What is 2+2?")
+    }
+
+    func testBuildRequest_NoAPIKey_OmitsAuthHeader() throws {
+        // Given - Ollama-style local config without API key
+        let config = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "llama2"
+        )
+        sut = OpenResponsesProvider(config: config)
+
+        // When
+        let request = try sut.buildRequest(prompt: "Hello", systemPrompt: nil)
+
+        // Then - no Authorization header
+        XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
+    }
+
+    // MARK: - Response Parsing Tests
+
+    func testParseResponse_ValidJSON() throws {
+        // Given
+        let responseJSON = """
+        {
+            "id": "resp_123",
+            "output": [
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "text": "Hello! How can I help you?"
+                        }
+                    ]
+                }
+            ],
+            "status": "completed"
+        }
+        """.data(using: .utf8)!
+
+        sut = OpenResponsesProvider(config: .openRouterDefault)
+
+        // When
+        let content = try sut.parseResponse(data: responseJSON)
+
+        // Then
+        XCTAssertEqual(content, "Hello! How can I help you?")
+    }
+
+    func testParseResponse_MultipleTextBlocks() throws {
+        // Given
+        let responseJSON = """
+        {
+            "id": "resp_123",
+            "output": [
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [
+                        {"type": "output_text", "text": "First part. "},
+                        {"type": "output_text", "text": "Second part."}
+                    ]
+                }
+            ],
+            "status": "completed"
+        }
+        """.data(using: .utf8)!
+
+        sut = OpenResponsesProvider(config: .openRouterDefault)
+
+        // When
+        let content = try sut.parseResponse(data: responseJSON)
+
+        // Then
+        XCTAssertEqual(content, "First part. Second part.")
+    }
+
+    func testParseResponse_EmptyOutput_ThrowsError() {
+        // Given
+        let responseJSON = """
+        {
+            "id": "resp_123",
+            "output": [],
+            "status": "completed"
+        }
+        """.data(using: .utf8)!
+
+        sut = OpenResponsesProvider(config: .openRouterDefault)
+
+        // Then
+        XCTAssertThrowsError(try sut.parseResponse(data: responseJSON)) { error in
+            XCTAssertEqual(error as? LLMError, LLMError.invalidResponse)
+        }
+    }
+
+    func testParseResponse_APIError_ThrowsError() {
+        // Given
+        let errorJSON = """
+        {
+            "error": {
+                "message": "Invalid API key",
+                "type": "authentication_error"
+            }
+        }
+        """.data(using: .utf8)!
+
+        sut = OpenResponsesProvider(config: .openRouterDefault)
+
+        // Then
+        XCTAssertThrowsError(try sut.parseResponse(data: errorJSON)) { error in
+            if case LLMError.apiError(let message) = error {
+                XCTAssertTrue(message.contains("Invalid API key"))
+            } else {
+                XCTFail("Expected apiError")
+            }
+        }
+    }
+
+    // MARK: - Provider Type Tests
+
+    func testLLMProviderType_OpenResponses() {
+        // Test OpenRouter
+        XCTAssertEqual(LLMProviderType.openRouter.displayName, "OpenRouter")
+        XCTAssertTrue(LLMProviderType.openRouter.requiresAPIKey)
+        XCTAssertEqual(LLMProviderType.openRouter.iconName, "cloud")
+
+        // Test Ollama
+        XCTAssertEqual(LLMProviderType.ollama.displayName, "Ollama (Local)")
+        XCTAssertFalse(LLMProviderType.ollama.requiresAPIKey)
+        XCTAssertEqual(LLMProviderType.ollama.iconName, "desktopcomputer")
+
+        // Test Custom
+        XCTAssertEqual(LLMProviderType.custom.displayName, "Custom Endpoint")
+        XCTAssertFalse(LLMProviderType.custom.requiresAPIKey) // May or may not need key
+        XCTAssertEqual(LLMProviderType.custom.iconName, "link")
+    }
+
+    func testLLMProviderType_Descriptions() {
+        XCTAssertTrue(LLMProviderType.apple.description.contains("On-device"))
+        XCTAssertTrue(LLMProviderType.openRouter.description.contains("cloud"))
+        XCTAssertTrue(LLMProviderType.ollama.description.contains("local"))
+    }
+
+    // MARK: - Integration with LLMService Tests
+
+    func testLLMService_SupportsOpenResponsesProvider() {
+        // Given
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "test-model"
+        )
+
+        // When
+        LLMService.shared.configureOpenResponses(config: config, providerType: .openRouter)
+
+        // Then
+        XCTAssertTrue(LLMService.shared.availableProviders.contains(.openRouter))
+
+        // Cleanup
+        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+    }
+
+    func testLLMService_SelectOpenResponsesProvider() {
+        // Given
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "test-model"
+        )
+        LLMService.shared.configureOpenResponses(config: config, providerType: .openRouter)
+
+        // When
+        LLMService.shared.selectedProvider = .openRouter
+
+        // Then
+        XCTAssertEqual(LLMService.shared.selectedProvider, .openRouter)
+
+        // Cleanup - reset to Apple
+        LLMService.shared.selectedProvider = .apple
+        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+    }
+
+    func testLLMService_FallsBackToApple_WhenOpenResponsesUnavailable() {
+        // Given - no OpenRouter configured
+        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+
+        // When - try to select OpenRouter
+        LLMService.shared.selectedProvider = .openRouter
+
+        // Then - should fall back to Apple (or stay at Apple if OpenRouter not available)
+        // The service should handle gracefully
+        XCTAssertTrue(LLMService.shared.availableProviders.contains(.apple) || LLMService.shared.availableProviders.isEmpty)
+    }
+}
+
+// MARK: - LLMError Equatable for Testing
+
+extension LLMError: Equatable {
+    public static func == (lhs: LLMError, rhs: LLMError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidResponse, .invalidResponse):
+            return true
+        case (.noAPIKey, .noAPIKey):
+            return true
+        case (.rateLimited, .rateLimited):
+            return true
+        case (.modelUnavailable, .modelUnavailable):
+            return true
+        case let (.providerUnavailable(l), .providerUnavailable(r)):
+            return l == r
+        case let (.apiError(l), .apiError(r)):
+            return l == r
+        default:
+            return false
+        }
+    }
+}

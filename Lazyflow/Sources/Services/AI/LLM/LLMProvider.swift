@@ -32,30 +32,53 @@ extension LLMProvider {
 /// Enum of supported LLM providers
 enum LLMProviderType: String, CaseIterable, Codable, Identifiable {
     case apple = "apple"
+    case openRouter = "openRouter"
+    case ollama = "ollama"
+    case custom = "custom"
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
         case .apple: return "Apple Intelligence"
+        case .openRouter: return "OpenRouter"
+        case .ollama: return "Ollama (Local)"
+        case .custom: return "Custom Endpoint"
         }
     }
 
     var description: String {
         switch self {
         case .apple: return "On-device, free, private"
+        case .openRouter: return "Access multiple cloud models via OpenRouter"
+        case .ollama: return "Run local models on your Mac"
+        case .custom: return "Connect to any Open Responses API"
         }
     }
 
     var iconName: String {
         switch self {
         case .apple: return "apple.logo"
+        case .openRouter: return "cloud"
+        case .ollama: return "desktopcomputer"
+        case .custom: return "link"
         }
     }
 
     var requiresAPIKey: Bool {
         switch self {
         case .apple: return false
+        case .openRouter: return true
+        case .ollama: return false
+        case .custom: return false // May or may not need key
+        }
+    }
+
+    /// Whether this provider sends data to external servers
+    var isExternal: Bool {
+        switch self {
+        case .apple, .ollama: return false
+        case .openRouter, .custom: return true
         }
     }
 }
