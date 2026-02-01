@@ -797,41 +797,21 @@ struct AISettingsView: View {
     @State private var batchAnalysisTotal: Int = 0
     @State private var showBatchReviewSheet = false
     @State private var batchResults: [BatchAnalysisResult] = []
+    @State private var showProviderConfig = false
+    @State private var configProviderType: LLMProviderType = .openRouter
 
     var body: some View {
         NavigationStack {
             Form {
-                // Apple Intelligence Info
+                // Provider Selection Section
                 Section {
-                    HStack(spacing: DesignSystem.Spacing.md) {
-                        Image(systemName: "apple.logo")
-                            .font(.title2)
-                            .foregroundColor(Color.Lazyflow.accent)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Apple Intelligence")
-                                .font(DesignSystem.Typography.headline)
-                                .foregroundColor(Color.Lazyflow.textPrimary)
-
-                            Text("On-device • Private • Free")
-                                .font(DesignSystem.Typography.caption1)
-                                .foregroundColor(Color.Lazyflow.textSecondary)
-                        }
-
-                        Spacer()
-
-                        if llmService.isReady {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(Color.Lazyflow.success)
-                        } else {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundColor(Color.Lazyflow.warning)
-                        }
+                    ForEach(LLMProviderType.allCases) { provider in
+                        providerRow(for: provider)
                     }
                 } header: {
                     Text("AI Provider")
                 } footer: {
-                    Text("AI features are powered by Apple Intelligence, running entirely on your device. No data leaves your device. Requires iOS 18.4 or later.")
+                    providerFooterText
                 }
 
                 // AI Features Section
@@ -924,6 +904,88 @@ struct AISettingsView: View {
                     onApply: applyBatchResults
                 )
             }
+            .sheet(isPresented: $showProviderConfig) {
+                ProviderConfigurationSheet(providerType: configProviderType)
+            }
+        }
+    }
+
+    // MARK: - Provider UI
+
+    @ViewBuilder
+    private func providerRow(for provider: LLMProviderType) -> some View {
+        Button {
+            if provider == .apple {
+                llmService.selectedProvider = provider
+            } else if llmService.availableProviders.contains(provider) {
+                llmService.selectedProvider = provider
+            } else {
+                // Need to configure first
+                configProviderType = provider
+                showProviderConfig = true
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Image(systemName: provider.iconName)
+                    .font(.title2)
+                    .foregroundColor(llmService.selectedProvider == provider ? Color.Lazyflow.accent : Color.Lazyflow.textSecondary)
+                    .frame(width: 32)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(provider.displayName)
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundColor(Color.Lazyflow.textPrimary)
+
+                    Text(provider.description)
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                }
+
+                Spacer()
+
+                if llmService.selectedProvider == provider {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Color.Lazyflow.accent)
+                } else if llmService.availableProviders.contains(provider) {
+                    Image(systemName: "circle")
+                        .foregroundColor(Color.Lazyflow.textTertiary)
+                } else if provider != .apple {
+                    Text("Configure")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.accent)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            if provider != .apple && llmService.availableProviders.contains(provider) {
+                Button {
+                    configProviderType = provider
+                    showProviderConfig = true
+                } label: {
+                    Label("Edit Configuration", systemImage: "pencil")
+                }
+
+                Button(role: .destructive) {
+                    llmService.removeOpenResponsesProvider(type: provider)
+                } label: {
+                    Label("Remove Provider", systemImage: "trash")
+                }
+            }
+        }
+    }
+
+    private var providerFooterText: Text {
+        let provider = llmService.selectedProvider
+        switch provider {
+        case .apple:
+            return Text("Apple Intelligence runs entirely on your device. No data leaves your device. Requires iOS 18.4 or later.")
+        case .openRouter:
+            return Text("⚠️ OpenRouter sends your task data to external servers for AI processing. Your data will leave your device.")
+        case .ollama:
+            return Text("Ollama runs locally on your Mac. Your data stays on your local network.")
+        case .custom:
+            return Text("⚠️ Custom endpoints may send your task data to external servers. Ensure you trust the endpoint provider.")
         }
     }
 
@@ -1364,6 +1426,232 @@ struct LiveActivityToggle: View {
             inProgressPriority: inProgressTask?.priority.rawValue ?? 0,
             inProgressEstimatedDuration: inProgressTask?.estimatedDuration
         )
+    }
+}
+
+// MARK: - Provider Configuration Sheet
+
+struct ProviderConfigurationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var llmService = LLMService.shared
+
+    let providerType: LLMProviderType
+
+    @State private var endpoint: String = ""
+    @State private var apiKey: String = ""
+    @State private var model: String = ""
+    @State private var isTesting = false
+    @State private var testResult: TestResult?
+    @State private var showDeleteConfirmation = false
+
+    private enum TestResult {
+        case success
+        case failure(String)
+    }
+
+    private var isConfigured: Bool {
+        llmService.availableProviders.contains(providerType)
+    }
+
+    private var canSave: Bool {
+        !endpoint.isEmpty && !model.isEmpty
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                // Provider Info
+                Section {
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: providerType.iconName)
+                            .font(.title2)
+                            .foregroundColor(Color.Lazyflow.accent)
+                            .frame(width: 32)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(providerType.displayName)
+                                .font(DesignSystem.Typography.headline)
+
+                            Text(providerType.description)
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                    }
+                }
+
+                // Privacy Warning for external providers
+                if providerType.isExternal {
+                    Section {
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(Color.Lazyflow.warning)
+                            Text("Your task data will be sent to external servers when using this provider.")
+                                .font(DesignSystem.Typography.footnote)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                    }
+                }
+
+                // Configuration Fields
+                Section("Configuration") {
+                    TextField("Endpoint URL", text: $endpoint)
+                        .textContentType(.URL)
+                        .keyboardType(.URL)
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
+
+                    if providerType.requiresAPIKey {
+                        SecureField("API Key", text: $apiKey)
+                            .textContentType(.password)
+                            .autocapitalization(.none)
+                            .autocorrectionDisabled()
+                    }
+
+                    TextField("Model Name", text: $model)
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
+                }
+
+                // Test Connection
+                Section {
+                    Button {
+                        testConnection()
+                    } label: {
+                        HStack {
+                            if isTesting {
+                                ProgressView()
+                                    .frame(width: 20, height: 20)
+                            } else {
+                                Image(systemName: "network")
+                            }
+                            Text("Test Connection")
+                            Spacer()
+                            if let result = testResult {
+                                switch result {
+                                case .success:
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(Color.Lazyflow.success)
+                                case .failure:
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(Color.Lazyflow.error)
+                                }
+                            }
+                        }
+                    }
+                    .disabled(!canSave || isTesting)
+
+                    if case .failure(let message) = testResult {
+                        Text(message)
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.error)
+                    }
+                }
+
+                // Remove Provider (if configured)
+                if isConfigured {
+                    Section {
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "trash")
+                                Text("Remove Provider")
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Configure \(providerType.displayName)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveConfiguration()
+                    }
+                    .disabled(!canSave)
+                }
+            }
+            .onAppear {
+                loadExistingConfig()
+            }
+            .alert("Remove Provider", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Remove", role: .destructive) {
+                    llmService.removeOpenResponsesProvider(type: providerType)
+                    dismiss()
+                }
+            } message: {
+                Text("Are you sure you want to remove \(providerType.displayName)? You'll need to reconfigure it to use it again.")
+            }
+        }
+    }
+
+    private func loadExistingConfig() {
+        // Load default or existing configuration
+        let config: OpenResponsesConfig
+
+        if let existingConfig = llmService.getOpenResponsesConfig(for: providerType) {
+            config = existingConfig
+        } else {
+            // Use defaults based on provider type
+            switch providerType {
+            case .openRouter:
+                config = .openRouterDefault
+            case .ollama:
+                config = .ollamaDefault
+            case .custom:
+                config = .customDefault
+            case .apple:
+                return // Apple doesn't need configuration
+            }
+        }
+
+        endpoint = config.endpoint
+        apiKey = config.apiKey ?? ""
+        model = config.model
+    }
+
+    private func testConnection() {
+        isTesting = true
+        testResult = nil
+
+        let config = OpenResponsesConfig(
+            endpoint: endpoint,
+            apiKey: apiKey.isEmpty ? nil : apiKey,
+            model: model
+        )
+
+        _Concurrency.Task {
+            do {
+                _ = try await llmService.testConnection(config: config)
+                await MainActor.run {
+                    testResult = .success
+                    isTesting = false
+                }
+            } catch {
+                await MainActor.run {
+                    testResult = .failure(error.localizedDescription)
+                    isTesting = false
+                }
+            }
+        }
+    }
+
+    private func saveConfiguration() {
+        let config = OpenResponsesConfig(
+            endpoint: endpoint,
+            apiKey: apiKey.isEmpty ? nil : apiKey,
+            model: model
+        )
+
+        llmService.configureOpenResponses(config: config, providerType: providerType)
+        llmService.selectedProvider = providerType
+        dismiss()
     }
 }
 
