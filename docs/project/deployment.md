@@ -223,6 +223,36 @@ export MATCH_PASSWORD="your-password"
 - **API keys** should be shared securely (e.g., 1Password, encrypted message)
 - The certificates repo is **private** - only team members have access
 
+## Regional Compliance
+
+### Excluded Territories
+
+Lazyflow excludes certain territories due to AI/LLM regulatory compliance:
+
+| Territory | Code | Reason |
+|-----------|------|--------|
+| China | CHN | Requires administrative license from MIIT for generative AI apps (CAC Interim Measures 2023) |
+
+To view excluded territories:
+```bash
+bundle exec fastlane show_excluded_territories
+```
+
+### Before App Store Submission
+
+1. **Verify territories in App Store Connect**:
+   - Go to App Store Connect → Pricing and Availability
+   - Ensure excluded territories are unchecked
+   - Reference: `fastlane/excluded_territories.json`
+
+2. **The `submit_for_review` lane will remind you** to verify territories before submission
+
+### Adding/Removing Territories
+
+1. Update `fastlane/excluded_territories.json` with the territory and reason
+2. Manually update availability in App Store Connect (Pricing and Availability)
+3. Run `fastlane show_excluded_territories` to verify
+
 ## App Store Connect Setup
 
 Before first deployment, create the app on App Store Connect:

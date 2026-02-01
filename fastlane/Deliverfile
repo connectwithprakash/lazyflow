@@ -1,0 +1,27 @@
+# Deliverfile for Lazyflow
+# https://docs.fastlane.tools/actions/deliver/
+
+# App Store Connect API (inherited from Fastfile)
+# api_key is set in lanes
+
+# Pricing
+price_tier(0)  # Free app
+
+# Availability - Exclude China due to AI/LLM compliance requirements
+# China requires administrative license from MIIT for generative AI apps
+# Reference: CAC Interim Measures for Generative AI Services (2023)
+#
+# To exclude China, we specify all territories EXCEPT CHN
+# This list includes all App Store territories minus China (CHN)
+availability_config({
+  "available_in_new_territories" => false,  # Don't auto-add new territories
+})
+
+# Phased release (gradual rollout over 7 days)
+phased_release(true)
+
+# Auto-release after approval
+automatic_release(true)
+
+# App Rating - Contains no objectionable content
+app_rating_config_path("./fastlane/rating_config.json")

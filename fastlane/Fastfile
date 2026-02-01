@@ -156,6 +156,11 @@ platform :ios do
 
   desc "Submit latest TestFlight build to App Store Review"
   lane :submit_for_review do
+    # Reminder about excluded territories
+    UI.important("REMINDER: Verify excluded territories in App Store Connect before submission")
+    UI.message("China (CHN) should be excluded due to AI/LLM compliance requirements")
+    UI.message("Run 'fastlane show_excluded_territories' for details")
+
     # Get the latest TestFlight build info
     build_number = latest_testflight_build_number(api_key: api_key)
     version = get_version_number(xcodeproj: "Lazyflow.xcodeproj", target: "Lazyflow")
@@ -193,6 +198,30 @@ platform :ios do
   desc "Increment version number"
   lane :bump_version do |options|
     increment_version_number(bump_type: options[:type] || "patch")
+  end
+
+  desc "Show excluded territories for compliance"
+  lane :show_excluded_territories do
+    require 'json'
+    config_path = "./fastlane/excluded_territories.json"
+
+    if File.exist?(config_path)
+      config = JSON.parse(File.read(config_path))
+
+      UI.header("Excluded Territories")
+      config["excluded_territories"].each do |territory|
+        UI.message("#{territory['code']} - #{territory['name']}")
+        UI.message("  Reason: #{territory['reason']}")
+      end
+
+      UI.header("Notes")
+      config["notes"].each { |note| UI.message("- #{note}") }
+
+      UI.success("Last updated: #{config['last_updated']}")
+      UI.important("To modify territories, update excluded_territories.json and apply in App Store Connect")
+    else
+      UI.error("excluded_territories.json not found")
+    end
   end
 
   desc "Get current build info"

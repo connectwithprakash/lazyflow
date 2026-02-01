@@ -1,0 +1,15 @@
+{
+  "excluded_territories": [
+    {
+      "code": "CHN",
+      "name": "China",
+      "reason": "AI/LLM compliance - China requires administrative license from MIIT for generative AI apps (CAC Interim Measures 2023)"
+    }
+  ],
+  "notes": [
+    "This app uses AI features that may not comply with local regulations in excluded territories.",
+    "Apple Intelligence is on-device and compliant, but custom LLM endpoints may send data externally.",
+    "Review local regulations before expanding to new territories."
+  ],
+  "last_updated": "2026-02-01"
+}
