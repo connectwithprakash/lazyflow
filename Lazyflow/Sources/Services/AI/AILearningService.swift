@@ -37,7 +37,7 @@ final class AILearningService: ObservableObject {
     private let maxCorrections = 100
     private let maxAccuracyRecords = 100
     private let maxImpressions = 200
-    private let maxRefinements = 100
+    private let maxRefinements = 200
     private let correctionExpiryDays = 90
 
     @Published private(set) var corrections: [AICorrection] = []
@@ -309,12 +309,13 @@ final class AILearningService: ObservableObject {
 
     /// Calculate refinement rate (refinements / impressions) for the specified time window
     /// Returns 0 if no impressions to avoid division by zero
+    /// Capped at 1.0 since user can press "Try Again" multiple times per impression
     func getRefinementRate(lastDays: Int = 7) -> Double {
         let impressionCount = getImpressionCount(lastDays: lastDays)
         guard impressionCount > 0 else { return 0 }
 
         let refinementCount = getRefinementCount(lastDays: lastDays)
-        return Double(refinementCount) / Double(impressionCount)
+        return min(1.0, Double(refinementCount) / Double(impressionCount))
     }
 
     // MARK: - Persistence

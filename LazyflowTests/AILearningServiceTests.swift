@@ -599,13 +599,13 @@ final class AILearningServiceTests: XCTestCase {
     }
 
     func testRecordRefinementRequest_EnforcesMaxLimit() {
-        // Given - record more than max (100)
-        for _ in 0..<110 {
+        // Given - record more than max (200)
+        for _ in 0..<210 {
             sut.recordRefinementRequest()
         }
 
-        // Then - should be trimmed to 100
-        XCTAssertEqual(sut.refinementRequests.count, 100)
+        // Then - should be trimmed to 200
+        XCTAssertEqual(sut.refinementRequests.count, 200)
     }
 
     func testGetRefinementCount_ReturnsZero_WhenNoRefinements() {
@@ -656,6 +656,21 @@ final class AILearningServiceTests: XCTestCase {
 
         // Then - 1/4 = 0.25
         XCTAssertEqual(rate, 0.25, accuracy: 0.01)
+    }
+
+    func testGetRefinementRate_CapsAtOne_WhenRefinementsExceedImpressions() {
+        // Given - 1 impression, 3 refinements (user pressed Try Again multiple times)
+        sut.recordImpression()
+
+        sut.recordRefinementRequest()
+        sut.recordRefinementRequest()
+        sut.recordRefinementRequest()
+
+        // When
+        let rate = sut.getRefinementRate(lastDays: 7)
+
+        // Then - capped at 1.0 even though 3/1 = 3.0
+        XCTAssertEqual(rate, 1.0, accuracy: 0.01)
     }
 
     func testClearAllCorrections_AlsoClearsRefinements() {
