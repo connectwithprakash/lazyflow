@@ -980,6 +980,7 @@ struct AISettingsView: View {
                         .foregroundColor(Color.Lazyflow.textTertiary)
                 }
             }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .contextMenu {
