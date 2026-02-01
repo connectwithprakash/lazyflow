@@ -6,6 +6,15 @@ struct OpenResponsesConfig: Codable, Equatable {
     var apiKey: String?
     var model: String
 
+    // MARK: - Codable (exclude apiKey from UserDefaults storage)
+
+    /// Only encode endpoint and model - apiKey is stored securely in Keychain
+    private enum CodingKeys: String, CodingKey {
+        case endpoint
+        case model
+        // apiKey intentionally excluded - stored in Keychain only
+    }
+
     // MARK: - Default Configurations
 
     /// Default configuration for OpenRouter
@@ -335,9 +344,13 @@ extension OpenResponsesConfig {
             UserDefaults.standard.set(data, forKey: key)
         }
 
-        // Store API key securely in Keychain if present
+        // Store API key securely in Keychain, or delete if cleared
+        let keychainKey = "llm_apikey_\(providerType.rawValue)"
         if let apiKey = apiKey, !apiKey.isEmpty {
-            KeychainHelper.save(apiKey, forKey: "llm_apikey_\(providerType.rawValue)")
+            KeychainHelper.save(apiKey, forKey: keychainKey)
+        } else {
+            // Delete stale Keychain entry when key is cleared
+            KeychainHelper.delete(forKey: keychainKey)
         }
     }
 

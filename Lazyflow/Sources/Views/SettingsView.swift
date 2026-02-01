@@ -917,7 +917,13 @@ struct AISettingsView: View {
             if provider == .apple {
                 llmService.selectedProvider = provider
             } else if llmService.availableProviders.contains(provider) {
-                llmService.selectedProvider = provider
+                if llmService.selectedProvider == provider {
+                    // Already selected - tap again to edit
+                    configProviderType = provider
+                } else {
+                    // Select this provider
+                    llmService.selectedProvider = provider
+                }
             } else {
                 // Need to configure first
                 configProviderType = provider
@@ -930,9 +936,22 @@ struct AISettingsView: View {
                     .frame(width: 32)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(provider.displayName)
-                        .font(DesignSystem.Typography.headline)
-                        .foregroundColor(Color.Lazyflow.textPrimary)
+                    HStack(spacing: 6) {
+                        Text(provider.displayName)
+                            .font(DesignSystem.Typography.headline)
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+
+                        // Show "External" badge for providers that send data externally
+                        if provider.isExternal {
+                            Text("External")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Color.orange.opacity(0.8))
+                                .cornerRadius(4)
+                        }
+                    }
 
                     Text(provider.description)
                         .font(DesignSystem.Typography.caption1)
@@ -941,6 +960,7 @@ struct AISettingsView: View {
 
                 Spacer()
 
+                // Selection indicator
                 if llmService.selectedProvider == provider {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(Color.Lazyflow.accent)
@@ -951,6 +971,13 @@ struct AISettingsView: View {
                     Text("Configure")
                         .font(DesignSystem.Typography.caption1)
                         .foregroundColor(Color.Lazyflow.accent)
+                }
+
+                // Edit chevron for configured non-Apple providers
+                if provider != .apple && llmService.availableProviders.contains(provider) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color.Lazyflow.textTertiary)
                 }
             }
         }
@@ -1440,6 +1467,7 @@ struct ProviderConfigurationSheet: View {
     @State private var isTesting = false
     @State private var testResult: TestResult?
     @State private var showDeleteConfirmation = false
+    @State private var showTestConfirmation = false
     @State private var availableModels: [AvailableModel] = []
     @State private var isFetchingModels = false
     @State private var modelFetchError: String?
@@ -1505,8 +1533,9 @@ struct ProviderConfigurationSheet: View {
                             modelFetchError = nil
                         }
 
-                    if providerType.requiresAPIKey {
-                        SecureField("API Key", text: $apiKey)
+                    // Show API key field for providers that require it OR custom endpoints (optional)
+                    if providerType.requiresAPIKey || providerType == .custom {
+                        SecureField(providerType == .custom ? "API Key (optional)" : "API Key", text: $apiKey)
                             .textContentType(.password)
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
@@ -1593,7 +1622,12 @@ struct ProviderConfigurationSheet: View {
                 // Test Connection
                 Section {
                     Button {
-                        testConnection()
+                        // Show confirmation for external providers
+                        if providerType.isExternal {
+                            showTestConfirmation = true
+                        } else {
+                            testConnection()
+                        }
                     } label: {
                         HStack {
                             if isTesting {
@@ -1665,6 +1699,14 @@ struct ProviderConfigurationSheet: View {
                 }
             } message: {
                 Text("Are you sure you want to remove \(providerType.displayName)? You'll need to reconfigure it to use it again.")
+            }
+            .alert("Test Connection", isPresented: $showTestConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Test Anyway") {
+                    testConnection()
+                }
+            } message: {
+                Text("This will send a test request to \(providerType.displayName). Your task data may be sent to external servers.")
             }
         }
     }
@@ -1772,10 +1814,27 @@ struct ModelSelectionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showFreeOnly = false
     @State private var selectedModelForDetail: AvailableModel?
+    @State private var searchText = ""
 
-    /// Models grouped by provider
+    /// Models filtered by search and free filter, grouped by provider
     private var groupedModels: [(provider: String, models: [AvailableModel])] {
-        let filtered = showFreeOnly ? models.filter { $0.isFree } : models
+        var filtered = models
+
+        // Apply free filter
+        if showFreeOnly {
+            filtered = filtered.filter { $0.isFree }
+        }
+
+        // Apply search filter
+        if !searchText.isEmpty {
+            let search = searchText.lowercased()
+            filtered = filtered.filter {
+                $0.name.lowercased().contains(search) ||
+                $0.id.lowercased().contains(search) ||
+                ($0.description?.lowercased().contains(search) ?? false)
+            }
+        }
+
         let grouped = Dictionary(grouping: filtered) { $0.provider ?? "Other" }
         return grouped.sorted { $0.key < $1.key }.map { (provider: $0.key, models: $0.value) }
     }
@@ -1825,6 +1884,13 @@ struct ModelSelectionView: View {
 
                                 Spacer()
 
+                                // Info indicator (visual hint for swipe)
+                                if model.description != nil {
+                                    Image(systemName: "info.circle")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Color.Lazyflow.textTertiary.opacity(0.6))
+                                }
+
                                 // Checkmark for selected model
                                 if model.id == selectedModelId {
                                     Image(systemName: "checkmark")
@@ -1846,7 +1912,17 @@ struct ModelSelectionView: View {
                     }
                 }
             }
+
+            // Hint about swipe for details
+            if models.contains(where: { $0.description != nil }) {
+                Section {
+                } footer: {
+                    Text("Swipe left on a model for more details")
+                        .font(DesignSystem.Typography.caption2)
+                }
+            }
         }
+        .searchable(text: $searchText, prompt: "Search models")
         .navigationTitle("Select Model")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedModelForDetail) { model in

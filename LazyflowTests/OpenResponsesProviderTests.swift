@@ -47,8 +47,28 @@ final class OpenResponsesProviderTests: XCTestCase {
 
         // Then
         XCTAssertEqual(decoded.endpoint, config.endpoint)
-        XCTAssertEqual(decoded.apiKey, config.apiKey)
         XCTAssertEqual(decoded.model, config.model)
+        // apiKey is intentionally excluded from Codable (stored in Keychain only)
+        XCTAssertNil(decoded.apiKey, "API key should NOT be encoded - it's stored in Keychain only")
+    }
+
+    func testOpenResponsesConfig_ApiKeyExcludedFromEncoding() throws {
+        // Given - config WITH an API key
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "secret-api-key-12345",
+            model: "gpt-4"
+        )
+
+        // When - encode to JSON
+        let encoded = try JSONEncoder().encode(config)
+        let jsonString = String(data: encoded, encoding: .utf8)!
+
+        // Then - API key should NOT appear in the encoded data (security fix)
+        XCTAssertFalse(jsonString.contains("secret-api-key"), "API key must NOT be encoded to UserDefaults")
+        XCTAssertFalse(jsonString.contains("apiKey"), "apiKey field must NOT be in encoded JSON")
+        XCTAssertTrue(jsonString.contains("endpoint"), "endpoint should be encoded")
+        XCTAssertTrue(jsonString.contains("model"), "model should be encoded")
     }
 
     func testOpenResponsesConfig_DefaultEndpoints() {
