@@ -235,10 +235,13 @@ platform :ios do
     end
 
     config = JSON.parse(File.read(config_path))
-    excluded_codes = config["excluded_territories"].map { |t| t["code"] }
+    # Support both ISO-2 (CN) and ISO-3 (CHN) codes - API format varies
+    excluded_codes = config["excluded_territories"].flat_map { |t|
+      [t["code"], t["code_alt"]].compact
+    }
 
     UI.header("Setting Territory Availability")
-    UI.message("Excluded territories: #{excluded_codes.join(', ')}")
+    UI.message("Excluded territory codes (trying both formats): #{excluded_codes.join(', ')}")
 
     # Connect to App Store Connect via Spaceship
     Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
