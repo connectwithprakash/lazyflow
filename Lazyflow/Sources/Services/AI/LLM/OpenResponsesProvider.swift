@@ -34,6 +34,119 @@ struct OpenResponsesConfig: Codable, Equatable {
             model: ""
         )
     }
+
+    // MARK: - Model Discovery
+
+    /// Fetch available models from the provider
+    /// Works with Ollama (/api/tags) and OpenRouter (/api/v1/models)
+    static func fetchAvailableModels(
+        endpoint: String,
+        apiKey: String?,
+        for providerType: LLMProviderType
+    ) async throws -> [AvailableModel] {
+        switch providerType {
+        case .ollama:
+            return try await fetchOllamaModels(endpoint: endpoint)
+        case .openRouter:
+            return try await fetchOpenRouterModels(apiKey: apiKey)
+        case .custom:
+            // Try Ollama-style first, then OpenRouter-style
+            if let models = try? await fetchOllamaModels(endpoint: endpoint), !models.isEmpty {
+                return models
+            }
+            return try await fetchOpenRouterModels(endpoint: endpoint, apiKey: apiKey)
+        case .apple:
+            return []
+        }
+    }
+
+    private static func fetchOllamaModels(endpoint: String) async throws -> [AvailableModel] {
+        // Convert /v1/responses endpoint to /api/tags
+        let tagsURL = endpoint
+            .replacingOccurrences(of: "/v1/responses", with: "/api/tags")
+            .replacingOccurrences(of: "/v1/chat/completions", with: "/api/tags")
+
+        guard let url = URL(string: tagsURL) else {
+            throw LLMError.apiError("Invalid endpoint URL")
+        }
+
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let response = try JSONDecoder().decode(OllamaTagsResponse.self, from: data)
+
+        return response.models.map { model in
+            AvailableModel(
+                id: model.name,
+                name: model.name,
+                description: formatModelSize(model.size)
+            )
+        }
+    }
+
+    private static func fetchOpenRouterModels(
+        endpoint: String = "https://openrouter.ai/api/v1/models",
+        apiKey: String?
+    ) async throws -> [AvailableModel] {
+        let modelsURL = endpoint.contains("/models")
+            ? endpoint
+            : endpoint.replacingOccurrences(of: "/v1/responses", with: "/v1/models")
+
+        guard let url = URL(string: modelsURL) else {
+            throw LLMError.apiError("Invalid endpoint URL")
+        }
+
+        var request = URLRequest(url: url)
+        if let apiKey = apiKey, !apiKey.isEmpty {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let response = try JSONDecoder().decode(OpenRouterModelsResponse.self, from: data)
+
+        return response.data.prefix(50).map { model in
+            AvailableModel(
+                id: model.id,
+                name: model.name ?? model.id,
+                description: model.description
+            )
+        }
+    }
+
+    private static func formatModelSize(_ bytes: Int64) -> String? {
+        let gb = Double(bytes) / 1_000_000_000
+        if gb >= 1 {
+            return String(format: "%.1f GB", gb)
+        }
+        let mb = Double(bytes) / 1_000_000
+        return String(format: "%.0f MB", mb)
+    }
+}
+
+/// Represents an available model from a provider
+struct AvailableModel: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let description: String?
+}
+
+// MARK: - API Response Models
+
+private struct OllamaTagsResponse: Decodable {
+    let models: [OllamaModel]
+}
+
+private struct OllamaModel: Decodable {
+    let name: String
+    let size: Int64
+}
+
+private struct OpenRouterModelsResponse: Decodable {
+    let data: [OpenRouterModel]
+}
+
+private struct OpenRouterModel: Decodable {
+    let id: String
+    let name: String?
+    let description: String?
 }
 
 /// LLM Provider using the Open Responses standard API

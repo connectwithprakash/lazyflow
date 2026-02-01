@@ -1440,6 +1440,9 @@ struct ProviderConfigurationSheet: View {
     @State private var isTesting = false
     @State private var testResult: TestResult?
     @State private var showDeleteConfirmation = false
+    @State private var availableModels: [AvailableModel] = []
+    @State private var isFetchingModels = false
+    @State private var modelFetchError: String?
 
     private enum TestResult {
         case success
@@ -1496,6 +1499,11 @@ struct ProviderConfigurationSheet: View {
                         .keyboardType(.URL)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
+                        .onChange(of: endpoint) { _, _ in
+                            // Clear models when endpoint changes
+                            availableModels = []
+                            modelFetchError = nil
+                        }
 
                     if providerType.requiresAPIKey {
                         SecureField("API Key", text: $apiKey)
@@ -1503,10 +1511,73 @@ struct ProviderConfigurationSheet: View {
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
                     }
+                }
 
-                    TextField("Model Name", text: $model)
-                        .autocapitalization(.none)
-                        .autocorrectionDisabled()
+                // Model Selection
+                Section {
+                    if availableModels.isEmpty {
+                        // Manual entry with fetch button
+                        HStack {
+                            TextField("Model Name", text: $model)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+
+                            Button {
+                                fetchModels()
+                            } label: {
+                                if isFetchingModels {
+                                    ProgressView()
+                                        .frame(width: 20, height: 20)
+                                } else {
+                                    Image(systemName: "arrow.down.circle")
+                                        .foregroundColor(Color.Lazyflow.accent)
+                                }
+                            }
+                            .disabled(endpoint.isEmpty || isFetchingModels)
+                        }
+
+                        if let error = modelFetchError {
+                            Text(error)
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.error)
+                        }
+                    } else {
+                        // Model picker
+                        Picker("Model", selection: $model) {
+                            ForEach(availableModels) { availableModel in
+                                VStack(alignment: .leading) {
+                                    Text(availableModel.name)
+                                    if let desc = availableModel.description {
+                                        Text(desc)
+                                            .font(DesignSystem.Typography.caption2)
+                                            .foregroundColor(Color.Lazyflow.textSecondary)
+                                    }
+                                }
+                                .tag(availableModel.id)
+                            }
+                        }
+                        .pickerStyle(.navigationLink)
+
+                        Button {
+                            availableModels = []
+                            model = ""
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.counterclockwise")
+                                Text("Enter Manually")
+                            }
+                            .font(DesignSystem.Typography.footnote)
+                            .foregroundColor(Color.Lazyflow.accent)
+                        }
+                    }
+                } header: {
+                    Text("Model")
+                } footer: {
+                    if availableModels.isEmpty && providerType != .custom {
+                        Text("Tap the download icon to fetch available models from the server.")
+                    } else if !availableModels.isEmpty {
+                        Text("\(availableModels.count) models available")
+                    }
                 }
 
                 // Test Connection
@@ -1649,6 +1720,36 @@ struct ProviderConfigurationSheet: View {
         llmService.configureOpenResponses(config: config, providerType: providerType)
         llmService.selectedProvider = providerType
         dismiss()
+    }
+
+    private func fetchModels() {
+        isFetchingModels = true
+        modelFetchError = nil
+
+        _Concurrency.Task {
+            do {
+                let models = try await OpenResponsesConfig.fetchAvailableModels(
+                    endpoint: endpoint,
+                    apiKey: apiKey.isEmpty ? nil : apiKey,
+                    for: providerType
+                )
+
+                await MainActor.run {
+                    availableModels = models
+                    isFetchingModels = false
+
+                    // Auto-select first model if current model is empty or not in list
+                    if model.isEmpty || !models.contains(where: { $0.id == model }) {
+                        model = models.first?.id ?? ""
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    modelFetchError = "Failed to fetch models: \(error.localizedDescription)"
+                    isFetchingModels = false
+                }
+            }
+        }
     }
 }
 
