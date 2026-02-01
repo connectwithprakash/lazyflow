@@ -1,6 +1,13 @@
-What's New in 1.5.0:
+Organization
+• Move tasks between lists with the new list picker
+• Categorize tasks with built-in or custom categories
+• Create your own categories to match your workflow
 
-• Add intraday recurring tasks (hourly reminders)
-• Add duration, recurring, and improved reminder options
-• Reduce verbose logging in InboxCleanup function
-• Enable scrolling in AddTaskView when keyboard is visible
+Recurring & Habits
+• Intraday recurring tasks with hourly reminders
+• Set task duration and recurring schedules easily
+
+Smarter AI
+• AI learns from your preferences over time
+• Duration estimates adapt to your actual work pace
+• Improved suggestions powered by Apple Intelligence
