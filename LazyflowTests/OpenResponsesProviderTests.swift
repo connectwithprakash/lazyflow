@@ -462,6 +462,65 @@ final class OpenResponsesProviderTests: XCTestCase {
         XCTAssertTrue(freeModel.isFree)
         XCTAssertFalse(paidModel.isFree)
     }
+
+    // MARK: - Live Integration Tests (requires Ollama running)
+
+    /// Test actual call to Ollama Open Responses endpoint
+    /// Requires: Ollama running locally with gemma2:2b model
+    func testOllamaIntegration_LiveCall() async throws {
+        // Check if Ollama is running
+        let tagsURL = URL(string: "http://localhost:11434/api/tags")!
+        do {
+            let (data, _) = try await URLSession.shared.data(from: tagsURL)
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let models = json["models"] as? [[String: Any]],
+                  !models.isEmpty else {
+                throw XCTSkip("Ollama not running or no models available")
+            }
+        } catch {
+            throw XCTSkip("Ollama not available: \(error.localizedDescription)")
+        }
+
+        // Create provider with Ollama config
+        let config = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "gemma2:2b"
+        )
+        let provider = OpenResponsesProvider(config: config)
+
+        // Make actual call
+        let response = try await provider.complete(
+            prompt: "What is 2+2? Answer with just the number.",
+            systemPrompt: "You are a math assistant. Be concise."
+        )
+
+        // Verify response
+        XCTAssertFalse(response.isEmpty, "Should receive a response")
+        print("Ollama response: \(response)")
+
+        // Response should contain "4"
+        XCTAssertTrue(response.contains("4"), "Response should contain the answer 4")
+    }
+
+    /// Test model discovery from live Ollama instance
+    func testOllamaIntegration_ModelDiscovery() async throws {
+        do {
+            let models = try await OpenResponsesConfig.fetchAvailableModels(
+                endpoint: "http://localhost:11434/v1/responses",
+                apiKey: nil,
+                for: .ollama
+            )
+
+            XCTAssertFalse(models.isEmpty, "Should find models from Ollama")
+            print("Found \(models.count) models from Ollama:")
+            for model in models {
+                print("  - \(model.name) (\(model.description ?? "no description"))")
+            }
+        } catch {
+            throw XCTSkip("Ollama not available: \(error.localizedDescription)")
+        }
+    }
 }
 
 // MARK: - LLMError Equatable for Testing

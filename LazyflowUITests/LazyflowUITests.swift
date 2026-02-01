@@ -1254,4 +1254,140 @@ final class LazyflowUITests: XCTestCase {
         let taskText = app.staticTexts["Parent Task"].firstMatch
         XCTAssertTrue(taskText.waitForExistence(timeout: 8), "Task with subtask should appear in Upcoming view")
     }
+
+    // MARK: - AI Settings Tests
+
+    /// Test navigating to AI Settings and verifying provider options exist
+    func testAISettingsShowsProviders() throws {
+        navigateToTab("Settings")
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+
+        // Find and tap AI Settings - try multiple element types
+        // The button has a Label("AI Settings", systemImage: "brain") inside
+        let aiButton = app.buttons["AI Settings"]
+        let aiCell = app.cells.containing(.staticText, identifier: "AI Settings").firstMatch
+        let aiStaticText = app.staticTexts["AI Settings"]
+
+        if aiButton.waitForExistence(timeout: 3) && aiButton.isHittable {
+            aiButton.tap()
+        } else if aiCell.waitForExistence(timeout: 2) && aiCell.isHittable {
+            aiCell.tap()
+        } else if aiStaticText.waitForExistence(timeout: 2) && aiStaticText.isHittable {
+            aiStaticText.tap()
+        } else {
+            // Try scrolling to find it (AI Features section may not be visible)
+            let settingsList = app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.tables.firstMatch
+            if settingsList.exists {
+                settingsList.swipeUp()
+                Thread.sleep(forTimeInterval: 0.5)
+            }
+
+            // Check again after scroll
+            if aiButton.waitForExistence(timeout: 2) && aiButton.isHittable {
+                aiButton.tap()
+            } else if aiStaticText.waitForExistence(timeout: 2) && aiStaticText.isHittable {
+                aiStaticText.tap()
+            } else {
+                throw XCTSkip("AI Settings button not found - may not be visible")
+            }
+        }
+
+        // Verify AI Settings sheet appears
+        let aiSettingsTitle = app.staticTexts["AI Settings"]
+        XCTAssertTrue(aiSettingsTitle.waitForExistence(timeout: 3), "AI Settings sheet should appear")
+
+        // Verify provider options exist
+        let appleOption = app.staticTexts["Apple Intelligence"]
+        let openRouterOption = app.staticTexts["OpenRouter"]
+        let ollamaOption = app.staticTexts["Ollama (Local)"]
+
+        XCTAssertTrue(appleOption.waitForExistence(timeout: 2), "Apple Intelligence option should exist")
+        XCTAssertTrue(openRouterOption.exists, "OpenRouter option should exist")
+        XCTAssertTrue(ollamaOption.exists, "Ollama option should exist")
+
+        // Dismiss
+        let doneButton = app.buttons["Done"]
+        if doneButton.exists && doneButton.isHittable {
+            doneButton.tap()
+        }
+    }
+
+    /// Test configuring Ollama provider and selecting a model
+    /// Requires Ollama to be running locally with models available
+    func testOllamaModelSelection() throws {
+        navigateToTab("Settings")
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+
+        // Open AI Settings - use the same pattern as testAISettingsShowsProviders
+        let aiButton = app.buttons["AI Settings"]
+        let aiStaticText = app.staticTexts["AI Settings"]
+
+        if !(aiButton.waitForExistence(timeout: 2) && aiButton.isHittable) &&
+           !(aiStaticText.waitForExistence(timeout: 1) && aiStaticText.isHittable) {
+            // Scroll to find AI Settings
+            let settingsList = app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.tables.firstMatch
+            if settingsList.exists {
+                settingsList.swipeUp()
+                Thread.sleep(forTimeInterval: 0.5)
+            }
+        }
+
+        if aiStaticText.waitForExistence(timeout: 2) && aiStaticText.isHittable {
+            aiStaticText.tap()
+        } else if aiButton.waitForExistence(timeout: 1) && aiButton.isHittable {
+            aiButton.tap()
+        } else {
+            throw XCTSkip("AI Settings button not found")
+        }
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Tap Configure for Ollama
+        let configureButton = app.buttons.matching(NSPredicate(format: "label == 'Configure'")).element(boundBy: 0)
+        guard configureButton.waitForExistence(timeout: 2) && configureButton.isHittable else {
+            throw XCTSkip("Configure button not found")
+        }
+        configureButton.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Look for model field or download models button
+        let modelField = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Model'")).firstMatch
+        let downloadButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'arrow.down' OR label CONTAINS[c] 'download'")).firstMatch
+
+        if downloadButton.waitForExistence(timeout: 2) && downloadButton.isHittable {
+            // Tap to fetch models
+            downloadButton.tap()
+            // Wait for models to load
+            Thread.sleep(forTimeInterval: 3)
+        }
+
+        // Look for model picker
+        let modelPicker = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'gemma' OR label CONTAINS[c] 'llama' OR label CONTAINS[c] 'qwen'")).firstMatch
+
+        if modelPicker.waitForExistence(timeout: 2) && modelPicker.isHittable {
+            // Tap to open model selection
+            modelPicker.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Verify model list appears
+            let modelList = app.navigationBars["Select Model"]
+            XCTAssertTrue(modelList.waitForExistence(timeout: 2), "Model selection view should appear")
+
+            // Try to select a different model
+            let modelRows = app.cells.count
+            if modelRows > 1 {
+                // Tap a model row
+                app.cells.element(boundBy: 1).tap()
+                Thread.sleep(forTimeInterval: 0.5)
+
+                // Verify we returned to config sheet (model should be selected)
+                XCTAssertFalse(modelList.exists, "Model selection should dismiss after selecting")
+            }
+        }
+
+        // Dismiss configuration
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists && cancelButton.isHittable {
+            cancelButton.tap()
+        }
+    }
 }
