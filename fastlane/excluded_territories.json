@@ -1,7 +1,7 @@
 {
   "excluded_territories": [
     {
-      "code": "CHN",
+      "code": "CN",
       "name": "China",
       "reason": "AI/LLM compliance - China requires administrative license from MIIT for generative AI apps (CAC Interim Measures 2023)"
     }

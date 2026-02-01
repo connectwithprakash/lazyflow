@@ -252,16 +252,28 @@ platform :ios do
     UI.user_error!("App not found on App Store Connect") unless app
 
     # Get all territories and exclude specified ones
+    # Territory.id is the ISO-2 country code (e.g., "CN", "US", "GB")
     all_territories = Spaceship::ConnectAPI::Territory.all
     UI.message("Total territories available: #{all_territories.count}")
+
+    # Log sample territory to verify structure
+    if all_territories.any?
+      sample = all_territories.first
+      UI.message("Sample territory - id: #{sample.id}")
+    end
 
     included_territories = all_territories.reject { |t| excluded_codes.include?(t.id) }
     UI.message("Territories after exclusion: #{included_territories.count}")
 
-    # Show what's being excluded
+    # Show what's being excluded and warn if no matches
     excluded_territories = all_territories.select { |t| excluded_codes.include?(t.id) }
-    excluded_territories.each do |t|
-      UI.important("Excluding: #{t.id}")
+    if excluded_territories.empty? && excluded_codes.any?
+      UI.important("Warning: No territories matched exclusion codes: #{excluded_codes.join(', ')}")
+      UI.message("Sample territory IDs: #{all_territories.first(10).map(&:id).join(', ')}")
+    else
+      excluded_territories.each do |t|
+        UI.important("Excluding: #{t.id}")
+      end
     end
 
     # Confirm before applying
