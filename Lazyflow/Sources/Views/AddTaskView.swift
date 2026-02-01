@@ -246,13 +246,18 @@ struct AddTaskView: View {
                             pendingSubtasks = subtasks
                         },
                         onCreateCategory: { proposedCategory in
-                            // Create the new category and assign it to the task
-                            let newCategory = categoryService.createCategory(
-                                name: proposedCategory.name,
-                                colorHex: proposedCategory.colorHex,
-                                iconName: proposedCategory.iconName
-                            )
-                            viewModel.customCategoryID = newCategory.id
+                            // Check if category with this name already exists (case-insensitive)
+                            if let existingCategory = categoryService.getCategory(byName: proposedCategory.name) {
+                                viewModel.customCategoryID = existingCategory.id
+                            } else {
+                                // Create the new category and assign it to the task
+                                let newCategory = categoryService.createCategory(
+                                    name: proposedCategory.name,
+                                    colorHex: proposedCategory.colorHex,
+                                    iconName: proposedCategory.iconName
+                                )
+                                viewModel.customCategoryID = newCategory.id
+                            }
                             viewModel.category = .uncategorized  // Custom categories use uncategorized as base
                         },
                         pendingSubtasks: pendingSubtasks

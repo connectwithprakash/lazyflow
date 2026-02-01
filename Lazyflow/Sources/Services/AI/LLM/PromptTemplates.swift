@@ -352,13 +352,16 @@ enum PromptTemplates {
             suggestedDescription = nil
         }
 
-        // Parse proposed new category
+        // Parse proposed new category (only when category is uncategorized to avoid conflicting guidance)
         let proposedNewCategory: ProposedCategory?
-        if let proposedJson = json["proposed_new_category"] as? [String: Any] {
-            let name = proposedJson["name"] as? String ?? "New Category"
+        if category == .uncategorized && customCategoryID == nil,
+           let proposedJson = json["proposed_new_category"] as? [String: Any],
+           let name = proposedJson["name"] as? String,
+           !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             let colorHex = proposedJson["color_hex"] as? String ?? ProposedCategory.defaultColorHex
             let iconName = proposedJson["icon_name"] as? String ?? ProposedCategory.defaultIconName
-            proposedNewCategory = ProposedCategory(name: name, colorHex: colorHex, iconName: iconName)
+            proposedNewCategory = ProposedCategory(name: trimmedName, colorHex: colorHex, iconName: iconName)
         } else {
             proposedNewCategory = nil
         }

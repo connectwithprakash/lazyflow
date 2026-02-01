@@ -415,12 +415,17 @@ struct TaskDetailView: View {
                             pendingSubtasksFromAI = subtasks
                         },
                         onCreateCategory: { proposedCategory in
-                            let newCategory = CategoryService.shared.createCategory(
-                                name: proposedCategory.name,
-                                colorHex: proposedCategory.colorHex,
-                                iconName: proposedCategory.iconName
-                            )
-                            viewModel.customCategoryID = newCategory.id
+                            // Check if category with this name already exists (case-insensitive)
+                            if let existingCategory = CategoryService.shared.getCategory(byName: proposedCategory.name) {
+                                viewModel.customCategoryID = existingCategory.id
+                            } else {
+                                let newCategory = CategoryService.shared.createCategory(
+                                    name: proposedCategory.name,
+                                    colorHex: proposedCategory.colorHex,
+                                    iconName: proposedCategory.iconName
+                                )
+                                viewModel.customCategoryID = newCategory.id
+                            }
                             viewModel.category = .uncategorized
                         },
                         pendingSubtasks: pendingSubtasksFromAI
