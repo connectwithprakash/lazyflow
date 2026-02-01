@@ -414,6 +414,15 @@ struct TaskDetailView: View {
                         onApplySubtasks: { subtasks in
                             pendingSubtasksFromAI = subtasks
                         },
+                        onCreateCategory: { proposedCategory in
+                            let newCategory = CategoryService.shared.createCategory(
+                                name: proposedCategory.name,
+                                colorHex: proposedCategory.colorHex,
+                                iconName: proposedCategory.iconName
+                            )
+                            viewModel.customCategoryID = newCategory.id
+                            viewModel.category = .uncategorized
+                        },
                         pendingSubtasks: pendingSubtasksFromAI
                     )
                     .presentationDetents([.medium, .large])

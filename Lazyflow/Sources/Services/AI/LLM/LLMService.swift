@@ -221,12 +221,25 @@ struct TaskOrderSuggestion {
     let suggestedPosition: Int
 }
 
+/// Represents a proposed new category that the AI suggests creating
+struct ProposedCategory {
+    let name: String
+    let colorHex: String
+    let iconName: String
+
+    /// Default color for proposed categories
+    static let defaultColorHex = "#808080"
+    /// Default icon for proposed categories
+    static let defaultIconName = "tag.fill"
+}
+
 struct TaskAnalysis {
     let estimatedMinutes: Int
     let suggestedPriority: Priority
     let bestTime: BestTime
     let suggestedCategory: TaskCategory
     let suggestedCustomCategoryID: UUID?  // When AI suggests a custom category
+    let proposedNewCategory: ProposedCategory?  // When AI proposes creating a new category
     let subtasks: [String]
     let tips: String
     let refinedTitle: String?
@@ -246,6 +259,7 @@ struct TaskAnalysis {
             bestTime: .anytime,
             suggestedCategory: .uncategorized,
             suggestedCustomCategoryID: nil,
+            proposedNewCategory: nil,
             subtasks: [],
             tips: "",
             refinedTitle: nil,
