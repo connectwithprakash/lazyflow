@@ -32,6 +32,9 @@ struct AddTaskView: View {
     @State private var originalDurationBeforeAI: TimeInterval?
     @State private var originalPriorityBeforeAI: Priority = .none
 
+    // Track if AI suggestions were shown for implicit feedback
+    @State private var aiSuggestionsWereShown: Bool = false
+
     init(
         defaultDueDate: Date? = nil,
         defaultListID: UUID? = nil,
@@ -175,6 +178,9 @@ struct AddTaskView: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
+                        // Record AI corrections before saving (implicit feedback)
+                        recordAICorrections()
+
                         if let savedTask = viewModel.save() {
                             // Create subtasks if any were selected from AI suggestions
                             if !pendingSubtasks.isEmpty {
@@ -908,12 +914,67 @@ struct AddTaskView: View {
                     aiAnalysis = analysis
                     showAISuggestions = true
                     isAnalyzing = false
+                    aiSuggestionsWereShown = true
                 }
             } catch {
                 await MainActor.run {
                     isAnalyzing = false
                 }
             }
+        }
+    }
+
+    // MARK: - AI Feedback Recording
+
+    /// Records corrections when user modifies AI suggestions (implicit feedback)
+    private func recordAICorrections() {
+        // Only record if AI suggestions were shown and we have analysis data
+        guard aiSuggestionsWereShown, let analysis = aiAnalysis else { return }
+
+        let learningService = AILearningService.shared
+        let taskTitle = viewModel.title
+
+        // Compare AI suggested category with user's final choice
+        if analysis.suggestedCategory != .uncategorized &&
+           analysis.suggestedCategory != viewModel.category {
+            learningService.recordCorrection(
+                field: .category,
+                originalSuggestion: analysis.suggestedCategory.displayName,
+                userChoice: viewModel.category.displayName,
+                taskTitle: taskTitle
+            )
+        }
+
+        // Compare AI suggested priority with user's final choice
+        if analysis.suggestedPriority != viewModel.priority {
+            learningService.recordCorrection(
+                field: .priority,
+                originalSuggestion: analysis.suggestedPriority.displayName,
+                userChoice: viewModel.priority.displayName,
+                taskTitle: taskTitle
+            )
+        }
+
+        // Compare AI suggested duration with user's final choice
+        let suggestedDuration = TimeInterval(analysis.estimatedMinutes * 60)
+        if let userDuration = viewModel.estimatedDuration,
+           suggestedDuration != userDuration {
+            let suggestedMinutes = analysis.estimatedMinutes
+            let userMinutes = Int(userDuration / 60)
+            learningService.recordCorrection(
+                field: .duration,
+                originalSuggestion: "\(suggestedMinutes) min",
+                userChoice: "\(userMinutes) min",
+                taskTitle: taskTitle
+            )
+        } else if viewModel.estimatedDuration == nil && analysis.estimatedMinutes > 0 {
+            // User cleared the duration that AI suggested
+            learningService.recordCorrection(
+                field: .duration,
+                originalSuggestion: "\(analysis.estimatedMinutes) min",
+                userChoice: "none",
+                taskTitle: taskTitle
+            )
         }
     }
 
