@@ -123,14 +123,14 @@ final class AILearningServiceTests: XCTestCase {
 
     // MARK: - getCorrectionsContext Tests
 
-    func testGetCorrectionsContext_ReturnsNoPreferences_WhenEmpty() {
+    func testGetCorrectionsContext_ReturnsEmpty_WhenNoCorrections() {
         // Given - no corrections
 
         // When
         let context = sut.getCorrectionsContext()
 
-        // Then
-        XCTAssertTrue(context.contains("No user preferences learned yet"))
+        // Then - returns empty string, AIContextService handles the "no preferences" message
+        XCTAssertTrue(context.isEmpty)
     }
 
     func testGetCorrectionsContext_ReturnsPatterns_AfterMultipleCorrections() {

@@ -80,7 +80,7 @@ final class AILearningService: ObservableObject {
     /// Generate context string for LLM prompts based on user corrections
     func getCorrectionsContext() -> String {
         guard !corrections.isEmpty else {
-            return "No user preferences learned yet."
+            return ""
         }
 
         var context = "User preferences learned from past corrections:\n"
