@@ -35,6 +35,9 @@ struct AddTaskView: View {
     // Track if AI suggestions were shown for implicit feedback
     @State private var aiSuggestionsWereShown: Bool = false
 
+    // Track if AI is regenerating suggestions
+    @State private var isRegeneratingAI: Bool = false
+
     init(
         defaultDueDate: Date? = nil,
         defaultListID: UUID? = nil,
@@ -260,7 +263,11 @@ struct AddTaskView: View {
                             }
                             viewModel.category = .uncategorized  // Custom categories use uncategorized as base
                         },
-                        pendingSubtasks: pendingSubtasks
+                        onTryAgain: {
+                            regenerateAISuggestions()
+                        },
+                        pendingSubtasks: pendingSubtasks,
+                        isRegenerating: isRegeneratingAI
                     )
                     .presentationDetents([.medium, .large])
                 }
@@ -940,6 +947,50 @@ struct AddTaskView: View {
         }
     }
 
+    /// Regenerate AI suggestions when user taps "Try Again"
+    private func regenerateAISuggestions() {
+        guard !viewModel.title.isEmpty else { return }
+        isRegeneratingAI = true
+
+        // Record the refinement request for analytics
+        AILearningService.shared.recordRefinementRequest()
+
+        _Concurrency.Task {
+            do {
+                // Create a temporary task for analysis
+                let tempTask = Task(
+                    id: UUID(),
+                    title: viewModel.title,
+                    notes: viewModel.notes.isEmpty ? nil : viewModel.notes,
+                    dueDate: viewModel.hasDueDate ? viewModel.dueDate : nil,
+                    dueTime: viewModel.hasDueTime ? viewModel.dueTime : nil,
+                    reminderDate: nil,
+                    isCompleted: false,
+                    isArchived: false,
+                    priority: viewModel.priority,
+                    listID: viewModel.selectedListID,
+                    linkedEventID: nil,
+                    estimatedDuration: nil,
+                    completedAt: nil,
+                    createdAt: Date(),
+                    updatedAt: Date(),
+                    recurringRule: nil
+                )
+
+                let analysis = try await llmService.analyzeTask(tempTask)
+
+                await MainActor.run {
+                    aiAnalysis = analysis
+                    isRegeneratingAI = false
+                }
+            } catch {
+                await MainActor.run {
+                    isRegeneratingAI = false
+                }
+            }
+        }
+    }
+
     // MARK: - AI Feedback Recording
 
     /// Records corrections when user modifies AI suggestions (implicit feedback)
@@ -1462,7 +1513,9 @@ struct AISuggestionsSheet: View {
     let onApplyDescription: (String) -> Void
     let onApplySubtasks: ([String]) -> Void
     let onCreateCategory: (ProposedCategory) -> Void
+    let onTryAgain: () -> Void
     let pendingSubtasks: [String]  // Initial value from parent
+    let isRegenerating: Bool
 
     @State private var titleApplied = false
     @State private var descriptionApplied = false
@@ -1499,13 +1552,33 @@ struct AISuggestionsSheet: View {
                 VStack(spacing: DesignSystem.Spacing.lg) {
                     // Header
                     VStack(spacing: DesignSystem.Spacing.sm) {
-                        Image(systemName: "wand.and.stars")
-                            .font(.system(size: 40))
-                            .foregroundColor(.purple)
+                        ZStack {
+                            if isRegenerating {
+                                ProgressView()
+                                    .scaleEffect(1.5)
+                                    .frame(width: 40, height: 40)
+                            } else {
+                                Image(systemName: "wand.and.stars")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.purple)
+                            }
+                        }
 
-                        Text("AI Analysis")
-                            .font(DesignSystem.Typography.title2)
-                            .fontWeight(.bold)
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Text("AI Analysis")
+                                .font(DesignSystem.Typography.title2)
+                                .fontWeight(.bold)
+
+                            Button {
+                                onTryAgain()
+                            } label: {
+                                Label("Try Again", systemImage: "arrow.clockwise")
+                                    .font(DesignSystem.Typography.caption1)
+                                    .foregroundColor(.purple)
+                            }
+                            .disabled(isRegenerating)
+                            .opacity(isRegenerating ? 0.5 : 1.0)
+                        }
 
                         Text("Tap Apply on suggestions you want to use")
                             .font(DesignSystem.Typography.caption1)
