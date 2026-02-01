@@ -422,4 +422,127 @@ final class AILearningServiceTests: XCTestCase {
         XCTAssertEqual(sut.corrections.count, 0)
         XCTAssertEqual(sut.durationAccuracyRecords.count, 0)
     }
+
+    // MARK: - Impression Tracking Tests
+
+    func testRecordImpression_StoresImpression() {
+        // Given - no impressions
+
+        // When
+        sut.recordImpression()
+
+        // Then
+        XCTAssertEqual(sut.impressions.count, 1)
+    }
+
+    func testRecordImpression_StoresMultipleImpressions() {
+        // Given/When
+        sut.recordImpression()
+        sut.recordImpression()
+        sut.recordImpression()
+
+        // Then
+        XCTAssertEqual(sut.impressions.count, 3)
+    }
+
+    func testRecordImpression_EnforcesMaxLimit() {
+        // Given - record more than max (100)
+        for _ in 0..<110 {
+            sut.recordImpression()
+        }
+
+        // Then - should be trimmed to 100
+        XCTAssertEqual(sut.impressions.count, 100)
+    }
+
+    func testGetImpressionCount_ReturnsZero_WhenNoImpressions() {
+        // Given - no impressions
+
+        // When
+        let count = sut.getImpressionCount(lastDays: 7)
+
+        // Then
+        XCTAssertEqual(count, 0)
+    }
+
+    func testGetImpressionCount_ReturnsAllRecent_WithinTimeWindow() {
+        // Given
+        sut.recordImpression()
+        sut.recordImpression()
+        sut.recordImpression()
+
+        // When
+        let count = sut.getImpressionCount(lastDays: 7)
+
+        // Then
+        XCTAssertEqual(count, 3)
+    }
+
+    func testGetCorrectionRate_ReturnsZero_WhenNoImpressions() {
+        // Given - no impressions, but some corrections
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Test task"
+        )
+
+        // When
+        let rate = sut.getCorrectionRate(lastDays: 7)
+
+        // Then - avoid division by zero
+        XCTAssertEqual(rate, 0)
+    }
+
+    func testGetCorrectionRate_ReturnsZero_WhenNoCorrections() {
+        // Given - impressions but no corrections
+        sut.recordImpression()
+        sut.recordImpression()
+
+        // When
+        let rate = sut.getCorrectionRate(lastDays: 7)
+
+        // Then
+        XCTAssertEqual(rate, 0)
+    }
+
+    func testGetCorrectionRate_CalculatesCorrectly() {
+        // Given - 4 impressions, 2 corrections = 50% correction rate
+        sut.recordImpression()
+        sut.recordImpression()
+        sut.recordImpression()
+        sut.recordImpression()
+
+        sut.recordCorrection(
+            field: .category,
+            originalSuggestion: "Personal",
+            userChoice: "Work",
+            taskTitle: "Task 1"
+        )
+        sut.recordCorrection(
+            field: .priority,
+            originalSuggestion: "Low",
+            userChoice: "High",
+            taskTitle: "Task 2"
+        )
+
+        // When
+        let rate = sut.getCorrectionRate(lastDays: 7)
+
+        // Then - 2/4 = 0.5
+        XCTAssertEqual(rate, 0.5, accuracy: 0.01)
+    }
+
+    func testClearAllCorrections_AlsoClearsImpressions() {
+        // Given
+        sut.recordImpression()
+        sut.recordImpression()
+        XCTAssertGreaterThan(sut.impressions.count, 0)
+
+        // When
+        sut.clearAllCorrections()
+
+        // Then
+        XCTAssertEqual(sut.impressions.count, 0)
+    }
 }
