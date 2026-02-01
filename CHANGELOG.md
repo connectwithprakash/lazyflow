@@ -5,6 +5,24 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0](https://github.com/connectwithprakash/lazyflow/compare/v1.5.0...v1.6.0) (2026-02-01)
+
+
+### Features
+
+* Add AI suggestion impression tracking for correction rate metric ([#155](https://github.com/connectwithprakash/lazyflow/issues/155)) ([4f2fe3a](https://github.com/connectwithprakash/lazyflow/commit/4f2fe3ad8ca1e4778e899b2d236f51f6ace5c8d2))
+* **ai:** AI suggestion refinement UI with Try Again button ([#157](https://github.com/connectwithprakash/lazyflow/issues/157)) ([4fc261c](https://github.com/connectwithprakash/lazyflow/commit/4fc261c2b7806b9b23b6cceca0107991b0119a1b))
+* **ai:** Configurable LLM via Open Responses API ([#125](https://github.com/connectwithprakash/lazyflow/issues/125)) ([d23cdd7](https://github.com/connectwithprakash/lazyflow/commit/d23cdd72280f854f01817922c914a01cc9ad2269))
+* **ai:** Context engineering for smarter AI suggestions ([#151](https://github.com/connectwithprakash/lazyflow/issues/151)) ([68b8970](https://github.com/connectwithprakash/lazyflow/commit/68b8970c14573a3d2eaa624ad7c4f5b50264ee04))
+* **ai:** Prompt engineering for Apple Intelligence ([#149](https://github.com/connectwithprakash/lazyflow/issues/149)) ([a43df44](https://github.com/connectwithprakash/lazyflow/commit/a43df4414b168bc8a8074e14c4d6acb5db033d3a))
+* Allow AI to propose new category creation ([#156](https://github.com/connectwithprakash/lazyflow/issues/156)) ([c099f5a](https://github.com/connectwithprakash/lazyflow/commit/c099f5a24b55dd9abdba2dbefa1659db720438cb))
+* Wire up implicit AI feedback mechanism ([#154](https://github.com/connectwithprakash/lazyflow/issues/154)) ([464b9c0](https://github.com/connectwithprakash/lazyflow/commit/464b9c09d30c2927d66fc4a48584bb6e26772f06))
+
+
+### Bug Fixes
+
+* Only deploy when docs/site changes to save Netlify build minutes ([958d27f](https://github.com/connectwithprakash/lazyflow/commit/958d27fbee41162e74dba37373880760a9e9183f))
+
 ## [1.5.0](https://github.com/connectwithprakash/lazyflow/compare/v1.4.0...v1.5.0) (2026-01-28)
 
 
