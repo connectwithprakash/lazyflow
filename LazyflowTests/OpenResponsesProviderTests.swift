@@ -353,6 +353,115 @@ final class OpenResponsesProviderTests: XCTestCase {
         // The service should handle gracefully
         XCTAssertTrue(LLMService.shared.availableProviders.contains(.apple) || LLMService.shared.availableProviders.isEmpty)
     }
+
+    // MARK: - Model Configuration Change Tests
+
+    func testModelChange_PersistsCorrectly() {
+        // Given - initial config with model A
+        let initialConfig = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "model-a"
+        )
+        LLMService.shared.configureOpenResponses(config: initialConfig, providerType: .openRouter)
+
+        // Verify initial model
+        var loadedConfig = LLMService.shared.getOpenResponsesConfig(for: .openRouter)
+        XCTAssertEqual(loadedConfig?.model, "model-a")
+
+        // When - change to model B
+        let updatedConfig = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: "test-key",
+            model: "model-b"
+        )
+        LLMService.shared.configureOpenResponses(config: updatedConfig, providerType: .openRouter)
+
+        // Then - model B should be persisted
+        loadedConfig = LLMService.shared.getOpenResponsesConfig(for: .openRouter)
+        XCTAssertEqual(loadedConfig?.model, "model-b")
+
+        // Cleanup
+        LLMService.shared.removeOpenResponsesProvider(type: .openRouter)
+    }
+
+    func testModelChange_SameEndpointDifferentModel() {
+        // Given - configure with model A
+        let configA = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "gemma2:2b"
+        )
+        LLMService.shared.configureOpenResponses(config: configA, providerType: .ollama)
+
+        // When - change to model B (same endpoint)
+        let configB = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "qwen2.5:1.5b"
+        )
+        LLMService.shared.configureOpenResponses(config: configB, providerType: .ollama)
+
+        // Then - endpoint unchanged, model updated
+        let loaded = LLMService.shared.getOpenResponsesConfig(for: .ollama)
+        XCTAssertEqual(loaded?.endpoint, "http://localhost:11434/v1/responses")
+        XCTAssertEqual(loaded?.model, "qwen2.5:1.5b")
+
+        // Cleanup
+        LLMService.shared.removeOpenResponsesProvider(type: .ollama)
+    }
+
+    // MARK: - AvailableModel Tests
+
+    func testAvailableModel_DisplayName_RemovesProviderPrefix() {
+        // Given - model with provider prefix
+        let model = AvailableModel.parse(
+            id: "openai/gpt-4",
+            name: "OpenAI: GPT-4",
+            description: "Latest GPT-4 model",
+            isFree: false
+        )
+
+        // Then
+        XCTAssertEqual(model.provider, "OpenAI")
+        XCTAssertEqual(model.displayName, "GPT-4")
+    }
+
+    func testAvailableModel_DisplayName_NoPrefix() {
+        // Given - model without provider prefix
+        let model = AvailableModel(
+            id: "gemma2:2b",
+            name: "gemma2:2b",
+            provider: "Ollama",
+            description: "2.6 GB",
+            isFree: true
+        )
+
+        // Then - displayName should be same as name
+        XCTAssertEqual(model.displayName, "gemma2:2b")
+    }
+
+    func testAvailableModel_FreeFlag() {
+        // Given - free model
+        let freeModel = AvailableModel.parse(
+            id: "free/model",
+            name: "Free Model",
+            description: nil,
+            isFree: true
+        )
+
+        // Given - paid model
+        let paidModel = AvailableModel.parse(
+            id: "paid/model",
+            name: "Paid Model",
+            description: nil,
+            isFree: false
+        )
+
+        // Then
+        XCTAssertTrue(freeModel.isFree)
+        XCTAssertFalse(paidModel.isFree)
+    }
 }
 
 // MARK: - LLMError Equatable for Testing
