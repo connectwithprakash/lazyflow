@@ -233,25 +233,32 @@ Lazyflow excludes certain territories due to AI/LLM regulatory compliance:
 |-----------|------|--------|
 | China | CHN | Requires administrative license from MIIT for generative AI apps (CAC Interim Measures 2023) |
 
-To view excluded territories:
+### Managing Territories
+
 ```bash
+# View excluded territories and reasons
 bundle exec fastlane show_excluded_territories
+
+# Apply territory exclusions via App Store Connect API
+bundle exec fastlane set_territories
 ```
+
+**Important:** Do NOT set `price_tier` in Deliverfile - it can [reset territories to all 175 countries](https://github.com/fastlane/fastlane/discussions/21623).
 
 ### Before App Store Submission
 
-1. **Verify territories in App Store Connect**:
+1. **Run `set_territories` lane** to apply exclusions via API, OR
+2. **Manually verify in App Store Connect**:
    - Go to App Store Connect → Pricing and Availability
    - Ensure excluded territories are unchecked
-   - Reference: `fastlane/excluded_territories.json`
 
-2. **The `submit_for_review` lane will remind you** to verify territories before submission
+3. **The `submit_for_review` lane will remind you** to verify territories before submission
 
 ### Adding/Removing Territories
 
-1. Update `fastlane/excluded_territories.json` with the territory and reason
-2. Manually update availability in App Store Connect (Pricing and Availability)
-3. Run `fastlane show_excluded_territories` to verify
+1. Update `fastlane/excluded_territories.json` with the territory code and reason
+2. Run `bundle exec fastlane set_territories` to apply changes
+3. Verify with `bundle exec fastlane show_excluded_territories`
 
 ## App Store Connect Setup
 

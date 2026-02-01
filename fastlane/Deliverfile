@@ -1,21 +1,11 @@
 # Deliverfile for Lazyflow
 # https://docs.fastlane.tools/actions/deliver/
 
-# App Store Connect API (inherited from Fastfile)
-# api_key is set in lanes
-
-# Pricing
-price_tier(0)  # Free app
-
-# Availability - Exclude China due to AI/LLM compliance requirements
-# China requires administrative license from MIIT for generative AI apps
-# Reference: CAC Interim Measures for Generative AI Services (2023)
+# IMPORTANT: Do NOT set price_tier here!
+# Setting price_tier can reset territory availability to all 175 countries.
+# See: https://github.com/fastlane/fastlane/discussions/21623
 #
-# To exclude China, we specify all territories EXCEPT CHN
-# This list includes all App Store territories minus China (CHN)
-availability_config({
-  "available_in_new_territories" => false,  # Don't auto-add new territories
-})
+# Manage pricing in App Store Connect directly.
 
 # Phased release (gradual rollout over 7 days)
 phased_release(true)
@@ -25,3 +15,11 @@ automatic_release(true)
 
 # App Rating - Contains no objectionable content
 app_rating_config_path("./fastlane/rating_config.json")
+
+# TERRITORY EXCLUSION NOTE:
+# China (CHN) is excluded due to AI/LLM compliance requirements.
+# Territory management must be done via:
+#   1. App Store Connect UI (Pricing and Availability), OR
+#   2. Spaceship ConnectAPI (see set_territories lane in Fastfile)
+#
+# See fastlane/excluded_territories.json for details.

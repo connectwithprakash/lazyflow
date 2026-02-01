@@ -218,9 +218,72 @@ platform :ios do
       config["notes"].each { |note| UI.message("- #{note}") }
 
       UI.success("Last updated: #{config['last_updated']}")
-      UI.important("To modify territories, update excluded_territories.json and apply in App Store Connect")
+      UI.important("To modify territories, update excluded_territories.json and run 'fastlane set_territories'")
     else
       UI.error("excluded_territories.json not found")
+    end
+  end
+
+  desc "Set app territory availability (excludes China for compliance)"
+  lane :set_territories do
+    require 'json'
+
+    # Load excluded territories
+    config_path = "./fastlane/excluded_territories.json"
+    unless File.exist?(config_path)
+      UI.user_error!("excluded_territories.json not found")
+    end
+
+    config = JSON.parse(File.read(config_path))
+    excluded_codes = config["excluded_territories"].map { |t| t["code"] }
+
+    UI.header("Setting Territory Availability")
+    UI.message("Excluded territories: #{excluded_codes.join(', ')}")
+
+    # Connect to App Store Connect via Spaceship
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: API_KEY_ID,
+      issuer_id: API_KEY_ISSUER_ID,
+      filepath: API_KEY_PATH
+    )
+
+    # Find the app
+    app = Spaceship::ConnectAPI::App.find("com.lazyflow.app")
+    UI.user_error!("App not found on App Store Connect") unless app
+
+    # Get all territories and exclude specified ones
+    all_territories = Spaceship::ConnectAPI::Territory.all
+    UI.message("Total territories available: #{all_territories.count}")
+
+    included_territories = all_territories.reject { |t| excluded_codes.include?(t.id) }
+    UI.message("Territories after exclusion: #{included_territories.count}")
+
+    # Show what's being excluded
+    excluded_territories = all_territories.select { |t| excluded_codes.include?(t.id) }
+    excluded_territories.each do |t|
+      UI.important("Excluding: #{t.id}")
+    end
+
+    # Confirm before applying
+    unless ENV['CI']
+      UI.important("This will update territory availability in App Store Connect.")
+      unless UI.confirm("Proceed with territory update?")
+        UI.user_error!("Aborted by user")
+      end
+    end
+
+    # Update app availability
+    # Note: This uses the ConnectAPI to set territories
+    territory_ids = included_territories.map(&:id)
+
+    begin
+      app.update_app_available_territories(territory_ids: territory_ids)
+      UI.success("Territory availability updated successfully!")
+      UI.success("Excluded: #{excluded_codes.join(', ')}")
+    rescue => e
+      UI.error("Failed to update territories: #{e.message}")
+      UI.important("You may need to update territories manually in App Store Connect")
+      UI.important("Go to: App Store Connect > App > Pricing and Availability")
     end
   end
 
