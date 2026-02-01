@@ -182,19 +182,25 @@ enum PromptTemplates {
 
         Available categories: \(allCategories)
 
+        If no existing category fits well, you may propose creating a new one.
+
         Examples:
         Task: "Call mom"
-        Response: {"estimated_minutes": 15, "suggested_priority": "medium", "best_time": "evening", "category": "personal", "refined_title": null, "suggested_description": null, "subtasks": [], "tips": "Find a quiet spot."}
+        Response: {"estimated_minutes": 15, "suggested_priority": "medium", "best_time": "evening", "category": "personal", "proposed_new_category": null, "refined_title": null, "suggested_description": null, "subtasks": [], "tips": "Find a quiet spot."}
 
         Task: "Prepare presentation for Monday meeting"
-        Response: {"estimated_minutes": 90, "suggested_priority": "high", "best_time": "morning", "category": "work", "refined_title": null, "suggested_description": "Create slides and rehearse key points", "subtasks": ["Outline main points", "Create slides", "Practice delivery"], "tips": "Start with the conclusion."}
+        Response: {"estimated_minutes": 90, "suggested_priority": "high", "best_time": "morning", "category": "work", "proposed_new_category": null, "refined_title": null, "suggested_description": "Create slides and rehearse key points", "subtasks": ["Outline main points", "Create slides", "Practice delivery"], "tips": "Start with the conclusion."}
+
+        Task: "Volunteer at food bank"
+        Response: {"estimated_minutes": 180, "suggested_priority": "medium", "best_time": "morning", "category": "uncategorized", "proposed_new_category": {"name": "Volunteering", "color_hex": "#4CAF50", "icon_name": "heart.fill"}, "refined_title": null, "suggested_description": null, "subtasks": [], "tips": "Wear comfortable shoes."}
 
         Provide analysis. Only include subtasks for complex tasks that benefit from breakdown:
         {
             "estimated_minutes": <number between 5 and 480>,
             "suggested_priority": "<none|low|medium|high|urgent>",
             "best_time": "<morning|afternoon|evening|anytime>",
-            "category": "<one of the available categories>",
+            "category": "<one of the available categories, or 'uncategorized' if proposing new>",
+            "proposed_new_category": <null, or {"name": "...", "color_hex": "#RRGGBB", "icon_name": "sf.symbol.name"} if suggesting new category>,
             "refined_title": "<improved title or null if original is good>",
             "suggested_description": "<helpful description or null if not needed>",
             "subtasks": [<empty array for simple tasks, up to 3 items for complex tasks>],
@@ -346,12 +352,27 @@ enum PromptTemplates {
             suggestedDescription = nil
         }
 
+        // Parse proposed new category (only when category is uncategorized to avoid conflicting guidance)
+        let proposedNewCategory: ProposedCategory?
+        if category == .uncategorized && customCategoryID == nil,
+           let proposedJson = json["proposed_new_category"] as? [String: Any],
+           let name = proposedJson["name"] as? String,
+           !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let colorHex = proposedJson["color_hex"] as? String ?? ProposedCategory.defaultColorHex
+            let iconName = proposedJson["icon_name"] as? String ?? ProposedCategory.defaultIconName
+            proposedNewCategory = ProposedCategory(name: trimmedName, colorHex: colorHex, iconName: iconName)
+        } else {
+            proposedNewCategory = nil
+        }
+
         return TaskAnalysis(
             estimatedMinutes: minutes,
             suggestedPriority: priority,
             bestTime: bestTime,
             suggestedCategory: category,
             suggestedCustomCategoryID: customCategoryID,
+            proposedNewCategory: proposedNewCategory,
             subtasks: subtasks,
             tips: tips,
             refinedTitle: refinedTitle,

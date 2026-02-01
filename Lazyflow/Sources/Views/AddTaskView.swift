@@ -245,6 +245,21 @@ struct AddTaskView: View {
                         onApplySubtasks: { subtasks in
                             pendingSubtasks = subtasks
                         },
+                        onCreateCategory: { proposedCategory in
+                            // Check if category with this name already exists (case-insensitive)
+                            if let existingCategory = categoryService.getCategory(byName: proposedCategory.name) {
+                                viewModel.customCategoryID = existingCategory.id
+                            } else {
+                                // Create the new category and assign it to the task
+                                let newCategory = categoryService.createCategory(
+                                    name: proposedCategory.name,
+                                    colorHex: proposedCategory.colorHex,
+                                    iconName: proposedCategory.iconName
+                                )
+                                viewModel.customCategoryID = newCategory.id
+                            }
+                            viewModel.category = .uncategorized  // Custom categories use uncategorized as base
+                        },
                         pendingSubtasks: pendingSubtasks
                     )
                     .presentationDetents([.medium, .large])
@@ -1446,6 +1461,7 @@ struct AISuggestionsSheet: View {
     let onApplyTitle: (String) -> Void
     let onApplyDescription: (String) -> Void
     let onApplySubtasks: ([String]) -> Void
+    let onCreateCategory: (ProposedCategory) -> Void
     let pendingSubtasks: [String]  // Initial value from parent
 
     @State private var titleApplied = false
@@ -1453,6 +1469,7 @@ struct AISuggestionsSheet: View {
     @State private var categoryApplied = false
     @State private var durationApplied = false
     @State private var priorityApplied = false
+    @State private var newCategoryCreated = false
     @State private var localSubtasks: [String] = []  // Local state for subtasks
 
     private var hasTitleSuggestion: Bool {
@@ -1576,6 +1593,75 @@ struct AISuggestionsSheet: View {
                                 }
                             )
                         }
+                    }
+
+                    // Proposed New Category
+                    if let proposedCategory = analysis.proposedNewCategory {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                            HStack {
+                                Label("Create New Category", systemImage: "plus.circle.fill")
+                                    .font(DesignSystem.Typography.headline)
+                                    .foregroundColor(Color.Lazyflow.textPrimary)
+
+                                Spacer()
+
+                                if newCategoryCreated {
+                                    Label("Created", systemImage: "checkmark.circle.fill")
+                                        .font(DesignSystem.Typography.caption1)
+                                        .foregroundColor(Color.Lazyflow.success)
+                                }
+                            }
+
+                            HStack(spacing: DesignSystem.Spacing.md) {
+                                // Category preview
+                                HStack(spacing: DesignSystem.Spacing.sm) {
+                                    Image(systemName: proposedCategory.iconName)
+                                        .foregroundColor(Color(hex: proposedCategory.colorHex) ?? Color.gray)
+                                    Text(proposedCategory.name)
+                                        .font(DesignSystem.Typography.body)
+                                        .fontWeight(.medium)
+                                }
+                                .padding(.horizontal, DesignSystem.Spacing.md)
+                                .padding(.vertical, DesignSystem.Spacing.sm)
+                                .background(
+                                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.small)
+                                        .fill((Color(hex: proposedCategory.colorHex) ?? Color.gray).opacity(0.15))
+                                )
+
+                                Spacer()
+
+                                // Create button
+                                if !newCategoryCreated {
+                                    Button {
+                                        onCreateCategory(proposedCategory)
+                                        newCategoryCreated = true
+                                    } label: {
+                                        Text("Create & Apply")
+                                            .font(DesignSystem.Typography.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, DesignSystem.Spacing.md)
+                                            .padding(.vertical, DesignSystem.Spacing.sm)
+                                            .background(Color.Lazyflow.accent)
+                                            .cornerRadius(DesignSystem.CornerRadius.small)
+                                    }
+                                }
+                            }
+
+                            Text("AI suggests creating this category for tasks like yours")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                                .fill(Color(.secondarySystemBackground))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                                .stroke(Color.Lazyflow.accent.opacity(0.3), lineWidth: 1)
+                        )
+                        .padding(.horizontal)
                     }
 
                     // Duration Suggestion

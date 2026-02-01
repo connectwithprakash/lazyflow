@@ -317,4 +317,94 @@ final class PromptTemplatesTests: XCTestCase {
 
         XCTAssertEqual(result.estimatedMinutes, 91, "Should round decimal to nearest Int")
     }
+
+    // MARK: - Proposed New Category Tests
+
+    func testBuildFullAnalysisPrompt_IncludesProposeCategoryInstruction() {
+        let task = Task(title: "Test")
+        let prompt = PromptTemplates.buildFullAnalysisPrompt(task: task, learningContext: "", customCategories: [])
+
+        XCTAssertTrue(prompt.contains("proposed_new_category") || prompt.contains("propose") || prompt.contains("new category"),
+                      "Should include instruction about proposing new categories")
+    }
+
+    func testParseFullAnalysisResponse_WithProposedNewCategory() {
+        let response = """
+        {
+            "estimated_minutes": 45,
+            "suggested_priority": "medium",
+            "best_time": "afternoon",
+            "category": "uncategorized",
+            "proposed_new_category": {
+                "name": "Volunteering",
+                "color_hex": "#4CAF50",
+                "icon_name": "heart.fill"
+            },
+            "subtasks": [],
+            "tips": "Great cause!"
+        }
+        """
+        let result = PromptTemplates.parseFullAnalysisResponse(response)
+
+        XCTAssertNotNil(result.proposedNewCategory, "Should parse proposed new category")
+        XCTAssertEqual(result.proposedNewCategory?.name, "Volunteering")
+        XCTAssertEqual(result.proposedNewCategory?.colorHex, "#4CAF50")
+        XCTAssertEqual(result.proposedNewCategory?.iconName, "heart.fill")
+    }
+
+    func testParseFullAnalysisResponse_WithNullProposedCategory() {
+        let response = """
+        {
+            "estimated_minutes": 30,
+            "suggested_priority": "low",
+            "best_time": "anytime",
+            "category": "personal",
+            "proposed_new_category": null,
+            "subtasks": [],
+            "tips": ""
+        }
+        """
+        let result = PromptTemplates.parseFullAnalysisResponse(response)
+
+        XCTAssertNil(result.proposedNewCategory, "Should handle null proposed category")
+    }
+
+    func testParseFullAnalysisResponse_WithoutProposedCategoryField() {
+        let response = """
+        {
+            "estimated_minutes": 30,
+            "suggested_priority": "low",
+            "best_time": "anytime",
+            "category": "work",
+            "subtasks": [],
+            "tips": ""
+        }
+        """
+        let result = PromptTemplates.parseFullAnalysisResponse(response)
+
+        XCTAssertNil(result.proposedNewCategory, "Should handle missing proposed category field")
+    }
+
+    func testParseFullAnalysisResponse_ProposedCategoryWithMissingFields() {
+        let response = """
+        {
+            "estimated_minutes": 30,
+            "suggested_priority": "medium",
+            "best_time": "morning",
+            "category": "uncategorized",
+            "proposed_new_category": {
+                "name": "Hobbies"
+            },
+            "subtasks": [],
+            "tips": ""
+        }
+        """
+        let result = PromptTemplates.parseFullAnalysisResponse(response)
+
+        XCTAssertNotNil(result.proposedNewCategory, "Should parse partial proposed category")
+        XCTAssertEqual(result.proposedNewCategory?.name, "Hobbies")
+        // Should have default values for missing fields
+        XCTAssertNotNil(result.proposedNewCategory?.colorHex, "Should have default color")
+        XCTAssertNotNil(result.proposedNewCategory?.iconName, "Should have default icon")
+    }
 }
