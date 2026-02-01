@@ -1542,21 +1542,26 @@ struct ProviderConfigurationSheet: View {
                                 .foregroundColor(Color.Lazyflow.error)
                         }
                     } else {
-                        // Model picker
-                        Picker("Model", selection: $model) {
-                            ForEach(availableModels) { availableModel in
-                                VStack(alignment: .leading) {
-                                    Text(availableModel.name)
-                                    if let desc = availableModel.description {
-                                        Text(desc)
-                                            .font(DesignSystem.Typography.caption2)
-                                            .foregroundColor(Color.Lazyflow.textSecondary)
-                                    }
+                        // Model selection with NavigationLink
+                        NavigationLink {
+                            ModelSelectionView(
+                                models: availableModels,
+                                selectedModelId: $model
+                            )
+                        } label: {
+                            HStack {
+                                Text("Model")
+                                Spacer()
+                                if let selectedModel = availableModels.first(where: { $0.id == model }) {
+                                    Text(selectedModel.displayName)
+                                        .foregroundColor(Color.Lazyflow.textSecondary)
+                                        .lineLimit(1)
+                                } else {
+                                    Text("Select")
+                                        .foregroundColor(Color.Lazyflow.textTertiary)
                                 }
-                                .tag(availableModel.id)
                             }
                         }
-                        .pickerStyle(.navigationLink)
 
                         Button {
                             availableModels = []
@@ -1576,7 +1581,12 @@ struct ProviderConfigurationSheet: View {
                     if availableModels.isEmpty && providerType != .custom {
                         Text("Tap the download icon to fetch available models from the server.")
                     } else if !availableModels.isEmpty {
-                        Text("\(availableModels.count) models available")
+                        let freeCount = availableModels.filter { $0.isFree }.count
+                        if freeCount > 0 && freeCount < availableModels.count {
+                            Text("\(availableModels.count) models available (\(freeCount) free)")
+                        } else {
+                            Text("\(availableModels.count) models available")
+                        }
                     }
                 }
 
@@ -1747,6 +1757,173 @@ struct ProviderConfigurationSheet: View {
                 await MainActor.run {
                     modelFetchError = "Failed to fetch models: \(error.localizedDescription)"
                     isFetchingModels = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Model Selection View
+
+/// View for selecting a model from available models, grouped by provider
+struct ModelSelectionView: View {
+    let models: [AvailableModel]
+    @Binding var selectedModelId: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var showFreeOnly = false
+    @State private var selectedModelForDetail: AvailableModel?
+
+    /// Models grouped by provider
+    private var groupedModels: [(provider: String, models: [AvailableModel])] {
+        let filtered = showFreeOnly ? models.filter { $0.isFree } : models
+        let grouped = Dictionary(grouping: filtered) { $0.provider ?? "Other" }
+        return grouped.sorted { $0.key < $1.key }.map { (provider: $0.key, models: $0.value) }
+    }
+
+    var body: some View {
+        List {
+            // Free filter toggle (only show if there are both free and paid models)
+            let freeCount = models.filter { $0.isFree }.count
+            if freeCount > 0 && freeCount < models.count {
+                Section {
+                    Toggle("Show Free Models Only", isOn: $showFreeOnly)
+                } footer: {
+                    Text("\(freeCount) of \(models.count) models are free")
+                }
+            }
+
+            // Grouped models
+            ForEach(groupedModels, id: \.provider) { group in
+                Section(group.provider) {
+                    ForEach(group.models) { model in
+                        Button {
+                            selectedModelId = model.id
+                            dismiss()
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 4) {
+                                        Text(model.displayName)
+                                            .foregroundColor(Color.Lazyflow.textPrimary)
+                                        if model.isFree {
+                                            Text("FREE")
+                                                .font(.system(size: 9, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 4)
+                                                .padding(.vertical, 1)
+                                                .background(Color.Lazyflow.success)
+                                                .cornerRadius(3)
+                                        }
+                                    }
+                                    if let desc = model.description {
+                                        Text(desc)
+                                            .font(DesignSystem.Typography.caption2)
+                                            .foregroundColor(Color.Lazyflow.textTertiary)
+                                            .lineLimit(1)
+                                    }
+                                }
+
+                                Spacer()
+
+                                // Info button for details
+                                if model.description != nil {
+                                    Button {
+                                        selectedModelForDetail = model
+                                    } label: {
+                                        Image(systemName: "info.circle")
+                                            .foregroundColor(Color.Lazyflow.accent)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+
+                                // Checkmark for selected model
+                                if model.id == selectedModelId {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(Color.Lazyflow.accent)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Select Model")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $selectedModelForDetail) { model in
+            ModelDetailSheet(model: model)
+        }
+    }
+}
+
+/// Sheet showing model details
+struct ModelDetailSheet: View {
+    let model: AvailableModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Model name
+                    HStack {
+                        Text(model.displayName)
+                            .font(DesignSystem.Typography.title2)
+                            .fontWeight(.semibold)
+                        if model.isFree {
+                            Text("FREE")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.Lazyflow.success)
+                                .cornerRadius(4)
+                        }
+                    }
+
+                    // Provider
+                    if let provider = model.provider {
+                        HStack {
+                            Text("Provider:")
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                            Text(provider)
+                        }
+                        .font(DesignSystem.Typography.subheadline)
+                    }
+
+                    // Model ID
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Model ID")
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.textSecondary)
+                        Text(model.id)
+                            .font(.system(.footnote, design: .monospaced))
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+                    }
+
+                    // Description
+                    if let description = model.description {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Description")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                            Text(description)
+                                .font(DesignSystem.Typography.body)
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("Model Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
                 }
             }
         }

@@ -77,7 +77,9 @@ struct OpenResponsesConfig: Codable, Equatable {
             AvailableModel(
                 id: model.name,
                 name: model.name,
-                description: formatModelSize(model.size)
+                provider: "Ollama",
+                description: formatModelSize(model.size),
+                isFree: true
             )
         }
     }
@@ -102,11 +104,14 @@ struct OpenResponsesConfig: Codable, Equatable {
         let (data, _) = try await URLSession.shared.data(for: request)
         let response = try JSONDecoder().decode(OpenRouterModelsResponse.self, from: data)
 
-        return response.data.prefix(50).map { model in
-            AvailableModel(
+        return response.data.compactMap { model in
+            // Check if model is free (both prompt and completion pricing are "0")
+            let isFree = model.pricing?.prompt == "0" && model.pricing?.completion == "0"
+            return AvailableModel.parse(
                 id: model.id,
                 name: model.name ?? model.id,
-                description: model.description
+                description: model.description,
+                isFree: isFree
             )
         }
     }
@@ -125,7 +130,33 @@ struct OpenResponsesConfig: Codable, Equatable {
 struct AvailableModel: Identifiable, Hashable {
     let id: String
     let name: String
+    let provider: String?
     let description: String?
+    let isFree: Bool
+
+    /// Display name without provider prefix (e.g., "GPT-5.2" instead of "OpenAI: GPT-5.2")
+    var displayName: String {
+        if let provider = provider, name.hasPrefix("\(provider):") {
+            return String(name.dropFirst(provider.count + 1)).trimmingCharacters(in: .whitespaces)
+        }
+        return name
+    }
+
+    /// Parse provider and model name from combined string like "OpenAI: GPT-5.2"
+    static func parse(id: String, name: String, description: String?, isFree: Bool = false) -> AvailableModel {
+        let components = name.split(separator: ":", maxSplits: 1)
+        if components.count == 2 {
+            let provider = String(components[0]).trimmingCharacters(in: .whitespaces)
+            return AvailableModel(
+                id: id,
+                name: name,
+                provider: provider,
+                description: description,
+                isFree: isFree
+            )
+        }
+        return AvailableModel(id: id, name: name, provider: nil, description: description, isFree: isFree)
+    }
 }
 
 // MARK: - API Response Models
@@ -147,6 +178,12 @@ private struct OpenRouterModel: Decodable {
     let id: String
     let name: String?
     let description: String?
+    let pricing: OpenRouterPricing?
+}
+
+private struct OpenRouterPricing: Decodable {
+    let prompt: String?
+    let completion: String?
 }
 
 /// LLM Provider using the Open Responses standard API
