@@ -361,6 +361,19 @@ final class TaskService: ObservableObject {
             // Record completion for AI context learning
             AIContextService.shared.recordTaskCompletion(task)
 
+            // Record duration accuracy for AI learning (implicit feedback)
+            if let estimatedDuration = task.estimatedDuration,
+               estimatedDuration > 0,
+               task.accumulatedDuration > 0 {
+                let estimatedMinutes = Int(estimatedDuration / 60)
+                let actualMinutes = Int(task.accumulatedDuration / 60)
+                AILearningService.shared.recordDurationAccuracy(
+                    category: task.category.displayName,
+                    estimatedMinutes: estimatedMinutes,
+                    actualMinutes: actualMinutes
+                )
+            }
+
             // Handle recurring task completion
             if let rule = task.recurringRule, let dueDate = task.dueDate {
                 if let nextDate = rule.nextOccurrence(from: dueDate) {
