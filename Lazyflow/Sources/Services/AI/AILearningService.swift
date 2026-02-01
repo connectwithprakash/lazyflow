@@ -32,18 +32,23 @@ final class AILearningService: ObservableObject {
 
     private let correctionsKey = "aiCorrections"
     private let durationAccuracyKey = "durationAccuracyData"
+    private let impressionsKey = "aiImpressions"
     private let maxCorrections = 100
     private let maxAccuracyRecords = 100
+    private let maxImpressions = 200
     private let correctionExpiryDays = 90
 
     @Published private(set) var corrections: [AICorrection] = []
     @Published private(set) var durationAccuracyRecords: [DurationAccuracy] = []
+    @Published private(set) var impressions: [Date] = []
 
     private init() {
         loadCorrections()
         loadDurationAccuracy()
+        loadImpressions()
         cleanupOldCorrections()
         cleanupOldAccuracyRecords()
+        cleanupOldImpressions()
     }
 
     // MARK: - Recording Corrections
@@ -240,6 +245,43 @@ final class AILearningService: ObservableObject {
         return context
     }
 
+    // MARK: - Impression Tracking
+
+    /// Record when AI suggestions are shown to the user
+    func recordImpression() {
+        impressions.append(Date())
+
+        // Trim to max impressions
+        if impressions.count > maxImpressions {
+            impressions = Array(impressions.suffix(maxImpressions))
+        }
+
+        saveImpressions()
+    }
+
+    /// Get count of impressions within the specified time window
+    func getImpressionCount(lastDays: Int = 7) -> Int {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -lastDays, to: Date()) ?? Date()
+        return impressions.filter { $0 > cutoff }.count
+    }
+
+    /// Get count of corrections within the specified time window
+    func getCorrectionCount(lastDays: Int = 7) -> Int {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -lastDays, to: Date()) ?? Date()
+        return corrections.filter { $0.timestamp > cutoff }.count
+    }
+
+    /// Calculate correction rate (corrections / impressions) for the specified time window
+    /// Returns 0 if no impressions to avoid division by zero
+    /// Capped at 1.0 since one impression can yield multiple corrections (category, priority, duration)
+    func getCorrectionRate(lastDays: Int = 7) -> Double {
+        let impressionCount = getImpressionCount(lastDays: lastDays)
+        guard impressionCount > 0 else { return 0 }
+
+        let correctionCount = getCorrectionCount(lastDays: lastDays)
+        return min(1.0, Double(correctionCount) / Double(impressionCount))
+    }
+
     // MARK: - Persistence
 
     private func loadCorrections() {
@@ -268,6 +310,20 @@ final class AILearningService: ObservableObject {
     private func saveDurationAccuracy() {
         guard let data = try? JSONEncoder().encode(durationAccuracyRecords) else { return }
         UserDefaults.standard.set(data, forKey: durationAccuracyKey)
+    }
+
+    private func loadImpressions() {
+        guard let data = UserDefaults.standard.data(forKey: impressionsKey),
+              let decoded = try? JSONDecoder().decode([Date].self, from: data) else {
+            impressions = []
+            return
+        }
+        impressions = decoded
+    }
+
+    private func saveImpressions() {
+        guard let data = try? JSONEncoder().encode(impressions) else { return }
+        UserDefaults.standard.set(data, forKey: impressionsKey)
     }
 
     // MARK: - Cleanup
@@ -304,11 +360,29 @@ final class AILearningService: ObservableObject {
         }
     }
 
-    /// Clear all corrections and accuracy data (for testing or user request)
+    /// Remove impressions older than the expiry period
+    func cleanupOldImpressions() {
+        let cutoffDate = Calendar.current.date(
+            byAdding: .day,
+            value: -correctionExpiryDays,
+            to: Date()
+        ) ?? Date()
+
+        let countBefore = impressions.count
+        impressions = impressions.filter { $0 > cutoffDate }
+
+        if impressions.count != countBefore {
+            saveImpressions()
+        }
+    }
+
+    /// Clear all corrections, accuracy data, and impressions (for testing or user request)
     func clearAllCorrections() {
         corrections = []
         durationAccuracyRecords = []
+        impressions = []
         saveCorrections()
         UserDefaults.standard.removeObject(forKey: durationAccuracyKey)
+        UserDefaults.standard.removeObject(forKey: impressionsKey)
     }
 }

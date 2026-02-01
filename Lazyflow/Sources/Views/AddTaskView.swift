@@ -915,6 +915,7 @@ struct AddTaskView: View {
                     showAISuggestions = true
                     isAnalyzing = false
                     aiSuggestionsWereShown = true
+                    AILearningService.shared.recordImpression()
                 }
             } catch {
                 await MainActor.run {
