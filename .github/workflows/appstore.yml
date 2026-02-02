@@ -67,10 +67,7 @@ jobs:
           ls -la fastlane/screenshots/en-US/
 
       - name: Set Territory Availability
-        run: |
-          echo "Current directory: $(pwd)"
-          ls -la fastlane/excluded_territories.json
-          bundle exec fastlane set_territories
+        run: bundle exec fastlane set_territories
 
       - name: Submit to App Store Review
         run: bundle exec fastlane submit_for_review

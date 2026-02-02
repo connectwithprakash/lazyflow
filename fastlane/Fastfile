@@ -203,7 +203,7 @@ platform :ios do
   desc "Show excluded territories for compliance"
   lane :show_excluded_territories do
     require 'json'
-    config_path = "./fastlane/excluded_territories.json"
+    config_path = "./excluded_territories.json"
 
     if File.exist?(config_path)
       config = JSON.parse(File.read(config_path))
@@ -229,7 +229,7 @@ platform :ios do
     require 'json'
 
     # Load excluded territories
-    config_path = "./fastlane/excluded_territories.json"
+    config_path = "./excluded_territories.json"
     unless File.exist?(config_path)
       UI.user_error!("excluded_territories.json not found")
     end
