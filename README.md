@@ -27,7 +27,7 @@ Most todo apps just store tasks. Lazyflow helps you **plan your day** by combini
 
 ## Features
 
-- **AI Priority** - Ask "What should I do next?" and get recommendations with scores and reasoning
+- **AI Priority** - Ask "What should I do next?" and get recommendations with reasoning. Refine with Try Again
 - **Calendar Integration** - View events alongside tasks, schedule tasks as time blocks
 - **Daily Summary** - Track completion streaks and get AI-generated productivity insights
 - **Works Everywhere** - iPhone, iPad, Apple Watch, widgets, Siri, and Live Activities
@@ -56,7 +56,7 @@ open Lazyflow.xcodeproj
 - **UI**: SwiftUI
 - **Data**: Core Data + CloudKit
 - **Calendar**: EventKit
-- **AI**: Apple Intelligence (on-device)
+- **AI**: Apple Intelligence, Ollama, or custom providers
 
 ### Deployment
 

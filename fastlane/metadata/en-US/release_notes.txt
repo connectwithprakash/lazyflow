@@ -1,10 +1,18 @@
-What's New in 1.6.0:
+Organization
+• Move tasks between lists with the new list picker
+• Categorize tasks with built-in or custom categories
+• Create your own categories to match your workflow
 
-• Add AI suggestion impression tracking for correction rate metric
-• AI suggestion refinement UI with Try Again button
-• Configurable LLM via Open Responses API
-• Context engineering for smarter AI suggestions
-• Prompt engineering for Apple Intelligence
-• Allow AI to propose new category creation
-• Wire up implicit AI feedback mechanism
-• Only deploy when docs/site changes to save Netlify build minutes
+Recurring & Habits
+• Intraday recurring tasks with hourly reminders
+• Set task duration and recurring schedules easily
+
+Smarter AI
+• AI learns from your preferences over time
+• Duration estimates adapt to your actual work pace
+• Improved suggestions powered by Apple Intelligence
+• Connect to alternative AI providers (Ollama, custom Open Responses endpoints)
+
+Bug Fixes
+• Fixed iPad layout issue on onboarding screen
+• Improved permission request wording for clarity

@@ -32,79 +32,73 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-                    // Skip button
-                    HStack {
-                        Spacer()
-                        if currentPage < pages.count {
-                            Button("Skip") {
-                                completeOnboarding()
-                            }
-                            .font(.subheadline)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                            .padding()
-                        }
+            // Skip button
+            HStack {
+                Spacer()
+                if currentPage < pages.count {
+                    Button("Skip") {
+                        completeOnboarding()
                     }
+                    .font(.subheadline)
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+                    .padding()
+                }
+            }
 
-                    Spacer()
+            // Content - using flexible frame instead of GeometryReader for better iPad compatibility
+            TabView(selection: $currentPage) {
+                ForEach(0..<pages.count, id: \.self) { index in
+                    OnboardingPageView(page: pages[index])
+                        .tag(index)
+                }
 
-                    // Content
-                    GeometryReader { geometry in
-                        TabView(selection: $currentPage) {
-                            ForEach(0..<pages.count, id: \.self) { index in
-                                OnboardingPageView(page: pages[index])
-                                    .tag(index)
-                                    .frame(width: geometry.size.width, height: geometry.size.height)
-                            }
+                // Final page: Permissions
+                PermissionsPageView(
+                    calendarGranted: $calendarPermissionGranted,
+                    notificationsGranted: $notificationPermissionGranted
+                )
+                .tag(pages.count)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // NOTE: Don't add .animation() here - it conflicts with UIPageViewController's
+            // built-in swipe animations and causes stuttering/freezing
 
-                            // Final page: Permissions
-                            PermissionsPageView(
-                                calendarGranted: $calendarPermissionGranted,
-                                notificationsGranted: $notificationPermissionGranted
-                            )
-                            .tag(pages.count)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                        }
-                        .tabViewStyle(.page(indexDisplayMode: .never))
-                        .frame(width: geometry.size.width, height: geometry.size.height)
+            // Page indicator
+            HStack(spacing: 8) {
+                ForEach(0...pages.count, id: \.self) { index in
+                    Circle()
+                        .fill(index == currentPage ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary.opacity(0.3))
+                        .frame(width: 8, height: 8)
+                        .animation(.easeInOut, value: currentPage)
+                }
+            }
+            .padding(.bottom, 24)
+
+            // Action button
+            Button {
+                if currentPage < pages.count {
+                    withAnimation {
+                        currentPage += 1
                     }
-                    // NOTE: Don't add .animation() here - it conflicts with UIPageViewController's
-                    // built-in swipe animations and causes stuttering/freezing
-
-                    Spacer()
-
-                    // Page indicator
-                    HStack(spacing: 8) {
-                        ForEach(0...pages.count, id: \.self) { index in
-                            Circle()
-                                .fill(index == currentPage ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary.opacity(0.3))
-                                .frame(width: 8, height: 8)
-                                .animation(.easeInOut, value: currentPage)
-                        }
-                    }
-                    .padding(.bottom, 24)
-
-                    // Action button
-                    Button {
-                        if currentPage < pages.count {
-                            withAnimation {
-                                currentPage += 1
-                            }
-                        } else {
-                            completeOnboarding()
-                        }
-                    } label: {
-                        Text(currentPage < pages.count ? "Continue" : "Get Started")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.Lazyflow.accent)
-                            .cornerRadius(12)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
+                } else {
+                    completeOnboarding()
+                }
+            } label: {
+                Text(currentPage < pages.count ? "Continue" : "Get Started")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.Lazyflow.accent)
+                    .cornerRadius(12)
+            }
+            .frame(maxWidth: 400) // Limit button width on iPad for better aesthetics
+            .padding(.horizontal, 24)
+            .padding(.bottom, 40)
         }
-        .background(Color.adaptiveBackground)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.adaptiveBackground.ignoresSafeArea())
     }
 
     private func completeOnboarding() {
@@ -169,24 +163,28 @@ private struct PermissionsPageView: View {
                 .padding(.bottom, 16)
 
             // Title
-            Text("Stay on Track")
+            Text("Plan Your Day")
                 .font(.title.bold())
                 .foregroundColor(Color.Lazyflow.textPrimary)
                 .multilineTextAlignment(.center)
 
             // Description
-            Text("Enable permissions for the best experience.")
+            Text("Sync tasks and calendar events. Get notified for deadlines and daily briefings.")
                 .font(.body)
                 .foregroundColor(Color.Lazyflow.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+
+            Text("These permissions are optional.")
+                .font(.caption)
+                .foregroundColor(Color.Lazyflow.textTertiary)
 
             // Permission buttons
             VStack(spacing: 16) {
                 PermissionRow(
                     icon: "calendar",
                     title: "Calendar Access",
-                    description: "Schedule tasks as time blocks",
+                    description: "Sync tasks with your calendar",
                     isGranted: calendarGranted,
                     action: requestCalendarPermission
                 )
@@ -194,7 +192,7 @@ private struct PermissionsPageView: View {
                 PermissionRow(
                     icon: "bell.fill",
                     title: "Notifications",
-                    description: "Get reminded about tasks",
+                    description: "Alerts for deadlines and daily briefings",
                     isGranted: notificationsGranted,
                     action: requestNotificationPermission
                 )
@@ -279,7 +277,7 @@ private struct PermissionRow: View {
                     .foregroundColor(Color.Lazyflow.success)
                     .font(.title2)
             } else {
-                Button("Enable") {
+                Button("Set Up") {
                     action()
                 }
                 .font(.subheadline.weight(.medium))
