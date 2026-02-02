@@ -990,13 +990,8 @@ final class LazyflowUITests: XCTestCase {
             // Find subtask input field and use helper for reliable keyboard focus
             let subtaskField = app.textFields.matching(NSPredicate(format: "placeholderValue CONTAINS[c] 'subtask' OR identifier CONTAINS[c] 'subtask'")).firstMatch
             if subtaskField.waitForExistence(timeout: 2) && subtaskField.isHittable {
-                tapAndTypeText(subtaskField, text: "First Subtask")
-
-                // Submit the subtask (press return)
-                let returnKey = app.keyboards.buttons["Return"]
-                if returnKey.waitForExistence(timeout: 2) {
-                    returnKey.tap()
-                }
+                // Type text with newline to submit (more reliable than tapping Return key)
+                tapAndTypeText(subtaskField, text: "First Subtask\n")
             }
         }
 
@@ -1298,12 +1293,12 @@ final class LazyflowUITests: XCTestCase {
 
         // Verify provider options exist
         let appleOption = app.staticTexts["Apple Intelligence"]
-        let openRouterOption = app.staticTexts["OpenRouter"]
         let ollamaOption = app.staticTexts["Ollama (Local)"]
+        let customOption = app.staticTexts["Custom Endpoint"]
 
         XCTAssertTrue(appleOption.waitForExistence(timeout: 2), "Apple Intelligence option should exist")
-        XCTAssertTrue(openRouterOption.exists, "OpenRouter option should exist")
         XCTAssertTrue(ollamaOption.exists, "Ollama option should exist")
+        XCTAssertTrue(customOption.exists, "Custom Endpoint option should exist")
 
         // Dismiss
         let doneButton = app.buttons["Done"]
