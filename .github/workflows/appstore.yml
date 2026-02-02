@@ -66,5 +66,8 @@ jobs:
           done
           ls -la fastlane/screenshots/en-US/
 
+      - name: Set Territory Availability
+        run: bundle exec fastlane set_territories
+
       - name: Submit to App Store Review
         run: bundle exec fastlane submit_for_review
