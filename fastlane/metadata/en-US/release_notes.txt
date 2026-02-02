@@ -1,3 +1,18 @@
-What's New in 1.6.1:
+Organization
+• Move tasks between lists with the new list picker
+• Categorize tasks with built-in or custom categories
+• Create your own categories to match your workflow
 
-• Address App Store review feedback
+Recurring & Habits
+• Intraday recurring tasks with hourly reminders
+• Set task duration and recurring schedules easily
+
+Smarter AI
+• AI learns from your preferences over time
+• Duration estimates adapt to your actual work pace
+• Improved suggestions powered by Apple Intelligence
+• Connect to alternative AI providers (Ollama, custom Open Responses endpoints)
+
+Bug Fixes
+• Fixed iPad layout issue on onboarding screen
+• Improved permission request wording for clarity
