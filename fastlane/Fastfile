@@ -243,12 +243,9 @@ platform :ios do
     UI.header("Setting Territory Availability")
     UI.message("Excluded territory codes (trying both formats): #{excluded_codes.join(', ')}")
 
-    # Connect to App Store Connect via Spaceship
-    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
-      key_id: API_KEY_ID,
-      issuer_id: API_KEY_ISSUER_ID,
-      filepath: API_KEY_PATH
-    )
+    # Connect to App Store Connect via Spaceship using the api_key helper
+    token = api_key
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: token)
 
     # Find the app
     app = Spaceship::ConnectAPI::App.find("com.lazyflow.app")
