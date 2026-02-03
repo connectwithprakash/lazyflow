@@ -631,4 +631,149 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertEqual(summary.priority, .high)
         XCTAssertEqual(summary.estimatedDuration, 3600)
     }
+
+    // MARK: - Preview Mode Tests (Issue #165)
+
+    func testGenerateSummary_WithPersistTrue_SetsHasTodaySummary() async throws {
+        // Create a task to generate summary for
+        let task = taskService.createTask(title: "Test Task", dueDate: Date())
+        taskService.toggleTaskCompletion(task)
+
+        // Verify hasTodaySummary is false before generation
+        XCTAssertFalse(dailySummaryService.hasTodaySummary)
+
+        // Generate with persist: true (default)
+        _ = await dailySummaryService.generateSummary(for: Date(), persist: true)
+
+        // Verify hasTodaySummary is now true
+        XCTAssertTrue(dailySummaryService.hasTodaySummary)
+    }
+
+    func testGenerateSummary_WithPersistFalse_DoesNotSetHasTodaySummary() async throws {
+        // Create a task to generate summary for
+        let task = taskService.createTask(title: "Test Task", dueDate: Date())
+        taskService.toggleTaskCompletion(task)
+
+        // Verify hasTodaySummary is false before generation
+        XCTAssertFalse(dailySummaryService.hasTodaySummary)
+
+        // Generate with persist: false (preview mode)
+        _ = await dailySummaryService.generateSummary(for: Date(), persist: false)
+
+        // Verify hasTodaySummary is still false
+        XCTAssertFalse(dailySummaryService.hasTodaySummary)
+    }
+
+    func testGenerateSummary_WithPersistFalse_DoesNotUpdateStreak() async throws {
+        // Create and complete a task
+        let task = taskService.createTask(title: "Test Task", dueDate: Date())
+        taskService.toggleTaskCompletion(task)
+
+        // Record initial streak state
+        let initialStreak = dailySummaryService.streakData.currentStreak
+
+        // Generate with persist: false
+        _ = await dailySummaryService.generateSummary(for: Date(), persist: false)
+
+        // Streak should not have changed
+        XCTAssertEqual(dailySummaryService.streakData.currentStreak, initialStreak)
+    }
+
+    func testGenerateSummary_WithPersistFalse_DoesNotSaveToHistory() async throws {
+        // Create and complete a task
+        let task = taskService.createTask(title: "Test Task", dueDate: Date())
+        taskService.toggleTaskCompletion(task)
+
+        // Record initial history count
+        let initialHistoryCount = dailySummaryService.summaryHistory.count
+
+        // Generate with persist: false
+        _ = await dailySummaryService.generateSummary(for: Date(), persist: false)
+
+        // History count should not have changed
+        XCTAssertEqual(dailySummaryService.summaryHistory.count, initialHistoryCount)
+    }
+
+    func testGenerateSummary_WithPersistFalse_StillReturnsSummaryData() async throws {
+        // Create and complete tasks
+        let task1 = taskService.createTask(title: "Task 1", dueDate: Date())
+        let task2 = taskService.createTask(title: "Task 2", dueDate: Date())
+        taskService.toggleTaskCompletion(task1)
+        taskService.toggleTaskCompletion(task2)
+
+        // Generate with persist: false
+        let summary = await dailySummaryService.generateSummary(for: Date(), persist: false)
+
+        // Summary should still contain valid data
+        XCTAssertEqual(summary.tasksCompleted, 2)
+        XCTAssertEqual(summary.completedTasks.count, 2)
+        XCTAssertNotNil(summary.encouragement)
+    }
+
+    func testPreloadInsightsData_DoesNotSetHasTodaySummary() async throws {
+        // Create and complete a task
+        let task = taskService.createTask(title: "Test Task", dueDate: Date())
+        taskService.toggleTaskCompletion(task)
+
+        // Verify hasTodaySummary is false before preload
+        XCTAssertFalse(dailySummaryService.hasTodaySummary)
+
+        // Call preload
+        dailySummaryService.preloadInsightsData()
+
+        // Wait for preload to complete by checking todaySummary (deterministic condition)
+        let expectation = expectation(description: "Preload completes")
+        _Concurrency.Task {
+            while dailySummaryService.todaySummary == nil {
+                try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
+            }
+            expectation.fulfill()
+        }
+
+        await fulfillment(of: [expectation], timeout: 10.0)
+
+        // Verify hasTodaySummary is still false after preload
+        XCTAssertFalse(dailySummaryService.hasTodaySummary)
+    }
+
+    func testPreloadInsightsData_StillPopulatesTodaySummary() async throws {
+        // Create and complete a task
+        let task = taskService.createTask(title: "Test Task", dueDate: Date())
+        taskService.toggleTaskCompletion(task)
+
+        // Verify todaySummary is nil before preload
+        XCTAssertNil(dailySummaryService.todaySummary)
+
+        // Call preload
+        dailySummaryService.preloadInsightsData()
+
+        // Wait for preload to complete by checking todaySummary (deterministic condition)
+        let expectation = expectation(description: "Preload completes")
+        _Concurrency.Task {
+            while dailySummaryService.todaySummary == nil {
+                try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
+            }
+            expectation.fulfill()
+        }
+
+        await fulfillment(of: [expectation], timeout: 10.0)
+
+        // Verify todaySummary is populated (for fast UI display)
+        XCTAssertNotNil(dailySummaryService.todaySummary)
+    }
+
+    func testGenerateSummary_DefaultPersistIsTrue() async throws {
+        // Create a task
+        let task = taskService.createTask(title: "Test Task", dueDate: Date())
+        taskService.toggleTaskCompletion(task)
+
+        // Verify hasTodaySummary is false before
+        XCTAssertFalse(dailySummaryService.hasTodaySummary)
+
+        // Generate without specifying persist (should default to true)
+        _ = await dailySummaryService.generateSummary(for: Date())
+
+        // Verify hasTodaySummary is true (default persist behavior)
+        XCTAssertTrue(dailySummaryService.hasTodaySummary)
+    }
 }
