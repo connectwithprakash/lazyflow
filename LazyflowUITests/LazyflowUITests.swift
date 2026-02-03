@@ -731,6 +731,46 @@ final class LazyflowUITests: XCTestCase {
         }
     }
 
+    func testMorningBriefingPromptToggle() throws {
+        navigateToTab("Settings")
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+
+        // Find the Morning Briefing Prompt Toggle using accessibilityIdentifier
+        let promptToggle = app.switches["Morning Briefing Prompt Toggle"]
+
+        // Scroll to find the toggle if needed
+        for _ in 0..<5 {
+            if promptToggle.exists && promptToggle.isHittable {
+                break
+            }
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        XCTAssertTrue(promptToggle.waitForExistence(timeout: 5), "Morning Briefing Prompt Toggle should exist in settings")
+
+        // Get initial state
+        let wasOnValue = promptToggle.value as? String ?? ""
+        let wasOn = wasOnValue == "1" || wasOnValue.lowercased() == "true"
+
+        // Toggle the switch using coordinate tap (XCUITest toggle workaround)
+        promptToggle.tap()
+        let switchCoord = promptToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        switchCoord.tap()
+
+        // Wait for state change
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Verify state changed
+        let isOnValue = promptToggle.value as? String ?? ""
+        let isOn = isOnValue == "1" || isOnValue.lowercased() == "true"
+        XCTAssertNotEqual(wasOn, isOn, "Morning Briefing Prompt Toggle should change state")
+
+        // Toggle back to original state
+        promptToggle.tap()
+        switchCoord.tap()
+    }
+
     // MARK: - Daily Summary Tests
 
     func testDailySummarySettingsExist() throws {
