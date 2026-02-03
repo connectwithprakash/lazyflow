@@ -63,13 +63,14 @@ struct SettingsView: View {
                     }
                 }
 
-                // Morning Briefing Notifications
+                // Morning Briefing
                 Section {
+                    MorningBriefingPromptToggle()
                     MorningBriefingNotificationToggle()
                 } header: {
                     Text("Morning Briefing")
                 } footer: {
-                    Text("Get a notification to view your morning briefing. Access it anytime from More > Morning Briefing.")
+                    Text("Get a prompt card on Today and optional notification to view your morning briefing. Access it anytime from More > Morning Briefing.")
                 }
 
                 // Daily Summary Notifications
@@ -1258,6 +1259,24 @@ struct BatchAnalysisResultRow: View {
         .onTapGesture {
             result.isSelected.toggle()
         }
+    }
+}
+
+// MARK: - Morning Briefing Prompt Toggle
+
+struct MorningBriefingPromptToggle: View {
+    @AppStorage("morningBriefingEnabled") private var isEnabled = true
+
+    var body: some View {
+        Toggle(isOn: $isEnabled) {
+            HStack {
+                Image(systemName: "sun.horizon")
+                    .foregroundColor(.orange)
+                    .frame(width: 24)
+                Text("Show Prompt on Today")
+            }
+        }
+        .accessibilityIdentifier("Morning Briefing Prompt Toggle")
     }
 }
 

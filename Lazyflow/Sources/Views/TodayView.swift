@@ -23,7 +23,7 @@ struct TodayView: View {
     @State private var autoCompletedParentTitle = ""
     @StateObject private var summaryService = DailySummaryService.shared
     @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
-    @AppStorage("morningBriefingEnabled") private var morningBriefingEnabled: Bool = false
+    @AppStorage("morningBriefingEnabled") private var morningBriefingEnabled: Bool = true
     @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
 
     var body: some View {
@@ -130,6 +130,9 @@ struct TodayView: View {
 
     /// Show morning briefing prompt between 5 AM and 12 PM when there are tasks
     private var shouldShowMorningBriefingPrompt: Bool {
+        // Check if user has enabled the prompt in Settings
+        guard morningBriefingEnabled else { return false }
+
         let hour = Calendar.current.component(.hour, from: Date())
         let isMorning = hour >= 5 && hour < 12
 
