@@ -776,4 +776,279 @@ final class DailySummaryServiceTests: XCTestCase {
         // Verify hasTodaySummary is true (default persist behavior)
         XCTAssertTrue(dailySummaryService.hasTodaySummary)
     }
+
+    // MARK: - CalendarEventSummary Tests (Issue #166)
+
+    func testCalendarEventSummary_DurationMinutes() {
+        let start = Date()
+        let end = Calendar.current.date(byAdding: .minute, value: 90, to: start)!
+
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Team Meeting",
+            startDate: start,
+            endDate: end,
+            isAllDay: false,
+            location: "Conference Room"
+        )
+
+        XCTAssertEqual(event.durationMinutes, 90)
+    }
+
+    func testCalendarEventSummary_FormattedTimeRange_AllDay() {
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Conference",
+            startDate: Date(),
+            endDate: Date(),
+            isAllDay: true,
+            location: nil
+        )
+
+        XCTAssertEqual(event.formattedTimeRange, "All day")
+    }
+
+    func testCalendarEventSummary_FormattedStartTime_AllDay() {
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Conference",
+            startDate: Date(),
+            endDate: Date(),
+            isAllDay: true,
+            location: nil
+        )
+
+        XCTAssertEqual(event.formattedStartTime, "All day")
+    }
+
+    func testCalendarEventSummary_FormattedStartTime_NotAllDay() {
+        let calendar = Calendar.current
+        let start = calendar.date(bySettingHour: 14, minute: 30, second: 0, of: Date())!
+        let end = calendar.date(byAdding: .hour, value: 1, to: start)!
+
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Meeting",
+            startDate: start,
+            endDate: end,
+            isAllDay: false,
+            location: nil
+        )
+
+        XCTAssertNotNil(event.formattedStartTime)
+        XCTAssertNotEqual(event.formattedStartTime, "All day")
+    }
+
+    // MARK: - ScheduleSummary Tests (Issue #166)
+
+    func testScheduleSummary_FormattedMeetingTime_MinutesOnly() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 45,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedMeetingTime, "45m")
+    }
+
+    func testScheduleSummary_FormattedMeetingTime_HoursAndMinutes() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 150,
+            meetingCount: 3,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 60,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedMeetingTime, "2h 30m")
+    }
+
+    func testScheduleSummary_FormattedMeetingTime_ExactHours() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 120,
+            meetingCount: 2,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 60,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedMeetingTime, "2h")
+    }
+
+    func testScheduleSummary_FormattedFreeBlock_MinutesOnly() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 45,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedFreeBlock, "45m")
+    }
+
+    func testScheduleSummary_FormattedFreeBlock_HoursAndMinutes() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 150,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedFreeBlock, "2h 30m")
+    }
+
+    func testScheduleSummary_HasMeetings_True() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 2,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        XCTAssertTrue(summary.hasMeetings)
+    }
+
+    func testScheduleSummary_HasMeetings_False() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 0,
+            meetingCount: 0,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 480,
+            allDayEvents: []
+        )
+
+        XCTAssertFalse(summary.hasMeetings)
+    }
+
+    func testScheduleSummary_HasSignificantFreeBlock_True() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 60,
+            allDayEvents: []
+        )
+
+        XCTAssertTrue(summary.hasSignificantFreeBlock)
+    }
+
+    func testScheduleSummary_HasSignificantFreeBlock_False() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 420,
+            meetingCount: 10,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 15,
+            allDayEvents: []
+        )
+
+        XCTAssertFalse(summary.hasSignificantFreeBlock)
+    }
+
+    func testScheduleSummary_HasSignificantFreeBlock_ExactThreshold() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 30,
+            allDayEvents: []
+        )
+
+        XCTAssertTrue(summary.hasSignificantFreeBlock)
+    }
+
+    // MARK: - MorningBriefingData Calendar Tests (Issue #166)
+
+    func testMorningBriefingData_HasCalendarData_True() {
+        let schedule = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        let briefing = MorningBriefingData(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 0,
+            yesterdayTopCategory: nil,
+            todayTasks: [],
+            todayHighPriority: 0,
+            todayOverdue: 0,
+            todayEstimatedMinutes: 0,
+            weeklyStats: WeeklyStats(),
+            scheduleSummary: schedule
+        )
+
+        XCTAssertTrue(briefing.hasCalendarData)
+    }
+
+    func testMorningBriefingData_HasCalendarData_False() {
+        let briefing = MorningBriefingData(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 0,
+            yesterdayTopCategory: nil,
+            todayTasks: [],
+            todayHighPriority: 0,
+            todayOverdue: 0,
+            todayEstimatedMinutes: 0,
+            weeklyStats: WeeklyStats(),
+            scheduleSummary: nil
+        )
+
+        XCTAssertFalse(briefing.hasCalendarData)
+    }
+
+    func testScheduleSummary_WithAllDayEvents() {
+        let allDayEvent = CalendarEventSummary(
+            id: "all-day-1",
+            title: "Company Holiday",
+            startDate: Date(),
+            endDate: Date(),
+            isAllDay: true,
+            location: nil
+        )
+
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 0,
+            meetingCount: 0,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 480,
+            allDayEvents: [allDayEvent]
+        )
+
+        XCTAssertEqual(summary.allDayEvents.count, 1)
+        XCTAssertTrue(summary.allDayEvents.first?.isAllDay ?? false)
+    }
+
+    func testScheduleSummary_WithNextEvent() {
+        let calendar = Calendar.current
+        let start = calendar.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!
+        let end = calendar.date(byAdding: .hour, value: 1, to: start)!
+
+        let nextEvent = CalendarEventSummary(
+            id: "next-1",
+            title: "Team Standup",
+            startDate: start,
+            endDate: end,
+            isAllDay: false,
+            location: "Zoom"
+        )
+
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nextEvent,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        XCTAssertNotNil(summary.nextEvent)
+        XCTAssertEqual(summary.nextEvent?.title, "Team Standup")
+        XCTAssertEqual(summary.nextEvent?.location, "Zoom")
+    }
 }

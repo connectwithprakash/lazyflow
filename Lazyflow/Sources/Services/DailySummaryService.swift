@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import EventKit
 
 /// Service for generating daily summaries and managing productivity streaks
 final class DailySummaryService: ObservableObject {
@@ -22,6 +23,7 @@ final class DailySummaryService: ObservableObject {
 
     private let taskService: TaskService
     private let llmService: LLMService
+    private let calendarService: CalendarService
 
     // MARK: - UserDefaults Keys
 
@@ -30,9 +32,10 @@ final class DailySummaryService: ObservableObject {
 
     // MARK: - Initialization
 
-    init(taskService: TaskService = .shared, llmService: LLMService = .shared) {
+    init(taskService: TaskService = .shared, llmService: LLMService = .shared, calendarService: CalendarService = .shared) {
         self.taskService = taskService
         self.llmService = llmService
+        self.calendarService = calendarService
         self.streakData = StreakData.load()
         self.summaryHistory = Self.loadSummaryHistory()
     }
@@ -434,6 +437,9 @@ final class DailySummaryService: ObservableObject {
         // Weekly stats
         let weeklyStats = calculateWeeklyStats()
 
+        // Calendar schedule summary (nil if no calendar access)
+        let scheduleSummary = calculateScheduleSummary(for: today)
+
         // Create initial briefing without AI content
         var briefing = MorningBriefingData(
             date: today,
@@ -444,7 +450,8 @@ final class DailySummaryService: ObservableObject {
             todayHighPriority: todayHighPriority,
             todayOverdue: todayOverdue.count,
             todayEstimatedMinutes: todayEstimatedMinutes,
-            weeklyStats: weeklyStats
+            weeklyStats: weeklyStats,
+            scheduleSummary: scheduleSummary
         )
 
         // Generate AI content if available
@@ -501,6 +508,149 @@ final class DailySummaryService: ObservableObject {
         )
     }
 
+    // MARK: - Schedule Summary Calculation
+
+    /// Calculate today's schedule summary from calendar events
+    func calculateScheduleSummary(for date: Date = Date()) -> ScheduleSummary? {
+        guard calendarService.hasCalendarAccess else { return nil }
+
+        let events = calendarService.fetchEvents(for: date)
+        guard !events.isEmpty else {
+            // No events today - return summary with full day as free block
+            return ScheduleSummary(
+                totalMeetingMinutes: 0,
+                meetingCount: 0,
+                nextEvent: nil,
+                largestFreeBlockMinutes: calculateWorkdayMinutes(),
+                allDayEvents: []
+            )
+        }
+
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Separate all-day and timed events
+        let allDayEvents = events.filter { $0.isAllDay }
+        let timedEvents = events.filter { !$0.isAllDay }
+
+        // Convert to CalendarEventSummary
+        let allDaySummaries = allDayEvents.map { event in
+            CalendarEventSummary(
+                id: event.eventIdentifier ?? UUID().uuidString,
+                title: event.title ?? "Untitled",
+                startDate: event.startDate,
+                endDate: event.endDate,
+                isAllDay: true,
+                location: event.location
+            )
+        }
+
+        // Calculate total meeting time (non-all-day events only)
+        let totalMeetingMinutes = timedEvents.reduce(0) { total, event in
+            total + Int(event.endDate.timeIntervalSince(event.startDate) / 60)
+        }
+
+        // Find next event (first event starting >= now, or first today if all passed)
+        let upcomingEvents = timedEvents.filter { $0.startDate >= now }
+        let nextEvent: CalendarEventSummary?
+        if let upcoming = upcomingEvents.first {
+            nextEvent = CalendarEventSummary(
+                id: upcoming.eventIdentifier ?? UUID().uuidString,
+                title: upcoming.title ?? "Untitled",
+                startDate: upcoming.startDate,
+                endDate: upcoming.endDate,
+                isAllDay: false,
+                location: upcoming.location
+            )
+        } else if let first = timedEvents.first {
+            // All events have passed, show the first one anyway
+            nextEvent = CalendarEventSummary(
+                id: first.eventIdentifier ?? UUID().uuidString,
+                title: first.title ?? "Untitled",
+                startDate: first.startDate,
+                endDate: first.endDate,
+                isAllDay: false,
+                location: first.location
+            )
+        } else {
+            nextEvent = nil
+        }
+
+        // Calculate largest free block using merged intervals
+        let largestFreeBlock = calculateLargestFreeBlock(events: timedEvents, for: date)
+
+        return ScheduleSummary(
+            totalMeetingMinutes: totalMeetingMinutes,
+            meetingCount: timedEvents.count,
+            nextEvent: nextEvent,
+            largestFreeBlockMinutes: largestFreeBlock,
+            allDayEvents: allDaySummaries
+        )
+    }
+
+    /// Calculate the largest free block between events
+    private func calculateLargestFreeBlock(events: [EKEvent], for date: Date) -> Int {
+        let calendar = Calendar.current
+
+        // Define workday bounds (8 AM to 6 PM)
+        let startOfDay = calendar.startOfDay(for: date)
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        guard !events.isEmpty else {
+            return calculateWorkdayMinutes()
+        }
+
+        // Sort events by start time
+        let sortedEvents = events.sorted { $0.startDate < $1.startDate }
+
+        // Merge overlapping intervals
+        var mergedIntervals: [(start: Date, end: Date)] = []
+        for event in sortedEvents {
+            let eventStart = max(event.startDate, workdayStart)
+            let eventEnd = min(event.endDate, workdayEnd)
+
+            if eventStart >= eventEnd { continue } // Event outside workday
+
+            if mergedIntervals.isEmpty {
+                mergedIntervals.append((eventStart, eventEnd))
+            } else if let last = mergedIntervals.last, eventStart <= last.end {
+                // Overlapping - extend the last interval
+                mergedIntervals[mergedIntervals.count - 1] = (last.start, max(last.end, eventEnd))
+            } else {
+                mergedIntervals.append((eventStart, eventEnd))
+            }
+        }
+
+        // Calculate gaps
+        var largestGap = 0
+
+        // Gap before first event
+        if let first = mergedIntervals.first {
+            let gapBefore = Int(first.start.timeIntervalSince(workdayStart) / 60)
+            largestGap = max(largestGap, gapBefore)
+        }
+
+        // Gaps between events
+        for i in 0..<(mergedIntervals.count - 1) {
+            let gap = Int(mergedIntervals[i + 1].start.timeIntervalSince(mergedIntervals[i].end) / 60)
+            largestGap = max(largestGap, gap)
+        }
+
+        // Gap after last event
+        if let last = mergedIntervals.last {
+            let gapAfter = Int(workdayEnd.timeIntervalSince(last.end) / 60)
+            largestGap = max(largestGap, gapAfter)
+        }
+
+        return max(0, largestGap)
+    }
+
+    /// Calculate total workday minutes (8 AM to 6 PM = 10 hours)
+    private func calculateWorkdayMinutes() -> Int {
+        return 10 * 60 // 600 minutes
+    }
+
     // MARK: - Morning Briefing AI
 
     private func generateAIMorningBriefing(data: MorningBriefingData) async throws -> (summary: String, todayFocus: String, motivation: String) {
@@ -521,6 +671,32 @@ final class DailySummaryService: ObservableObject {
             }
             .joined(separator: "\n")
 
+        // Build schedule context if available
+        var scheduleSection = ""
+        if let schedule = data.scheduleSummary {
+            var scheduleLines: [String] = []
+            if schedule.hasMeetings {
+                scheduleLines.append("- Meetings: \(schedule.meetingCount) (\(schedule.formattedMeetingTime) total)")
+            } else {
+                scheduleLines.append("- No meetings scheduled")
+            }
+            if let nextEvent = schedule.nextEvent {
+                scheduleLines.append("- Next: \(nextEvent.title) at \(nextEvent.formattedStartTime)")
+            }
+            if schedule.hasSignificantFreeBlock {
+                scheduleLines.append("- Largest free block: \(schedule.formattedFreeBlock)")
+            }
+            if !schedule.allDayEvents.isEmpty {
+                let allDayTitles = schedule.allDayEvents.prefix(2).map { $0.title }.joined(separator: ", ")
+                scheduleLines.append("- All-day: \(allDayTitles)")
+            }
+            scheduleSection = """
+
+            Today's Calendar:
+            \(scheduleLines.joined(separator: "\n"))
+            """
+        }
+
         return """
         Generate a motivating morning briefing for a productivity app user.
 
@@ -532,7 +708,7 @@ final class DailySummaryService: ObservableObject {
         - Total tasks: \(data.todayTasks.count)
         - High priority: \(data.todayHighPriority)
         - Overdue: \(data.todayOverdue)
-        - Estimated time: \(data.formattedTodayTime)
+        - Estimated time: \(data.formattedTodayTime)\(scheduleSection)
 
         Weekly Progress:
         - Tasks completed this week: \(data.weeklyStats.tasksCompletedThisWeek)
@@ -543,8 +719,8 @@ final class DailySummaryService: ObservableObject {
         \(todayTaskList.isEmpty ? "No tasks scheduled yet" : todayTaskList)
 
         Provide:
-        1. A 2-3 sentence morning greeting that briefly mentions yesterday's progress
-        2. One sentence highlighting today's focus areas based on priorities
+        1. A 2-3 sentence morning greeting that briefly mentions yesterday's progress\(data.hasCalendarData ? " and today's schedule" : "")
+        2. One sentence highlighting today's focus areas based on priorities\(data.hasCalendarData ? " and available time" : "")
         3. A brief motivational message based on streak and weekly progress
 
         Respond in JSON format only:
