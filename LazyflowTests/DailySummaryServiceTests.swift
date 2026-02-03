@@ -721,15 +721,10 @@ final class DailySummaryServiceTests: XCTestCase {
         // Call preload
         dailySummaryService.preloadInsightsData()
 
-        // Wait for preload to complete by polling isPreloading
+        // Wait for preload to complete by checking todaySummary (deterministic condition)
         let expectation = expectation(description: "Preload completes")
         _Concurrency.Task {
-            // Wait until preloading starts
-            while !dailySummaryService.isPreloading {
-                try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
-            }
-            // Wait until preloading finishes
-            while dailySummaryService.isPreloading {
+            while dailySummaryService.todaySummary == nil {
                 try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
             }
             expectation.fulfill()
@@ -752,15 +747,10 @@ final class DailySummaryServiceTests: XCTestCase {
         // Call preload
         dailySummaryService.preloadInsightsData()
 
-        // Wait for preload to complete by polling isPreloading
+        // Wait for preload to complete by checking todaySummary (deterministic condition)
         let expectation = expectation(description: "Preload completes")
         _Concurrency.Task {
-            // Wait until preloading starts
-            while !dailySummaryService.isPreloading {
-                try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
-            }
-            // Wait until preloading finishes
-            while dailySummaryService.isPreloading {
+            while dailySummaryService.todaySummary == nil {
                 try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
             }
             expectation.fulfill()
