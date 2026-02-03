@@ -40,7 +40,10 @@ final class DailySummaryService: ObservableObject {
     // MARK: - Summary Generation
 
     /// Generate a summary for a specific date
-    func generateSummary(for date: Date = Date()) async -> DailySummaryData {
+    /// - Parameters:
+    ///   - date: The date to generate summary for (defaults to today)
+    ///   - persist: If true (default), saves to history and updates streaks. If false, generates preview data only.
+    func generateSummary(for date: Date = Date(), persist: Bool = true) async -> DailySummaryData {
         await MainActor.run { isGeneratingSummary = true }
         defer {
             _Concurrency.Task { @MainActor in
@@ -98,11 +101,15 @@ final class DailySummaryService: ObservableObject {
             )
         }
 
-        // Update streak
-        updateStreak(for: date, wasProductive: summary.wasProductiveDay)
+        // Only persist if requested (default behavior)
+        // Preview mode (persist: false) skips saving to allow preloading without suppressing prompts
+        if persist {
+            // Update streak
+            updateStreak(for: date, wasProductive: summary.wasProductiveDay)
 
-        // Save summary
-        saveSummary(summary)
+            // Save summary
+            saveSummary(summary)
+        }
 
         let finalSummary = summary
         await MainActor.run {
@@ -339,8 +346,9 @@ final class DailySummaryService: ObservableObject {
             }
 
             // Preload today's summary if not already generated
+            // Use persist: false to avoid suppressing the Daily Summary prompt in TodayView
             if todaySummary == nil || needsRefresh(for: Date()) {
-                let summary = await generateSummary(for: Date())
+                let summary = await generateSummary(for: Date(), persist: false)
                 await MainActor.run {
                     todaySummary = summary
                 }
