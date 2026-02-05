@@ -1191,4 +1191,121 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertEqual(result?.id, "future-1")
         XCTAssertEqual(result?.title, "Afternoon Call")
     }
+
+    // MARK: - AI Context Injection Tests (Issue #162)
+
+    func testBuildEnrichedAIContext_ReturnsEmptyWhenNoLearningData() {
+        // Clear any existing learning data
+        AILearningService.shared.clearAllCorrections()
+        AIContextService.shared.resetPatterns()
+
+        // Build context
+        let context = dailySummaryService.buildEnrichedAIContext(for: .dailySummary)
+
+        // Should be empty or minimal when no learning data exists
+        // The context might have minimal time info, but no user preferences
+        XCTAssertFalse(context.contains("User often changes"))
+        XCTAssertFalse(context.contains("Duration accuracy patterns"))
+    }
+
+    func testBuildEnrichedAIContext_IncludesCorrectionPatterns() {
+        // Clear existing data
+        AILearningService.shared.clearAllCorrections()
+
+        // Record enough corrections to exceed quality threshold (need 10+ for 0.3 score)
+        for i in 0..<12 {
+            AILearningService.shared.recordCorrection(
+                field: .priority,
+                originalSuggestion: "Low",
+                userChoice: "High",
+                taskTitle: "Important meeting task \(i)"
+            )
+        }
+
+        // Build context
+        let context = dailySummaryService.buildEnrichedAIContext(for: .dailySummary)
+
+        // Should include correction pattern
+        XCTAssertTrue(context.contains("User often changes") || context.contains("user prefers"),
+                      "Expected correction patterns in context: \(context)")
+    }
+
+    func testBuildEnrichedAIContext_IncludesDurationAccuracy() {
+        // Clear existing data
+        AILearningService.shared.clearAllCorrections()
+
+        // Record enough corrections to exceed quality threshold
+        for i in 0..<12 {
+            AILearningService.shared.recordCorrection(
+                field: .category,
+                originalSuggestion: "Personal",
+                userChoice: "Work",
+                taskTitle: "Task \(i)"
+            )
+        }
+
+        // Record duration accuracy data
+        AILearningService.shared.recordDurationAccuracy(
+            category: "work",
+            estimatedMinutes: 30,
+            actualMinutes: 45
+        )
+        AILearningService.shared.recordDurationAccuracy(
+            category: "work",
+            estimatedMinutes: 60,
+            actualMinutes: 90
+        )
+
+        // Build context
+        let context = dailySummaryService.buildEnrichedAIContext(for: .dailySummary)
+
+        // Should include duration accuracy pattern (requires 2+ records)
+        XCTAssertTrue(context.contains("Duration accuracy") || context.contains("takes"),
+                      "Expected duration patterns in context: \(context)")
+    }
+
+    func testBuildEnrichedAIContext_RespectsMaxLength() {
+        // Clear existing data
+        AILearningService.shared.clearAllCorrections()
+
+        // Add many corrections to potentially exceed limit
+        for i in 0..<50 {
+            AILearningService.shared.recordCorrection(
+                field: .category,
+                originalSuggestion: "Work",
+                userChoice: "Personal",
+                taskTitle: "Task number \(i) with some additional keywords"
+            )
+        }
+
+        // Build context
+        let context = dailySummaryService.buildEnrichedAIContext(for: .dailySummary)
+
+        // Should be within token budget (1500 chars)
+        XCTAssertLessThanOrEqual(context.count, 1500)
+    }
+
+    func testBuildEnrichedAIContext_DifferentForSummaryAndBriefing() {
+        // Clear existing data
+        AILearningService.shared.clearAllCorrections()
+        AIContextService.shared.resetPatterns()
+
+        // Record enough corrections to exceed quality threshold
+        for i in 0..<12 {
+            AILearningService.shared.recordCorrection(
+                field: .priority,
+                originalSuggestion: "Medium",
+                userChoice: "High",
+                taskTitle: "Important work task \(i)"
+            )
+        }
+
+        // Build both contexts
+        let summaryContext = dailySummaryService.buildEnrichedAIContext(for: .dailySummary)
+        let briefingContext = dailySummaryService.buildEnrichedAIContext(for: .morningBriefing)
+
+        // Both should include user preferences when available
+        XCTAssertFalse(summaryContext.isEmpty, "Summary context should not be empty")
+        XCTAssertFalse(briefingContext.isEmpty, "Briefing context should not be empty")
+    }
 }

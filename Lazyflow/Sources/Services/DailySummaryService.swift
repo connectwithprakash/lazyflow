@@ -2,6 +2,12 @@ import Foundation
 import Combine
 import EventKit
 
+/// Context type for AI prompt building
+enum AIPromptContextType {
+    case dailySummary
+    case morningBriefing
+}
+
 /// Service for generating daily summaries and managing productivity streaks
 final class DailySummaryService: ObservableObject {
     static let shared = DailySummaryService()
@@ -24,6 +30,13 @@ final class DailySummaryService: ObservableObject {
     private let taskService: TaskService
     private let llmService: LLMService
     private let calendarService: CalendarService
+    private let aiContextService: AIContextService
+    private let aiLearningService: AILearningService
+
+    // MARK: - Constants
+
+    private let maxContextCharacters = 1500
+    private let minContextQualityThreshold = 0.2
 
     // MARK: - UserDefaults Keys
 
@@ -32,10 +45,18 @@ final class DailySummaryService: ObservableObject {
 
     // MARK: - Initialization
 
-    init(taskService: TaskService = .shared, llmService: LLMService = .shared, calendarService: CalendarService = .shared) {
+    init(
+        taskService: TaskService = .shared,
+        llmService: LLMService = .shared,
+        calendarService: CalendarService = .shared,
+        aiContextService: AIContextService = .shared,
+        aiLearningService: AILearningService = .shared
+    ) {
         self.taskService = taskService
         self.llmService = llmService
         self.calendarService = calendarService
+        self.aiContextService = aiContextService
+        self.aiLearningService = aiLearningService
         self.streakData = StreakData.load()
         self.summaryHistory = Self.loadSummaryHistory()
     }
@@ -139,6 +160,15 @@ final class DailySummaryService: ObservableObject {
             .map { "- \($0.title) (\($0.category.displayName))" }
             .joined(separator: "\n")
 
+        // Build enriched context from user learning data
+        let enrichedContext = buildEnrichedAIContext(for: .dailySummary)
+        let contextSection = enrichedContext.isEmpty ? "" : """
+
+        User Learning Context:
+        \(enrichedContext)
+
+        """
+
         return """
         Generate a brief, encouraging daily summary for a productivity app user.
 
@@ -150,10 +180,12 @@ final class DailySummaryService: ObservableObject {
 
         Completed tasks:
         \(taskList.isEmpty ? "No tasks completed yet" : taskList)
-
+        \(contextSection)
         Provide:
         1. A 2-3 sentence natural language summary of their day (reference specific accomplishments if any)
         2. One sentence of encouragement based on their streak and progress
+
+        If user learning context is provided, tailor the summary to acknowledge their patterns and preferences.
 
         Respond in JSON format only:
         {
@@ -234,6 +266,91 @@ final class DailySummaryService: ObservableObject {
 
     func updateStreak(for date: Date, wasProductive: Bool) {
         streakData.recordDay(date: date, wasProductive: wasProductive)
+    }
+
+    // MARK: - AI Context Building (Issue #162)
+
+    /// Build enriched AI context from user learning data for prompt injection
+    /// - Parameter type: The type of prompt (daily summary or morning briefing)
+    /// - Returns: Context string clamped to token budget, or empty if insufficient quality
+    func buildEnrichedAIContext(for type: AIPromptContextType) -> String {
+        // Check if we have enough context quality to be useful
+        guard aiContextService.contextQuality >= minContextQualityThreshold else {
+            return ""
+        }
+
+        var sections: [(priority: Int, content: String)] = []
+
+        // Priority 1: Correction patterns (highest value - shows what user dislikes)
+        let correctionsContext = aiLearningService.getCorrectionsContext()
+        if !correctionsContext.isEmpty {
+            sections.append((1, correctionsContext))
+        }
+
+        // Priority 2: Duration accuracy patterns (calibrates time estimates)
+        let durationContext = aiLearningService.getDurationAccuracyContext()
+        if !durationContext.isEmpty {
+            sections.append((2, durationContext))
+        }
+
+        // Priority 3: User patterns from AIContextService (behavioral patterns)
+        let userPatterns = aiContextService.userPatterns
+        let topCategories = userPatterns.topCategories(limit: 3)
+        if !topCategories.isEmpty {
+            var patternContext = "User preferences:\n"
+            patternContext += "- Most used categories: \(topCategories.joined(separator: ", "))\n"
+
+            // Add time preferences for top categories
+            for category in topCategories.prefix(2) {
+                if let preferredTime = userPatterns.preferredTime(for: category) {
+                    patternContext += "- \(category) tasks usually done in: \(preferredTime)\n"
+                }
+                if let avgDuration = userPatterns.averageDuration(for: category) {
+                    patternContext += "- \(category) tasks average: \(avgDuration) min\n"
+                }
+            }
+
+            sections.append((3, patternContext))
+        }
+
+        // Build final context with token budget
+        return buildContextWithBudget(sections: sections)
+    }
+
+    /// Build context string respecting token budget, prioritizing higher-priority sections
+    private func buildContextWithBudget(sections: [(priority: Int, content: String)]) -> String {
+        // Sort by priority (lower number = higher priority)
+        let sortedSections = sections.sorted { $0.priority < $1.priority }
+
+        var result = ""
+        var remainingBudget = maxContextCharacters
+
+        for section in sortedSections {
+            let content = section.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !content.isEmpty else { continue }
+
+            if content.count <= remainingBudget {
+                // Full section fits
+                if !result.isEmpty {
+                    result += "\n"
+                }
+                result += content
+                remainingBudget -= content.count + 1
+            } else if remainingBudget > 100 {
+                // Truncate section to fit remaining budget
+                let truncated = String(content.prefix(remainingBudget - 3)) + "..."
+                if !result.isEmpty {
+                    result += "\n"
+                }
+                result += truncated
+                break
+            } else {
+                // Not enough space left
+                break
+            }
+        }
+
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Encouragement Messages
@@ -768,6 +885,15 @@ final class DailySummaryService: ObservableObject {
             """
         }
 
+        // Build enriched context from user learning data
+        let enrichedContext = buildEnrichedAIContext(for: .morningBriefing)
+        let contextSection = enrichedContext.isEmpty ? "" : """
+
+        User Learning Context:
+        \(enrichedContext)
+
+        """
+
         return """
         Generate a motivating morning briefing for a productivity app user.
 
@@ -788,11 +914,13 @@ final class DailySummaryService: ObservableObject {
 
         Today's Top Priorities:
         \(todayTaskList.isEmpty ? "No tasks scheduled yet" : todayTaskList)
-
+        \(contextSection)
         Provide:
         1. A 2-3 sentence morning greeting that briefly mentions yesterday's progress\(data.hasCalendarData ? " and today's schedule" : "")
         2. One sentence highlighting today's focus areas based on priorities\(data.hasCalendarData ? " and available time" : "")
         3. A brief motivational message based on streak and weekly progress
+
+        If user learning context is provided, personalize the briefing based on their patterns and timing preferences.
 
         Respond in JSON format only:
         {
