@@ -776,4 +776,419 @@ final class DailySummaryServiceTests: XCTestCase {
         // Verify hasTodaySummary is true (default persist behavior)
         XCTAssertTrue(dailySummaryService.hasTodaySummary)
     }
+
+    // MARK: - CalendarEventSummary Tests (Issue #166)
+
+    func testCalendarEventSummary_DurationMinutes() {
+        let start = Date()
+        let end = Calendar.current.date(byAdding: .minute, value: 90, to: start)!
+
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Team Meeting",
+            startDate: start,
+            endDate: end,
+            isAllDay: false,
+            location: "Conference Room"
+        )
+
+        XCTAssertEqual(event.durationMinutes, 90)
+    }
+
+    func testCalendarEventSummary_FormattedTimeRange_AllDay() {
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Conference",
+            startDate: Date(),
+            endDate: Date(),
+            isAllDay: true,
+            location: nil
+        )
+
+        XCTAssertEqual(event.formattedTimeRange, "All day")
+    }
+
+    func testCalendarEventSummary_FormattedStartTime_AllDay() {
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Conference",
+            startDate: Date(),
+            endDate: Date(),
+            isAllDay: true,
+            location: nil
+        )
+
+        XCTAssertEqual(event.formattedStartTime, "All day")
+    }
+
+    func testCalendarEventSummary_FormattedStartTime_NotAllDay() {
+        let calendar = Calendar.current
+        let start = calendar.date(bySettingHour: 14, minute: 30, second: 0, of: Date())!
+        let end = calendar.date(byAdding: .hour, value: 1, to: start)!
+
+        let event = CalendarEventSummary(
+            id: "test-event",
+            title: "Meeting",
+            startDate: start,
+            endDate: end,
+            isAllDay: false,
+            location: nil
+        )
+
+        XCTAssertNotNil(event.formattedStartTime)
+        XCTAssertNotEqual(event.formattedStartTime, "All day")
+    }
+
+    // MARK: - ScheduleSummary Tests (Issue #166)
+
+    func testScheduleSummary_FormattedMeetingTime_MinutesOnly() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 45,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedMeetingTime, "45m")
+    }
+
+    func testScheduleSummary_FormattedMeetingTime_HoursAndMinutes() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 150,
+            meetingCount: 3,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 60,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedMeetingTime, "2h 30m")
+    }
+
+    func testScheduleSummary_FormattedMeetingTime_ExactHours() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 120,
+            meetingCount: 2,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 60,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedMeetingTime, "2h")
+    }
+
+    func testScheduleSummary_FormattedFreeBlock_MinutesOnly() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 45,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedFreeBlock, "45m")
+    }
+
+    func testScheduleSummary_FormattedFreeBlock_HoursAndMinutes() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 150,
+            allDayEvents: []
+        )
+
+        XCTAssertEqual(summary.formattedFreeBlock, "2h 30m")
+    }
+
+    func testScheduleSummary_HasMeetings_True() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 2,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        XCTAssertTrue(summary.hasMeetings)
+    }
+
+    func testScheduleSummary_HasMeetings_False() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 0,
+            meetingCount: 0,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 480,
+            allDayEvents: []
+        )
+
+        XCTAssertFalse(summary.hasMeetings)
+    }
+
+    func testScheduleSummary_HasSignificantFreeBlock_True() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 60,
+            allDayEvents: []
+        )
+
+        XCTAssertTrue(summary.hasSignificantFreeBlock)
+    }
+
+    func testScheduleSummary_HasSignificantFreeBlock_False() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 420,
+            meetingCount: 10,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 15,
+            allDayEvents: []
+        )
+
+        XCTAssertFalse(summary.hasSignificantFreeBlock)
+    }
+
+    func testScheduleSummary_HasSignificantFreeBlock_ExactThreshold() {
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 30,
+            allDayEvents: []
+        )
+
+        XCTAssertTrue(summary.hasSignificantFreeBlock)
+    }
+
+    // MARK: - MorningBriefingData Calendar Tests (Issue #166)
+
+    func testMorningBriefingData_HasCalendarData_True() {
+        let schedule = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        let briefing = MorningBriefingData(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 0,
+            yesterdayTopCategory: nil,
+            todayTasks: [],
+            todayHighPriority: 0,
+            todayOverdue: 0,
+            todayEstimatedMinutes: 0,
+            weeklyStats: WeeklyStats(),
+            scheduleSummary: schedule
+        )
+
+        XCTAssertTrue(briefing.hasCalendarData)
+    }
+
+    func testMorningBriefingData_HasCalendarData_False() {
+        let briefing = MorningBriefingData(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 0,
+            yesterdayTopCategory: nil,
+            todayTasks: [],
+            todayHighPriority: 0,
+            todayOverdue: 0,
+            todayEstimatedMinutes: 0,
+            weeklyStats: WeeklyStats(),
+            scheduleSummary: nil
+        )
+
+        XCTAssertFalse(briefing.hasCalendarData)
+    }
+
+    func testScheduleSummary_WithAllDayEvents() {
+        let allDayEvent = CalendarEventSummary(
+            id: "all-day-1",
+            title: "Company Holiday",
+            startDate: Date(),
+            endDate: Date(),
+            isAllDay: true,
+            location: nil
+        )
+
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 0,
+            meetingCount: 0,
+            nextEvent: nil,
+            largestFreeBlockMinutes: 480,
+            allDayEvents: [allDayEvent]
+        )
+
+        XCTAssertEqual(summary.allDayEvents.count, 1)
+        XCTAssertTrue(summary.allDayEvents.first?.isAllDay ?? false)
+    }
+
+    func testScheduleSummary_WithNextEvent() {
+        let calendar = Calendar.current
+        let start = calendar.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!
+        let end = calendar.date(byAdding: .hour, value: 1, to: start)!
+
+        let nextEvent = CalendarEventSummary(
+            id: "next-1",
+            title: "Team Standup",
+            startDate: start,
+            endDate: end,
+            isAllDay: false,
+            location: "Zoom"
+        )
+
+        let summary = ScheduleSummary(
+            totalMeetingMinutes: 60,
+            meetingCount: 1,
+            nextEvent: nextEvent,
+            largestFreeBlockMinutes: 120,
+            allDayEvents: []
+        )
+
+        XCTAssertNotNil(summary.nextEvent)
+        XCTAssertEqual(summary.nextEvent?.title, "Team Standup")
+        XCTAssertEqual(summary.nextEvent?.location, "Zoom")
+    }
+
+    // MARK: - Schedule Calculation Edge Case Tests (Issue #166 - PR Review)
+
+    func testCalculateLargestFreeBlock_NoEvents_ReturnsFullWorkday() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        // Workday: 8 AM - 6 PM = 10 hours = 600 minutes
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [],
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
+        )
+        XCTAssertEqual(result, 600, "Empty events should return full workday (600 minutes)")
+    }
+
+    func testCalculateLargestFreeBlock_AllEventsOutsideWorkday_ReturnsFullWorkday() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        // Workday: 8 AM - 6 PM
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        // Events all in evening (7 PM - 9 PM) - outside workday
+        let eveningEventStart = calendar.date(bySettingHour: 19, minute: 0, second: 0, of: startOfDay)!
+        let eveningEventEnd = calendar.date(bySettingHour: 21, minute: 0, second: 0, of: startOfDay)!
+
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [(start: eveningEventStart, end: eveningEventEnd)],
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
+        )
+
+        XCTAssertEqual(result, 600, "Events outside workday should return full workday (600 minutes)")
+    }
+
+    func testCalculateLargestFreeBlock_EventsBeforeWorkday_ReturnsFullWorkday() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        // Early morning event (6 AM - 7 AM) - before workday
+        let earlyEventStart = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: startOfDay)!
+        let earlyEventEnd = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: startOfDay)!
+
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [(start: earlyEventStart, end: earlyEventEnd)],
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
+        )
+
+        XCTAssertEqual(result, 600, "Events before workday should return full workday (600 minutes)")
+    }
+
+    func testCalculateLargestFreeBlock_MidDayEvent_ReturnsCorrectGap() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        // Meeting from 12 PM - 1 PM (1 hour)
+        let meetingStart = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: startOfDay)!
+        let meetingEnd = calendar.date(bySettingHour: 13, minute: 0, second: 0, of: startOfDay)!
+
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [(start: meetingStart, end: meetingEnd)],
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
+        )
+
+        // Gap after meeting: 1 PM - 6 PM = 5 hours = 300 minutes
+        // Gap before meeting: 8 AM - 12 PM = 4 hours = 240 minutes
+        XCTAssertEqual(result, 300, "Largest gap should be 300 minutes (1 PM - 6 PM)")
+    }
+
+    func testFindNextEvent_AllEventsPassed_ReturnsNil() {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Events all in the past
+        let pastEvent1 = CalendarEventSummary(
+            id: "past-1",
+            title: "Morning Meeting",
+            startDate: calendar.date(byAdding: .hour, value: -3, to: now)!,
+            endDate: calendar.date(byAdding: .hour, value: -2, to: now)!,
+            isAllDay: false,
+            location: nil
+        )
+        let pastEvent2 = CalendarEventSummary(
+            id: "past-2",
+            title: "Lunch",
+            startDate: calendar.date(byAdding: .hour, value: -2, to: now)!,
+            endDate: calendar.date(byAdding: .hour, value: -1, to: now)!,
+            isAllDay: false,
+            location: nil
+        )
+
+        let result = dailySummaryService.findNextEvent(from: [pastEvent1, pastEvent2], now: now)
+
+        XCTAssertNil(result, "Should return nil when all events have passed")
+    }
+
+    func testFindNextEvent_HasUpcomingEvent_ReturnsFirst() {
+        let calendar = Calendar.current
+        let now = Date()
+
+        let pastEvent = CalendarEventSummary(
+            id: "past-1",
+            title: "Morning Meeting",
+            startDate: calendar.date(byAdding: .hour, value: -1, to: now)!,
+            endDate: now,
+            isAllDay: false,
+            location: nil
+        )
+        let futureEvent = CalendarEventSummary(
+            id: "future-1",
+            title: "Afternoon Call",
+            startDate: calendar.date(byAdding: .hour, value: 1, to: now)!,
+            endDate: calendar.date(byAdding: .hour, value: 2, to: now)!,
+            isAllDay: false,
+            location: nil
+        )
+
+        let result = dailySummaryService.findNextEvent(from: [pastEvent, futureEvent], now: now)
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.id, "future-1")
+        XCTAssertEqual(result?.title, "Afternoon Call")
+    }
 }

@@ -100,6 +100,11 @@ struct MorningBriefingView: View {
             // Today's Plan Card
             todayPlanCard(briefing)
 
+            // Today's Schedule Card (if calendar access granted)
+            if let schedule = briefing.scheduleSummary {
+                scheduleCard(schedule)
+            }
+
             // Weekly Progress Card
             weeklyProgressCard(briefing.weeklyStats)
 
@@ -274,6 +279,98 @@ struct MorningBriefingView: View {
                 .foregroundColor(Color.Lazyflow.textSecondary)
                 .lineLimit(1)
         }
+    }
+
+    // MARK: - Schedule Card
+
+    private func scheduleCard(_ schedule: ScheduleSummary) -> some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            HStack {
+                Image(systemName: "clock.fill")
+                    .foregroundColor(.purple)
+                Text("Today's Schedule")
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+            }
+
+            if schedule.hasMeetings {
+                // Meeting summary
+                HStack(spacing: DesignSystem.Spacing.xl) {
+                    statItem(
+                        value: "\(schedule.meetingCount)",
+                        label: "Meetings",
+                        icon: "person.2.fill",
+                        color: .purple
+                    )
+
+                    statItem(
+                        value: schedule.formattedMeetingTime,
+                        label: "In Meetings",
+                        icon: "clock.fill",
+                        color: .purple
+                    )
+
+                    if schedule.hasSignificantFreeBlock {
+                        statItem(
+                            value: schedule.formattedFreeBlock,
+                            label: "Free Block",
+                            icon: "checkmark.circle.fill",
+                            color: .green
+                        )
+                    }
+                }
+
+                // Next event
+                if let nextEvent = schedule.nextEvent {
+                    Divider()
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Image(systemName: "arrow.right.circle.fill")
+                            .foregroundColor(.orange)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Next: \(nextEvent.title)")
+                                .font(DesignSystem.Typography.subheadline)
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+                                .lineLimit(1)
+                            Text(nextEvent.formattedTimeRange)
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                        Spacer()
+                    }
+                }
+            } else {
+                // No meetings today
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("No meetings today")
+                        .font(DesignSystem.Typography.body)
+                        .foregroundColor(Color.Lazyflow.textPrimary)
+                    Spacer()
+                    Text("\(schedule.formattedFreeBlock) free")
+                        .font(DesignSystem.Typography.subheadline)
+                        .foregroundColor(.green)
+                }
+            }
+
+            // All-day events
+            if !schedule.allDayEvents.isEmpty {
+                Divider()
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "sun.max.fill")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 14))
+                    Text("All day: \(schedule.allDayEvents.map { $0.title }.joined(separator: ", "))")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.adaptiveSurface)
+        .cornerRadius(DesignSystem.CornerRadius.large)
     }
 
     // MARK: - Weekly Progress Card

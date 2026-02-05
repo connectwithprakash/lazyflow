@@ -208,6 +208,84 @@ struct StreakData: Codable {
     }
 }
 
+// MARK: - Calendar Event Summary
+
+/// Lightweight summary of a calendar event for display in briefings
+struct CalendarEventSummary: Codable, Identifiable {
+    let id: String
+    let title: String
+    let startDate: Date
+    let endDate: Date
+    let isAllDay: Bool
+    let location: String?
+
+    /// Duration in minutes
+    var durationMinutes: Int {
+        Int(endDate.timeIntervalSince(startDate) / 60)
+    }
+
+    /// Formatted time range (e.g., "9:00 AM - 10:30 AM")
+    var formattedTimeRange: String {
+        if isAllDay {
+            return "All day"
+        }
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+    }
+
+    /// Formatted start time only
+    var formattedStartTime: String {
+        if isAllDay {
+            return "All day"
+        }
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: startDate)
+    }
+}
+
+// MARK: - Schedule Summary
+
+/// Summary of today's calendar schedule for morning briefing
+struct ScheduleSummary: Codable {
+    let totalMeetingMinutes: Int
+    let meetingCount: Int
+    let nextEvent: CalendarEventSummary?
+    let largestFreeBlockMinutes: Int
+    let allDayEvents: [CalendarEventSummary]
+
+    /// Formatted total meeting time
+    var formattedMeetingTime: String {
+        if totalMeetingMinutes < 60 {
+            return "\(totalMeetingMinutes)m"
+        }
+        let hours = totalMeetingMinutes / 60
+        let minutes = totalMeetingMinutes % 60
+        return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
+    }
+
+    /// Formatted largest free block
+    var formattedFreeBlock: String {
+        if largestFreeBlockMinutes < 60 {
+            return "\(largestFreeBlockMinutes)m"
+        }
+        let hours = largestFreeBlockMinutes / 60
+        let minutes = largestFreeBlockMinutes % 60
+        return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
+    }
+
+    /// Check if there are any meetings today
+    var hasMeetings: Bool {
+        meetingCount > 0
+    }
+
+    /// Check if there's meaningful free time
+    var hasSignificantFreeBlock: Bool {
+        largestFreeBlockMinutes >= 30
+    }
+}
+
 // MARK: - Morning Briefing Data
 
 /// Represents the morning briefing content with yesterday's recap and today's plan
@@ -229,6 +307,9 @@ struct MorningBriefingData: Codable, Identifiable {
     // Weekly insights
     let weeklyStats: WeeklyStats
 
+    // Calendar schedule (optional - nil if no calendar access)
+    let scheduleSummary: ScheduleSummary?
+
     // AI content
     var aiSummary: String?
     var todayFocus: String?
@@ -247,6 +328,7 @@ struct MorningBriefingData: Codable, Identifiable {
         todayOverdue: Int,
         todayEstimatedMinutes: Int,
         weeklyStats: WeeklyStats,
+        scheduleSummary: ScheduleSummary? = nil,
         aiSummary: String? = nil,
         todayFocus: String? = nil,
         motivationalMessage: String? = nil,
@@ -262,6 +344,7 @@ struct MorningBriefingData: Codable, Identifiable {
         self.todayOverdue = todayOverdue
         self.todayEstimatedMinutes = todayEstimatedMinutes
         self.weeklyStats = weeklyStats
+        self.scheduleSummary = scheduleSummary
         self.aiSummary = aiSummary
         self.todayFocus = todayFocus
         self.motivationalMessage = motivationalMessage
@@ -296,6 +379,11 @@ struct MorningBriefingData: Codable, Identifiable {
             return Double(yesterdayCompleted) / Double(yesterdayPlanned) >= 0.5
         }
         return true
+    }
+
+    /// Check if calendar data is available
+    var hasCalendarData: Bool {
+        scheduleSummary != nil
     }
 }
 
