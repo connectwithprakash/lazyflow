@@ -276,16 +276,30 @@ final class DailySummaryService: ObservableObject {
     func buildEnrichedAIContext(for type: AIPromptContextType) -> String {
         var sections: [(priority: Int, content: String)] = []
 
-        // Priority 1: Correction patterns (highest value - shows what user dislikes)
-        let correctionsContext = aiLearningService.getCorrectionsContext()
-        if !correctionsContext.isEmpty {
-            sections.append((1, correctionsContext))
+        // Prioritize sections based on context type:
+        // - Morning briefing: duration accuracy is more important (planning the day ahead)
+        // - Daily summary: corrections are more important (reflecting on what went wrong)
+        let correctionPriority: Int
+        let durationPriority: Int
+        switch type {
+        case .morningBriefing:
+            durationPriority = 1
+            correctionPriority = 2
+        case .dailySummary:
+            correctionPriority = 1
+            durationPriority = 2
         }
 
-        // Priority 2: Duration accuracy patterns (calibrates time estimates)
+        // Correction patterns (shows what user dislikes)
+        let correctionsContext = aiLearningService.getCorrectionsContext()
+        if !correctionsContext.isEmpty {
+            sections.append((correctionPriority, correctionsContext))
+        }
+
+        // Duration accuracy patterns (calibrates time estimates)
         let durationContext = aiLearningService.getDurationAccuracyContext()
         if !durationContext.isEmpty {
-            sections.append((2, durationContext))
+            sections.append((durationPriority, durationContext))
         }
 
         // Priority 3: User patterns from AIContextService (behavioral patterns)
@@ -308,11 +322,12 @@ final class DailySummaryService: ObservableObject {
             sections.append((3, patternContext))
         }
 
-        // Compute quality from actual data sources used (not aiContextService.contextQuality)
-        // Quality is based on having meaningful correction or duration data
+        // Compute quality from actual data sources used
+        // Quality considers corrections, duration accuracy, and behavioral patterns
         let correctionCount = aiLearningService.getCorrectionCount(lastDays: 30)
+        let durationRecordCount = aiLearningService.durationAccuracyRecords.count
         let hasPatterns = !topCategories.isEmpty
-        let quality = Double(correctionCount) / 50.0 + (hasPatterns ? 0.1 : 0.0)
+        let quality = Double(correctionCount) / 50.0 + Double(durationRecordCount) / 50.0 + (hasPatterns ? 0.1 : 0.0)
 
         guard quality >= minContextQualityThreshold else {
             return ""
