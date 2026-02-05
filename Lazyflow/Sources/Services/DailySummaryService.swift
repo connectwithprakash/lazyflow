@@ -274,11 +274,6 @@ final class DailySummaryService: ObservableObject {
     /// - Parameter type: The type of prompt (daily summary or morning briefing)
     /// - Returns: Context string clamped to token budget, or empty if insufficient quality
     func buildEnrichedAIContext(for type: AIPromptContextType) -> String {
-        // Check if we have enough context quality to be useful
-        guard aiContextService.contextQuality >= minContextQualityThreshold else {
-            return ""
-        }
-
         var sections: [(priority: Int, content: String)] = []
 
         // Priority 1: Correction patterns (highest value - shows what user dislikes)
@@ -311,6 +306,16 @@ final class DailySummaryService: ObservableObject {
             }
 
             sections.append((3, patternContext))
+        }
+
+        // Compute quality from actual data sources used (not aiContextService.contextQuality)
+        // Quality is based on having meaningful correction or duration data
+        let correctionCount = aiLearningService.getCorrectionCount(lastDays: 30)
+        let hasPatterns = !topCategories.isEmpty
+        let quality = Double(correctionCount) / 50.0 + (hasPatterns ? 0.1 : 0.0)
+
+        guard quality >= minContextQualityThreshold else {
+            return ""
         }
 
         // Build final context with token budget
