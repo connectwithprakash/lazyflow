@@ -1312,9 +1312,9 @@ final class DailySummaryServiceTests: XCTestCase {
     // MARK: - Impression Tracking Tests (Issue #163)
 
     func testRecordImpressionIfNeeded_RecordsWhenAISummaryPresent() {
-        // Clear existing impressions
+        // Clear all learning data (corrections, impressions, refinements)
         AILearningService.shared.clearAllCorrections()
-        let initialCount = AILearningService.shared.impressions.count
+        XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // When AI summary is present and not already recorded
         let result = dailySummaryService.recordImpressionIfNeeded(
@@ -1324,13 +1324,13 @@ final class DailySummaryServiceTests: XCTestCase {
 
         // Should record and return true
         XCTAssertTrue(result)
-        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount + 1)
+        XCTAssertEqual(AILearningService.shared.impressions.count, 1)
     }
 
     func testRecordImpressionIfNeeded_DoesNotRecordWhenAISummaryNil() {
-        // Clear existing impressions
+        // Clear all learning data (corrections, impressions, refinements)
         AILearningService.shared.clearAllCorrections()
-        let initialCount = AILearningService.shared.impressions.count
+        XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // When AI summary is nil (fallback content only)
         let result = dailySummaryService.recordImpressionIfNeeded(
@@ -1340,13 +1340,13 @@ final class DailySummaryServiceTests: XCTestCase {
 
         // Should not record and return false
         XCTAssertFalse(result)
-        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount)
+        XCTAssertEqual(AILearningService.shared.impressions.count, 0)
     }
 
     func testRecordImpressionIfNeeded_DoesNotRecordWhenAlreadyRecorded() {
-        // Clear existing impressions
+        // Clear all learning data (corrections, impressions, refinements)
         AILearningService.shared.clearAllCorrections()
-        let initialCount = AILearningService.shared.impressions.count
+        XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // When already recorded this session
         let result = dailySummaryService.recordImpressionIfNeeded(
@@ -1356,13 +1356,13 @@ final class DailySummaryServiceTests: XCTestCase {
 
         // Should not record and return false
         XCTAssertFalse(result)
-        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount)
+        XCTAssertEqual(AILearningService.shared.impressions.count, 0)
     }
 
     func testRecordImpressionIfNeeded_MultipleCalls_OnlyRecordsOnce() {
-        // Clear existing impressions
+        // Clear all learning data (corrections, impressions, refinements)
         AILearningService.shared.clearAllCorrections()
-        let initialCount = AILearningService.shared.impressions.count
+        XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // Simulate view session: first call records
         var alreadyRecorded = false
@@ -1381,13 +1381,13 @@ final class DailySummaryServiceTests: XCTestCase {
         // Should record only once
         XCTAssertTrue(firstResult)
         XCTAssertFalse(secondResult)
-        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount + 1)
+        XCTAssertEqual(AILearningService.shared.impressions.count, 1)
     }
 
     func testRecordImpressionIfNeeded_AfterReset_RecordsAgain() {
-        // Clear existing impressions
+        // Clear all learning data (corrections, impressions, refinements)
         AILearningService.shared.clearAllCorrections()
-        let initialCount = AILearningService.shared.impressions.count
+        XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // First view session
         var alreadyRecorded = false
@@ -1396,6 +1396,7 @@ final class DailySummaryServiceTests: XCTestCase {
             alreadyRecorded: alreadyRecorded
         )
         alreadyRecorded = true
+        XCTAssertEqual(AILearningService.shared.impressions.count, 1)
 
         // Simulate refresh/regenerate: reset the flag
         alreadyRecorded = false
@@ -1407,6 +1408,6 @@ final class DailySummaryServiceTests: XCTestCase {
         )
 
         XCTAssertTrue(result)
-        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount + 2)
+        XCTAssertEqual(AILearningService.shared.impressions.count, 2)
     }
 }
