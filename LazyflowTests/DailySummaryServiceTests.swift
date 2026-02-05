@@ -1308,4 +1308,105 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertFalse(summaryContext.isEmpty, "Summary context should not be empty")
         XCTAssertFalse(briefingContext.isEmpty, "Briefing context should not be empty")
     }
+
+    // MARK: - Impression Tracking Tests (Issue #163)
+
+    func testRecordImpressionIfNeeded_RecordsWhenAISummaryPresent() {
+        // Clear existing impressions
+        AILearningService.shared.clearAllCorrections()
+        let initialCount = AILearningService.shared.impressions.count
+
+        // When AI summary is present and not already recorded
+        let result = dailySummaryService.recordImpressionIfNeeded(
+            aiSummary: "Great day! You completed 5 tasks.",
+            alreadyRecorded: false
+        )
+
+        // Should record and return true
+        XCTAssertTrue(result)
+        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount + 1)
+    }
+
+    func testRecordImpressionIfNeeded_DoesNotRecordWhenAISummaryNil() {
+        // Clear existing impressions
+        AILearningService.shared.clearAllCorrections()
+        let initialCount = AILearningService.shared.impressions.count
+
+        // When AI summary is nil (fallback content only)
+        let result = dailySummaryService.recordImpressionIfNeeded(
+            aiSummary: nil,
+            alreadyRecorded: false
+        )
+
+        // Should not record and return false
+        XCTAssertFalse(result)
+        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount)
+    }
+
+    func testRecordImpressionIfNeeded_DoesNotRecordWhenAlreadyRecorded() {
+        // Clear existing impressions
+        AILearningService.shared.clearAllCorrections()
+        let initialCount = AILearningService.shared.impressions.count
+
+        // When already recorded this session
+        let result = dailySummaryService.recordImpressionIfNeeded(
+            aiSummary: "Great day! You completed 5 tasks.",
+            alreadyRecorded: true
+        )
+
+        // Should not record and return false
+        XCTAssertFalse(result)
+        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount)
+    }
+
+    func testRecordImpressionIfNeeded_MultipleCalls_OnlyRecordsOnce() {
+        // Clear existing impressions
+        AILearningService.shared.clearAllCorrections()
+        let initialCount = AILearningService.shared.impressions.count
+
+        // Simulate view session: first call records
+        var alreadyRecorded = false
+        let firstResult = dailySummaryService.recordImpressionIfNeeded(
+            aiSummary: "Great day!",
+            alreadyRecorded: alreadyRecorded
+        )
+        if firstResult { alreadyRecorded = true }
+
+        // Second call should not record (simulates view refresh without regenerate)
+        let secondResult = dailySummaryService.recordImpressionIfNeeded(
+            aiSummary: "Great day!",
+            alreadyRecorded: alreadyRecorded
+        )
+
+        // Should record only once
+        XCTAssertTrue(firstResult)
+        XCTAssertFalse(secondResult)
+        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount + 1)
+    }
+
+    func testRecordImpressionIfNeeded_AfterReset_RecordsAgain() {
+        // Clear existing impressions
+        AILearningService.shared.clearAllCorrections()
+        let initialCount = AILearningService.shared.impressions.count
+
+        // First view session
+        var alreadyRecorded = false
+        _ = dailySummaryService.recordImpressionIfNeeded(
+            aiSummary: "Great day!",
+            alreadyRecorded: alreadyRecorded
+        )
+        alreadyRecorded = true
+
+        // Simulate refresh/regenerate: reset the flag
+        alreadyRecorded = false
+
+        // Should record again after reset
+        let result = dailySummaryService.recordImpressionIfNeeded(
+            aiSummary: "Even better day!",
+            alreadyRecorded: alreadyRecorded
+        )
+
+        XCTAssertTrue(result)
+        XCTAssertEqual(AILearningService.shared.impressions.count, initialCount + 2)
+    }
 }

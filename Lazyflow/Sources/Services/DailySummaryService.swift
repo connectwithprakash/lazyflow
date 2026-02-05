@@ -373,6 +373,22 @@ final class DailySummaryService: ObservableObject {
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    // MARK: - Impression Tracking (Issue #163)
+
+    /// Records an AI impression if conditions are met
+    /// - Parameters:
+    ///   - aiSummary: The AI-generated summary content (nil if AI unavailable)
+    ///   - alreadyRecorded: Whether an impression was already recorded this session
+    /// - Returns: true if an impression was recorded, false otherwise
+    func recordImpressionIfNeeded(aiSummary: String?, alreadyRecorded: Bool) -> Bool {
+        // Only record when AI content is present and not already recorded
+        guard aiSummary != nil, !alreadyRecorded else {
+            return false
+        }
+        aiLearningService.recordImpression()
+        return true
+    }
+
     // MARK: - Encouragement Messages
 
     func getDefaultEncouragement(streak: Int, score: Double) -> String {
