@@ -562,17 +562,8 @@ final class DailySummaryService: ObservableObject {
                 isAllDay: false,
                 location: upcoming.location
             )
-        } else if let first = timedEvents.first {
-            // All events have passed, show the first one anyway
-            nextEvent = CalendarEventSummary(
-                id: first.eventIdentifier ?? UUID().uuidString,
-                title: first.title ?? "Untitled",
-                startDate: first.startDate,
-                endDate: first.endDate,
-                isAllDay: false,
-                location: first.location
-            )
         } else {
+            // All events have passed - return nil
             nextEvent = nil
         }
 
@@ -620,6 +611,11 @@ final class DailySummaryService: ObservableObject {
             } else {
                 mergedIntervals.append((eventStart, eventEnd))
             }
+        }
+
+        // If all events are outside workday, return full workday
+        guard !mergedIntervals.isEmpty else {
+            return calculateWorkdayMinutes()
         }
 
         // Calculate gaps
