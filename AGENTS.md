@@ -22,6 +22,7 @@ This file provides guidance to AI coding agents when working with code in this r
 - Use external references for additional context when needed
 - Research solutions when encountering issues
 - Follow Swift/iOS community best practices
+- Use subagents (Task tool) for parallel exploration, code search, and complex multi-step research tasks
 
 **DEVELOPMENT WORKFLOW:**
 1. **Pull:** Always pull `origin/main` before starting work
