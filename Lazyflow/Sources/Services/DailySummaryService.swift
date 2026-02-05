@@ -643,8 +643,81 @@ final class DailySummaryService: ObservableObject {
     }
 
     /// Calculate total workday minutes (8 AM to 6 PM = 10 hours)
-    private func calculateWorkdayMinutes() -> Int {
+    func calculateWorkdayMinutes() -> Int {
         return 10 * 60 // 600 minutes
+    }
+
+    // MARK: - Testable Schedule Calculations
+
+    /// Calculate largest free block from event intervals (internal for testing)
+    /// - Parameters:
+    ///   - intervals: Array of (start, end) date tuples representing events
+    ///   - workdayStart: Start of workday
+    ///   - workdayEnd: End of workday
+    /// - Returns: Largest free block in minutes
+    func calculateLargestFreeBlockFromIntervals(
+        _ intervals: [(start: Date, end: Date)],
+        workdayStart: Date,
+        workdayEnd: Date
+    ) -> Int {
+        guard !intervals.isEmpty else {
+            return calculateWorkdayMinutes()
+        }
+
+        // Sort by start time
+        let sorted = intervals.sorted { $0.start < $1.start }
+
+        // Merge overlapping intervals, clipping to workday
+        var merged: [(start: Date, end: Date)] = []
+        for interval in sorted {
+            let clippedStart = max(interval.start, workdayStart)
+            let clippedEnd = min(interval.end, workdayEnd)
+
+            if clippedStart >= clippedEnd { continue } // Outside workday
+
+            if merged.isEmpty {
+                merged.append((clippedStart, clippedEnd))
+            } else if let last = merged.last, clippedStart <= last.end {
+                merged[merged.count - 1] = (last.start, max(last.end, clippedEnd))
+            } else {
+                merged.append((clippedStart, clippedEnd))
+            }
+        }
+
+        // If all events outside workday, return full workday
+        guard !merged.isEmpty else {
+            return calculateWorkdayMinutes()
+        }
+
+        // Calculate gaps
+        var largestGap = 0
+
+        // Gap before first event
+        if let first = merged.first {
+            largestGap = max(largestGap, Int(first.start.timeIntervalSince(workdayStart) / 60))
+        }
+
+        // Gaps between events
+        for i in 0..<(merged.count - 1) {
+            let gap = Int(merged[i + 1].start.timeIntervalSince(merged[i].end) / 60)
+            largestGap = max(largestGap, gap)
+        }
+
+        // Gap after last event
+        if let last = merged.last {
+            largestGap = max(largestGap, Int(workdayEnd.timeIntervalSince(last.end) / 60))
+        }
+
+        return max(0, largestGap)
+    }
+
+    /// Determine next event from a list of events (internal for testing)
+    /// - Parameters:
+    ///   - events: Array of calendar event summaries
+    ///   - now: Current time
+    /// - Returns: Next upcoming event, or nil if all have passed
+    func findNextEvent(from events: [CalendarEventSummary], now: Date) -> CalendarEventSummary? {
+        events.filter { $0.startDate >= now }.first
     }
 
     // MARK: - Morning Briefing AI

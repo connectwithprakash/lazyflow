@@ -1051,4 +1051,136 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertEqual(summary.nextEvent?.title, "Team Standup")
         XCTAssertEqual(summary.nextEvent?.location, "Zoom")
     }
+
+    // MARK: - Schedule Calculation Edge Case Tests (Issue #166 - PR Review)
+
+    func testCalculateLargestFreeBlock_NoEvents_ReturnsFullWorkday() {
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [],
+            workdayStart: Date(),
+            workdayEnd: Date()
+        )
+        XCTAssertEqual(result, 600, "Empty events should return full workday (600 minutes)")
+    }
+
+    func testCalculateLargestFreeBlock_AllEventsOutsideWorkday_ReturnsFullWorkday() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        // Workday: 8 AM - 6 PM
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        // Events all in evening (7 PM - 9 PM) - outside workday
+        let eveningEventStart = calendar.date(bySettingHour: 19, minute: 0, second: 0, of: startOfDay)!
+        let eveningEventEnd = calendar.date(bySettingHour: 21, minute: 0, second: 0, of: startOfDay)!
+
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [(start: eveningEventStart, end: eveningEventEnd)],
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
+        )
+
+        XCTAssertEqual(result, 600, "Events outside workday should return full workday (600 minutes)")
+    }
+
+    func testCalculateLargestFreeBlock_EventsBeforeWorkday_ReturnsFullWorkday() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        // Early morning event (6 AM - 7 AM) - before workday
+        let earlyEventStart = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: startOfDay)!
+        let earlyEventEnd = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: startOfDay)!
+
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [(start: earlyEventStart, end: earlyEventEnd)],
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
+        )
+
+        XCTAssertEqual(result, 600, "Events before workday should return full workday (600 minutes)")
+    }
+
+    func testCalculateLargestFreeBlock_MidDayEvent_ReturnsCorrectGap() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
+        // Meeting from 12 PM - 1 PM (1 hour)
+        let meetingStart = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: startOfDay)!
+        let meetingEnd = calendar.date(bySettingHour: 13, minute: 0, second: 0, of: startOfDay)!
+
+        let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
+            [(start: meetingStart, end: meetingEnd)],
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
+        )
+
+        // Gap after meeting: 1 PM - 6 PM = 5 hours = 300 minutes
+        // Gap before meeting: 8 AM - 12 PM = 4 hours = 240 minutes
+        XCTAssertEqual(result, 300, "Largest gap should be 300 minutes (1 PM - 6 PM)")
+    }
+
+    func testFindNextEvent_AllEventsPassed_ReturnsNil() {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Events all in the past
+        let pastEvent1 = CalendarEventSummary(
+            id: "past-1",
+            title: "Morning Meeting",
+            startDate: calendar.date(byAdding: .hour, value: -3, to: now)!,
+            endDate: calendar.date(byAdding: .hour, value: -2, to: now)!,
+            isAllDay: false,
+            location: nil
+        )
+        let pastEvent2 = CalendarEventSummary(
+            id: "past-2",
+            title: "Lunch",
+            startDate: calendar.date(byAdding: .hour, value: -2, to: now)!,
+            endDate: calendar.date(byAdding: .hour, value: -1, to: now)!,
+            isAllDay: false,
+            location: nil
+        )
+
+        let result = dailySummaryService.findNextEvent(from: [pastEvent1, pastEvent2], now: now)
+
+        XCTAssertNil(result, "Should return nil when all events have passed")
+    }
+
+    func testFindNextEvent_HasUpcomingEvent_ReturnsFirst() {
+        let calendar = Calendar.current
+        let now = Date()
+
+        let pastEvent = CalendarEventSummary(
+            id: "past-1",
+            title: "Morning Meeting",
+            startDate: calendar.date(byAdding: .hour, value: -1, to: now)!,
+            endDate: now,
+            isAllDay: false,
+            location: nil
+        )
+        let futureEvent = CalendarEventSummary(
+            id: "future-1",
+            title: "Afternoon Call",
+            startDate: calendar.date(byAdding: .hour, value: 1, to: now)!,
+            endDate: calendar.date(byAdding: .hour, value: 2, to: now)!,
+            isAllDay: false,
+            location: nil
+        )
+
+        let result = dailySummaryService.findNextEvent(from: [pastEvent, futureEvent], now: now)
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.id, "future-1")
+        XCTAssertEqual(result?.title, "Afternoon Call")
+    }
 }
