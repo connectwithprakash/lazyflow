@@ -1055,10 +1055,18 @@ final class DailySummaryServiceTests: XCTestCase {
     // MARK: - Schedule Calculation Edge Case Tests (Issue #166 - PR Review)
 
     func testCalculateLargestFreeBlock_NoEvents_ReturnsFullWorkday() {
+        let calendar = Calendar.current
+        let today = Date()
+        let startOfDay = calendar.startOfDay(for: today)
+
+        // Workday: 8 AM - 6 PM = 10 hours = 600 minutes
+        let workdayStart = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: startOfDay)!
+        let workdayEnd = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: startOfDay)!
+
         let result = dailySummaryService.calculateLargestFreeBlockFromIntervals(
             [],
-            workdayStart: Date(),
-            workdayEnd: Date()
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
         )
         XCTAssertEqual(result, 600, "Empty events should return full workday (600 minutes)")
     }

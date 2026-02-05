@@ -660,8 +660,10 @@ final class DailySummaryService: ObservableObject {
         workdayStart: Date,
         workdayEnd: Date
     ) -> Int {
+        let workdayDuration = Int(workdayEnd.timeIntervalSince(workdayStart) / 60)
+
         guard !intervals.isEmpty else {
-            return calculateWorkdayMinutes()
+            return workdayDuration
         }
 
         // Sort by start time
@@ -686,7 +688,7 @@ final class DailySummaryService: ObservableObject {
 
         // If all events outside workday, return full workday
         guard !merged.isEmpty else {
-            return calculateWorkdayMinutes()
+            return workdayDuration
         }
 
         // Calculate gaps
