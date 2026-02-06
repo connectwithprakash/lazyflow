@@ -90,11 +90,12 @@ final class LazyflowUITests: XCTestCase {
         }
     }
 
-    /// Navigate to a tab or a view accessible via the More hub.
-    /// Direct tabs: Today, Calendar, Upcoming, History, More
-    /// Via More hub: Lists, Settings
+    /// Navigate to a tab or a view accessible via hub tabs.
+    /// Direct tabs: Today, Calendar, Upcoming, Insights, Me
+    /// Via Insights hub: History, Morning Briefing, Daily Summary
+    /// Via Me hub: Lists, Categories, Settings
     /// On iPad: Uses sidebar navigation (List with selection)
-    /// On iPhone: Uses tab bar + More hub
+    /// On iPhone: Uses tab bar + hub navigation
     private func navigateToTab(_ tabName: String) {
         // iPad uses sidebar navigation - items are in a List with selection
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -120,9 +121,8 @@ final class LazyflowUITests: XCTestCase {
             return
         }
 
-        // iPhone uses tab bar + More hub
-        // Direct tabs in the tab bar
-        let directTabs = ["Today", "Calendar", "Upcoming", "History", "More"]
+        // iPhone uses tab bar with 5 direct tabs
+        let directTabs = ["Today", "Calendar", "Upcoming", "Insights", "Me"]
 
         if directTabs.contains(tabName) {
             let directTab = app.tabBars.buttons[tabName]
@@ -132,33 +132,49 @@ final class LazyflowUITests: XCTestCase {
             return
         }
 
-        // Lists and Settings are accessed via More hub
-        let moreTab = app.tabBars.buttons["More"]
-        guard moreTab.exists && moreTab.isHittable else { return }
-        moreTab.tap()
+        // Items accessible via Insights hub
+        let insightsItems = ["History", "Morning Briefing", "Daily Summary"]
+        if insightsItems.contains(tabName) {
+            let insightsTab = app.tabBars.buttons["Insights"]
+            guard insightsTab.exists && insightsTab.isHittable else { return }
+            insightsTab.tap()
+            Thread.sleep(forTimeInterval: 0.5)
 
-        // Wait for More view to load
-        Thread.sleep(forTimeInterval: 0.5)
+            // Find and tap the item in Insights hub
+            navigateToHubItem(tabName)
+            return
+        }
 
-        // Find the card text - may need to scroll
-        let cardText = app.staticTexts[tabName]
+        // Items accessible via Me hub
+        let meItems = ["Lists", "Categories", "Settings"]
+        if meItems.contains(tabName) {
+            let meTab = app.tabBars.buttons["Me"]
+            guard meTab.exists && meTab.isHittable else { return }
+            meTab.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Find and tap the item in Me hub
+            navigateToHubItem(tabName)
+            return
+        }
+    }
+
+    /// Helper to navigate to an item within a hub view
+    private func navigateToHubItem(_ itemName: String) {
+        let cardText = app.staticTexts[itemName]
 
         // Try to find and tap card, scrolling if necessary
         for _ in 0..<3 {
             if cardText.waitForExistence(timeout: 1) && cardText.isHittable {
-                // Tap via coordinate to ensure it triggers NavigationLink
                 let coordinate = cardText.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 coordinate.tap()
                 Thread.sleep(forTimeInterval: 0.5)
                 return
             }
-
-            // Scroll down to find the card
             app.swipeUp()
             Thread.sleep(forTimeInterval: 0.3)
         }
 
-        // Final attempt after scrolling
         if cardText.exists {
             cardText.tap()
         }
@@ -210,31 +226,127 @@ final class LazyflowUITests: XCTestCase {
             throw XCTSkip("This test only runs on iPhone (iPad uses sidebar navigation)")
         }
 
-        // Verify visible tabs are present (iOS shows 5 tabs max including "More")
-        XCTAssertTrue(app.tabBars.buttons["Today"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Upcoming"].exists)
-        XCTAssertTrue(app.tabBars.buttons["History"].exists)
-        XCTAssertTrue(app.tabBars.buttons["More"].exists, "More tab should exist for overflow items")
+        // Verify new 5-tab structure: Today, Calendar, Upcoming, Insights, Me
+        XCTAssertTrue(app.tabBars.buttons["Today"].exists, "Today tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Calendar"].exists, "Calendar tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Upcoming"].exists, "Upcoming tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Insights"].exists, "Insights tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Me"].exists, "Me tab should exist")
 
-        // Navigate to each tab
+        // Verify old tabs no longer exist as direct tabs
+        XCTAssertFalse(app.tabBars.buttons["History"].exists, "History should not be a direct tab")
+        XCTAssertFalse(app.tabBars.buttons["More"].exists, "More tab should not exist")
+
+        // Navigate to each direct tab
         navigateToTab("Calendar")
         XCTAssertTrue(app.navigationBars["Calendar"].exists)
 
         navigateToTab("Upcoming")
         XCTAssertTrue(app.navigationBars["Upcoming"].exists)
 
-        app.tabBars.buttons["History"].tap()
-        XCTAssertTrue(app.navigationBars["History"].exists)
+        navigateToTab("Insights")
+        XCTAssertTrue(app.navigationBars["Insights"].exists)
 
-        navigateToTab("Lists")
-        XCTAssertTrue(app.navigationBars["Lists"].exists)
-
-        navigateToTab("Settings")
-        XCTAssertTrue(app.navigationBars["Settings"].exists)
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].exists)
 
         navigateToToday()
         XCTAssertTrue(app.navigationBars["Today"].exists)
+    }
+
+    // MARK: - Insights Hub Tests
+
+    func testInsightsHubContainsHistory() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        // Navigate to Insights tab
+        navigateToTab("Insights")
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+
+        // Verify History is accessible within Insights hub
+        let historyCard = app.staticTexts["History"]
+        XCTAssertTrue(historyCard.waitForExistence(timeout: 2), "History should be in Insights hub")
+
+        // Tap to navigate to History
+        historyCard.tap()
+        XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 3), "Should navigate to History view")
+    }
+
+    func testInsightsHubContainsMorningBriefing() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Insights")
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+
+        // Verify Morning Briefing is accessible
+        let morningCard = app.staticTexts["Morning Briefing"]
+        XCTAssertTrue(morningCard.waitForExistence(timeout: 2), "Morning Briefing should be in Insights hub")
+    }
+
+    func testInsightsHubContainsDailySummary() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Insights")
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+
+        // Verify Daily Summary is accessible
+        let summaryCard = app.staticTexts["Daily Summary"]
+        XCTAssertTrue(summaryCard.waitForExistence(timeout: 2), "Daily Summary should be in Insights hub")
+    }
+
+    // MARK: - Me Hub Tests
+
+    func testMeHubContainsLists() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Verify Lists is accessible within Me hub
+        let listsCard = app.staticTexts["Lists"]
+        XCTAssertTrue(listsCard.waitForExistence(timeout: 2), "Lists should be in Me hub")
+
+        // Tap to navigate to Lists
+        listsCard.tap()
+        XCTAssertTrue(app.navigationBars["Lists"].waitForExistence(timeout: 3), "Should navigate to Lists view")
+    }
+
+    func testMeHubContainsCategories() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Verify Categories is accessible
+        let categoriesCard = app.staticTexts["Categories"]
+        XCTAssertTrue(categoriesCard.waitForExistence(timeout: 2), "Categories should be in Me hub")
+    }
+
+    func testMeHubContainsSettings() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Verify Settings is accessible within Me hub
+        let settingsCard = app.staticTexts["Settings"]
+        XCTAssertTrue(settingsCard.waitForExistence(timeout: 2), "Settings should be in Me hub")
+
+        // Tap to navigate to Settings
+        settingsCard.tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3), "Should navigate to Settings view")
     }
 
     // MARK: - Task Creation Tests
@@ -482,20 +594,20 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 5), "Today view should be ready")
 
         if UIDevice.current.userInterfaceIdiom == .phone {
-            // Check visible tab bar items (iOS shows 5 items max, including "More" for overflow)
-            for tabName in ["Today", "Calendar", "Upcoming", "History"] {
+            // Check new 5-tab structure: Today, Calendar, Upcoming, Insights, Me
+            for tabName in ["Today", "Calendar", "Upcoming", "Insights", "Me"] {
                 let tab = app.tabBars.buttons[tabName]
                 XCTAssertTrue(tab.exists, "\(tabName) tab should exist")
                 XCTAssertNotEqual(tab.label, "")
             }
 
-            // Lists and Settings are under "More" tab
-            let moreTab = app.tabBars.buttons["More"]
-            if moreTab.exists {
-                moreTab.tap()
-                // Verify Lists and Settings are accessible in More menu
-                XCTAssertTrue(app.tables.staticTexts["Lists"].waitForExistence(timeout: 2) ||
-                              app.staticTexts["Lists"].waitForExistence(timeout: 2))
+            // Lists and Settings are under "Me" tab
+            let meTab = app.tabBars.buttons["Me"]
+            if meTab.exists {
+                meTab.tap()
+                // Verify Lists and Settings are accessible in Me hub
+                XCTAssertTrue(app.staticTexts["Lists"].waitForExistence(timeout: 2) ||
+                              app.staticTexts["Settings"].waitForExistence(timeout: 2))
             }
         } else {
             // iPad: Check sidebar items (may be buttons, staticTexts, or cells)
@@ -598,17 +710,17 @@ final class LazyflowUITests: XCTestCase {
             throw XCTSkip("This test only runs on iPad")
         }
 
-        // Verify sidebar section headers exist
+        // Verify new sidebar section headers: Tasks, Insights, You
         let tasksHeader = app.staticTexts["Tasks"]
-        let organizeHeader = app.staticTexts["Organize"]
-        let systemHeader = app.staticTexts["System"]
+        let insightsHeader = app.staticTexts["Insights"]
+        let youHeader = app.staticTexts["You"]
 
         // At least one section should be visible
         let hasAnySectionHeader = tasksHeader.waitForExistence(timeout: 3) ||
-                                  organizeHeader.exists ||
-                                  systemHeader.exists
+                                  insightsHeader.exists ||
+                                  youHeader.exists
 
-        XCTAssertTrue(hasAnySectionHeader, "iPad sidebar should have section headers")
+        XCTAssertTrue(hasAnySectionHeader, "iPad sidebar should have section headers (Tasks, Insights, You)")
     }
 
     func testIPadSidebarNavigation() throws {
@@ -644,21 +756,20 @@ final class LazyflowUITests: XCTestCase {
             throw XCTSkip("This test only runs on iPhone")
         }
 
-        // Verify tab bar exists and visible tabs are present
-        // With 6 tabs, iOS shows 5 in tab bar (including "More" for overflow)
+        // Verify tab bar exists with new 5-tab structure
         XCTAssertTrue(app.tabBars.firstMatch.exists, "iPhone should have tab bar")
-        XCTAssertTrue(app.tabBars.buttons["Today"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Calendar"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Upcoming"].exists)
-        XCTAssertTrue(app.tabBars.buttons["History"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Today"].exists, "Today tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Calendar"].exists, "Calendar tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Upcoming"].exists, "Upcoming tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Insights"].exists, "Insights tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Me"].exists, "Me tab should exist")
 
-        // Lists and Settings are under "More" tab
-        let moreTab = app.tabBars.buttons["More"]
-        XCTAssertTrue(moreTab.exists, "More tab should exist for overflow items")
-
-        // Test tab navigation still works via More menu
-        navigateToTab("Settings")
+        // Test navigation via hub tabs
+        navigateToTab("Settings")  // Via Me hub
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
+
+        navigateToTab("History")  // Via Insights hub
+        XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 2))
 
         navigateToToday()
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 2))

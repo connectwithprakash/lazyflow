@@ -22,14 +22,15 @@ Documentation of core user journeys, interaction patterns, and UX decisions.
 ### App Structure
 
 ```
-Lazyflow
-|-- Today (default landing)
+Lazyflow (v1.8.0+)
+|-- Today (default landing) ★
+|   |-- Morning Briefing (optional prompt)
 |   |-- Overdue Tasks (red indicator)
 |   |-- Today's Tasks (by priority)
 |   |-- Completed Today (collapsible)
-|   +-- Add Task (FAB)
+|   +-- Daily Summary (optional prompt)
 |
-|-- Calendar (v0.2.0+)
+|-- Calendar
 |   |-- Month View (overview)
 |   |-- Week View (planning)
 |   +-- Day View (time blocking)
@@ -39,18 +40,24 @@ Lazyflow
 |   |-- This Week
 |   +-- Later (grouped by date)
 |
-|-- Lists
-|   |-- Inbox (default, cannot delete)
-|   |-- Custom Lists (user-created)
-|   +-- Add List
+|-- Insights ★ (NEW)
+|   |-- Completion trends
+|   |-- Productivity metrics
+|   +-- Category breakdowns
 |
-+-- Settings
-    |-- Appearance (theme, app icon)
-    |-- Notifications (reminders)
-    |-- AI Settings (v0.3.0+)
-    |-- Data Management (sync, export)
-    +-- About (version, legal)
++-- Me ★ (NEW)
+    |-- Profile / Account
+    |-- Preferences
+    |-- Settings
+        |-- Appearance (theme, app icon)
+        |-- Notifications (reminders)
+        |-- AI Settings (Apple Intelligence)
+        |-- Data Management (sync, export)
+        +-- About (version, legal)
+    +-- Lists (access via profile)
 ```
+
+Note: On iPad, additional sidebar sections provide access to History, Lists, and Settings.
 
 ### Navigation Philosophy
 
@@ -791,25 +798,37 @@ Available on: Today, Upcoming, Lists, Calendar
 |---------|------|
 | v0.1.0 | Today, Upcoming, Lists, Settings |
 | v0.2.0+ | Today, Calendar, Upcoming, Lists, Settings |
+| v1.8.0+ | Today, Calendar, Upcoming, Insights, Me |
 
 - Selected tab: accent color icon + label
 - Unselected: secondary color icon only
 - Badge on Today tab: overdue count (red)
 
-### Sidebar (iPad - v0.9.0)
+**Tabs (v1.8.0+)**:
+- **Today**: Daily tasks and focus, Morning Briefing prompt, Daily Summary prompt
+- **Calendar**: Month/Week/Day views of calendar and scheduled tasks
+- **Upcoming**: Tomorrow, This Week, Later sections for upcoming tasks
+- **Insights**: Task analytics, completion trends, productivity metrics
+- **Me**: Account, preferences, Settings, and Links sections
+
+**iPad Structure (v1.8.0+)**:
+Lists, History, and Settings accessible from sidebar under their respective sections. The five main tabs remain as the core navigation on iPad.
+
+### Sidebar (iPad - v0.9.0+)
 
 iPad uses NavigationSplitView with a sidebar instead of TabView:
 
 | Section | Items |
 |---------|-------|
 | Tasks | Today, Calendar, Upcoming |
-| Organize | Lists |
-| System | Settings |
+| Insights | History |
+| You | Lists, Settings |
 
 - Selected item: system selection highlight
 - Sidebar width: 260pt
 - Collapsible with toggle button
 - Toolbar: Add task (+), Search (magnifying glass)
+- Note: Insights and Me tab content accessible via sidebar sections on iPad
 
 ### Sheet Presentation
 
