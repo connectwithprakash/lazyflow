@@ -542,6 +542,88 @@ Edit Task --> List Picker
 
 ---
 
+### 12. Morning Briefing (v1.7.0)
+
+**Goal**: Start your day with AI-generated planning based on calendar and priorities
+
+```
+[Today View - Morning Hours]
+    |
+    +-> Morning Briefing card appears
+        |
+        +-> Tap "Start Your Day" card
+            |
+            +-> [Morning Briefing Sheet]
+                |
+                +-- "Good Morning" greeting
+                +-- Yesterday's recap (if applicable)
+                +-- Today's calendar context
+                +-- Suggested focus areas
+                +-- Motivational tip
+                |
+                +-> "Regenerate" button (refresh icon)
+                |   +-> New AI-generated content
+                |
+                +-> "Done" button
+                    +-> Dismiss sheet
+```
+
+**Access Points**:
+- Today view prompt card (morning hours only)
+- More > Morning Briefing (anytime)
+- Notification action (if enabled)
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Time-restricted prompt | Only relevant in morning |
+| Available via More menu | Access anytime if needed |
+| Regenerate option | User control over AI content |
+| Calendar context | Personalized recommendations |
+
+---
+
+### 13. Daily Summary (v1.7.0)
+
+**Goal**: Review productivity and get AI-generated end-of-day insights
+
+```
+[Today View - Evening Hours]
+    |
+    +-> Daily Summary prompt appears (after completing tasks)
+        |
+        +-> Tap "View Summary"
+            |
+            +-> [Daily Summary Sheet]
+                |
+                +-- Completion stats (X of Y tasks)
+                +-- Streak tracking
+                +-- AI-generated summary
+                +-- Top category worked on
+                +-- Motivational message
+                |
+                +-> "Regenerate" button
+                |
+                +-> "Done" button
+```
+
+**Access Points**:
+- Today view prompt (evening, after task completions)
+- More > Daily Summary (anytime)
+- Notification action (if enabled)
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Zero-task handling | Honest messaging, no false positives |
+| Streak emphasis | Motivation through consistency |
+| Regenerate option | User control over AI content |
+| First-day detection | Skip "yesterday" references for new users |
+
+---
+
 ## Empty States
 
 ### No Tasks Today
