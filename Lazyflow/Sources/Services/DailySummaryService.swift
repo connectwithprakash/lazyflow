@@ -389,6 +389,85 @@ final class DailySummaryService: ObservableObject {
         return true
     }
 
+    // MARK: - Regenerate AI Content (Issue #164)
+
+    /// Regenerate AI content for Daily Summary without recalculating stats
+    /// - Parameter existingSummary: The current summary data to regenerate AI for
+    /// - Returns: Updated summary with new AI content
+    func regenerateDailySummaryAI(for existingSummary: DailySummaryData) async -> DailySummaryData {
+        await MainActor.run { isGeneratingSummary = true }
+        defer {
+            _Concurrency.Task { @MainActor in
+                isGeneratingSummary = false
+            }
+        }
+
+        // Record refinement request
+        aiLearningService.recordRefinementRequest()
+
+        var summary = existingSummary
+
+        // Regenerate AI content only
+        if llmService.isReady && summary.tasksCompleted > 0 {
+            do {
+                let (aiSummary, encouragement) = try await generateAISummary(data: summary)
+                summary.aiSummary = aiSummary
+                summary.encouragement = encouragement
+            } catch {
+                // Keep existing AI content or fall back to default
+                if summary.aiSummary == nil {
+                    summary.encouragement = getDefaultEncouragement(
+                        streak: streakData.currentStreak,
+                        score: summary.productivityScore
+                    )
+                }
+            }
+        } else if summary.aiSummary == nil {
+            summary.encouragement = getDefaultEncouragement(
+                streak: streakData.currentStreak,
+                score: summary.productivityScore
+            )
+        }
+
+        return summary
+    }
+
+    /// Regenerate AI content for Morning Briefing without recalculating stats
+    /// - Parameter existingBriefing: The current briefing data to regenerate AI for
+    /// - Returns: Updated briefing with new AI content
+    func regenerateMorningBriefingAI(for existingBriefing: MorningBriefingData) async -> MorningBriefingData {
+        await MainActor.run { isGeneratingSummary = true }
+        defer {
+            _Concurrency.Task { @MainActor in
+                isGeneratingSummary = false
+            }
+        }
+
+        // Record refinement request
+        aiLearningService.recordRefinementRequest()
+
+        var briefing = existingBriefing
+
+        // Regenerate AI content only
+        if llmService.isReady {
+            do {
+                let aiContent = try await generateAIMorningBriefing(data: briefing)
+                briefing.aiSummary = aiContent.summary
+                briefing.todayFocus = aiContent.todayFocus
+                briefing.motivationalMessage = aiContent.motivation
+            } catch {
+                // Keep existing AI content or fall back to default
+                if briefing.aiSummary == nil {
+                    briefing.motivationalMessage = getDefaultMorningMotivation(briefing: briefing)
+                }
+            }
+        } else if briefing.aiSummary == nil {
+            briefing.motivationalMessage = getDefaultMorningMotivation(briefing: briefing)
+        }
+
+        return briefing
+    }
+
     // MARK: - Encouragement Messages
 
     func getDefaultEncouragement(streak: Int, score: Double) -> String {

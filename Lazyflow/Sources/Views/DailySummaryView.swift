@@ -34,12 +34,26 @@ struct DailySummaryView: View {
     @ToolbarContentBuilder
     private func toolbarContent() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                _Concurrency.Task {
-                    await refreshSummary()
+            Menu {
+                Button {
+                    _Concurrency.Task {
+                        await refreshSummary()
+                    }
+                } label: {
+                    Label("Refresh All", systemImage: "arrow.clockwise")
+                }
+
+                if summary?.aiSummary != nil {
+                    Button {
+                        _Concurrency.Task {
+                            await regenerateAI()
+                        }
+                    } label: {
+                        Label("Regenerate AI", systemImage: "sparkles")
+                    }
                 }
             } label: {
-                Image(systemName: "arrow.clockwise")
+                Image(systemName: "ellipsis.circle")
             }
             .disabled(isLoading)
         }
@@ -386,6 +400,15 @@ struct DailySummaryView: View {
         didRecordImpression = false  // Reset before reloading
         // Force regenerate - ignores cache
         summary = await summaryService.generateSummary(for: Date())
+        isLoading = false
+        recordImpressionIfNeeded()
+    }
+
+    private func regenerateAI() async {
+        guard let currentSummary = summary else { return }
+        isLoading = true
+        didRecordImpression = false  // Reset for new AI content
+        summary = await summaryService.regenerateDailySummaryAI(for: currentSummary)
         isLoading = false
         recordImpressionIfNeeded()
     }

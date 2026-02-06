@@ -34,12 +34,26 @@ struct MorningBriefingView: View {
     @ToolbarContentBuilder
     private func toolbarContent() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                _Concurrency.Task {
-                    await refreshBriefing()
+            Menu {
+                Button {
+                    _Concurrency.Task {
+                        await refreshBriefing()
+                    }
+                } label: {
+                    Label("Refresh All", systemImage: "arrow.clockwise")
+                }
+
+                if briefing?.aiSummary != nil {
+                    Button {
+                        _Concurrency.Task {
+                            await regenerateAI()
+                        }
+                    } label: {
+                        Label("Regenerate AI", systemImage: "sparkles")
+                    }
                 }
             } label: {
-                Image(systemName: "arrow.clockwise")
+                Image(systemName: "ellipsis.circle")
             }
             .disabled(isLoading)
         }
@@ -541,6 +555,15 @@ struct MorningBriefingView: View {
         isLoading = true
         didRecordImpression = false  // Reset before reloading
         briefing = await summaryService.forceRefreshMorningBriefing()
+        isLoading = false
+        recordImpressionIfNeeded()
+    }
+
+    private func regenerateAI() async {
+        guard let currentBriefing = briefing else { return }
+        isLoading = true
+        didRecordImpression = false  // Reset for new AI content
+        briefing = await summaryService.regenerateMorningBriefingAI(for: currentBriefing)
         isLoading = false
         recordImpressionIfNeeded()
     }
