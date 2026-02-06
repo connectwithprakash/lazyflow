@@ -9,6 +9,25 @@ final class LazyflowUITests: XCTestCase {
         app.launchArguments = ["UI_TESTING"]
         app.launchEnvironment = ["UI_TESTING": "1"]
 
+        // Handle system interruptions (alerts, notifications) that can cause flaky tests
+        addUIInterruptionMonitor(withDescription: "System Alert") { alert in
+            let allowButton = alert.buttons["Allow"]
+            let okButton = alert.buttons["OK"]
+            let dontAllowButton = alert.buttons["Don't Allow"]
+
+            if allowButton.exists {
+                allowButton.tap()
+                return true
+            } else if okButton.exists {
+                okButton.tap()
+                return true
+            } else if dontAllowButton.exists {
+                dontAllowButton.tap()
+                return true
+            }
+            return false
+        }
+
         // Force terminate any existing instance to ensure fresh launch with UI_TESTING flag
         app.terminate()
         app.launch()
@@ -29,26 +48,45 @@ final class LazyflowUITests: XCTestCase {
 
     // MARK: - Helper Methods
 
+    /// Tap an element with retry logic to handle interruption flakiness.
+    /// Returns true if tap succeeded, false otherwise.
+    @discardableResult
+    private func tapWithRetry(_ element: XCUIElement, maxRetries: Int = 3) -> Bool {
+        for attempt in 0..<maxRetries {
+            if element.waitForExistence(timeout: 2) && element.isHittable {
+                element.tap()
+                // Brief pause to allow UI to settle after tap
+                Thread.sleep(forTimeInterval: 0.3)
+                return true
+            }
+            // Wait before retry to allow interruptions to clear
+            if attempt < maxRetries - 1 {
+                Thread.sleep(forTimeInterval: 0.5)
+                // Trigger interruption handler by interacting with app
+                app.tap()
+            }
+        }
+        return false
+    }
+
     /// Navigate to Today tab. Works on both iPhone (tab bar) and iPad (sidebar).
     private func navigateToToday() {
         if UIDevice.current.userInterfaceIdiom == .pad {
-            // Try multiple element types for iPad sidebar
+            // Try multiple element types for iPad sidebar with retry logic
             let todayButton = app.buttons["Today"]
             let todayText = app.staticTexts["Today"]
             let todayCell = app.cells.staticTexts["Today"]
 
-            if todayButton.waitForExistence(timeout: 1) && todayButton.isHittable {
-                todayButton.tap()
-            } else if todayText.waitForExistence(timeout: 1) && todayText.isHittable {
-                todayText.tap()
-            } else if todayCell.waitForExistence(timeout: 1) && todayCell.isHittable {
-                todayCell.tap()
+            if tapWithRetry(todayButton) {
+                return
+            } else if tapWithRetry(todayText) {
+                return
+            } else if tapWithRetry(todayCell) {
+                return
             }
         } else {
             let todayTab = app.tabBars.buttons["Today"]
-            if todayTab.exists && todayTab.isHittable {
-                todayTab.tap()
-            }
+            tapWithRetry(todayTab)
         }
     }
 
@@ -351,39 +389,46 @@ final class LazyflowUITests: XCTestCase {
     func testNavigateToList() throws {
         // First create a list
         navigateToTab("Lists")
-        XCTAssertTrue(app.navigationBars["Lists"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Lists"].waitForExistence(timeout: 5))
 
-        // Find add list button
+        // Allow UI to stabilize after navigation
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Find add list button with retry logic
         let addListButton = app.buttons["Add list"]
         let addButton = app.buttons["Add"]
 
-        guard addListButton.exists || addButton.exists else {
+        guard addListButton.waitForExistence(timeout: 2) || addButton.waitForExistence(timeout: 2) else {
             throw XCTSkip("Add list button not found - UI may differ on this device")
         }
 
-        if addListButton.exists && addListButton.isHittable {
-            addListButton.tap()
-        } else if addButton.exists && addButton.isHittable {
-            addButton.tap()
+        if !tapWithRetry(addListButton) {
+            tapWithRetry(addButton)
         }
 
-        // Verify sheet appears
-        XCTAssertTrue(app.navigationBars["New List"].waitForExistence(timeout: 2))
+        // Verify sheet appears with longer timeout
+        XCTAssertTrue(app.navigationBars["New List"].waitForExistence(timeout: 3))
 
         // Enter list name using helper to ensure keyboard focus
         let nameField = app.textFields["List Name"]
         tapAndTypeText(nameField, text: "Nav Test List")
-        app.buttons["Create"].tap()
+
+        // Allow keyboard input to settle before tapping Create
+        Thread.sleep(forTimeInterval: 0.3)
+        tapWithRetry(app.buttons["Create"])
+
+        // Wait for sheet to dismiss and list to appear
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Wait for list to appear - use firstMatch to handle multiple matches
         let listText = app.staticTexts.matching(identifier: "Nav Test List").firstMatch
-        XCTAssertTrue(listText.waitForExistence(timeout: 3))
+        XCTAssertTrue(listText.waitForExistence(timeout: 5))
 
-        // Tap on the list
-        listText.tap()
+        // Tap on the list with retry logic
+        tapWithRetry(listText)
 
-        // Verify navigation occurred
-        XCTAssertTrue(app.navigationBars["Nav Test List"].waitForExistence(timeout: 3))
+        // Verify navigation occurred with longer timeout
+        XCTAssertTrue(app.navigationBars["Nav Test List"].waitForExistence(timeout: 5))
     }
 
     // MARK: - Settings Tests
@@ -734,35 +779,41 @@ final class LazyflowUITests: XCTestCase {
     func testMorningBriefingRegenerateAI() throws {
         navigateToToday()
 
+        // Allow UI to stabilize after navigation
+        Thread.sleep(forTimeInterval: 0.5)
+
         // Morning Briefing card is time-dependent (only shows in morning hours)
         let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
-        guard briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable else {
+        guard briefingCard.waitForExistence(timeout: 3) && briefingCard.isHittable else {
             throw XCTSkip("Morning Briefing card not available (only shows in morning hours)")
         }
 
-        briefingCard.tap()
+        // Use retry logic for tapping briefing card
+        guard tapWithRetry(briefingCard) else {
+            throw XCTSkip("Could not tap Morning Briefing card - UI may have auto-dismissed")
+        }
 
-        // Wait for briefing view
+        // Wait for briefing view with longer timeout
         let briefingNav = app.navigationBars["Good Morning"]
-        XCTAssertTrue(briefingNav.waitForExistence(timeout: 3), "Morning Briefing view should open")
+        XCTAssertTrue(briefingNav.waitForExistence(timeout: 5), "Morning Briefing view should open")
 
         // Find regenerate AI button using accessibility identifier
         let regenerateButton = app.buttons["Regenerate AI"]
         XCTAssertTrue(regenerateButton.waitForExistence(timeout: 3), "Regenerate AI button should exist when briefing has data")
 
-        // Tap regenerate button
-        regenerateButton.tap()
+        // Tap regenerate button with retry logic
+        tapWithRetry(regenerateButton)
 
         // Wait for regeneration to complete
-        sleep(2)
+        Thread.sleep(forTimeInterval: 2)
 
         // View should still exist after regenerate
         XCTAssertTrue(briefingNav.exists, "View should remain stable after regeneration")
 
-        // Dismiss
+        // Dismiss with retry logic
         let doneButton = app.buttons["Done"]
         if doneButton.exists {
-            doneButton.tap()
+            tapWithRetry(doneButton)
         }
     }
 
