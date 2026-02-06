@@ -142,6 +142,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         let actionIdentifier = response.actionIdentifier
+        let category = response.notification.request.content.categoryIdentifier
 
         // Handle notification action
         switch actionIdentifier {
@@ -157,30 +158,40 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 snoozeTask(withID: taskID)
             }
 
-        case "VIEW_SUMMARY_ACTION", UNNotificationDefaultActionIdentifier:
-            // Handle tap on Daily Summary notification or its action button
-            let category = response.notification.request.content.categoryIdentifier
-            if actionIdentifier == "VIEW_SUMMARY_ACTION" || category == "DAILY_SUMMARY" {
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .showDailySummary, object: nil)
-                }
-            } else if category == "MORNING_BRIEFING" {
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .showMorningBriefing, object: nil)
-                }
-            }
+        case "VIEW_SUMMARY_ACTION":
+            routeToView(.showDailySummary)
 
         case "VIEW_BRIEFING_ACTION":
-            // Handle tap on Morning Briefing action button
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .showMorningBriefing, object: nil)
-            }
+            routeToView(.showMorningBriefing)
+
+        case UNNotificationDefaultActionIdentifier:
+            // User tapped the notification body - route based on category
+            routeForCategory(category)
 
         default:
             break
         }
 
         completionHandler()
+    }
+
+    /// Route to a view based on notification name
+    private func routeToView(_ notificationName: Notification.Name) {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: notificationName, object: nil)
+        }
+    }
+
+    /// Route based on notification category when user taps notification body
+    private func routeForCategory(_ category: String) {
+        switch category {
+        case "DAILY_SUMMARY":
+            routeToView(.showDailySummary)
+        case "MORNING_BRIEFING":
+            routeToView(.showMorningBriefing)
+        default:
+            break
+        }
     }
 
     private func completeTask(withID taskID: UUID) {
