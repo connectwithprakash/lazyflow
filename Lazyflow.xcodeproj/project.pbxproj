@@ -126,6 +126,8 @@
 		F02F3EBA1A0F32A74F609B89 /* AddTaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C130E31A1F2108516A910E6C /* AddTaskView.swift */; };
 		F17F638CD450DED1113D0D65 /* RecurringRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F018E899F22FF4A0E0F8001 /* RecurringRule.swift */; };
 		F3CDE4F38C7E3602E18DAF6F /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37EE9B4E1E57C27373DF4BDE /* HistoryView.swift */; };
+		T55AQQNJ7GWAZU2VAHOVRVPU /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2K785M41KNJP9OJ6UQ36G8G /* InsightsView.swift */; };
+		PRTFU6VAHRGLCT8I0ZF2XHSJ /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ZAAJT3C2KP9BQNQWWW3WONC /* ProfileView.swift */; };
 		F3DD5D78DA037DC32D7D4B4D /* LazyflowUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */; };
 		F5197B43E520107422F453F8 /* CategoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074327A6E958D1C63453B02D /* CategoryService.swift */; };
 		F6538631367C9A9E80D16A5E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB436CC06BC124AF3305385B /* DesignSystem.swift */; };
@@ -222,6 +224,8 @@
 		30E984DA67113CE647FA5CA2 /* Notification+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Notification+Extensions.swift"; sourceTree = "<group>"; };
 		34C7BF0359B1373B7432656A /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
 		37EE9B4E1E57C27373DF4BDE /* HistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HistoryView.swift; path = Lazyflow/Sources/Views/HistoryView.swift; sourceTree = "<group>"; };
+		D2K785M41KNJP9OJ6UQ36G8G /* InsightsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = InsightsView.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		6ZAAJT3C2KP9BQNQWWW3WONC /* ProfileView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProfileView.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		3C3FB71AB248FDD9843E5449 /* GetTodayTasksIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetTodayTasksIntent.swift; sourceTree = "<group>"; };
 		3C4824B59531F94012837CB8 /* AppIcon.svg */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppIcon.svg; sourceTree = "<group>"; };
 		3E99330F16B7723BEF3202B0 /* AICorrection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AICorrection.swift; path = Lazyflow/Sources/Models/AI/AICorrection.swift; sourceTree = "<group>"; };
@@ -536,10 +540,12 @@
 				C130E31A1F2108516A910E6C /* AddTaskView.swift */,
 				894FC3172D458DF3B827CE18 /* CalendarView.swift */,
 				0C5F23987492CF9DBF92700E /* DailySummaryView.swift */,
+				D2K785M41KNJP9OJ6UQ36G8G /* InsightsView.swift */,
 				6C0477ADBA7929DC3A7753B3 /* ListDetailView.swift */,
 				D3391545EB6E7A4277AF8D35 /* ListsView.swift */,
 				61EC4AC29B50F17794EC5BF7 /* MorningBriefingView.swift */,
 				BB72FB63D1752B0B54B7C9AF /* OnboardingView.swift */,
+				6ZAAJT3C2KP9BQNQWWW3WONC /* ProfileView.swift */,
 				8EB60CF3B399155250875EF8 /* RootView.swift */,
 				FCCEEDCCC7E90A6148060ACD /* SearchView.swift */,
 				A34CA29A2CC7068B558C16DC /* SettingsView.swift */,
@@ -1052,6 +1058,8 @@
 				F3CDE4F38C7E3602E18DAF6F /* HistoryView.swift in Sources */,
 				FB7A32A88B3679FF63D91F64 /* HistoryViewModel.swift in Sources */,
 				1BD7293BE9EE744157820093 /* MoreView.swift in Sources */,
+				T55AQQNJ7GWAZU2VAHOVRVPU /* InsightsView.swift in Sources */,
+				PRTFU6VAHRGLCT8I0ZF2XHSJ /* ProfileView.swift in Sources */,
 				FDDD4A8B8AA7110057385535 /* CustomCategory.swift in Sources */,
 				F5197B43E520107422F453F8 /* CategoryService.swift in Sources */,
 				8A0F81E92CEFDEBF408A25DD /* CategoryManagementView.swift in Sources */,

@@ -34,9 +34,10 @@ struct ContentView: View {
         case today = "Today"
         case calendar = "Calendar"
         case upcoming = "Upcoming"
+        case insights = "Insights"
+        case me = "Me"
+        // Keep these for iPad sidebar and deep linking
         case history = "History"
-        case more = "More"
-        // Keep lists and settings for iPad sidebar and deep linking
         case lists = "Lists"
         case settings = "Settings"
 
@@ -47,16 +48,17 @@ struct ContentView: View {
             case .today: return "star.fill"
             case .calendar: return "calendar"
             case .upcoming: return "calendar.badge.clock"
+            case .insights: return "chart.bar.xaxis"
+            case .me: return "person.circle"
             case .history: return "clock.arrow.circlepath"
-            case .more: return "ellipsis.circle"
             case .lists: return "folder.fill"
             case .settings: return "gear"
             }
         }
 
-        /// Tabs shown in iPhone tab bar (excludes lists/settings which are in More)
+        /// Tabs shown in iPhone tab bar
         static var iPhoneTabs: [Tab] {
-            [.today, .calendar, .upcoming, .history, .more]
+            [.today, .calendar, .upcoming, .insights, .me]
         }
     }
 
@@ -97,6 +99,8 @@ struct ContentView: View {
                 case "today": selectedTab = .today
                 case "calendar": selectedTab = .calendar
                 case "upcoming": selectedTab = .upcoming
+                case "insights": selectedTab = .insights
+                case "me": selectedTab = .me
                 case "history": selectedTab = .history
                 case "lists": selectedTab = .lists
                 case "settings": selectedTab = .settings
@@ -172,14 +176,14 @@ struct ContentView: View {
                 sidebarRow(for: .today)
                 sidebarRow(for: .calendar)
                 sidebarRow(for: .upcoming)
+            }
+
+            Section("Insights") {
                 sidebarRow(for: .history)
             }
 
-            Section("Organize") {
+            Section("You") {
                 sidebarRow(for: .lists)
-            }
-
-            Section("System") {
                 sidebarRow(for: .settings)
             }
         }
@@ -218,15 +222,16 @@ struct ContentView: View {
             CalendarView()
         case .upcoming:
             UpcomingView()
+        case .insights:
+            InsightsView()
+        case .me:
+            ProfileView()
         case .history:
             HistoryView()
         case .lists:
             ListsView()
         case .settings:
             SettingsView()
-        case .more:
-            // More is only used on iPhone; on iPad, redirect to Today
-            TodayView()
         }
     }
 
@@ -255,17 +260,17 @@ struct ContentView: View {
                 }
                 .tag(Tab.upcoming)
 
-            HistoryView()
+            InsightsView()
                 .tabItem {
-                    Label(Tab.history.rawValue, systemImage: Tab.history.icon)
+                    Label(Tab.insights.rawValue, systemImage: Tab.insights.icon)
                 }
-                .tag(Tab.history)
+                .tag(Tab.insights)
 
-            MoreView()
+            ProfileView()
                 .tabItem {
-                    Label(Tab.more.rawValue, systemImage: Tab.more.icon)
+                    Label(Tab.me.rawValue, systemImage: Tab.me.icon)
                 }
-                .tag(Tab.more)
+                .tag(Tab.me)
         }
     }
 
@@ -281,6 +286,10 @@ struct ContentView: View {
             selectedTab = .calendar
         case "upcoming":
             selectedTab = .upcoming
+        case "insights":
+            selectedTab = .insights
+        case "me":
+            selectedTab = .me
         case "history":
             selectedTab = .history
         case "lists":
