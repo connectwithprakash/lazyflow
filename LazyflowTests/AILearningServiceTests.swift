@@ -10,11 +10,11 @@ final class AILearningServiceTests: XCTestCase {
     override func setUp() {
         super.setUp()
         sut = AILearningService.shared
-        sut.clearAllCorrections()
+        sut.clearAllLearningData()
     }
 
     override func tearDown() {
-        sut.clearAllCorrections()
+        sut.clearAllLearningData()
         super.tearDown()
     }
 
@@ -285,7 +285,7 @@ final class AILearningServiceTests: XCTestCase {
         XCTAssertGreaterThan(sut.corrections.count, 0)
 
         // When
-        sut.clearAllCorrections()
+        sut.clearAllLearningData()
 
         // Then
         XCTAssertEqual(sut.corrections.count, 0)
@@ -416,7 +416,7 @@ final class AILearningServiceTests: XCTestCase {
         XCTAssertGreaterThan(sut.durationAccuracyRecords.count, 0)
 
         // When
-        sut.clearAllCorrections()
+        sut.clearAllLearningData()
 
         // Then - both corrections and accuracy records should be cleared
         XCTAssertEqual(sut.corrections.count, 0)
@@ -570,7 +570,7 @@ final class AILearningServiceTests: XCTestCase {
         XCTAssertGreaterThan(sut.impressions.count, 0)
 
         // When
-        sut.clearAllCorrections()
+        sut.clearAllLearningData()
 
         // Then
         XCTAssertEqual(sut.impressions.count, 0)
@@ -680,7 +680,7 @@ final class AILearningServiceTests: XCTestCase {
         XCTAssertGreaterThan(sut.refinementRequests.count, 0)
 
         // When
-        sut.clearAllCorrections()
+        sut.clearAllLearningData()
 
         // Then
         XCTAssertEqual(sut.refinementRequests.count, 0)

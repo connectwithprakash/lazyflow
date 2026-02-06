@@ -1196,7 +1196,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testBuildEnrichedAIContext_ReturnsEmptyWhenNoLearningData() {
         // Clear any existing learning data
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
         AIContextService.shared.resetPatterns()
 
         // Build context
@@ -1210,7 +1210,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testBuildEnrichedAIContext_IncludesCorrectionPatterns() {
         // Clear existing data
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
 
         // Record enough corrections to exceed quality threshold (need 10+ for 0.3 score)
         for i in 0..<12 {
@@ -1232,7 +1232,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testBuildEnrichedAIContext_IncludesDurationAccuracy() {
         // Clear existing data
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
 
         // Record enough corrections to exceed quality threshold
         for i in 0..<12 {
@@ -1266,7 +1266,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testBuildEnrichedAIContext_RespectsMaxLength() {
         // Clear existing data
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
 
         // Add many corrections to potentially exceed limit
         for i in 0..<50 {
@@ -1287,7 +1287,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testBuildEnrichedAIContext_DifferentForSummaryAndBriefing() {
         // Clear existing data
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
         AIContextService.shared.resetPatterns()
 
         // Record enough corrections to exceed quality threshold
@@ -1313,7 +1313,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testRecordImpressionIfNeeded_RecordsWhenAISummaryPresent() {
         // Clear all learning data (corrections, impressions, refinements)
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
         XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // When AI summary is present and not already recorded
@@ -1329,7 +1329,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testRecordImpressionIfNeeded_DoesNotRecordWhenAISummaryNil() {
         // Clear all learning data (corrections, impressions, refinements)
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
         XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // When AI summary is nil (fallback content only)
@@ -1345,7 +1345,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testRecordImpressionIfNeeded_DoesNotRecordWhenAlreadyRecorded() {
         // Clear all learning data (corrections, impressions, refinements)
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
         XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // When already recorded this session
@@ -1361,7 +1361,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testRecordImpressionIfNeeded_MultipleCalls_OnlyRecordsOnce() {
         // Clear all learning data (corrections, impressions, refinements)
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
         XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // Simulate view session: first call records
@@ -1386,7 +1386,7 @@ final class DailySummaryServiceTests: XCTestCase {
 
     func testRecordImpressionIfNeeded_AfterReset_RecordsAgain() {
         // Clear all learning data (corrections, impressions, refinements)
-        AILearningService.shared.clearAllCorrections()
+        AILearningService.shared.clearAllLearningData()
         XCTAssertEqual(AILearningService.shared.impressions.count, 0, "Impressions should be cleared")
 
         // First view session
