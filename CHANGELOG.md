@@ -5,6 +5,26 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0](https://github.com/connectwithprakash/lazyflow/compare/v1.6.1...v1.7.0) (2026-02-06)
+
+
+### Features
+
+* add calendar context to Morning Briefing ([#174](https://github.com/connectwithprakash/lazyflow/issues/174)) ([e64ddca](https://github.com/connectwithprakash/lazyflow/commit/e64ddca17aa095b7ce3fe291102550de9ac35b34))
+* add Morning Briefing prompt toggle ([#173](https://github.com/connectwithprakash/lazyflow/issues/173)) ([d012de7](https://github.com/connectwithprakash/lazyflow/commit/d012de74d85d139d8dfad5cc2733051c77956107))
+* add Regenerate AI actions for Morning Briefing and Daily Summary ([#177](https://github.com/connectwithprakash/lazyflow/issues/177)) ([69e6cfc](https://github.com/connectwithprakash/lazyflow/commit/69e6cfcd0095d23596a60ba4bacdf1afb5a377b9))
+* Handle Morning Briefing + Daily Summary notification actions ([#179](https://github.com/connectwithprakash/lazyflow/issues/179)) ([5c0520e](https://github.com/connectwithprakash/lazyflow/commit/5c0520e399ccfb11acd57cf30b0813a301172d93))
+* Improve AI-generated Morning Briefing and Daily Summary quality ([#182](https://github.com/connectwithprakash/lazyflow/issues/182)) ([ad92aaf](https://github.com/connectwithprakash/lazyflow/commit/ad92aaf182b8fefd2b842478501fc466514322b8))
+* inject AI learning context into prompts ([#175](https://github.com/connectwithprakash/lazyflow/issues/175)) ([da42ae4](https://github.com/connectwithprakash/lazyflow/commit/da42ae49f667b79503e5b35d1bd9ad0ff82ec40d))
+* track AI impressions for Morning Briefing and Daily Summary ([#176](https://github.com/connectwithprakash/lazyflow/issues/176)) ([f60144b](https://github.com/connectwithprakash/lazyflow/commit/f60144b91e816651a9c6bb3542e4c6b3d82d38b4))
+
+
+### Bug Fixes
+
+* correct path for excluded_territories.json in fastlane ([6365ae8](https://github.com/connectwithprakash/lazyflow/commit/6365ae8f930ec6680e7930adebfc83d9d4a5183b))
+* prevent preload from suppressing Daily Summary prompt ([#172](https://github.com/connectwithprakash/lazyflow/issues/172)) ([dbe69ad](https://github.com/connectwithprakash/lazyflow/commit/dbe69ad8bdd5e8e86ef56bf824f7fc7a253f1a49))
+* use api_key helper for Spaceship token in set_territories ([fdc20f2](https://github.com/connectwithprakash/lazyflow/commit/fdc20f219ff28c0783e86f61ea686a198fe0a21a))
+
 ## [1.6.1](https://github.com/connectwithprakash/lazyflow/compare/v1.6.0...v1.6.1) (2026-02-02)
 
 
