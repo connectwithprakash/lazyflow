@@ -39,6 +39,10 @@ Anyone who:
 
 ## Version History
 
+### Current & Upcoming
+
+- **v1.8.0** (in development): Navigation restructure - 5-tab layout (Today, Calendar, Upcoming, Insights, Me) with profile-centric organization
+
 See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.
 
 ## Contributing
