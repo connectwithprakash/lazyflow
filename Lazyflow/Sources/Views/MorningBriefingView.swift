@@ -34,28 +34,28 @@ struct MorningBriefingView: View {
     @ToolbarContentBuilder
     private func toolbarContent() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            Menu {
+            HStack(spacing: DesignSystem.Spacing.md) {
                 Button {
                     _Concurrency.Task {
                         await refreshBriefing()
                     }
                 } label: {
-                    Label("Refresh All", systemImage: "arrow.clockwise")
+                    Image(systemName: "arrow.clockwise")
                 }
+                .disabled(isLoading)
 
-                if briefing?.aiSummary != nil {
+                // Show Regenerate AI when briefing data exists (even if AI failed previously)
+                if briefing != nil {
                     Button {
                         _Concurrency.Task {
                             await regenerateAI()
                         }
                     } label: {
-                        Label("Regenerate AI", systemImage: "sparkles")
+                        Image(systemName: "sparkles")
                     }
+                    .disabled(isLoading)
                 }
-            } label: {
-                Image(systemName: "ellipsis.circle")
             }
-            .disabled(isLoading)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Button("Done") {

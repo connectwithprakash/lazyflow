@@ -34,28 +34,28 @@ struct DailySummaryView: View {
     @ToolbarContentBuilder
     private func toolbarContent() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            Menu {
+            HStack(spacing: DesignSystem.Spacing.md) {
                 Button {
                     _Concurrency.Task {
                         await refreshSummary()
                     }
                 } label: {
-                    Label("Refresh All", systemImage: "arrow.clockwise")
+                    Image(systemName: "arrow.clockwise")
                 }
+                .disabled(isLoading)
 
-                if summary?.aiSummary != nil {
+                // Show Regenerate AI when summary data exists (even if AI failed previously)
+                if summary != nil {
                     Button {
                         _Concurrency.Task {
                             await regenerateAI()
                         }
                     } label: {
-                        Label("Regenerate AI", systemImage: "sparkles")
+                        Image(systemName: "sparkles")
                     }
+                    .disabled(isLoading)
                 }
-            } label: {
-                Image(systemName: "ellipsis.circle")
             }
-            .disabled(isLoading)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Button("Done") {
