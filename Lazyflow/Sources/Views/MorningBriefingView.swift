@@ -42,6 +42,7 @@ struct MorningBriefingView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
+                .accessibilityIdentifier("Refresh Briefing")
                 .disabled(isLoading)
 
                 // Show Regenerate AI when briefing data exists (even if AI failed previously)
@@ -53,6 +54,7 @@ struct MorningBriefingView: View {
                     } label: {
                         Image(systemName: "sparkles")
                     }
+                    .accessibilityIdentifier("Regenerate AI")
                     .disabled(isLoading)
                 }
             }
