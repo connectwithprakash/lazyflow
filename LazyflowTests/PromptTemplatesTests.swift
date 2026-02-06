@@ -407,4 +407,306 @@ final class PromptTemplatesTests: XCTestCase {
         XCTAssertNotNil(result.proposedNewCategory?.colorHex, "Should have default color")
         XCTAssertNotNil(result.proposedNewCategory?.iconName, "Should have default icon")
     }
+
+    // MARK: - Morning Briefing System Prompt Tests
+
+    func testMorningBriefingSystemPrompt_ContainsRoleDefinition() {
+        let systemPrompt = PromptTemplates.morningBriefingSystemPrompt
+        XCTAssertTrue(systemPrompt.contains("productivity"), "Should define productivity role")
+        XCTAssertTrue(systemPrompt.contains("assistant"), "Should define assistant role")
+    }
+
+    func testMorningBriefingSystemPrompt_ContainsOutputConstraints() {
+        let systemPrompt = PromptTemplates.morningBriefingSystemPrompt
+        XCTAssertTrue(systemPrompt.contains("JSON"), "Should specify JSON output format")
+    }
+
+    func testMorningBriefingSystemPrompt_ContainsToneGuidelines() {
+        let systemPrompt = PromptTemplates.morningBriefingSystemPrompt
+        XCTAssertTrue(systemPrompt.contains("warm") || systemPrompt.contains("energizing") || systemPrompt.contains("encouraging"),
+                      "Should include tone guidelines")
+    }
+
+    // MARK: - Daily Summary Prompt Tests
+
+    func testBuildDailySummaryPrompt_IncludesStats() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 5,
+            totalPlanned: 8,
+            topCategory: "Work",
+            timeWorked: "3h 20m",
+            currentStreak: 7,
+            taskList: "- Task 1\n- Task 2",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("5"), "Should include completed count")
+        XCTAssertTrue(prompt.contains("8"), "Should include planned count")
+        XCTAssertTrue(prompt.contains("Work"), "Should include top category")
+        XCTAssertTrue(prompt.contains("3h 20m"), "Should include time worked")
+        XCTAssertTrue(prompt.contains("7 days"), "Should include streak")
+    }
+
+    func testBuildDailySummaryPrompt_IncludesTaskList() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 2,
+            totalPlanned: 3,
+            topCategory: nil,
+            timeWorked: "1h",
+            currentStreak: 1,
+            taskList: "- Buy groceries\n- Call mom",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("Buy groceries"), "Should include task list items")
+        XCTAssertTrue(prompt.contains("Call mom"), "Should include task list items")
+    }
+
+    func testBuildDailySummaryPrompt_HandlesEmptyTaskList() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 0,
+            totalPlanned: 0,
+            topCategory: nil,
+            timeWorked: "0m",
+            currentStreak: 0,
+            taskList: "",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("No tasks completed yet"), "Should show fallback for empty task list")
+    }
+
+    func testBuildDailySummaryPrompt_IncludesLearningContext() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 3,
+            totalPlanned: 5,
+            topCategory: "Personal",
+            timeWorked: "2h",
+            currentStreak: 3,
+            taskList: "- Task 1",
+            learningContext: "User prefers brief summaries"
+        )
+
+        XCTAssertTrue(prompt.contains("User prefers brief summaries"), "Should include learning context")
+        XCTAssertTrue(prompt.contains("User Learning Context"), "Should have learning context header")
+    }
+
+    func testBuildDailySummaryPrompt_HasJSONFormat() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 1,
+            totalPlanned: 1,
+            topCategory: nil,
+            timeWorked: "30m",
+            currentStreak: 1,
+            taskList: "",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("\"summary\""), "Should specify summary field")
+        XCTAssertTrue(prompt.contains("\"encouragement\""), "Should specify encouragement field")
+    }
+
+    // MARK: - Daily Summary Response Parsing Tests
+
+    func testParseDailySummaryResponse_ValidJSON() {
+        let response = """
+        {"summary": "Great day today!", "encouragement": "Keep it up!"}
+        """
+        let result = PromptTemplates.parseDailySummaryResponse(response)
+
+        XCTAssertEqual(result.summary, "Great day today!")
+        XCTAssertEqual(result.encouragement, "Keep it up!")
+    }
+
+    func testParseDailySummaryResponse_JSONWithExtraText() {
+        let response = """
+        Here's your summary:
+        {"summary": "You completed 5 tasks.", "encouragement": "Amazing streak!"}
+        """
+        let result = PromptTemplates.parseDailySummaryResponse(response)
+
+        XCTAssertEqual(result.summary, "You completed 5 tasks.")
+        XCTAssertEqual(result.encouragement, "Amazing streak!")
+    }
+
+    func testParseDailySummaryResponse_InvalidJSON_ReturnsNil() {
+        let response = "Unable to generate summary."
+        let result = PromptTemplates.parseDailySummaryResponse(response)
+
+        XCTAssertNil(result.summary, "Should return nil for invalid JSON")
+        XCTAssertNil(result.encouragement, "Should return nil for invalid JSON")
+    }
+
+    func testParseDailySummaryResponse_PartialJSON() {
+        let response = """
+        {"summary": "Partial response only."}
+        """
+        let result = PromptTemplates.parseDailySummaryResponse(response)
+
+        XCTAssertEqual(result.summary, "Partial response only.")
+        XCTAssertNil(result.encouragement, "Should handle missing encouragement")
+    }
+
+    // MARK: - Morning Briefing Prompt Tests
+
+    func testBuildMorningBriefingPrompt_IncludesYesterdayStats() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 4,
+            yesterdayPlanned: 6,
+            yesterdayTopCategory: "Work",
+            todayTaskCount: 5,
+            todayHighPriority: 2,
+            todayOverdue: 1,
+            todayTimeEstimate: "4h 30m",
+            weeklyTasksCompleted: 15,
+            weeklyCompletionRate: "75%",
+            currentStreak: 5,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("4"), "Should include yesterday completed")
+        XCTAssertTrue(prompt.contains("6"), "Should include yesterday planned")
+        XCTAssertTrue(prompt.contains("Work"), "Should include yesterday top category")
+    }
+
+    func testBuildMorningBriefingPrompt_IncludesTodayPlan() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 3,
+            yesterdayPlanned: 5,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 8,
+            todayHighPriority: 3,
+            todayOverdue: 2,
+            todayTimeEstimate: "5h",
+            weeklyTasksCompleted: 10,
+            weeklyCompletionRate: "60%",
+            currentStreak: 2,
+            todayTaskList: "- [HIGH] Meeting prep",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("8"), "Should include today task count")
+        XCTAssertTrue(prompt.contains("High priority: 3"), "Should include high priority count")
+        XCTAssertTrue(prompt.contains("Overdue: 2"), "Should include overdue count")
+        XCTAssertTrue(prompt.contains("Meeting prep"), "Should include task list")
+    }
+
+    func testBuildMorningBriefingPrompt_IncludesScheduleContext() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 5,
+            yesterdayPlanned: 5,
+            yesterdayTopCategory: "Personal",
+            todayTaskCount: 4,
+            todayHighPriority: 1,
+            todayOverdue: 0,
+            todayTimeEstimate: "2h",
+            weeklyTasksCompleted: 20,
+            weeklyCompletionRate: "80%",
+            currentStreak: 10,
+            todayTaskList: "",
+            scheduleContext: "- Meetings: 2 (3h total)\n- Largest free block: 2h",
+            learningContext: "",
+            hasCalendarData: true
+        )
+
+        XCTAssertTrue(prompt.contains("Today's Calendar"), "Should include calendar section")
+        XCTAssertTrue(prompt.contains("Meetings: 2"), "Should include meeting count")
+        XCTAssertTrue(prompt.contains("Largest free block"), "Should include free block info")
+    }
+
+    func testBuildMorningBriefingPrompt_IncludesWeeklyProgress() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 3,
+            yesterdayPlanned: 4,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 5,
+            todayHighPriority: 2,
+            todayOverdue: 0,
+            todayTimeEstimate: "3h",
+            weeklyTasksCompleted: 25,
+            weeklyCompletionRate: "85%",
+            currentStreak: 7,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("25"), "Should include weekly tasks completed")
+        XCTAssertTrue(prompt.contains("85%"), "Should include completion rate")
+        XCTAssertTrue(prompt.contains("7 days"), "Should include current streak")
+    }
+
+    func testBuildMorningBriefingPrompt_HasJSONFormat() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 0,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 0,
+            todayHighPriority: 0,
+            todayOverdue: 0,
+            todayTimeEstimate: "0m",
+            weeklyTasksCompleted: 0,
+            weeklyCompletionRate: "0%",
+            currentStreak: 0,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("\"summary\""), "Should specify summary field")
+        XCTAssertTrue(prompt.contains("\"todayFocus\""), "Should specify todayFocus field")
+        XCTAssertTrue(prompt.contains("\"motivation\""), "Should specify motivation field")
+    }
+
+    // MARK: - Morning Briefing Response Parsing Tests
+
+    func testParseMorningBriefingResponse_ValidJSON() {
+        let response = """
+        {"summary": "Good morning!", "todayFocus": "Focus on high-priority tasks.", "motivation": "You're doing great!"}
+        """
+        let result = PromptTemplates.parseMorningBriefingResponse(response)
+
+        XCTAssertEqual(result.summary, "Good morning!")
+        XCTAssertEqual(result.todayFocus, "Focus on high-priority tasks.")
+        XCTAssertEqual(result.motivation, "You're doing great!")
+    }
+
+    func testParseMorningBriefingResponse_JSONWithExtraText() {
+        let response = """
+        Here's your briefing:
+        {"summary": "Yesterday was productive!", "todayFocus": "Clear your overdue items.", "motivation": "Keep the streak going!"}
+        """
+        let result = PromptTemplates.parseMorningBriefingResponse(response)
+
+        XCTAssertEqual(result.summary, "Yesterday was productive!")
+        XCTAssertEqual(result.todayFocus, "Clear your overdue items.")
+        XCTAssertEqual(result.motivation, "Keep the streak going!")
+    }
+
+    func testParseMorningBriefingResponse_InvalidJSON_ReturnsNil() {
+        let response = "Unable to generate briefing."
+        let result = PromptTemplates.parseMorningBriefingResponse(response)
+
+        XCTAssertNil(result.summary, "Should return nil for invalid JSON")
+        XCTAssertNil(result.todayFocus, "Should return nil for invalid JSON")
+        XCTAssertNil(result.motivation, "Should return nil for invalid JSON")
+    }
+
+    func testParseMorningBriefingResponse_PartialJSON() {
+        let response = """
+        {"summary": "Good morning!", "todayFocus": "Focus today."}
+        """
+        let result = PromptTemplates.parseMorningBriefingResponse(response)
+
+        XCTAssertEqual(result.summary, "Good morning!")
+        XCTAssertEqual(result.todayFocus, "Focus today.")
+        XCTAssertNil(result.motivation, "Should handle missing motivation")
+    }
 }

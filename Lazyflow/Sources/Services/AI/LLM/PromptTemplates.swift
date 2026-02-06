@@ -36,6 +36,19 @@ enum PromptTemplates {
     Respond ONLY in the specified JSON format.
     """
 
+    /// System prompt for morning briefings
+    static let morningBriefingSystemPrompt = """
+    You are a supportive productivity assistant helping users start their day.
+
+    Guidelines:
+    - Be warm and energizing
+    - Generate encouraging, actionable briefings
+    - Reference yesterday's progress to build momentum
+    - Highlight priorities and suggest focus areas
+
+    Respond ONLY in the specified JSON format.
+    """
+
     // MARK: - Duration Estimation Prompt
 
     /// Build prompt for estimating task duration
@@ -378,6 +391,146 @@ enum PromptTemplates {
             refinedTitle: refinedTitle,
             suggestedDescription: suggestedDescription
         )
+    }
+
+    // MARK: - Daily Summary Prompt
+
+    /// Build prompt for daily summary generation
+    static func buildDailySummaryPrompt(
+        tasksCompleted: Int,
+        totalPlanned: Int,
+        topCategory: String?,
+        timeWorked: String,
+        currentStreak: Int,
+        taskList: String,
+        learningContext: String
+    ) -> String {
+        let contextSection = learningContext.isEmpty ? "" : """
+
+        User Learning Context:
+        \(learningContext)
+
+        """
+
+        return """
+        Generate a brief, encouraging daily summary for a productivity app user.
+
+        Today's Stats:
+        - Tasks completed: \(tasksCompleted) of \(totalPlanned) planned
+        - Top category: \(topCategory ?? "Various")
+        - Time worked: \(timeWorked)
+        - Current streak: \(currentStreak) days
+
+        Completed tasks:
+        \(taskList.isEmpty ? "No tasks completed yet" : taskList)
+        \(contextSection)
+        Provide:
+        1. A 2-3 sentence natural language summary of their day (reference specific accomplishments if any)
+        2. One sentence of encouragement based on their streak and progress
+
+        If user learning context is provided, tailor the summary to acknowledge their patterns and preferences.
+
+        Respond in JSON format only:
+        {
+            "summary": "<natural recap of day>",
+            "encouragement": "<motivating message>"
+        }
+
+        Keep tone warm, supportive, and concise.
+        """
+    }
+
+    /// Parse daily summary response
+    static func parseDailySummaryResponse(_ response: String) -> (summary: String?, encouragement: String?) {
+        guard let data = extractJSON(from: response),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return (nil, nil)
+        }
+
+        let summary = json["summary"] as? String
+        let encouragement = json["encouragement"] as? String
+
+        return (summary: summary, encouragement: encouragement)
+    }
+
+    // MARK: - Morning Briefing Prompt
+
+    /// Build prompt for morning briefing generation
+    static func buildMorningBriefingPrompt(
+        yesterdayCompleted: Int,
+        yesterdayPlanned: Int,
+        yesterdayTopCategory: String?,
+        todayTaskCount: Int,
+        todayHighPriority: Int,
+        todayOverdue: Int,
+        todayTimeEstimate: String,
+        weeklyTasksCompleted: Int,
+        weeklyCompletionRate: String,
+        currentStreak: Int,
+        todayTaskList: String,
+        scheduleContext: String?,
+        learningContext: String,
+        hasCalendarData: Bool
+    ) -> String {
+        let scheduleSection = scheduleContext.map { "\n\nToday's Calendar:\n\($0)" } ?? ""
+        let contextSection = learningContext.isEmpty ? "" : """
+
+        User Learning Context:
+        \(learningContext)
+
+        """
+
+        return """
+        Generate a motivating morning briefing for a productivity app user.
+
+        Yesterday's Results:
+        - Completed: \(yesterdayCompleted) of \(yesterdayPlanned) tasks
+        - Top category: \(yesterdayTopCategory ?? "Various")
+
+        Today's Plan:
+        - Total tasks: \(todayTaskCount)
+        - High priority: \(todayHighPriority)
+        - Overdue: \(todayOverdue)
+        - Estimated time: \(todayTimeEstimate)\(scheduleSection)
+
+        Weekly Progress:
+        - Tasks completed this week: \(weeklyTasksCompleted)
+        - Completion rate: \(weeklyCompletionRate)
+        - Current streak: \(currentStreak) days
+
+        Today's Top Priorities:
+        \(todayTaskList.isEmpty ? "No tasks scheduled yet" : todayTaskList)
+        \(contextSection)
+        Provide:
+        1. A 2-3 sentence morning greeting that briefly mentions yesterday's progress\(hasCalendarData ? " and today's schedule" : "")
+        2. One sentence highlighting today's focus areas based on priorities\(hasCalendarData ? " and available time" : "")
+        3. A brief motivational message based on streak and weekly progress
+
+        If user learning context is provided, personalize the briefing based on their patterns and timing preferences.
+
+        Respond in JSON format only:
+        {
+            "summary": "<morning greeting with yesterday recap>",
+            "todayFocus": "<today's priorities and focus>",
+            "motivation": "<encouraging message>"
+        }
+
+        Keep tone warm, energizing, and action-oriented.
+        """
+    }
+
+    /// Parse morning briefing response
+    static func parseMorningBriefingResponse(_ response: String) -> (summary: String?, todayFocus: String?, motivation: String?) {
+        guard let data = extractJSON(from: response),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return (nil, nil, nil)
+        }
+
+        let summary = json["summary"] as? String
+        let todayFocus = json["todayFocus"] as? String
+        let motivation = json["motivation"] as? String
+
+        return (summary: summary, todayFocus: todayFocus, motivation: motivation)
     }
 
     // MARK: - Helpers
