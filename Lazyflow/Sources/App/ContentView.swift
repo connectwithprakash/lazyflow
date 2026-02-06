@@ -9,10 +9,26 @@ struct ContentView: View {
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
     @AppStorage("hasShownICloudPrompt") private var hasShownICloudPrompt = false
     @State private var selectedTab: Tab? = .today
-    @State private var showSearch = false
-    @State private var showAddTask = false
+    @State private var activeSheet: SheetType?
     @State private var showICloudPrompt = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+
+    /// Consolidated sheet types to avoid multiple .sheet conflicts
+    enum SheetType: Identifiable {
+        case search
+        case addTask
+        case dailySummary
+        case morningBriefing
+
+        var id: String {
+            switch self {
+            case .search: return "search"
+            case .addTask: return "addTask"
+            case .dailySummary: return "dailySummary"
+            case .morningBriefing: return "morningBriefing"
+            }
+        }
+    }
 
     enum Tab: String, CaseIterable, Identifiable {
         case today = "Today"
@@ -54,20 +70,26 @@ struct ContentView: View {
         }
         .tint(Color.Lazyflow.accent)
         .preferredColorScheme(appearanceMode.colorScheme)
-        .sheet(isPresented: $showSearch) {
-            SearchView()
-        }
-        .sheet(isPresented: $showAddTask) {
-            AddTaskView()
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .search:
+                SearchView()
+            case .addTask:
+                AddTaskView()
+            case .dailySummary:
+                DailySummaryView()
+            case .morningBriefing:
+                MorningBriefingView()
+            }
         }
         .onOpenURL { url in
             handleDeepLink(url)
         }
         .onReceive(NotificationCenter.default.publisher(for: .newTaskShortcut)) { _ in
-            showAddTask = true
+            activeSheet = .addTask
         }
         .onReceive(NotificationCenter.default.publisher(for: .searchShortcut)) { _ in
-            showSearch = true
+            activeSheet = .search
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToTab)) { notification in
             if let tabName = notification.object as? String {
@@ -81,6 +103,12 @@ struct ContentView: View {
                 default: break
                 }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showDailySummary)) { _ in
+            activeSheet = .dailySummary
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showMorningBriefing)) { _ in
+            activeSheet = .morningBriefing
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)) { _ in
             // Check if we should show iCloud prompt after first task is created
@@ -160,7 +188,7 @@ struct ContentView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    showAddTask = true
+                    activeSheet = .addTask
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
@@ -168,7 +196,7 @@ struct ContentView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    showSearch = true
+                    activeSheet = .search
                 } label: {
                     Image(systemName: "magnifyingglass")
                 }
@@ -260,9 +288,13 @@ struct ContentView: View {
         case "settings":
             selectedTab = .settings
         case "search":
-            showSearch = true
+            activeSheet = .search
         case "add", "new":
-            showAddTask = true
+            activeSheet = .addTask
+        case "daily-summary":
+            activeSheet = .dailySummary
+        case "morning-briefing":
+            activeSheet = .morningBriefing
         default:
             break
         }

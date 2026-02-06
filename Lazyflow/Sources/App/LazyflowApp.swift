@@ -84,6 +84,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         let launchBackgroundColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
         UIWindow.appearance().backgroundColor = launchBackgroundColor
 
+        // Set notification delegate to handle actions
+        UNUserNotificationCenter.current().delegate = self
+
         NotificationService.shared.registerNotificationCategories()
         return true
     }
@@ -138,9 +141,11 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
+        let actionIdentifier = response.actionIdentifier
+        let category = response.notification.request.content.categoryIdentifier
 
         // Handle notification action
-        switch response.actionIdentifier {
+        switch actionIdentifier {
         case "COMPLETE_ACTION":
             if let taskIDString = userInfo["taskID"] as? String,
                let taskID = UUID(uuidString: taskIDString) {
@@ -153,11 +158,40 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 snoozeTask(withID: taskID)
             }
 
+        case "VIEW_SUMMARY_ACTION":
+            routeToView(.showDailySummary)
+
+        case "VIEW_BRIEFING_ACTION":
+            routeToView(.showMorningBriefing)
+
+        case UNNotificationDefaultActionIdentifier:
+            // User tapped the notification body - route based on category
+            routeForCategory(category)
+
         default:
             break
         }
 
         completionHandler()
+    }
+
+    /// Route to a view based on notification name
+    private func routeToView(_ notificationName: Notification.Name) {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: notificationName, object: nil)
+        }
+    }
+
+    /// Route based on notification category when user taps notification body
+    private func routeForCategory(_ category: String) {
+        switch category {
+        case "DAILY_SUMMARY":
+            routeToView(.showDailySummary)
+        case "MORNING_BRIEFING":
+            routeToView(.showMorningBriefing)
+        default:
+            break
+        }
     }
 
     private func completeTask(withID taskID: UUID) {

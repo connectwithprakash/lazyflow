@@ -334,4 +334,54 @@ final class NotificationServiceTests: XCTestCase {
             notificationService.cancelTaskReminder(taskID: taskID)
         }
     }
+
+    // MARK: - Notification Action Deep Link Tests (Issue #167)
+
+    func testNotificationName_showDailySummary_Exists() {
+        // Verify the notification name is correctly defined
+        let name = Notification.Name.showDailySummary
+        XCTAssertEqual(name.rawValue, "showDailySummary")
+    }
+
+    func testNotificationName_showMorningBriefing_Exists() {
+        // Verify the notification name is correctly defined
+        let name = Notification.Name.showMorningBriefing
+        XCTAssertEqual(name.rawValue, "showMorningBriefing")
+    }
+
+    func testDailySummaryNotification_CanBePosted() {
+        // Verify notification can be posted without crash
+        let expectation = XCTestExpectation(description: "Daily summary notification received")
+
+        let observer = NotificationCenter.default.addObserver(
+            forName: .showDailySummary,
+            object: nil,
+            queue: .main
+        ) { _ in
+            expectation.fulfill()
+        }
+
+        NotificationCenter.default.post(name: .showDailySummary, object: nil)
+
+        wait(for: [expectation], timeout: 1.0)
+        NotificationCenter.default.removeObserver(observer)
+    }
+
+    func testMorningBriefingNotification_CanBePosted() {
+        // Verify notification can be posted without crash
+        let expectation = XCTestExpectation(description: "Morning briefing notification received")
+
+        let observer = NotificationCenter.default.addObserver(
+            forName: .showMorningBriefing,
+            object: nil,
+            queue: .main
+        ) { _ in
+            expectation.fulfill()
+        }
+
+        NotificationCenter.default.post(name: .showMorningBriefing, object: nil)
+
+        wait(for: [expectation], timeout: 1.0)
+        NotificationCenter.default.removeObserver(observer)
+    }
 }
