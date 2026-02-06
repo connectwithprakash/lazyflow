@@ -146,89 +146,38 @@ final class DailySummaryService: ObservableObject {
     // MARK: - AI Summary Generation
 
     private func generateAISummary(data: DailySummaryData) async throws -> (summary: String, encouragement: String) {
-        let prompt = buildSummaryPrompt(data: data)
-        let systemPrompt = "You are a supportive productivity assistant. Generate encouraging, personalized summaries. Respond in JSON format only."
-
-        let response = try await llmService.complete(prompt: prompt, systemPrompt: systemPrompt)
-
-        return parseSummaryResponse(response)
-    }
-
-    private func buildSummaryPrompt(data: DailySummaryData) -> String {
         let taskList = data.completedTasks
             .prefix(10)
             .map { "- \($0.title) (\($0.category.displayName))" }
             .joined(separator: "\n")
 
-        // Build enriched context from user learning data
         let enrichedContext = buildEnrichedAIContext(for: .dailySummary)
-        let contextSection = enrichedContext.isEmpty ? "" : """
 
-        User Learning Context:
-        \(enrichedContext)
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: data.tasksCompleted,
+            totalPlanned: data.totalTasksPlanned,
+            topCategory: data.topCategory?.displayName,
+            timeWorked: data.formattedTimeWorked,
+            currentStreak: streakData.currentStreak,
+            taskList: taskList,
+            learningContext: enrichedContext
+        )
 
-        """
+        let response = try await llmService.complete(
+            prompt: prompt,
+            systemPrompt: PromptTemplates.dailySummarySystemPrompt
+        )
 
-        return """
-        Generate a brief, encouraging daily summary for a productivity app user.
-
-        Today's Stats:
-        - Tasks completed: \(data.tasksCompleted) of \(data.totalTasksPlanned) planned
-        - Top category: \(data.topCategory?.displayName ?? "Various")
-        - Time worked: \(data.formattedTimeWorked)
-        - Current streak: \(streakData.currentStreak) days
-
-        Completed tasks:
-        \(taskList.isEmpty ? "No tasks completed yet" : taskList)
-        \(contextSection)
-        Provide:
-        1. A 2-3 sentence natural language summary of their day (reference specific accomplishments if any)
-        2. One sentence of encouragement based on their streak and progress
-
-        If user learning context is provided, tailor the summary to acknowledge their patterns and preferences.
-
-        Respond in JSON format only:
-        {
-            "summary": "<natural recap of day>",
-            "encouragement": "<motivating message>"
-        }
-
-        Keep tone warm, supportive, and concise.
-        """
+        return parseSummaryResponse(response)
     }
 
     private func parseSummaryResponse(_ response: String) -> (summary: String, encouragement: String) {
-        // Try to extract JSON from response
-        guard let data = extractJSON(from: response),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return (
-                summary: "Great job staying productive today!",
-                encouragement: getDefaultEncouragement(streak: streakData.currentStreak, score: 50)
-            )
-        }
+        let parsed = PromptTemplates.parseDailySummaryResponse(response)
 
-        let summary = json["summary"] as? String ?? "Great job staying productive today!"
-        let encouragement = json["encouragement"] as? String ?? getDefaultEncouragement(streak: streakData.currentStreak, score: 50)
+        let summary = parsed.summary ?? "Great job staying productive today!"
+        let encouragement = parsed.encouragement ?? getDefaultEncouragement(streak: streakData.currentStreak, score: 50)
 
         return (summary: summary, encouragement: encouragement)
-    }
-
-    private func extractJSON(from response: String) -> Data? {
-        // Try direct parsing first
-        if let data = response.data(using: .utf8),
-           (try? JSONSerialization.jsonObject(with: data)) != nil {
-            return data
-        }
-
-        // Try to extract JSON object from response text
-        let pattern = "\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\}"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []),
-              let match = regex.firstMatch(in: response, options: [], range: NSRange(response.startIndex..., in: response)),
-              let range = Range(match.range, in: response) else {
-            return nil
-        }
-
-        return String(response[range]).data(using: .utf8)
     }
 
     // MARK: - Calculations
@@ -957,15 +906,6 @@ final class DailySummaryService: ObservableObject {
     // MARK: - Morning Briefing AI
 
     private func generateAIMorningBriefing(data: MorningBriefingData) async throws -> (summary: String, todayFocus: String, motivation: String) {
-        let prompt = buildMorningBriefingPrompt(data: data)
-        let systemPrompt = "You are a supportive productivity assistant helping users start their day. Generate encouraging, actionable morning briefings. Respond in JSON format only."
-
-        let response = try await llmService.complete(prompt: prompt, systemPrompt: systemPrompt)
-
-        return parseMorningBriefingResponse(response, briefing: data)
-    }
-
-    private func buildMorningBriefingPrompt(data: MorningBriefingData) -> String {
         let todayTaskList = data.todayTasks
             .prefix(5)
             .map { task in
@@ -975,7 +915,7 @@ final class DailySummaryService: ObservableObject {
             .joined(separator: "\n")
 
         // Build schedule context if available
-        var scheduleSection = ""
+        var scheduleContext: String?
         if let schedule = data.scheduleSummary {
             var scheduleLines: [String] = []
             if schedule.hasMeetings {
@@ -993,74 +933,42 @@ final class DailySummaryService: ObservableObject {
                 let allDayTitles = schedule.allDayEvents.prefix(2).map { $0.title }.joined(separator: ", ")
                 scheduleLines.append("- All-day: \(allDayTitles)")
             }
-            scheduleSection = """
-
-            Today's Calendar:
-            \(scheduleLines.joined(separator: "\n"))
-            """
+            scheduleContext = scheduleLines.joined(separator: "\n")
         }
 
-        // Build enriched context from user learning data
         let enrichedContext = buildEnrichedAIContext(for: .morningBriefing)
-        let contextSection = enrichedContext.isEmpty ? "" : """
 
-        User Learning Context:
-        \(enrichedContext)
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: data.yesterdayCompleted,
+            yesterdayPlanned: data.yesterdayPlanned,
+            yesterdayTopCategory: data.yesterdayTopCategory?.displayName,
+            todayTaskCount: data.todayTasks.count,
+            todayHighPriority: data.todayHighPriority,
+            todayOverdue: data.todayOverdue,
+            todayTimeEstimate: data.formattedTodayTime,
+            weeklyTasksCompleted: data.weeklyStats.tasksCompletedThisWeek,
+            weeklyCompletionRate: data.weeklyStats.formattedCompletionRate,
+            currentStreak: data.weeklyStats.currentStreak,
+            todayTaskList: todayTaskList,
+            scheduleContext: scheduleContext,
+            learningContext: enrichedContext,
+            hasCalendarData: data.hasCalendarData
+        )
 
-        """
+        let response = try await llmService.complete(
+            prompt: prompt,
+            systemPrompt: PromptTemplates.morningBriefingSystemPrompt
+        )
 
-        return """
-        Generate a motivating morning briefing for a productivity app user.
-
-        Yesterday's Results:
-        - Completed: \(data.yesterdayCompleted) of \(data.yesterdayPlanned) tasks
-        - Top category: \(data.yesterdayTopCategory?.displayName ?? "Various")
-
-        Today's Plan:
-        - Total tasks: \(data.todayTasks.count)
-        - High priority: \(data.todayHighPriority)
-        - Overdue: \(data.todayOverdue)
-        - Estimated time: \(data.formattedTodayTime)\(scheduleSection)
-
-        Weekly Progress:
-        - Tasks completed this week: \(data.weeklyStats.tasksCompletedThisWeek)
-        - Completion rate: \(data.weeklyStats.formattedCompletionRate)
-        - Current streak: \(data.weeklyStats.currentStreak) days
-
-        Today's Top Priorities:
-        \(todayTaskList.isEmpty ? "No tasks scheduled yet" : todayTaskList)
-        \(contextSection)
-        Provide:
-        1. A 2-3 sentence morning greeting that briefly mentions yesterday's progress\(data.hasCalendarData ? " and today's schedule" : "")
-        2. One sentence highlighting today's focus areas based on priorities\(data.hasCalendarData ? " and available time" : "")
-        3. A brief motivational message based on streak and weekly progress
-
-        If user learning context is provided, personalize the briefing based on their patterns and timing preferences.
-
-        Respond in JSON format only:
-        {
-            "summary": "<morning greeting with yesterday recap>",
-            "todayFocus": "<today's priorities and focus>",
-            "motivation": "<encouraging message>"
-        }
-
-        Keep tone warm, energizing, and action-oriented.
-        """
+        return parseMorningBriefingResponse(response, briefing: data)
     }
 
     private func parseMorningBriefingResponse(_ response: String, briefing: MorningBriefingData) -> (summary: String, todayFocus: String, motivation: String) {
-        guard let data = extractJSON(from: response),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return (
-                summary: getDefaultMorningSummary(briefing: briefing),
-                todayFocus: getDefaultTodayFocus(briefing: briefing),
-                motivation: getDefaultMorningMotivation(briefing: briefing)
-            )
-        }
+        let parsed = PromptTemplates.parseMorningBriefingResponse(response)
 
-        let summary = json["summary"] as? String ?? getDefaultMorningSummary(briefing: briefing)
-        let todayFocus = json["todayFocus"] as? String ?? getDefaultTodayFocus(briefing: briefing)
-        let motivation = json["motivation"] as? String ?? getDefaultMorningMotivation(briefing: briefing)
+        let summary = parsed.summary ?? getDefaultMorningSummary(briefing: briefing)
+        let todayFocus = parsed.todayFocus ?? getDefaultTodayFocus(briefing: briefing)
+        let motivation = parsed.motivation ?? getDefaultMorningMotivation(briefing: briefing)
 
         return (summary: summary, todayFocus: todayFocus, motivation: motivation)
     }
