@@ -953,9 +953,19 @@ final class DailySummaryService: ObservableObject {
         // Detect first-day user (no previous productive days)
         let isFirstDay = streakData.totalProductiveDays == 0 && streakData.lastProductiveDate == nil
 
-        // Detect if streak was recently broken (current is 0 but user had a previous streak)
-        let streakJustBroken = streakData.currentStreak == 0 && streakData.longestStreak > 0
-        let previousStreak = streakJustBroken ? streakData.longestStreak : 0
+        // Detect if streak was recently broken (user was active in last 3 days but streak is now 0)
+        // This avoids false positives for users returning after months
+        let streakJustBroken: Bool
+        let previousStreak: Int
+        if let lastDate = streakData.lastProductiveDate {
+            let daysSinceLastProductive = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
+            // Only consider "just broken" if user was active within last 3 days
+            streakJustBroken = streakData.currentStreak == 0 && daysSinceLastProductive <= 3 && streakData.longestStreak > 0
+            previousStreak = streakJustBroken ? min(streakData.longestStreak, daysSinceLastProductive + streakData.currentStreak) : 0
+        } else {
+            streakJustBroken = false
+            previousStreak = 0
+        }
 
         let prompt = PromptTemplates.buildMorningBriefingPrompt(
             yesterdayCompleted: data.yesterdayCompleted,
