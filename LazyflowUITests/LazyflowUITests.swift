@@ -731,6 +731,37 @@ final class LazyflowUITests: XCTestCase {
         }
     }
 
+    func testMorningBriefingRegenerateAI() throws {
+        navigateToToday()
+
+        let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
+        if briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable {
+            briefingCard.tap()
+
+            // Wait for briefing view
+            let briefingNav = app.navigationBars["Good Morning"]
+            XCTAssertTrue(briefingNav.waitForExistence(timeout: 3))
+
+            // Find regenerate AI button (sparkles icon)
+            let regenerateButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'sparkles'")).firstMatch
+            if regenerateButton.waitForExistence(timeout: 2) && regenerateButton.isHittable {
+                regenerateButton.tap()
+
+                // Wait for regeneration to complete
+                sleep(2)
+
+                // View should still exist after regenerate
+                XCTAssertTrue(briefingNav.exists)
+            }
+
+            // Dismiss
+            let doneButton = app.buttons["Done"]
+            if doneButton.exists {
+                doneButton.tap()
+            }
+        }
+    }
+
     func testMorningBriefingPromptToggle() throws {
         navigateToTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
