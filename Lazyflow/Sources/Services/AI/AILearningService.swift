@@ -442,8 +442,8 @@ final class AILearningService: ObservableObject {
         }
     }
 
-    /// Clear all corrections, accuracy data, impressions, and refinements (for testing or user request)
-    func clearAllCorrections() {
+    /// Clear all learning data: corrections, accuracy records, impressions, and refinements
+    func clearAllLearningData() {
         corrections = []
         durationAccuracyRecords = []
         impressions = []

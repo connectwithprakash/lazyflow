@@ -5,6 +5,7 @@ struct DailySummaryView: View {
     @StateObject private var summaryService = DailySummaryService.shared
     @State private var summary: DailySummaryData?
     @State private var isLoading = false
+    @State private var didRecordImpression = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -377,13 +378,25 @@ struct DailySummaryView: View {
         }
 
         isLoading = false
+        recordImpressionIfNeeded()
     }
 
     private func refreshSummary() async {
         isLoading = true
+        didRecordImpression = false  // Reset before reloading
         // Force regenerate - ignores cache
         summary = await summaryService.generateSummary(for: Date())
         isLoading = false
+        recordImpressionIfNeeded()
+    }
+
+    private func recordImpressionIfNeeded() {
+        if summaryService.recordImpressionIfNeeded(
+            aiSummary: summary?.aiSummary,
+            alreadyRecorded: didRecordImpression
+        ) {
+            didRecordImpression = true
+        }
     }
 }
 

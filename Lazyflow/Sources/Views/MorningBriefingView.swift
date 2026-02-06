@@ -5,6 +5,7 @@ struct MorningBriefingView: View {
     @StateObject private var summaryService = DailySummaryService.shared
     @State private var briefing: MorningBriefingData?
     @State private var isLoading = false
+    @State private var didRecordImpression = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -533,12 +534,24 @@ struct MorningBriefingView: View {
         isLoading = true
         briefing = await summaryService.generateMorningBriefing()
         isLoading = false
+        recordImpressionIfNeeded()
     }
 
     private func refreshBriefing() async {
         isLoading = true
+        didRecordImpression = false  // Reset before reloading
         briefing = await summaryService.forceRefreshMorningBriefing()
         isLoading = false
+        recordImpressionIfNeeded()
+    }
+
+    private func recordImpressionIfNeeded() {
+        if summaryService.recordImpressionIfNeeded(
+            aiSummary: briefing?.aiSummary,
+            alreadyRecorded: didRecordImpression
+        ) {
+            didRecordImpression = true
+        }
     }
 }
 
