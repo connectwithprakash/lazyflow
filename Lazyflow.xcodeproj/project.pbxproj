@@ -137,6 +137,9 @@
 		FB7A32A88B3679FF63D91F64 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE9C1B893E6D33EFB68B1B1 /* HistoryViewModel.swift */; };
 		FD56FCF2F09EA9046439B39A /* TaskTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD9381F83ADC609FB4E5790 /* TaskTimelineProvider.swift */; };
 		FDDD4A8B8AA7110057385535 /* CustomCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018BABE9766F92A0FE24061D /* CustomCategory.swift */; };
+		LG4UPMTYCP56WW10CK2EATRN /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FZJ6AX65YG6MVCMWORVK3J8A /* AnalyticsService.swift */; };
+		IQI3F1P658VMDIRHIROR2BOM /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = N74TCKVYDXRIXV2LTPIZ2TA5 /* AnalyticsView.swift */; };
+		7XTF6I23BTM6NGSCROU217PI /* AnalyticsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ESBVR5NYSM3EVC1SO1QG6ZA0 /* AnalyticsServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -331,6 +334,9 @@
 		FEA6E85B014FF9813EF3522A /* LazyflowLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowLiveActivity.swift; sourceTree = "<group>"; };
 		FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LazyflowWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFBF0524D133F7D5518CD670 /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModel.swift; sourceTree = "<group>"; };
+		FZJ6AX65YG6MVCMWORVK3J8A /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		N74TCKVYDXRIXV2LTPIZ2TA5 /* AnalyticsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
+		ESBVR5NYSM3EVC1SO1QG6ZA0 /* AnalyticsServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AnalyticsServiceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -452,6 +458,7 @@
 		5DB38BEFF9C19DAF0A1ACFF7 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				FZJ6AX65YG6MVCMWORVK3J8A /* AnalyticsService.swift */,
 				89B73DE04AAFEB38F09D3451 /* CalendarService.swift */,
 				795DC26627EBE7C54E1A28A1 /* ConflictDetectionService.swift */,
 				69B2071A23A13F5E9CB0EC8A /* DailySummaryService.swift */,
@@ -473,6 +480,7 @@
 		5FBF56828B970EDD42EAFF5C /* LazyflowTests */ = {
 			isa = PBXGroup;
 			children = (
+				ESBVR5NYSM3EVC1SO1QG6ZA0 /* AnalyticsServiceTests.swift */,
 				F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */,
 				A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */,
 				7C9CF8B88B573FE889545383 /* NotificationServiceTests.swift */,
@@ -538,6 +546,7 @@
 			isa = PBXGroup;
 			children = (
 				C130E31A1F2108516A910E6C /* AddTaskView.swift */,
+				N74TCKVYDXRIXV2LTPIZ2TA5 /* AnalyticsView.swift */,
 				894FC3172D458DF3B827CE18 /* CalendarView.swift */,
 				0C5F23987492CF9DBF92700E /* DailySummaryView.swift */,
 				D2K785M41KNJP9OJ6UQ36G8G /* InsightsView.swift */,
@@ -953,6 +962,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7XTF6I23BTM6NGSCROU217PI /* AnalyticsServiceTests.swift in Sources */,
 				84B9FAA6C2AA0387D83D18B1 /* DailySummaryServiceTests.swift in Sources */,
 				BC78DE81741B8AEC0C960DB9 /* LazyflowTests.swift in Sources */,
 				738C0EF9D5999920D27633EC /* NotificationServiceTests.swift in Sources */,
@@ -997,6 +1007,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F02F3EBA1A0F32A74F609B89 /* AddTaskView.swift in Sources */,
+				LG4UPMTYCP56WW10CK2EATRN /* AnalyticsService.swift in Sources */,
+				IQI3F1P658VMDIRHIROR2BOM /* AnalyticsView.swift in Sources */,
 				63FAF9C0324776D82B876C26 /* CalendarService.swift in Sources */,
 				3228030B46230907FEB02843 /* CalendarView.swift in Sources */,
 				7D67DC8DFE777ACCCB8BAB0A /* CalendarViewModel.swift in Sources */,
