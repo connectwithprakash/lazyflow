@@ -1,6 +1,6 @@
 # Lazyflow
 
-[![Version](https://img.shields.io/badge/version-1.6.1-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
+[![Version](https://img.shields.io/badge/version-1.7.0-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
 [![App Store](https://img.shields.io/badge/App_Store-Available-0D96F6.svg?logo=apple)](https://apps.apple.com/us/app/lazyflow/id6757427688)
 [![iOS](https://img.shields.io/badge/iOS-17.0+-000000.svg?logo=apple)](https://developer.apple.com/ios/)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?logo=swift)](https://swift.org)
@@ -16,7 +16,7 @@ A free, open-source todo app for iOS that helps you plan your day with AI-powere
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/01-today-view.png" width="180" alt="Today View">
-  <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/02-daily-summary.png" width="180" alt="Daily Summary">
+  <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/11-morning-briefing.png" width="180" alt="Morning Briefing">
   <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/03-ai-priority.png" width="180" alt="AI Priority">
   <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/07-settings.png" width="180" alt="Settings">
 </p>
@@ -27,6 +27,7 @@ Most todo apps just store tasks. Lazyflow helps you **plan your day** by combini
 
 ## Features
 
+- **Morning Briefing** - Start your day with AI-generated planning based on your calendar and priorities
 - **AI Priority** - Ask "What should I do next?" and get recommendations with reasoning. Refine with Try Again
 - **Calendar Integration** - View events alongside tasks, schedule tasks as time blocks
 - **Daily Summary** - Track completion streaks and get AI-generated productivity insights
