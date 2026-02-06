@@ -87,6 +87,25 @@ struct ContentView: View {
         }
         .tint(Color.Lazyflow.accent)
         .preferredColorScheme(appearanceMode.colorScheme)
+        .onChange(of: horizontalSizeClass) { _, newValue in
+            // Normalize tab selection when transitioning to compact (iPhone) mode
+            // iPad-only tabs need to be remapped to their hub equivalents
+            if newValue == .compact {
+                switch selectedTab {
+                case .history:
+                    selectedTab = .insights
+                    insightsNavigationPath.append(InsightsDestination.history)
+                case .lists:
+                    selectedTab = .me
+                    profileNavigationPath.append(ProfileDestination.lists)
+                case .settings:
+                    selectedTab = .me
+                    profileNavigationPath.append(ProfileDestination.settings)
+                default:
+                    break
+                }
+            }
+        }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .search:
