@@ -13,6 +13,10 @@ struct ContentView: View {
     @State private var showICloudPrompt = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
+    // Navigation paths for hub internal routing (iPhone deep links)
+    @State private var insightsNavigationPath = NavigationPath()
+    @State private var profileNavigationPath = NavigationPath()
+
     /// Consolidated sheet types to avoid multiple .sheet conflicts
     enum SheetType: Identifiable {
         case search
@@ -62,6 +66,17 @@ struct ContentView: View {
         }
     }
 
+    /// Destinations within Insights hub (for iPhone deep linking)
+    enum InsightsDestination: Hashable {
+        case history
+    }
+
+    /// Destinations within Profile/Me hub (for iPhone deep linking)
+    enum ProfileDestination: Hashable {
+        case lists
+        case settings
+    }
+
     var body: some View {
         Group {
             if horizontalSizeClass == .regular {
@@ -95,17 +110,7 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToTab)) { notification in
             if let tabName = notification.object as? String {
-                switch tabName {
-                case "today": selectedTab = .today
-                case "calendar": selectedTab = .calendar
-                case "upcoming": selectedTab = .upcoming
-                case "insights": selectedTab = .insights
-                case "me": selectedTab = .me
-                case "history": selectedTab = .history
-                case "lists": selectedTab = .lists
-                case "settings": selectedTab = .settings
-                default: break
-                }
+                navigateToTab(tabName)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showDailySummary)) { _ in
@@ -260,13 +265,13 @@ struct ContentView: View {
                 }
                 .tag(Tab.upcoming)
 
-            InsightsView()
+            InsightsView(navigationPath: $insightsNavigationPath)
                 .tabItem {
                     Label(Tab.insights.rawValue, systemImage: Tab.insights.icon)
                 }
                 .tag(Tab.insights)
 
-            ProfileView()
+            ProfileView(navigationPath: $profileNavigationPath)
                 .tabItem {
                     Label(Tab.me.rawValue, systemImage: Tab.me.icon)
                 }
@@ -280,22 +285,8 @@ struct ContentView: View {
         guard let host = url.host else { return }
 
         switch host {
-        case "today":
-            selectedTab = .today
-        case "calendar":
-            selectedTab = .calendar
-        case "upcoming":
-            selectedTab = .upcoming
-        case "insights":
-            selectedTab = .insights
-        case "me":
-            selectedTab = .me
-        case "history":
-            selectedTab = .history
-        case "lists":
-            selectedTab = .lists
-        case "settings":
-            selectedTab = .settings
+        case "today", "calendar", "upcoming", "insights", "me", "history", "lists", "settings":
+            navigateToTab(host)
         case "search":
             activeSheet = .search
         case "add", "new":
@@ -306,6 +297,44 @@ struct ContentView: View {
             activeSheet = .morningBriefing
         default:
             break
+        }
+    }
+
+    /// Navigate to a tab, handling iPhone hub routing for history/lists/settings
+    private func navigateToTab(_ tabName: String) {
+        let isCompact = horizontalSizeClass == .compact
+
+        switch tabName {
+        case "today": selectedTab = .today
+        case "calendar": selectedTab = .calendar
+        case "upcoming": selectedTab = .upcoming
+        case "insights": selectedTab = .insights
+        case "me": selectedTab = .me
+        case "history":
+            if isCompact {
+                // On iPhone, navigate to Insights hub then push History
+                selectedTab = .insights
+                insightsNavigationPath.append(InsightsDestination.history)
+            } else {
+                selectedTab = .history
+            }
+        case "lists":
+            if isCompact {
+                // On iPhone, navigate to Me hub then push Lists
+                selectedTab = .me
+                profileNavigationPath.append(ProfileDestination.lists)
+            } else {
+                selectedTab = .lists
+            }
+        case "settings":
+            if isCompact {
+                // On iPhone, navigate to Me hub then push Settings
+                selectedTab = .me
+                profileNavigationPath.append(ProfileDestination.settings)
+            } else {
+                selectedTab = .settings
+            }
+        default: break
         }
     }
 }

@@ -3,8 +3,15 @@ import SwiftUI
 /// Hub view for Me/Profile tab containing lists, categories, and settings
 /// Part of navigation restructure (Issue #110)
 struct ProfileView: View {
+    /// Navigation path for deep linking (optional, used on iPhone)
+    @Binding var navigationPath: NavigationPath
+
+    init(navigationPath: Binding<NavigationPath> = .constant(NavigationPath())) {
+        _navigationPath = navigationPath
+    }
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.lg) {
                     // MARK: - Organize Section
@@ -63,6 +70,14 @@ struct ProfileView: View {
             .background(Color.adaptiveBackground)
             .navigationTitle("Me")
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(for: ContentView.ProfileDestination.self) { destination in
+                switch destination {
+                case .lists:
+                    ListsView()
+                case .settings:
+                    SettingsView()
+                }
+            }
         }
     }
 
@@ -150,5 +165,5 @@ struct ProfileCard: View {
 // MARK: - Preview
 
 #Preview {
-    ProfileView()
+    ProfileView(navigationPath: .constant(NavigationPath()))
 }

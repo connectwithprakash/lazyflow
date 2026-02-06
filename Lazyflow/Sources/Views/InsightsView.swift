@@ -3,12 +3,18 @@ import SwiftUI
 /// Hub view for Insights tab containing analytics, history, and AI summaries
 /// Part of navigation restructure (Issue #110)
 struct InsightsView: View {
+    /// Navigation path for deep linking (optional, used on iPhone)
+    @Binding var navigationPath: NavigationPath
     @State private var showMorningBriefing = false
     @State private var showDailySummary = false
     @StateObject private var summaryService = DailySummaryService.shared
 
+    init(navigationPath: Binding<NavigationPath> = .constant(NavigationPath())) {
+        _navigationPath = navigationPath
+    }
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.lg) {
                     // MARK: - AI Insights Section
@@ -79,6 +85,12 @@ struct InsightsView: View {
             .onAppear {
                 // Preload insights data in background
                 summaryService.preloadInsightsData()
+            }
+            .navigationDestination(for: ContentView.InsightsDestination.self) { destination in
+                switch destination {
+                case .history:
+                    HistoryView()
+                }
             }
         }
     }
@@ -202,5 +214,5 @@ struct InsightsCardWithBadge: View {
 // MARK: - Preview
 
 #Preview {
-    InsightsView()
+    InsightsView(navigationPath: .constant(NavigationPath()))
 }
