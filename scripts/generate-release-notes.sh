@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Generate App Store release notes from CHANGELOG.md
-# Uses Release Please / Keep a Changelog format
+# Generate user-friendly App Store release notes from CHANGELOG.md
+# Transforms technical changelog into benefit-focused release notes
 #
 # Usage: ./scripts/generate-release-notes.sh <version>
-# Example: ./scripts/generate-release-notes.sh 1.3.0
+# Example: ./scripts/generate-release-notes.sh 1.7.0
 
 set -e
 
@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 if [ -z "$VERSION" ]; then
     echo -e "${RED}Error: Version argument required${NC}"
     echo "Usage: $0 <version>"
-    echo "Example: $0 1.3.0"
+    echo "Example: $0 1.7.0"
     exit 1
 fi
 
@@ -30,7 +30,6 @@ if [ ! -f "$CHANGELOG_FILE" ]; then
 fi
 
 # Extract the section for this version from CHANGELOG.md
-# Gets content between ## [VERSION] and the next ## [
 CHANGELOG_SECTION=$(awk "/^## \[$VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" "$CHANGELOG_FILE")
 
 if [ -z "$CHANGELOG_SECTION" ]; then
@@ -38,49 +37,88 @@ if [ -z "$CHANGELOG_SECTION" ]; then
     exit 1
 fi
 
-# Function to extract and format a section
-extract_section() {
-    local section_pattern="$1"
-    local prefix="$2"
-
-    echo "$CHANGELOG_SECTION" | awk "/^### $section_pattern/{flag=1; next} /^### /{flag=0} flag" | \
+# Extract features and clean up commit message format
+extract_features() {
+    echo "$CHANGELOG_SECTION" | \
+        awk '/^### Features/{flag=1; next} /^### /{flag=0} flag' | \
         grep "^\* " | \
-        sed 's/^\* \*\*[^:]*:\*\* /'"$prefix"'/' | \
-        sed 's/^\* /'"$prefix"'/' | \
-        sed 's/ (\[.*$//g'
+        sed 's/^\* \*\*[^:]*:\*\* //' | \
+        sed 's/^\* //' | \
+        sed 's/ (\[.*$//' | \
+        sed 's/ \[#[0-9]*\].*$//'
 }
 
-# Generate release notes (modern format - clean bullets, no prefixes)
+# Extract bug fixes
+extract_bugs() {
+    echo "$CHANGELOG_SECTION" | \
+        awk '/^### Bug Fixes/{flag=1; next} /^### /{flag=0} flag' | \
+        grep "^\* " | \
+        sed 's/^\* \*\*[^:]*:\*\* //' | \
+        sed 's/^\* //' | \
+        sed 's/ (\[.*$//' | \
+        sed 's/ \[#[0-9]*\].*$//'
+}
+
+# Count features and bugs
+FEATURE_COUNT=$(extract_features | wc -l | tr -d ' ')
+BUG_COUNT=$(extract_bugs | wc -l | tr -d ' ')
+
+# Determine the headline based on features
+FEATURES=$(extract_features)
+HEADLINE=""
+
+# Try to identify headline feature (first feature or one with key words)
+if echo "$FEATURES" | grep -qi "morning briefing\|plan your day"; then
+    HEADLINE="Plan Your Day"
+elif echo "$FEATURES" | grep -qi "calendar"; then
+    HEADLINE="Calendar Integration"
+elif echo "$FEATURES" | grep -qi "ai\|intelligence"; then
+    HEADLINE="Smarter AI"
+elif echo "$FEATURES" | grep -qi "widget\|watch"; then
+    HEADLINE="New Ways to Access"
+elif echo "$FEATURES" | grep -qi "category\|organization"; then
+    HEADLINE="Better Organization"
+elif echo "$FEATURES" | grep -qi "recurring\|habit"; then
+    HEADLINE="Recurring & Habits"
+else
+    # Default: use first feature as headline
+    HEADLINE=$(echo "$FEATURES" | head -1 | cut -c1-30)
+fi
+
+# Generate user-friendly release notes
 {
-    echo "What's New in $VERSION:"
-    echo ""
+    # Headline
+    echo "$HEADLINE"
 
-    # Breaking Changes - keep ⚠️ prefix for visibility
-    if echo "$CHANGELOG_SECTION" | grep -q "BREAKING CHANGES"; then
-        extract_section ".*BREAKING CHANGES" "• ⚠️ "
+    # Features as benefit-focused bullets
+    if [ "$FEATURE_COUNT" -gt 0 ]; then
+        echo "$FEATURES" | while read -r feature; do
+            # Skip empty lines
+            [ -z "$feature" ] && continue
+            # Clean up and format
+            echo "• $feature"
+        done
     fi
 
-    # Features (from feat: commits)
-    if echo "$CHANGELOG_SECTION" | grep -q "### Features"; then
-        extract_section "Features" "• "
-    fi
-
-    # Performance Improvements (from perf: commits)
-    if echo "$CHANGELOG_SECTION" | grep -q "### Performance"; then
-        extract_section "Performance.*" "• "
-    fi
-
-    # Bug Fixes - consolidate into single line if multiple
-    if echo "$CHANGELOG_SECTION" | grep -q "### Bug Fixes"; then
-        BUG_COUNT=$(echo "$CHANGELOG_SECTION" | awk '/^### Bug Fixes/{flag=1; next} /^### /{flag=0} flag' | grep -c "^\* " || true)
+    # Bug fixes section (only if there are bugs)
+    if [ "$BUG_COUNT" -gt 0 ]; then
+        echo ""
         if [ "$BUG_COUNT" -gt 2 ]; then
-            echo "• Bug fixes and stability improvements"
+            echo "Bug Fixes"
+            echo "• Various bug fixes and stability improvements"
         else
-            extract_section "Bug Fixes" "• "
+            echo "Bug Fixes"
+            extract_bugs | while read -r bug; do
+                [ -z "$bug" ] && continue
+                echo "• $bug"
+            done
         fi
     fi
 
 } > "$OUTPUT_FILE"
+
+# Remove any trailing empty lines
+sed -i '' -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$OUTPUT_FILE" 2>/dev/null || true
 
 echo -e "${GREEN}Generated release notes for v$VERSION:${NC}"
 echo "----------------------------------------"
