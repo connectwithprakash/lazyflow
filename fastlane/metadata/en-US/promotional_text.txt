@@ -1,1 +1,1 @@
-New: Custom categories with AI suggestions + Intraday recurring tasks for hourly reminders!
+New: Morning Briefing! AI-powered daily planning with calendar context + improved Daily Summary to track your progress.

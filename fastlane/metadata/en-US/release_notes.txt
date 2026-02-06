@@ -1,11 +1,9 @@
 Plan Your Day
-• add calendar context to Morning Briefing
-• add Morning Briefing prompt toggle
-• add Regenerate AI actions for Morning Briefing and Daily Summary
-• Handle Morning Briefing + Daily Summary notification actions
-• Improve AI-generated Morning Briefing and Daily Summary quality
-• inject AI learning context into prompts
-• track AI impressions for Morning Briefing and Daily Summary
+• Morning Briefing: Start your day with AI-powered planning based on your calendar and priorities
+• Calendar context integration shows your schedule alongside task recommendations
+• Regenerate AI insights anytime with one tap
 
-Bug Fixes
-• Various bug fixes and stability improvements
+Smarter AI
+• AI learns from your preferences and adapts over time
+• Improved Daily Summary quality with better productivity insights
+• Notification actions to quickly access Morning Briefing and Daily Summary
