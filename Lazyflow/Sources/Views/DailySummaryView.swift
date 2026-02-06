@@ -34,14 +34,28 @@ struct DailySummaryView: View {
     @ToolbarContentBuilder
     private func toolbarContent() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                _Concurrency.Task {
-                    await refreshSummary()
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Button {
+                    _Concurrency.Task {
+                        await refreshSummary()
+                    }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
                 }
-            } label: {
-                Image(systemName: "arrow.clockwise")
+                .disabled(isLoading)
+
+                // Show Regenerate AI when summary data exists (even if AI failed previously)
+                if summary != nil {
+                    Button {
+                        _Concurrency.Task {
+                            await regenerateAI()
+                        }
+                    } label: {
+                        Image(systemName: "sparkles")
+                    }
+                    .disabled(isLoading)
+                }
             }
-            .disabled(isLoading)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Button("Done") {
@@ -386,6 +400,15 @@ struct DailySummaryView: View {
         didRecordImpression = false  // Reset before reloading
         // Force regenerate - ignores cache
         summary = await summaryService.generateSummary(for: Date())
+        isLoading = false
+        recordImpressionIfNeeded()
+    }
+
+    private func regenerateAI() async {
+        guard let currentSummary = summary else { return }
+        isLoading = true
+        didRecordImpression = false  // Reset for new AI content
+        summary = await summaryService.regenerateDailySummaryAI(for: currentSummary)
         isLoading = false
         recordImpressionIfNeeded()
     }

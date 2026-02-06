@@ -1410,4 +1410,124 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertTrue(result)
         XCTAssertEqual(AILearningService.shared.impressions.count, 2)
     }
+
+    // MARK: - Regenerate AI Tests (Issue #164)
+
+    func testRegenerateDailySummaryAI_RecordsRefinementRequest() async {
+        // Clear learning data
+        AILearningService.shared.clearAllLearningData()
+        let initialRefinements = AILearningService.shared.refinementRequests.count
+
+        // Create a summary to regenerate
+        let summary = DailySummaryData(
+            date: Date(),
+            tasksCompleted: 3,
+            totalTasksPlanned: 5,
+            completedTasks: [],
+            topCategory: .work,
+            totalMinutesWorked: 60,
+            productivityScore: 60
+        )
+
+        // Regenerate AI
+        _ = await dailySummaryService.regenerateDailySummaryAI(for: summary)
+
+        // Should record refinement request
+        XCTAssertEqual(AILearningService.shared.refinementRequests.count, initialRefinements + 1)
+    }
+
+    func testRegenerateDailySummaryAI_PreservesNonAIFields() async {
+        // Create a summary with specific values
+        let originalDate = Date()
+        let summary = DailySummaryData(
+            date: originalDate,
+            tasksCompleted: 5,
+            totalTasksPlanned: 8,
+            completedTasks: [],
+            topCategory: .personal,
+            totalMinutesWorked: 120,
+            productivityScore: 62.5
+        )
+
+        // Regenerate AI
+        let result = await dailySummaryService.regenerateDailySummaryAI(for: summary)
+
+        // Non-AI fields should be preserved
+        XCTAssertEqual(result.date, originalDate)
+        XCTAssertEqual(result.tasksCompleted, 5)
+        XCTAssertEqual(result.totalTasksPlanned, 8)
+        XCTAssertEqual(result.topCategory, .personal)
+        XCTAssertEqual(result.totalMinutesWorked, 120)
+        XCTAssertEqual(result.productivityScore, 62.5)
+    }
+
+    func testRegenerateMorningBriefingAI_RecordsRefinementRequest() async {
+        // Clear learning data
+        AILearningService.shared.clearAllLearningData()
+        let initialRefinements = AILearningService.shared.refinementRequests.count
+
+        // Create a briefing to regenerate
+        let briefing = MorningBriefingData(
+            date: Date(),
+            yesterdayCompleted: 3,
+            yesterdayPlanned: 5,
+            yesterdayTopCategory: .work,
+            todayTasks: [],
+            todayHighPriority: 1,
+            todayOverdue: 0,
+            todayEstimatedMinutes: 60,
+            weeklyStats: WeeklyStats(
+                tasksCompletedThisWeek: 10,
+                totalTasksPlannedThisWeek: 15,
+                averageCompletionRate: 67,
+                mostProductiveDay: "Monday",
+                currentStreak: 3,
+                daysUntilWeekEnd: 2
+            ),
+            scheduleSummary: nil
+        )
+
+        // Regenerate AI
+        _ = await dailySummaryService.regenerateMorningBriefingAI(for: briefing)
+
+        // Should record refinement request
+        XCTAssertEqual(AILearningService.shared.refinementRequests.count, initialRefinements + 1)
+    }
+
+    func testRegenerateMorningBriefingAI_PreservesNonAIFields() async {
+        // Create a briefing with specific values
+        let originalDate = Date()
+        let briefing = MorningBriefingData(
+            date: originalDate,
+            yesterdayCompleted: 4,
+            yesterdayPlanned: 6,
+            yesterdayTopCategory: .health,
+            todayTasks: [],
+            todayHighPriority: 2,
+            todayOverdue: 1,
+            todayEstimatedMinutes: 90,
+            weeklyStats: WeeklyStats(
+                tasksCompletedThisWeek: 12,
+                totalTasksPlannedThisWeek: 18,
+                averageCompletionRate: 67,
+                mostProductiveDay: "Tuesday",
+                currentStreak: 5,
+                daysUntilWeekEnd: 3
+            ),
+            scheduleSummary: nil
+        )
+
+        // Regenerate AI
+        let result = await dailySummaryService.regenerateMorningBriefingAI(for: briefing)
+
+        // Non-AI fields should be preserved
+        XCTAssertEqual(result.date, originalDate)
+        XCTAssertEqual(result.yesterdayCompleted, 4)
+        XCTAssertEqual(result.yesterdayPlanned, 6)
+        XCTAssertEqual(result.yesterdayTopCategory, .health)
+        XCTAssertEqual(result.todayHighPriority, 2)
+        XCTAssertEqual(result.todayOverdue, 1)
+        XCTAssertEqual(result.todayEstimatedMinutes, 90)
+        XCTAssertEqual(result.weeklyStats.currentStreak, 5)
+    }
 }
