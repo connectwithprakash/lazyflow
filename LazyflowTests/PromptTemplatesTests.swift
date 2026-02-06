@@ -473,7 +473,7 @@ final class PromptTemplatesTests: XCTestCase {
             learningContext: ""
         )
 
-        XCTAssertTrue(prompt.contains("No tasks completed yet"), "Should show fallback for empty task list")
+        XCTAssertTrue(prompt.contains("No tasks completed"), "Should show fallback for empty task list")
     }
 
     func testBuildDailySummaryPrompt_IncludesLearningContext() {
@@ -708,5 +708,214 @@ final class PromptTemplatesTests: XCTestCase {
         XCTAssertEqual(result.summary, "Good morning!")
         XCTAssertEqual(result.todayFocus, "Focus today.")
         XCTAssertNil(result.motivation, "Should handle missing motivation")
+    }
+
+    // MARK: - Edge Case Handling Tests
+
+    func testBuildDailySummaryPrompt_ZeroTasksCompleted_IncludesWarning() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 0,
+            totalPlanned: 5,
+            topCategory: nil,
+            timeWorked: "0m",
+            currentStreak: 0,
+            taskList: "",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("Zero tasks completed"), "Should include zero-task scenario guidance")
+        XCTAssertTrue(prompt.contains("do NOT") || prompt.contains("Do NOT"), "Should include DO NOT instruction")
+        XCTAssertTrue(prompt.contains("positive") || prompt.contains("great"), "Should warn against false positive words")
+    }
+
+    func testBuildDailySummaryPrompt_AllTasksCompleted_CelebratesAchievement() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 5,
+            totalPlanned: 5,
+            topCategory: "Work",
+            timeWorked: "3h",
+            currentStreak: 7,
+            taskList: "- Task 1\n- Task 2",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("All tasks completed") || prompt.contains("celebration") || prompt.contains("achievement"),
+                      "Should include celebration guidance for full completion")
+    }
+
+    func testBuildDailySummaryPrompt_FirstDay_IncludesWelcome() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 1,
+            totalPlanned: 3,
+            topCategory: nil,
+            timeWorked: "30m",
+            currentStreak: 1,
+            taskList: "- First task",
+            learningContext: "",
+            isFirstDay: true
+        )
+
+        XCTAssertTrue(prompt.contains("First day") || prompt.contains("first day"), "Should include first-day guidance")
+        XCTAssertTrue(prompt.contains("Welcome") || prompt.contains("welcome") || prompt.contains("yesterday"),
+                      "Should mention welcome or warn about yesterday references")
+    }
+
+    func testBuildDailySummaryPrompt_CriticalRules_AlwaysPresent() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 3,
+            totalPlanned: 5,
+            topCategory: nil,
+            timeWorked: "2h",
+            currentStreak: 3,
+            taskList: "",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("CRITICAL RULES"), "Should include critical rules section")
+        XCTAssertTrue(prompt.contains("MUST match"), "Should require data matching")
+    }
+
+    func testBuildMorningBriefingPrompt_ZeroYesterdayCompletions_IncludesWarning() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 5,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 3,
+            todayHighPriority: 1,
+            todayOverdue: 0,
+            todayTimeEstimate: "2h",
+            weeklyTasksCompleted: 5,
+            weeklyCompletionRate: "50%",
+            currentStreak: 0,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("zero completions") || prompt.contains("Zero completions"),
+                      "Should include zero-completion scenario guidance")
+        XCTAssertTrue(prompt.contains("do NOT") || prompt.contains("Do NOT"),
+                      "Should include DO NOT instruction for yesterday")
+    }
+
+    func testBuildMorningBriefingPrompt_NoTasksPlannedYesterday_SkipsYesterday() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 0,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 5,
+            todayHighPriority: 2,
+            todayOverdue: 0,
+            todayTimeEstimate: "3h",
+            weeklyTasksCompleted: 10,
+            weeklyCompletionRate: "70%",
+            currentStreak: 5,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("No tasks were planned yesterday") || prompt.contains("Skip mentioning yesterday"),
+                      "Should advise skipping yesterday when nothing was planned")
+    }
+
+    func testBuildMorningBriefingPrompt_FirstDay_NoYesterdayReference() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 0,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 3,
+            todayHighPriority: 1,
+            todayOverdue: 0,
+            todayTimeEstimate: "2h",
+            weeklyTasksCompleted: 0,
+            weeklyCompletionRate: "0%",
+            currentStreak: 0,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false,
+            isFirstDay: true
+        )
+
+        XCTAssertTrue(prompt.contains("First day") || prompt.contains("first day"),
+                      "Should include first-day guidance")
+        XCTAssertTrue(prompt.contains("Welcome") || prompt.contains("welcome") || prompt.contains("Don't reference"),
+                      "Should welcome user or warn about yesterday references")
+    }
+
+    func testBuildMorningBriefingPrompt_BrokenStreak_EmpatheticMessage() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 0,
+            yesterdayPlanned: 3,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 5,
+            todayHighPriority: 2,
+            todayOverdue: 0,
+            todayTimeEstimate: "3h",
+            weeklyTasksCompleted: 10,
+            weeklyCompletionRate: "60%",
+            currentStreak: 0,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false,
+            streakJustBroken: true,
+            previousStreak: 14
+        )
+
+        XCTAssertTrue(prompt.contains("Streak was recently broken") || prompt.contains("broken"),
+                      "Should include broken streak guidance")
+        XCTAssertTrue(prompt.contains("14"), "Should mention previous streak length")
+        XCTAssertTrue(prompt.contains("empathetic") || prompt.contains("Empathetic") || prompt.contains("guilt"),
+                      "Should advise empathetic messaging")
+    }
+
+    func testBuildMorningBriefingPrompt_OverdueTasks_PrioritizationGuidance() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 3,
+            yesterdayPlanned: 5,
+            yesterdayTopCategory: "Work",
+            todayTaskCount: 8,
+            todayHighPriority: 2,
+            todayOverdue: 4,
+            todayTimeEstimate: "5h",
+            weeklyTasksCompleted: 15,
+            weeklyCompletionRate: "65%",
+            currentStreak: 3,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("4 overdue") || prompt.contains("overdue tasks"),
+                      "Should include overdue task guidance")
+        XCTAssertTrue(prompt.contains("prioritiz") || prompt.contains("Prioritiz"),
+                      "Should suggest prioritization")
+    }
+
+    func testBuildMorningBriefingPrompt_CriticalRules_AlwaysPresent() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 5,
+            yesterdayPlanned: 5,
+            yesterdayTopCategory: "Personal",
+            todayTaskCount: 3,
+            todayHighPriority: 1,
+            todayOverdue: 0,
+            todayTimeEstimate: "2h",
+            weeklyTasksCompleted: 20,
+            weeklyCompletionRate: "85%",
+            currentStreak: 10,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("CRITICAL RULES"), "Should include critical rules section")
+        XCTAssertTrue(prompt.contains("MUST accurately reflect"), "Should require data accuracy")
     }
 }

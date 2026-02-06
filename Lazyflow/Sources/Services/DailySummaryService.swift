@@ -153,6 +153,9 @@ final class DailySummaryService: ObservableObject {
 
         let enrichedContext = buildEnrichedAIContext(for: .dailySummary)
 
+        // Detect first-day user (no previous productive days)
+        let isFirstDay = streakData.totalProductiveDays == 0 && streakData.lastProductiveDate == nil
+
         let prompt = PromptTemplates.buildDailySummaryPrompt(
             tasksCompleted: data.tasksCompleted,
             totalPlanned: data.totalTasksPlanned,
@@ -160,7 +163,8 @@ final class DailySummaryService: ObservableObject {
             timeWorked: data.formattedTimeWorked,
             currentStreak: streakData.currentStreak,
             taskList: taskList,
-            learningContext: enrichedContext
+            learningContext: enrichedContext,
+            isFirstDay: isFirstDay
         )
 
         let response = try await llmService.complete(
@@ -168,14 +172,22 @@ final class DailySummaryService: ObservableObject {
             systemPrompt: PromptTemplates.dailySummarySystemPrompt
         )
 
-        return parseSummaryResponse(response)
+        return parseSummaryResponse(response, tasksCompleted: data.tasksCompleted)
     }
 
-    private func parseSummaryResponse(_ response: String) -> (summary: String, encouragement: String) {
+    private func parseSummaryResponse(_ response: String, tasksCompleted: Int = 0) -> (summary: String, encouragement: String) {
         let parsed = PromptTemplates.parseDailySummaryResponse(response)
 
-        let summary = parsed.summary ?? "Great job staying productive today!"
-        let encouragement = parsed.encouragement ?? getDefaultEncouragement(streak: streakData.currentStreak, score: 50)
+        // Use context-aware defaults for zero-task scenarios
+        let defaultSummary: String
+        if tasksCompleted == 0 {
+            defaultSummary = "Today was a quiet day. Tomorrow is a fresh opportunity to tackle your tasks."
+        } else {
+            defaultSummary = "Great job staying productive today!"
+        }
+
+        let summary = parsed.summary ?? defaultSummary
+        let encouragement = parsed.encouragement ?? getDefaultEncouragement(streak: streakData.currentStreak, score: tasksCompleted > 0 ? 50 : 20)
 
         return (summary: summary, encouragement: encouragement)
     }
@@ -938,6 +950,13 @@ final class DailySummaryService: ObservableObject {
 
         let enrichedContext = buildEnrichedAIContext(for: .morningBriefing)
 
+        // Detect first-day user (no previous productive days)
+        let isFirstDay = streakData.totalProductiveDays == 0 && streakData.lastProductiveDate == nil
+
+        // Detect if streak was recently broken (current is 0 but user had a previous streak)
+        let streakJustBroken = streakData.currentStreak == 0 && streakData.longestStreak > 0
+        let previousStreak = streakJustBroken ? streakData.longestStreak : 0
+
         let prompt = PromptTemplates.buildMorningBriefingPrompt(
             yesterdayCompleted: data.yesterdayCompleted,
             yesterdayPlanned: data.yesterdayPlanned,
@@ -952,7 +971,10 @@ final class DailySummaryService: ObservableObject {
             todayTaskList: todayTaskList,
             scheduleContext: scheduleContext,
             learningContext: enrichedContext,
-            hasCalendarData: data.hasCalendarData
+            hasCalendarData: data.hasCalendarData,
+            isFirstDay: isFirstDay,
+            streakJustBroken: streakJustBroken,
+            previousStreak: previousStreak
         )
 
         let response = try await llmService.complete(
@@ -978,8 +1000,12 @@ final class DailySummaryService: ObservableObject {
     private func getDefaultMorningSummary(briefing: MorningBriefingData) -> String {
         if briefing.yesterdayCompleted > 0 {
             return "Good morning! Yesterday you completed \(briefing.yesterdayCompleted) tasks. Let's build on that momentum today."
+        } else if briefing.yesterdayPlanned == 0 {
+            // No tasks were planned yesterday - skip referencing it
+            return "Good morning! You have \(briefing.todayTasks.count) tasks ready for today."
         } else {
-            return "Good morning! Today is a fresh start with \(briefing.todayTasks.count) tasks waiting for you."
+            // Tasks were planned but none completed - be honest but encouraging
+            return "Good morning! Today is a fresh start. Let's make it count."
         }
     }
 

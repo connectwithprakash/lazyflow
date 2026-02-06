@@ -403,7 +403,8 @@ enum PromptTemplates {
         timeWorked: String,
         currentStreak: Int,
         taskList: String,
-        learningContext: String
+        learningContext: String,
+        isFirstDay: Bool = false
     ) -> String {
         let contextSection = learningContext.isEmpty ? "" : """
 
@@ -412,8 +413,42 @@ enum PromptTemplates {
 
         """
 
+        // Build scenario-specific guidance
+        var scenarioGuidance = ""
+        if tasksCompleted == 0 {
+            scenarioGuidance = """
+
+        IMPORTANT - Zero tasks completed scenario:
+        - Do NOT say "positive start" or "great progress" - be honest
+        - Acknowledge the day without accomplishments gently
+        - Focus on tomorrow being a fresh start
+        - Suggest starting with one small task tomorrow
+
+        """
+        } else if tasksCompleted >= totalPlanned && totalPlanned > 0 {
+            scenarioGuidance = """
+
+        IMPORTANT - All tasks completed scenario:
+        - Celebrate this genuine achievement
+        - Reference the specific completion rate (\(tasksCompleted)/\(totalPlanned))
+        - Acknowledge the effort
+
+        """
+        }
+
+        if isFirstDay {
+            scenarioGuidance += """
+
+        IMPORTANT - First day user:
+        - Welcome them warmly
+        - Don't reference "yesterday" or past performance
+        - Focus on starting their productivity journey
+
+        """
+        }
+
         return """
-        Generate a brief, encouraging daily summary for a productivity app user.
+        Generate a brief daily summary for a productivity app user.
 
         Today's Stats:
         - Tasks completed: \(tasksCompleted) of \(totalPlanned) planned
@@ -422,21 +457,26 @@ enum PromptTemplates {
         - Current streak: \(currentStreak) days
 
         Completed tasks:
-        \(taskList.isEmpty ? "No tasks completed yet" : taskList)
-        \(contextSection)
-        Provide:
-        1. A 2-3 sentence natural language summary of their day (reference specific accomplishments if any)
-        2. One sentence of encouragement based on their streak and progress
+        \(taskList.isEmpty ? "No tasks completed" : taskList)
+        \(scenarioGuidance)\(contextSection)
+        CRITICAL RULES:
+        - Your message MUST match the actual data above
+        - If tasks completed is 0, do NOT use positive words like "great", "awesome", "positive start"
+        - If tasks completed is 0, acknowledge it honestly and kindly
+        - Never say someone made "progress" if they completed zero tasks
+        - Be encouraging about FUTURE potential, not false praise for the past
 
-        If user learning context is provided, tailor the summary to acknowledge their patterns and preferences.
+        Provide:
+        1. A 2-3 sentence summary that honestly reflects their day
+        2. One sentence of encouragement focused on tomorrow or their potential
 
         Respond in JSON format only:
         {
-            "summary": "<natural recap of day>",
-            "encouragement": "<motivating message>"
+            "summary": "<honest recap of day matching the stats>",
+            "encouragement": "<forward-looking motivating message>"
         }
 
-        Keep tone warm, supportive, and concise.
+        Keep tone warm, honest, and supportive.
         """
     }
 
@@ -470,7 +510,10 @@ enum PromptTemplates {
         todayTaskList: String,
         scheduleContext: String?,
         learningContext: String,
-        hasCalendarData: Bool
+        hasCalendarData: Bool,
+        isFirstDay: Bool = false,
+        streakJustBroken: Bool = false,
+        previousStreak: Int = 0
     ) -> String {
         let scheduleSection = scheduleContext.map { "\n\nToday's Calendar:\n\($0)" } ?? ""
         let contextSection = learningContext.isEmpty ? "" : """
@@ -480,8 +523,75 @@ enum PromptTemplates {
 
         """
 
+        // Build scenario-specific guidance
+        var scenarioGuidance = ""
+
+        // Handle yesterday's performance
+        if yesterdayCompleted == 0 && yesterdayPlanned > 0 {
+            scenarioGuidance += """
+
+        IMPORTANT - Yesterday had zero completions:
+        - Do NOT say "positive start", "great progress", or celebrate yesterday
+        - Acknowledge yesterday briefly and pivot to today's fresh start
+        - Focus on today's opportunities, not yesterday's shortcomings
+
+        """
+        } else if yesterdayCompleted == 0 && yesterdayPlanned == 0 {
+            scenarioGuidance += """
+
+        IMPORTANT - No tasks were planned yesterday:
+        - Skip mentioning yesterday entirely
+        - Focus on welcoming the new day and today's plan
+
+        """
+        } else if yesterdayCompleted >= yesterdayPlanned && yesterdayPlanned > 0 {
+            scenarioGuidance += """
+
+        IMPORTANT - Yesterday was fully productive:
+        - Genuinely celebrate completing all planned tasks
+        - Reference the achievement to build momentum
+
+        """
+        }
+
+        // Handle first-time users
+        if isFirstDay {
+            scenarioGuidance += """
+
+        IMPORTANT - First day user:
+        - Welcome them warmly to the app
+        - Don't reference "yesterday" at all
+        - Focus on starting their productivity journey today
+
+        """
+        }
+
+        // Handle broken streaks
+        if streakJustBroken && previousStreak > 0 {
+            scenarioGuidance += """
+
+        IMPORTANT - Streak was recently broken (was \(previousStreak) days):
+        - Be empathetic, not guilt-inducing
+        - Streaks reset but progress and habits remain
+        - Focus on rebuilding, not what was lost
+
+        """
+        }
+
+        // Handle overdue tasks
+        if todayOverdue > 0 {
+            scenarioGuidance += """
+
+        IMPORTANT - Has \(todayOverdue) overdue tasks:
+        - Acknowledge overdue items without judgment
+        - Suggest prioritizing them today
+        - Frame as opportunity to clear the backlog
+
+        """
+        }
+
         return """
-        Generate a motivating morning briefing for a productivity app user.
+        Generate a morning briefing for a productivity app user.
 
         Yesterday's Results:
         - Completed: \(yesterdayCompleted) of \(yesterdayPlanned) tasks
@@ -500,22 +610,28 @@ enum PromptTemplates {
 
         Today's Top Priorities:
         \(todayTaskList.isEmpty ? "No tasks scheduled yet" : todayTaskList)
-        \(contextSection)
-        Provide:
-        1. A 2-3 sentence morning greeting that briefly mentions yesterday's progress\(hasCalendarData ? " and today's schedule" : "")
-        2. One sentence highlighting today's focus areas based on priorities\(hasCalendarData ? " and available time" : "")
-        3. A brief motivational message based on streak and weekly progress
+        \(scenarioGuidance)\(contextSection)
+        CRITICAL RULES:
+        - Your message MUST accurately reflect the data above
+        - If yesterday had 0 completions, do NOT use words like "great start", "positive", "awesome"
+        - If yesterday had 0 completions, acknowledge it honestly then pivot to today
+        - Never claim someone made "progress" when they completed zero tasks
+        - Match your enthusiasm level to the actual metrics
+        - Be encouraging about TODAY and the future, not falsely positive about poor past results
 
-        If user learning context is provided, personalize the briefing based on their patterns and timing preferences.
+        Provide:
+        1. A 2-3 sentence morning greeting that honestly reflects yesterday\(hasCalendarData ? " and today's schedule" : "")
+        2. One sentence highlighting today's focus areas based on priorities\(hasCalendarData ? " and available time" : "")
+        3. A brief motivational message about today's potential
 
         Respond in JSON format only:
         {
-            "summary": "<morning greeting with yesterday recap>",
+            "summary": "<honest morning greeting matching the stats>",
             "todayFocus": "<today's priorities and focus>",
-            "motivation": "<encouraging message>"
+            "motivation": "<forward-looking encouraging message>"
         }
 
-        Keep tone warm, energizing, and action-oriented.
+        Keep tone warm, honest, and action-oriented.
         """
     }
 
