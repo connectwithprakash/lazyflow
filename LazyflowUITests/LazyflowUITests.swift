@@ -734,31 +734,35 @@ final class LazyflowUITests: XCTestCase {
     func testMorningBriefingRegenerateAI() throws {
         navigateToToday()
 
+        // Morning Briefing card is time-dependent (only shows in morning hours)
         let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
-        if briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable {
-            briefingCard.tap()
+        guard briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable else {
+            throw XCTSkip("Morning Briefing card not available (only shows in morning hours)")
+        }
 
-            // Wait for briefing view
-            let briefingNav = app.navigationBars["Good Morning"]
-            XCTAssertTrue(briefingNav.waitForExistence(timeout: 3))
+        briefingCard.tap()
 
-            // Find regenerate AI button (sparkles icon)
-            let regenerateButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'sparkles'")).firstMatch
-            if regenerateButton.waitForExistence(timeout: 2) && regenerateButton.isHittable {
-                regenerateButton.tap()
+        // Wait for briefing view
+        let briefingNav = app.navigationBars["Good Morning"]
+        XCTAssertTrue(briefingNav.waitForExistence(timeout: 3), "Morning Briefing view should open")
 
-                // Wait for regeneration to complete
-                sleep(2)
+        // Find regenerate AI button using accessibility identifier
+        let regenerateButton = app.buttons["Regenerate AI"]
+        XCTAssertTrue(regenerateButton.waitForExistence(timeout: 3), "Regenerate AI button should exist when briefing has data")
 
-                // View should still exist after regenerate
-                XCTAssertTrue(briefingNav.exists)
-            }
+        // Tap regenerate button
+        regenerateButton.tap()
 
-            // Dismiss
-            let doneButton = app.buttons["Done"]
-            if doneButton.exists {
-                doneButton.tap()
-            }
+        // Wait for regeneration to complete
+        sleep(2)
+
+        // View should still exist after regenerate
+        XCTAssertTrue(briefingNav.exists, "View should remain stable after regeneration")
+
+        // Dismiss
+        let doneButton = app.buttons["Done"]
+        if doneButton.exists {
+            doneButton.tap()
         }
     }
 

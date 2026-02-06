@@ -42,6 +42,7 @@ struct DailySummaryView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
+                .accessibilityIdentifier("Refresh Summary")
                 .disabled(isLoading)
 
                 // Show Regenerate AI when summary data exists (even if AI failed previously)
@@ -53,6 +54,7 @@ struct DailySummaryView: View {
                     } label: {
                         Image(systemName: "sparkles")
                     }
+                    .accessibilityIdentifier("Regenerate AI")
                     .disabled(isLoading)
                 }
             }
