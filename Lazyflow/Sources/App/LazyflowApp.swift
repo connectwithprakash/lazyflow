@@ -84,6 +84,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         let launchBackgroundColor = UIColor(red: 0.078, green: 0.329, blue: 0.337, alpha: 1.0)
         UIWindow.appearance().backgroundColor = launchBackgroundColor
 
+        // Set notification delegate to handle actions
+        UNUserNotificationCenter.current().delegate = self
+
         NotificationService.shared.registerNotificationCategories()
         return true
     }
@@ -138,9 +141,10 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
+        let actionIdentifier = response.actionIdentifier
 
         // Handle notification action
-        switch response.actionIdentifier {
+        switch actionIdentifier {
         case "COMPLETE_ACTION":
             if let taskIDString = userInfo["taskID"] as? String,
                let taskID = UUID(uuidString: taskIDString) {
@@ -151,6 +155,25 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             if let taskIDString = userInfo["taskID"] as? String,
                let taskID = UUID(uuidString: taskIDString) {
                 snoozeTask(withID: taskID)
+            }
+
+        case "VIEW_SUMMARY_ACTION", UNNotificationDefaultActionIdentifier:
+            // Handle tap on Daily Summary notification or its action button
+            let category = response.notification.request.content.categoryIdentifier
+            if actionIdentifier == "VIEW_SUMMARY_ACTION" || category == "DAILY_SUMMARY" {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .showDailySummary, object: nil)
+                }
+            } else if category == "MORNING_BRIEFING" {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .showMorningBriefing, object: nil)
+                }
+            }
+
+        case "VIEW_BRIEFING_ACTION":
+            // Handle tap on Morning Briefing action button
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .showMorningBriefing, object: nil)
             }
 
         default:

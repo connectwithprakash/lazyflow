@@ -12,6 +12,8 @@ struct ContentView: View {
     @State private var showSearch = false
     @State private var showAddTask = false
     @State private var showICloudPrompt = false
+    @State private var showDailySummary = false
+    @State private var showMorningBriefing = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     enum Tab: String, CaseIterable, Identifiable {
@@ -60,6 +62,12 @@ struct ContentView: View {
         .sheet(isPresented: $showAddTask) {
             AddTaskView()
         }
+        .sheet(isPresented: $showDailySummary) {
+            DailySummaryView()
+        }
+        .sheet(isPresented: $showMorningBriefing) {
+            MorningBriefingView()
+        }
         .onOpenURL { url in
             handleDeepLink(url)
         }
@@ -81,6 +89,20 @@ struct ContentView: View {
                 default: break
                 }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showDailySummary)) { _ in
+            // Dismiss any open sheet first, then present Daily Summary
+            showSearch = false
+            showAddTask = false
+            showMorningBriefing = false
+            showDailySummary = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showMorningBriefing)) { _ in
+            // Dismiss any open sheet first, then present Morning Briefing
+            showSearch = false
+            showAddTask = false
+            showDailySummary = false
+            showMorningBriefing = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)) { _ in
             // Check if we should show iCloud prompt after first task is created
@@ -263,6 +285,16 @@ struct ContentView: View {
             showSearch = true
         case "add", "new":
             showAddTask = true
+        case "daily-summary":
+            showSearch = false
+            showAddTask = false
+            showMorningBriefing = false
+            showDailySummary = true
+        case "morning-briefing":
+            showSearch = false
+            showAddTask = false
+            showDailySummary = false
+            showMorningBriefing = true
         default:
             break
         }
