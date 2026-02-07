@@ -36,7 +36,7 @@ jobs:
           xcodebuild build \
             -project Lazyflow.xcodeproj \
             -scheme Lazyflow \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -destination 'platform=iOS Simulator,name=Any iOS Simulator Device' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty
@@ -47,7 +47,7 @@ jobs:
           xcodebuild test \
             -project Lazyflow.xcodeproj \
             -scheme Lazyflow \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -destination 'platform=iOS Simulator,name=Any iOS Simulator Device' \
             -only-testing:LazyflowTests \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --report junit --output test-results.xml
@@ -83,7 +83,7 @@ jobs:
           xcodebuild test \
             -project Lazyflow.xcodeproj \
             -scheme Lazyflow \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -destination 'platform=iOS Simulator,name=Any iOS Simulator Device' \
             -only-testing:LazyflowUITests \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty
