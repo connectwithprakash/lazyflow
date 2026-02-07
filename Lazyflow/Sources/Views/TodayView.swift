@@ -25,6 +25,8 @@ struct TodayView: View {
     @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
     @AppStorage("morningBriefingEnabled") private var morningBriefingEnabled: Bool = true
     @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
+    @AppStorage("lastPlanYourDayDate") private var lastPlanYourDayDate: Double = 0
+    @State private var showPlanYourDay = false
 
     var body: some View {
         Group {
@@ -104,6 +106,9 @@ struct TodayView: View {
         .sheet(isPresented: $showMorningBriefing) {
             MorningBriefingView()
         }
+        .sheet(isPresented: $showPlanYourDay) {
+            PlanYourDayView()
+        }
         .sheet(item: $parentTaskForSubtask) { task in
             AddSubtaskSheet(parentTaskID: task.id) { subtaskTitle in
                 TaskService.shared.createSubtask(title: subtaskTitle, parentTaskID: task.id)
@@ -124,6 +129,26 @@ struct TodayView: View {
                 lastMorningBriefingDate = Date().timeIntervalSince1970
             }
         }
+        .onChange(of: showPlanYourDay) { _, newValue in
+            if !newValue {
+                // Mark as viewed when sheet is dismissed
+                lastPlanYourDayDate = Date().timeIntervalSince1970
+            }
+        }
+    }
+
+    // MARK: - Plan Your Day Prompt
+
+    /// Show Plan Your Day prompt between 5 AM and 12 PM when not yet reviewed today
+    private var shouldShowPlanYourDayPrompt: Bool {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let isMorning = hour >= 5 && hour < 12
+
+        // Check if already viewed today
+        let lastViewedDate = Date(timeIntervalSince1970: lastPlanYourDayDate)
+        let alreadyViewedToday = Calendar.current.isDateInToday(lastViewedDate)
+
+        return isMorning && CalendarService.shared.hasCalendarAccess && !alreadyViewedToday
     }
 
     // MARK: - Morning Briefing Prompt
@@ -339,6 +364,9 @@ struct TodayView: View {
 
             // Prompt cards section - always present to maintain stable section count
             Section {
+                if shouldShowPlanYourDayPrompt {
+                    planYourDayPromptCard
+                }
                 if shouldShowMorningBriefingPrompt {
                     morningBriefingPromptCard
                 }
@@ -675,6 +703,44 @@ struct TodayView: View {
         .padding()
         .background(Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.large)
+    }
+
+    private var planYourDayPromptCard: some View {
+        Button {
+            showPlanYourDay = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                ZStack {
+                    Circle()
+                        .fill(Color.Lazyflow.accent.opacity(0.15))
+                        .frame(width: 44, height: 44)
+
+                    Image(systemName: "calendar.badge.plus")
+                        .font(.system(size: 20))
+                        .foregroundColor(Color.Lazyflow.accent)
+                }
+
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                    Text("Plan Your Day")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundColor(Color.Lazyflow.textPrimary)
+
+                    Text("Review calendar events and add tasks")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+            }
+            .padding()
+            .background(Color.adaptiveSurface)
+            .cornerRadius(DesignSystem.CornerRadius.large)
+        }
+        .buttonStyle(.plain)
     }
 
     private var morningBriefingPromptCard: some View {
