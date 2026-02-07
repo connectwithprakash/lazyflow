@@ -24,18 +24,34 @@ jobs:
 
       - name: Ensure iOS Simulator Runtime
         run: |
+          set -euo pipefail
           # Install the latest iOS simulator runtime if none are available
-          if ! xcrun simctl list runtimes | grep -q "iOS"; then
+          if ! xcrun simctl list runtimes | grep -q "com.apple.CoreSimulator.SimRuntime.iOS"; then
             echo "No iOS runtime found, installing..."
             xcodebuild -downloadPlatform iOS
           fi
           # Create a simulator if the preferred device is missing
           DEVICE_NAME="iPhone 16 Pro"
           if ! xcrun simctl list devices available | grep -q "$DEVICE_NAME"; then
-            RUNTIME=$(xcrun simctl list runtimes | grep "iOS" | tail -1 | sed 's/.*- //')
-            echo "Creating $DEVICE_NAME with runtime $RUNTIME"
-            xcrun simctl create "$DEVICE_NAME" "iPhone-16-Pro" "$RUNTIME" || true
+            RUNTIME=$(xcrun simctl list runtimes | grep "com.apple.CoreSimulator.SimRuntime.iOS" | tail -1 | awk '{print $NF}')
+            if [ -z "$RUNTIME" ]; then
+              echo "::error::No iOS simulator runtime available"
+              exit 1
+            fi
+            DEVICE_TYPE=$(xcrun simctl list devicetypes | grep "iPhone 16 Pro," | awk -F'(' '{print $2}' | tr -d ')')
+            if [ -z "$DEVICE_TYPE" ]; then
+              echo "::error::iPhone 16 Pro device type not found"
+              exit 1
+            fi
+            echo "Creating $DEVICE_NAME (type: $DEVICE_TYPE) with runtime $RUNTIME"
+            xcrun simctl create "$DEVICE_NAME" "$DEVICE_TYPE" "$RUNTIME"
           fi
+          # Verify the device exists
+          if ! xcrun simctl list devices available | grep -q "$DEVICE_NAME"; then
+            echo "::error::$DEVICE_NAME simulator not available after setup"
+            exit 1
+          fi
+          echo "$DEVICE_NAME simulator is available"
 
       - name: Cache DerivedData
         uses: actions/cache@v4
