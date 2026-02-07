@@ -6,6 +6,8 @@ import Charts
 struct AnalyticsView: View {
     @StateObject private var analyticsService = AnalyticsService()
     @State private var selectedPeriod: AnalyticsPeriod = .thisWeek
+    /// Triggers view refresh when task data changes, without resetting scroll
+    @State private var refreshTrigger = Date()
 
     var body: some View {
         ScrollView {
@@ -32,6 +34,27 @@ struct AnalyticsView: View {
         .background(Color.adaptiveBackground)
         .navigationTitle("Analytics")
         .navigationBarTitleDisplayMode(.large)
+        .onReceive(analyticsService.$lastUpdated) { newValue in
+            // Update local state to trigger view refresh without recreating scroll container
+            refreshTrigger = newValue
+        }
+    }
+
+    // MARK: - Computed Data (refreshed via refreshTrigger)
+
+    private var overviewStats: OverviewStats {
+        _ = refreshTrigger // Reference to ensure recomputation
+        return analyticsService.getOverviewStats(for: selectedPeriod)
+    }
+
+    private var categoryStats: [CategoryStats] {
+        _ = refreshTrigger
+        return analyticsService.getCategoryStats(for: selectedPeriod)
+    }
+
+    private var workLifeBalance: WorkLifeBalance {
+        _ = refreshTrigger
+        return analyticsService.calculateWorkLifeBalance(for: selectedPeriod)
     }
 
     // MARK: - Period Selector
@@ -48,7 +71,7 @@ struct AnalyticsView: View {
     // MARK: - Overview Section
 
     private var overviewSection: some View {
-        let stats = analyticsService.getOverviewStats(for: selectedPeriod)
+        let stats = overviewStats
 
         return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             sectionHeader("Overview")
@@ -83,29 +106,29 @@ struct AnalyticsView: View {
     // MARK: - Category Distribution Section
 
     private var categoryDistributionSection: some View {
-        let categoryStats = analyticsService.getCategoryStats(for: selectedPeriod)
+        let stats = categoryStats
 
         return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             sectionHeader("Category Distribution")
 
-            if categoryStats.isEmpty {
+            if stats.isEmpty {
                 emptyStateCard(message: "No tasks in this period")
             } else {
                 VStack(spacing: DesignSystem.Spacing.sm) {
                     // Donut Chart (iOS 17+)
                     if #available(iOS 17.0, *) {
-                        CategoryDonutChart(stats: categoryStats)
+                        CategoryDonutChart(stats: stats)
                             .frame(height: 200)
                             .padding(.vertical, DesignSystem.Spacing.sm)
                     }
 
                     // Legend/Bar representation
-                    ForEach(categoryStats.prefix(6)) { stat in
+                    ForEach(stats.prefix(6)) { stat in
                         CategoryStatRow(stat: stat)
                     }
 
-                    if categoryStats.count > 6 {
-                        Text("+\(categoryStats.count - 6) more categories")
+                    if stats.count > 6 {
+                        Text("+\(stats.count - 6) more categories")
                             .font(DesignSystem.Typography.caption1)
                             .foregroundColor(Color.Lazyflow.textTertiary)
                     }
@@ -120,18 +143,18 @@ struct AnalyticsView: View {
     // MARK: - Completion Rates Section
 
     private var completionRatesSection: some View {
-        let categoryStats = analyticsService.getCategoryStats(for: selectedPeriod)
+        let filteredStats = categoryStats
             .filter { $0.totalCount > 0 }
             .sorted { $0.completionRate > $1.completionRate }
 
         return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             sectionHeader("Completion Rates")
 
-            if categoryStats.isEmpty {
+            if filteredStats.isEmpty {
                 emptyStateCard(message: "No tasks to analyze")
             } else {
                 VStack(spacing: DesignSystem.Spacing.sm) {
-                    ForEach(categoryStats) { stat in
+                    ForEach(filteredStats) { stat in
                         CompletionRateRow(stat: stat)
                     }
                 }
@@ -145,7 +168,7 @@ struct AnalyticsView: View {
     // MARK: - Work-Life Balance Section
 
     private var workLifeBalanceSection: some View {
-        let balance = analyticsService.calculateWorkLifeBalance(for: selectedPeriod)
+        let balance = workLifeBalance
 
         return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             sectionHeader("Work-Life Balance")
