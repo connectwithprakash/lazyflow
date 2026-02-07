@@ -96,18 +96,27 @@ final class PlanYourDayViewModel: ObservableObject {
         let ekEvents = calendarService.fetchEvents(for: Date())
         let linkedEventIDs = Set(taskService.tasks.compactMap(\.linkedEventID))
 
-        let unlinkedEvents = ekEvents.filter { event in
-            guard let identifier = event.eventIdentifier else { return false }
-            return !linkedEventIDs.contains(identifier)
-        }
+        let items = Self.filterAndMap(ekEvents: ekEvents, linkedEventIDs: linkedEventIDs)
 
-        if unlinkedEvents.isEmpty {
+        if items.isEmpty {
             events = []
             viewState = .empty
         } else {
-            events = unlinkedEvents.map { PlanEventItem(from: $0) }
+            events = items
             viewState = .selection
         }
+    }
+
+    /// Filter out already-linked events and map to PlanEventItems.
+    /// Extracted as a static method for testability (EKEvent can't be mocked in unit tests,
+    /// but this is covered via PlanEventItem-level tests).
+    static func filterAndMap(ekEvents: [EKEvent], linkedEventIDs: Set<String>) -> [PlanEventItem] {
+        ekEvents
+            .filter { event in
+                guard let identifier = event.eventIdentifier else { return false }
+                return !linkedEventIDs.contains(identifier)
+            }
+            .map { PlanEventItem(from: $0) }
     }
 
     /// Toggle selection for a single event

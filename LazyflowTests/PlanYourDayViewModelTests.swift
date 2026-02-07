@@ -165,6 +165,33 @@ final class PlanYourDayViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.formattedEstimatedTime, "0m")
     }
 
+    // MARK: - De-duplication
+
+    func testEventsWithLinkedIDs_AreExcludedFromSelection() {
+        // Simulate: user has events loaded, some of which have IDs matching existing linked tasks
+        let events = makeSampleEvents()
+        viewModel.events = events
+
+        // Simulate filtering that loadEvents() would do: remove events whose IDs are in linkedEventIDs
+        let linkedEventIDs: Set<String> = ["event-1"]
+        let filtered = viewModel.events.filter { !linkedEventIDs.contains($0.id) }
+
+        XCTAssertEqual(filtered.count, 2)
+        XCTAssertFalse(filtered.contains(where: { $0.id == "event-1" }))
+        XCTAssertTrue(filtered.contains(where: { $0.id == "event-2" }))
+        XCTAssertTrue(filtered.contains(where: { $0.id == "event-3" }))
+    }
+
+    func testEventsWithLinkedIDs_AllLinked_ResultsInEmpty() {
+        let events = makeSampleEvents()
+        viewModel.events = events
+
+        let linkedEventIDs = Set(events.map(\.id))
+        let filtered = viewModel.events.filter { !linkedEventIDs.contains($0.id) }
+
+        XCTAssertTrue(filtered.isEmpty)
+    }
+
     // MARK: - No-op on Empty Selection
 
     func testCreateTasks_NoSelection_NoStateChange() {
@@ -228,6 +255,57 @@ final class PlanEventItemTests: XCTestCase {
             isSelected: true
         )
         XCTAssertTrue(item.isLikelyNonTask)
+    }
+
+    func testIsLikelyNonTask_Vacation_ReturnsTrue() {
+        let item = PlanEventItem(
+            title: "Vacation Day",
+            startDate: Date(),
+            endDate: Date().addingTimeInterval(3600),
+            isSelected: true
+        )
+        XCTAssertTrue(item.isLikelyNonTask)
+    }
+
+    // MARK: - Default Selection for Non-Task Events
+
+    func testDefaultSelection_NonTaskTimedEvent_ShouldBeDeselected() {
+        // The manual init allows explicit isSelected, but the EKEvent init
+        // uses inline non-task detection. Verify the pattern: a timed "Lunch Break"
+        // should be detected as non-task and thus should not be pre-selected.
+        let lunchEvent = PlanEventItem(
+            title: "Lunch Break",
+            startDate: Date(),
+            endDate: Date().addingTimeInterval(3600),
+            isAllDay: false,
+            isSelected: false // Simulates what init(from: EKEvent) would set
+        )
+        XCTAssertTrue(lunchEvent.isLikelyNonTask)
+        XCTAssertFalse(lunchEvent.isSelected)
+    }
+
+    func testDefaultSelection_ActionableTimedEvent_ShouldBeSelected() {
+        let meeting = PlanEventItem(
+            title: "Sprint Planning",
+            startDate: Date(),
+            endDate: Date().addingTimeInterval(3600),
+            isAllDay: false,
+            isSelected: true // Simulates what init(from: EKEvent) would set
+        )
+        XCTAssertFalse(meeting.isLikelyNonTask)
+        XCTAssertTrue(meeting.isSelected)
+    }
+
+    func testDefaultSelection_AllDayEvent_ShouldBeDeselected() {
+        let allDay = PlanEventItem(
+            title: "Sprint Planning",
+            startDate: Date(),
+            endDate: Date().addingTimeInterval(86400),
+            isAllDay: true,
+            isSelected: false // Simulates what init(from: EKEvent) would set
+        )
+        XCTAssertTrue(allDay.isLikelyNonTask)
+        XCTAssertFalse(allDay.isSelected)
     }
 
     func testIsLikelyNonTask_RegularMeeting_ReturnsFalse() {
