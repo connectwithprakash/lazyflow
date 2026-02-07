@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 /// Service for calculating productivity analytics and insights
 /// Part of Issue #130 - Category and List Analytics
@@ -7,10 +8,22 @@ import SwiftUI
 class AnalyticsService: ObservableObject {
     private let taskService: TaskService
     private let taskListService: TaskListService
+    private var cancellables = Set<AnyCancellable>()
+
+    /// Triggers view updates when underlying data changes
+    @Published private(set) var lastUpdated = Date()
 
     init(taskService: TaskService = .shared, taskListService: TaskListService = TaskListService()) {
         self.taskService = taskService
         self.taskListService = taskListService
+
+        // Observe task changes to trigger analytics refresh
+        taskService.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.lastUpdated = Date()
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Category Analytics
@@ -198,16 +211,17 @@ class AnalyticsService: ObservableObject {
 
         return taskService.tasks.filter { task in
             // Include tasks created in period OR completed in period
-            let createdInPeriod = task.createdAt >= startDate && task.createdAt <= endDate
+            // Use < endDate since endDate is the start of the next period
+            let createdInPeriod = task.createdAt >= startDate && task.createdAt < endDate
             let completedInPeriod: Bool
             if let completedAt = task.completedAt {
-                completedInPeriod = completedAt >= startDate && completedAt <= endDate
+                completedInPeriod = completedAt >= startDate && completedAt < endDate
             } else {
                 completedInPeriod = false
             }
             let dueInPeriod: Bool
             if let dueDate = task.dueDate {
-                dueInPeriod = dueDate >= startDate && dueDate <= endDate
+                dueInPeriod = dueDate >= startDate && dueDate < endDate
             } else {
                 dueInPeriod = false
             }
