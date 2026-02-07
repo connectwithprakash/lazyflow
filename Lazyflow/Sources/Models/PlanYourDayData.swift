@@ -78,8 +78,16 @@ struct PlanEventItem: Identifiable {
         self.location = ekEvent.location
         self.calendarColor = ekEvent.calendar?.cgColor
         self.eventIdentifier = ekEvent.eventIdentifier ?? ""
-        // Pre-select timed events that look like tasks; deselect all-day and non-task events
-        self.isSelected = !ekEvent.isAllDay
+        // Pre-select timed events that look actionable; deselect all-day and non-task events
+        let isTimedEvent = !ekEvent.isAllDay
+        let lowercasedTitle = self.title.lowercased()
+        let nonTaskPatterns = [
+            "lunch", "break", "out of office", "ooo",
+            "holiday", "vacation", "pto", "birthday",
+            "block", "focus time", "do not disturb"
+        ]
+        let looksLikeNonTask = self.isAllDay || nonTaskPatterns.contains { lowercasedTitle.contains($0) }
+        self.isSelected = isTimedEvent && !looksLikeNonTask
     }
 
     init(

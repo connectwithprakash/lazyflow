@@ -94,8 +94,7 @@ final class PlanYourDayViewModel: ObservableObject {
         }
 
         let ekEvents = calendarService.fetchEvents(for: Date())
-        let existingTasks = taskService.fetchTodayTasks()
-        let linkedEventIDs = Set(existingTasks.compactMap(\.linkedEventID))
+        let linkedEventIDs = Set(taskService.tasks.compactMap(\.linkedEventID))
 
         let unlinkedEvents = ekEvents.filter { event in
             guard let identifier = event.eventIdentifier else { return false }
