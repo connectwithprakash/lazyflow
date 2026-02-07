@@ -37,8 +37,13 @@ This file provides guidance to AI coding agents when working with code in this r
    - Run UI tests on iPhone 17 Pro and iPad simulators
    - Manual testing on simulators
    - Manual testing on physical iPhone (if available)
-9. **Commit:** Create small, iterative commits with clear messages
-10. **Document:** Iteratively review `docs/` and update relevant documentation:
+9. **Peer Review:** Use Codex (via MCP) as a peer reviewer before presenting work:
+   - After implementation: ask Codex to review changes for blind spots, logic errors, security issues
+   - On tricky decisions: consult Codex mid-implementation for architecture/approach feedback
+   - Before PR: request a full review pass, address Codex feedback, then present to the user
+   - Use Codex like a colleague — ask specific questions, not just blanket reviews
+10. **Commit:** Create small, iterative commits with clear messages
+11. **Document:** Iteratively review `docs/` and update relevant documentation:
     - `docs/project/` - Check roadmap, user-flows, design-system for updates
     - `fastlane/metadata/en-US/release_notes.txt` - Add to What's New
     - `fastlane/metadata/en-US/promotional_text.txt` - Update promotional text
@@ -50,12 +55,32 @@ This file provides guidance to AI coding agents when working with code in this r
       - Add to `docs/site/design/index.html` (not the main landing page)
       - Update the design system version in the footer
     - Deploy website: `netlify deploy --prod --dir=docs/site`
-11. **PR:** Do NOT push or create PR without explicit permission from the user
-12. **Review:** When PR review comments are received:
+12. **PR:** Do NOT push or create PR without explicit permission from the user
+13. **Review:** When PR review comments are received:
     - Analyze each comment for validity (is it a real issue or misunderstanding?)
     - For valid issues: fix the code, add tests if needed, push updates
     - For invalid issues: respond with clear explanation why
     - Re-run tests after any changes
+
+## Tooling — Multi-Agent Setup
+
+This project uses a multi-agent workflow where Claude Code is the primary development agent and OpenAI Codex serves as a peer reviewer via MCP.
+
+**Codex MCP Server:**
+- Registered as `codex` MCP server using the official `codex mcp-server` command
+- Authenticated via ChatGPT OAuth (credentials in `~/.codex/auth.json`)
+- Model: `gpt-5.3-codex` with `xhigh` reasoning effort
+
+**When to use Codex:**
+- Post-implementation review — catch blind spots before presenting to user
+- Architecture decisions — get a second opinion on approach trade-offs
+- Complex logic validation — verify algorithms, state machines, edge cases
+- Pre-PR review — full review pass before requesting user approval
+
+**When NOT to use Codex:**
+- Simple typo fixes or trivial changes
+- Tasks where the user has already provided detailed instructions
+- Exploratory research (use web search and subagents instead)
 
 ## Project Overview
 

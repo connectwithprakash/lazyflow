@@ -56,7 +56,7 @@ Secrets.swift
 *~.nib
 
 # MCP configuration (local)
-.mcp.json
+# .mcp.json — tracked for shared multi-agent setup
 
 # Local Netlify folder
 .netlify
