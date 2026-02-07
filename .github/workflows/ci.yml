@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.swift', '**/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project Lazyflow.xcodeproj \
+            -scheme Lazyflow \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+
+      - name: Run Unit Tests
+        run: |
+          xcodebuild test \
+            -project Lazyflow.xcodeproj \
+            -scheme Lazyflow \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -only-testing:LazyflowTests \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --report junit --output test-results.xml
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.xml
+
+  ui-tests:
+    runs-on: macos-15
+    timeout-minutes: 60
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.swift', '**/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Run UI Tests
+        run: |
+          xcodebuild test \
+            -project Lazyflow.xcodeproj \
+            -scheme Lazyflow \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -only-testing:LazyflowUITests \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
