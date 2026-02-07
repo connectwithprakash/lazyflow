@@ -26,15 +26,15 @@ jobs:
         run: |
           set -euo pipefail
           # Install the latest iOS simulator runtime if none are available
-          if ! xcrun simctl list runtimes | grep -q "com.apple.CoreSimulator.SimRuntime.iOS"; then
-            echo "No iOS runtime found, installing..."
+          if ! xcrun simctl list runtimes available | grep -q "com.apple.CoreSimulator.SimRuntime.iOS"; then
+            echo "No available iOS runtime found, installing..."
             xcodebuild -downloadPlatform iOS
           fi
           # Create a simulator if the preferred device is missing
           DEVICE_NAME="iPhone 16 Pro"
           DEVICE_TYPE_ID="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
           if ! xcrun simctl list devices available | grep -w "$DEVICE_NAME" | grep -qv "Max"; then
-            RUNTIME=$(xcrun simctl list runtimes | grep "com.apple.CoreSimulator.SimRuntime.iOS" | tail -1 | awk '{print $NF}')
+            RUNTIME=$(xcrun simctl list runtimes available | grep "com.apple.CoreSimulator.SimRuntime.iOS" | tail -1 | awk '{print $NF}')
             if [ -z "$RUNTIME" ]; then
               echo "::error::No iOS simulator runtime available"
               exit 1
@@ -95,6 +95,19 @@ jobs:
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Ensure iOS Simulator Runtime
+        run: |
+          set -euo pipefail
+          if ! xcrun simctl list runtimes available | grep -q "com.apple.CoreSimulator.SimRuntime.iOS"; then
+            echo "No available iOS runtime found, installing..."
+            xcodebuild -downloadPlatform iOS
+          fi
+          if ! xcrun simctl list runtimes available | grep -q "com.apple.CoreSimulator.SimRuntime.iOS"; then
+            echo "::error::No iOS simulator runtime available after install attempt"
+            exit 1
+          fi
+          echo "iOS simulator runtime is available"
 
       - name: Cache DerivedData
         uses: actions/cache@v4
