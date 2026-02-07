@@ -22,6 +22,7 @@ final class PlanYourDayViewModel: ObservableObject {
 
     private let calendarService: CalendarService
     private let taskService: TaskService
+    private let learningService: EventPreferenceLearningService
 
     // MARK: - Computed Properties
 
@@ -74,10 +75,12 @@ final class PlanYourDayViewModel: ObservableObject {
 
     init(
         calendarService: CalendarService = .shared,
-        taskService: TaskService = .shared
+        taskService: TaskService = .shared,
+        learningService: EventPreferenceLearningService = .shared
     ) {
         self.calendarService = calendarService
         self.taskService = taskService
+        self.learningService = learningService
     }
 
     // MARK: - Actions
@@ -103,7 +106,7 @@ final class PlanYourDayViewModel: ObservableObject {
             events = []
             viewState = .empty
         } else {
-            events = items
+            events = applyLearnedPreferences(items)
             viewState = .selection
         }
     }
@@ -118,6 +121,20 @@ final class PlanYourDayViewModel: ObservableObject {
                 return !linkedEventIDs.contains(identifier)
             }
             .map { PlanEventItem(from: $0) }
+    }
+
+    /// Override default selection based on learned user preferences.
+    /// Frequently skipped events get deselected; frequently selected events get selected.
+    func applyLearnedPreferences(_ items: [PlanEventItem]) -> [PlanEventItem] {
+        items.map { item in
+            var modified = item
+            if learningService.isFrequentlySkipped(item.title) {
+                modified.isSelected = false
+            } else if learningService.isFrequentlySelected(item.title) {
+                modified.isSelected = true
+            }
+            return modified
+        }
     }
 
     /// Toggle selection for a single event
@@ -146,6 +163,9 @@ final class PlanYourDayViewModel: ObservableObject {
         guard !selected.isEmpty else { return }
 
         viewState = .creating
+
+        // Record all event selection states for learning (before processing)
+        learningService.recordSelections(events)
 
         var totalMinutes = 0
 

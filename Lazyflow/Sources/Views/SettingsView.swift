@@ -73,6 +73,18 @@ struct SettingsView: View {
                     Text("Get a prompt card on Today and optional notification to view your morning briefing. Access it anytime from More > Morning Briefing.")
                 }
 
+                // Plan Your Day
+                Section {
+                    Toggle("Auto-Hide Frequently Skipped", isOn: Binding(
+                        get: { UserDefaults.standard.bool(forKey: "autoHideSkippedEvents") },
+                        set: { UserDefaults.standard.set($0, forKey: "autoHideSkippedEvents") }
+                    ))
+                } header: {
+                    Text("Plan Your Day")
+                } footer: {
+                    Text("Events you skip 3+ times will be hidden by default. You can always reveal them.")
+                }
+
                 // Daily Summary Notifications
                 Section {
                     DailySummaryNotificationToggle()
@@ -343,6 +355,7 @@ struct DataManagementView: View {
     @State private var showDeleteEverywhereConfirmation = false
     @State private var showDeleteCloudOnlyConfirmation = false
     @State private var showResyncConfirmation = false
+    @State private var showResetEventPreferencesConfirmation = false
 
     private var iCloudAvailable: Bool {
         PersistenceController.isICloudAvailable
@@ -611,6 +624,23 @@ struct DataManagementView: View {
                     }
                     .disabled(isDeleting || isDeletingCloud)
                 }
+
+                // Option 4: Reset Event Preferences
+                Button(role: .destructive) {
+                    showResetEventPreferencesConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise")
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Reset Event Preferences")
+                            Text("Clears learned Plan Your Day patterns")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                        Spacer()
+                    }
+                }
             } header: {
                 Text("Danger Zone")
             } footer: {
@@ -674,6 +704,14 @@ struct DataManagementView: View {
             }
         } message: {
             Text("This will replace local data with data from iCloud. Any unsynced local changes will be lost.")
+        }
+        .alert("Reset Event Preferences?", isPresented: $showResetEventPreferencesConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                EventPreferenceLearningService.shared.clearAllLearningData()
+            }
+        } message: {
+            Text("This will clear all learned event preferences. The app will need to re-learn which events you typically skip or select.")
         }
     }
 

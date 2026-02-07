@@ -236,6 +236,114 @@ final class PlanYourDayViewModelTests: XCTestCase {
             XCTFail("Expected viewState to remain .selection when no events selected")
         }
     }
+
+    // MARK: - Learned Preferences
+
+    func testApplyLearnedPreferences_DeselectsFrequentlySkipped() {
+        let testDefaults = UserDefaults(suiteName: "PlanYourDayViewModelLearnedTests")!
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelLearnedTests")
+        let learningService = EventPreferenceLearningService(defaults: testDefaults)
+
+        viewModel = PlanYourDayViewModel(learningService: learningService)
+
+        // Train: skip "Team Standup" 3 times
+        for _ in 0..<3 {
+            learningService.recordSelections([
+                PlanEventItem(
+                    title: "Team Standup",
+                    startDate: Date(),
+                    endDate: Date().addingTimeInterval(1800),
+                    isSelected: false
+                ),
+            ])
+        }
+
+        // Apply to events where standup is initially selected
+        let events = [
+            PlanEventItem(
+                id: "e1",
+                title: "Team Standup",
+                startDate: Date(),
+                endDate: Date().addingTimeInterval(1800),
+                isSelected: true
+            ),
+            PlanEventItem(
+                id: "e2",
+                title: "Design Review",
+                startDate: Date(),
+                endDate: Date().addingTimeInterval(3600),
+                isSelected: true
+            ),
+        ]
+
+        let result = viewModel.applyLearnedPreferences(events)
+
+        // Team Standup should be deselected (frequently skipped)
+        XCTAssertFalse(result[0].isSelected)
+        // Design Review should remain selected (no learning data)
+        XCTAssertTrue(result[1].isSelected)
+
+        learningService.clearAllLearningData()
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelLearnedTests")
+    }
+
+    func testApplyLearnedPreferences_SelectsFrequentlySelected() {
+        let testDefaults = UserDefaults(suiteName: "PlanYourDayViewModelLearnedTests2")!
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelLearnedTests2")
+        let learningService = EventPreferenceLearningService(defaults: testDefaults)
+
+        viewModel = PlanYourDayViewModel(learningService: learningService)
+
+        // Train: select "Sprint Planning" 4 times
+        for _ in 0..<4 {
+            learningService.recordSelections([
+                PlanEventItem(
+                    title: "Sprint Planning",
+                    startDate: Date(),
+                    endDate: Date().addingTimeInterval(3600),
+                    isSelected: true
+                ),
+            ])
+        }
+
+        // Event starts deselected (e.g., heuristic marked it as non-task)
+        let events = [
+            PlanEventItem(
+                id: "e1",
+                title: "Sprint Planning",
+                startDate: Date(),
+                endDate: Date().addingTimeInterval(3600),
+                isSelected: false
+            ),
+        ]
+
+        let result = viewModel.applyLearnedPreferences(events)
+
+        // Should be selected because learning overrides heuristic
+        XCTAssertTrue(result[0].isSelected)
+
+        learningService.clearAllLearningData()
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelLearnedTests2")
+    }
+
+    func testCreateTasks_RecordsSelectionsToLearningService() {
+        let testDefaults = UserDefaults(suiteName: "PlanYourDayViewModelRecordTests")!
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelRecordTests")
+        let learningService = EventPreferenceLearningService(defaults: testDefaults)
+
+        viewModel = PlanYourDayViewModel(learningService: learningService)
+        viewModel.events = makeSampleEvents()
+
+        XCTAssertTrue(learningService.records.isEmpty)
+
+        viewModel.createTasks()
+
+        // All 3 events should be recorded
+        XCTAssertEqual(learningService.records.count, 3)
+
+        learningService.clearAllLearningData()
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelRecordTests")
+    }
 }
 
 // MARK: - PlanEventItem Tests

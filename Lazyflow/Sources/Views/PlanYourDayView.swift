@@ -5,6 +5,9 @@ struct PlanYourDayView: View {
     @StateObject private var viewModel = PlanYourDayViewModel()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("autoHideSkippedEvents") private var autoHideSkippedEvents = false
+    @State private var showHiddenEvents = false
+    private let learningService = EventPreferenceLearningService.shared
 
     var body: some View {
         NavigationStack {
@@ -120,6 +123,18 @@ struct PlanYourDayView: View {
 
     // MARK: - Selection State
 
+    /// Timed events that are NOT frequently skipped (or auto-hide is off)
+    private var visibleTimedEvents: [PlanEventItem] {
+        if !autoHideSkippedEvents { return viewModel.timedEvents }
+        return viewModel.timedEvents.filter { !learningService.isFrequentlySkipped($0.title) }
+    }
+
+    /// Timed events that ARE frequently skipped (only relevant when auto-hide is on)
+    private var hiddenTimedEvents: [PlanEventItem] {
+        if !autoHideSkippedEvents { return [] }
+        return viewModel.timedEvents.filter { learningService.isFrequentlySkipped($0.title) }
+    }
+
     private var selectionState: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -127,9 +142,21 @@ struct PlanYourDayView: View {
                     selectionHeader
                         .padding(.top, DesignSystem.Spacing.md)
 
-                    // Timed events
-                    if !viewModel.timedEvents.isEmpty {
-                        eventSection(title: "Events", events: viewModel.timedEvents)
+                    // Timed events (visible)
+                    if !visibleTimedEvents.isEmpty {
+                        eventSection(title: "Events", events: visibleTimedEvents)
+                    }
+
+                    // Hidden timed events toggle
+                    if !hiddenTimedEvents.isEmpty {
+                        hiddenEventsToggle
+                        if showHiddenEvents {
+                            eventSection(
+                                title: "Usually Skipped",
+                                events: hiddenTimedEvents,
+                                deEmphasized: true
+                            )
+                        }
                     }
 
                     // All-day events
@@ -142,6 +169,26 @@ struct PlanYourDayView: View {
             }
 
             actionBar
+        }
+    }
+
+    private var hiddenEventsToggle: some View {
+        Button {
+            withAnimation(DesignSystem.Animation.quick) {
+                showHiddenEvents.toggle()
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: showHiddenEvents ? "eye.slash" : "eye")
+                    .font(DesignSystem.Typography.caption1)
+                Text(showHiddenEvents
+                     ? "Hide \(hiddenTimedEvents.count) usually skipped"
+                     : "Show \(hiddenTimedEvents.count) usually skipped")
+                    .font(DesignSystem.Typography.caption1)
+            }
+            .foregroundColor(Color.Lazyflow.textTertiary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DesignSystem.Spacing.sm)
         }
     }
 
@@ -232,14 +279,28 @@ struct PlanYourDayView: View {
 
                 // Event details
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                    Text(event.title)
-                        .font(DesignSystem.Typography.body)
-                        .foregroundColor(
-                            deEmphasized
-                                ? Color.Lazyflow.textSecondary
-                                : Color.Lazyflow.textPrimary
-                        )
-                        .lineLimit(2)
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Text(event.title)
+                            .font(DesignSystem.Typography.body)
+                            .foregroundColor(
+                                deEmphasized || learningService.isFrequentlySkipped(event.title)
+                                    ? Color.Lazyflow.textSecondary
+                                    : Color.Lazyflow.textPrimary
+                            )
+                            .lineLimit(2)
+
+                        if learningService.isFrequentlySkipped(event.title) {
+                            Text("Usually skipped")
+                                .font(DesignSystem.Typography.caption2)
+                                .foregroundColor(Color.Lazyflow.textTertiary)
+                                .padding(.horizontal, DesignSystem.Spacing.xs)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.Lazyflow.textTertiary.opacity(0.12))
+                                )
+                        }
+                    }
 
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         Text(event.formattedTimeRange)
