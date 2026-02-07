@@ -166,15 +166,16 @@ final class PlanYourDayViewModelTests: XCTestCase {
     }
 
     // MARK: - De-duplication
+    // Note: filterAndMap() takes [EKEvent] which can't be instantiated in unit tests.
+    // These tests verify the filtering concept at the PlanEventItem level, matching
+    // the same ID-based predicate used in filterAndMap().
 
     func testEventsWithLinkedIDs_AreExcludedFromSelection() {
-        // Simulate: user has events loaded, some of which have IDs matching existing linked tasks
         let events = makeSampleEvents()
-        viewModel.events = events
-
-        // Simulate filtering that loadEvents() would do: remove events whose IDs are in linkedEventIDs
         let linkedEventIDs: Set<String> = ["event-1"]
-        let filtered = viewModel.events.filter { !linkedEventIDs.contains($0.id) }
+
+        // Same predicate as filterAndMap: exclude events whose ID is in linkedEventIDs
+        let filtered = events.filter { !linkedEventIDs.contains($0.id) }
 
         XCTAssertEqual(filtered.count, 2)
         XCTAssertFalse(filtered.contains(where: { $0.id == "event-1" }))
@@ -184,12 +185,39 @@ final class PlanYourDayViewModelTests: XCTestCase {
 
     func testEventsWithLinkedIDs_AllLinked_ResultsInEmpty() {
         let events = makeSampleEvents()
-        viewModel.events = events
-
         let linkedEventIDs = Set(events.map(\.id))
-        let filtered = viewModel.events.filter { !linkedEventIDs.contains($0.id) }
+
+        let filtered = events.filter { !linkedEventIDs.contains($0.id) }
 
         XCTAssertTrue(filtered.isEmpty)
+    }
+
+    // MARK: - All-Day Duration Exclusion
+
+    func testTotalEstimatedMinutes_ExcludesAllDayEvents() {
+        let now = Date()
+        let calendar = Calendar.current
+        viewModel.events = [
+            PlanEventItem(
+                id: "timed",
+                title: "Standup",
+                startDate: calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now)!,
+                endDate: calendar.date(bySettingHour: 9, minute: 30, second: 0, of: now)!,
+                isAllDay: false,
+                isSelected: true
+            ),
+            PlanEventItem(
+                id: "allday",
+                title: "Company Holiday",
+                startDate: calendar.startOfDay(for: now),
+                endDate: calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!,
+                isAllDay: true,
+                isSelected: true
+            ),
+        ]
+
+        // Only the 30-min timed event should count
+        XCTAssertEqual(viewModel.totalEstimatedMinutes, 30)
     }
 
     // MARK: - No-op on Empty Selection

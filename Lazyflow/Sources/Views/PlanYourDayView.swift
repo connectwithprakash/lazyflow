@@ -11,6 +11,8 @@ struct PlanYourDayView: View {
                 switch viewModel.viewState {
                 case .loading:
                     loadingState
+                case .noAccess:
+                    noAccessState
                 case .empty:
                     emptyState
                 case .selection:
@@ -46,6 +48,37 @@ struct PlanYourDayView: View {
                 .foregroundColor(Color.Lazyflow.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - No Access State
+
+    private var noAccessState: some View {
+        VStack(spacing: DesignSystem.Spacing.xl) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.system(size: 56))
+                .foregroundColor(Color.Lazyflow.warning)
+
+            VStack(spacing: DesignSystem.Spacing.sm) {
+                Text("Calendar Access Needed")
+                    .font(DesignSystem.Typography.title2)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+
+                Text("Grant calendar access in Settings to\nreview events and plan your day.")
+                    .font(DesignSystem.Typography.body)
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .frame(width: 200)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
 
     // MARK: - Empty State

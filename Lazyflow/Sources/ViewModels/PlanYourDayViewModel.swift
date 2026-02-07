@@ -10,6 +10,7 @@ final class PlanYourDayViewModel: ObservableObject {
 
     enum ViewState {
         case loading
+        case noAccess
         case empty
         case selection
         case creating
@@ -40,10 +41,10 @@ final class PlanYourDayViewModel: ObservableObject {
         events.allSatisfy { !$0.isSelected }
     }
 
-    /// Total estimated time in minutes for selected events
+    /// Total estimated time in minutes for selected timed events (excludes all-day)
     var totalEstimatedMinutes: Int {
         selectedEvents.reduce(0) { total, event in
-            total + event.durationMinutes
+            total + (event.isAllDay ? 0 : event.durationMinutes)
         }
     }
 
@@ -88,7 +89,7 @@ final class PlanYourDayViewModel: ObservableObject {
         if !calendarService.hasCalendarAccess {
             let granted = await calendarService.requestAccess()
             if !granted {
-                viewState = .empty
+                viewState = .noAccess
                 return
             }
         }
@@ -164,7 +165,9 @@ final class PlanYourDayViewModel: ObservableObject {
                 linkedEventID: event.eventIdentifier
             )
 
-            totalMinutes += event.durationMinutes
+            if !event.isAllDay {
+                totalMinutes += event.durationMinutes
+            }
         }
 
         let result = PlanYourDayResult(
