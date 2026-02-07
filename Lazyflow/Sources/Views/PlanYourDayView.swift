@@ -135,6 +135,14 @@ struct PlanYourDayView: View {
         return viewModel.timedEvents.filter { learningService.isFrequentlySkipped($0.title) }
     }
 
+    /// Whether all currently actionable visible events are selected (safe for empty collections)
+    private var actionableAllVisibleSelected: Bool {
+        let hasActionable = !visibleTimedEvents.isEmpty || !viewModel.allDayEvents.isEmpty
+        return hasActionable
+            && visibleTimedEvents.allSatisfy(\.isSelected)
+            && viewModel.allDayEvents.allSatisfy(\.isSelected)
+    }
+
     private var selectionState: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -210,21 +218,19 @@ struct PlanYourDayView: View {
 
             Button {
                 withAnimation(DesignSystem.Animation.quick) {
-                    if hiddenTimedEvents.isEmpty {
-                        // No hidden events — operate on all
+                    if hiddenTimedEvents.isEmpty || showHiddenEvents {
+                        // No hidden events, or hidden are revealed — operate on all
                         if viewModel.allSelected {
                             viewModel.deselectAll()
                         } else {
                             viewModel.selectAll()
                         }
                     } else {
-                        // Only toggle visible events (exclude collapsed hidden events)
+                        // Hidden events collapsed — only toggle visible events
                         let visibleIDs = Set(
                             visibleTimedEvents.map(\.id) + viewModel.allDayEvents.map(\.id)
                         )
-                        let allVisibleSelected = visibleTimedEvents.allSatisfy(\.isSelected)
-                            && viewModel.allDayEvents.allSatisfy(\.isSelected)
-                        if allVisibleSelected {
+                        if actionableAllVisibleSelected {
                             viewModel.deselectOnly(visibleIDs)
                         } else {
                             viewModel.selectOnly(visibleIDs)
@@ -232,7 +238,10 @@ struct PlanYourDayView: View {
                     }
                 }
             } label: {
-                Text(viewModel.allSelected ? "Deselect All" : "Select All")
+                let label = (hiddenTimedEvents.isEmpty || showHiddenEvents)
+                    ? viewModel.allSelected
+                    : actionableAllVisibleSelected
+                Text(label ? "Deselect All" : "Select All")
                     .font(DesignSystem.Typography.subheadline)
                     .foregroundColor(Color.Lazyflow.accent)
             }
