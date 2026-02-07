@@ -37,11 +37,12 @@ This file provides guidance to AI coding agents when working with code in this r
    - Run UI tests on iPhone 17 Pro and iPad simulators
    - Manual testing on simulators
    - Manual testing on physical iPhone (if available)
-9. **Peer Review:** Use Codex (via MCP) as a peer reviewer before presenting work:
-   - After implementation: ask Codex to review changes for blind spots, logic errors, security issues
+9. **Peer Review:** Use Codex (via MCP) as an iterative peer reviewer before presenting work:
+   - After implementation: send the full diff to Codex for review (blind spots, logic errors, edge cases, security)
+   - Fix all issues found, rebuild, re-run tests
+   - Send fixes back to Codex for verification — iterate until Codex confirms zero remaining issues
    - On tricky decisions: consult Codex mid-implementation for architecture/approach feedback
-   - Before PR: request a full review pass, address Codex feedback, then present to the user
-   - Use Codex like a colleague — ask specific questions, not just blanket reviews
+   - Use Codex like a colleague — ask specific questions, provide context, not just blanket reviews
 10. **Commit:** Create small, iterative commits with clear messages
 11. **Document:** Iteratively review `docs/` and update relevant documentation:
     - `docs/project/` - Check roadmap, user-flows, design-system for updates
@@ -69,7 +70,7 @@ This project uses a multi-agent workflow where Claude Code is the primary develo
 **Codex MCP Server:**
 - Registered as `codex` MCP server using the official `codex mcp-server` command
 - Authenticated via ChatGPT OAuth (credentials in `~/.codex/auth.json`)
-- Model: `gpt-5.3-codex` with `xhigh` reasoning effort
+- Model: `gpt-5.3-codex` with `high` reasoning effort (default)
 
 **When to use Codex:**
 - Post-implementation review — catch blind spots before presenting to user
@@ -145,6 +146,7 @@ MVVM with Combine for reactive data flow:
 - **v1.5.0:** Recurring & Habits - improved recurring tasks and intraday reminders
 - **v1.6.0:** AI Foundation - improved on-device AI and learning context
 - **v1.7.0:** Plan Your Day - Morning Briefing with calendar context, Daily Summary improvements
+- **v1.8.0:** Smart Learning - On-device event preference learning, auto-hide frequently skipped events
 
 ## Performance Targets
 
