@@ -392,7 +392,6 @@
 				5FBF56828B970EDD42EAFF5C /* LazyflowTests */,
 				FD0F5A80962AB178F0110613 /* LazyflowUITests */,
 				B7EFC687D23B3D13089A9289 /* LazyflowWidget */,
-				C5B4BBFE178DBC821ECDCB01 /* LiveActivity */,
 				B5994655436045B290AB0E81 /* Resources */,
 				C53A67999D50BE724F97FEBF /* Resources */,
 				922D11CE23C7C3820D31BCFE /* Sources */,
@@ -655,8 +654,7 @@
 				2950BA8ACF067780F4117B32 /* LockScreenLiveActivityView.swift */,
 				28E22B96CFCEC9E8C7E4324F /* TaskActivityAttributes.swift */,
 			);
-			name = LiveActivity;
-			path = LazyflowWidget/LiveActivity;
+			path = LiveActivity;
 			sourceTree = "<group>";
 		};
 		E1375F1D3A742482FC901CD4 /* ViewModels */ = {

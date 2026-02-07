@@ -24,6 +24,7 @@ targets:
       - path: Lazyflow/Sources
       - path: Lazyflow/Resources
       - path: LazyflowWidget/LiveActivity/TaskActivityAttributes.swift
+        group: LazyflowWidget/LiveActivity
     info:
       path: Lazyflow/Resources/Info.plist
       properties:
