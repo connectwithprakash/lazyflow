@@ -9,11 +9,19 @@ final class OpenResponsesProviderTests: XCTestCase {
         super.setUp()
         // Reset any stored configuration
         UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+        // Clean up LLMService singleton state from previous tests
+        LLMService.shared.removeOpenResponsesProvider(type: .custom)
+        LLMService.shared.removeOpenResponsesProvider(type: .ollama)
+        LLMService.shared.selectedProvider = .apple
     }
 
     override func tearDown() {
         sut = nil
         UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+        // Clean up LLMService singleton state
+        LLMService.shared.removeOpenResponsesProvider(type: .custom)
+        LLMService.shared.removeOpenResponsesProvider(type: .ollama)
+        LLMService.shared.selectedProvider = .apple
         super.tearDown()
     }
 
