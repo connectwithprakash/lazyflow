@@ -319,16 +319,9 @@ final class OpenResponsesProviderTests: XCTestCase {
 
     // MARK: - Integration with LLMService Tests
     // Note: These tests require Apple Intelligence which is not available in CI
+    // They are skipped in CI via -skip-testing flags in .github/workflows/ci.yml
 
-    /// Helper to check if running in CI environment
-    private var isRunningInCI: Bool {
-        ProcessInfo.processInfo.environment["CI"] != nil ||
-        ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] != nil
-    }
-
-    func testLLMService_SupportsOpenResponsesProvider() throws {
-        // Skip in CI - LLMService requires Apple Intelligence
-        try XCTSkipIf(isRunningInCI, "Skipping LLMService test in CI - requires Apple Intelligence")
+    func testLLMService_SupportsOpenResponsesProvider() {
 
         // Given
         let config = OpenResponsesConfig(
@@ -347,10 +340,7 @@ final class OpenResponsesProviderTests: XCTestCase {
         LLMService.shared.removeOpenResponsesProvider(type: .custom)
     }
 
-    func testLLMService_SelectOpenResponsesProvider() throws {
-        // Skip in CI - LLMService requires Apple Intelligence
-        try XCTSkipIf(isRunningInCI, "Skipping LLMService test in CI - requires Apple Intelligence")
-
+    func testLLMService_SelectOpenResponsesProvider() {
         // Given
         let config = OpenResponsesConfig(
             endpoint: "https://api.test.com/v1/responses",
@@ -370,10 +360,7 @@ final class OpenResponsesProviderTests: XCTestCase {
         LLMService.shared.removeOpenResponsesProvider(type: .custom)
     }
 
-    func testLLMService_FallsBackToApple_WhenOpenResponsesUnavailable() throws {
-        // Skip in CI - LLMService requires Apple Intelligence
-        try XCTSkipIf(isRunningInCI, "Skipping LLMService test in CI - requires Apple Intelligence")
-
+    func testLLMService_FallsBackToApple_WhenOpenResponsesUnavailable() {
         // Given - no Custom provider configured
         LLMService.shared.removeOpenResponsesProvider(type: .custom)
 
@@ -387,10 +374,7 @@ final class OpenResponsesProviderTests: XCTestCase {
 
     // MARK: - Model Configuration Change Tests
 
-    func testModelChange_PersistsCorrectly() throws {
-        // Skip in CI - LLMService requires Apple Intelligence
-        try XCTSkipIf(isRunningInCI, "Skipping LLMService test in CI - requires Apple Intelligence")
-
+    func testModelChange_PersistsCorrectly() {
         // Given - initial config with model A
         let initialConfig = OpenResponsesConfig(
             endpoint: "https://api.test.com/v1/responses",
@@ -419,10 +403,7 @@ final class OpenResponsesProviderTests: XCTestCase {
         LLMService.shared.removeOpenResponsesProvider(type: .custom)
     }
 
-    func testModelChange_SameEndpointDifferentModel() throws {
-        // Skip in CI - LLMService requires Apple Intelligence
-        try XCTSkipIf(isRunningInCI, "Skipping LLMService test in CI - requires Apple Intelligence")
-
+    func testModelChange_SameEndpointDifferentModel() {
         // Given - configure with model A
         let configA = OpenResponsesConfig(
             endpoint: "http://localhost:11434/v1/responses",
