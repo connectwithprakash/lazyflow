@@ -65,12 +65,12 @@ struct AnalyticsView: View {
 
     private var listHealthData: [(list: TaskList, health: ListHealth)] {
         _ = refreshTrigger
-        return analyticsService.getAllListHealth()
+        return analyticsService.getAllListHealth(for: selectedPeriod)
     }
 
     private var staleLists: [TaskList] {
         _ = refreshTrigger
-        return analyticsService.getStaleLists()
+        return analyticsService.getStaleLists(for: selectedPeriod)
     }
 
     // MARK: - Period Selector

@@ -39,6 +39,14 @@ class AnalyticsService: ObservableObject {
                 self?.lastUpdated = Date()
             }
             .store(in: &cancellables)
+
+        // Observe list metadata changes (rename, color, add, delete)
+        taskListService.$lists
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.lastUpdated = Date()
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Category Analytics
@@ -165,49 +173,66 @@ class AnalyticsService: ObservableObject {
 
     // MARK: - List Analytics
 
-    /// Calculate health score for a specific list
-    func calculateListHealth(for listID: UUID) -> ListHealth? {
-        let allTasks = taskService.tasks.filter { $0.listID == listID }
+    /// Calculate health score for a specific list within a time period
+    func calculateListHealth(for listID: UUID, in period: AnalyticsPeriod) -> ListHealth? {
+        let periodStart = period.startDate
+        let periodEnd = period.endDate
 
-        guard !allTasks.isEmpty else {
+        // Get tasks relevant to this period
+        let periodTasks = taskService.tasks.filter { task in
+            guard task.listID == listID else { return false }
+            let createdInPeriod = task.createdAt >= periodStart && task.createdAt < periodEnd
+            let completedInPeriod: Bool
+            if let completedAt = task.completedAt {
+                completedInPeriod = completedAt >= periodStart && completedAt < periodEnd
+            } else {
+                completedInPeriod = false
+            }
+            let dueInPeriod: Bool
+            if let dueDate = task.dueDate {
+                dueInPeriod = dueDate >= periodStart && dueDate < periodEnd
+            } else {
+                dueInPeriod = false
+            }
+            return createdInPeriod || completedInPeriod || dueInPeriod
+        }
+
+        guard !periodTasks.isEmpty else {
             return ListHealth(
                 listID: listID,
                 healthScore: 50,
                 completionRate: 0,
                 overdueCount: 0,
                 lastActivityDate: nil,
-                velocity: 0
+                velocity: 0,
+                totalTasksInPeriod: 0
             )
         }
 
-        let completedTasks = allTasks.filter { $0.isCompleted }
-        let completionRate = (Double(completedTasks.count) / Double(allTasks.count)) * 100
+        let completedTasks = periodTasks.filter { $0.isCompleted }
+        let completionRate = (Double(completedTasks.count) / Double(periodTasks.count)) * 100
 
         let now = Date()
-        let overdueTasks = allTasks.filter { task in
+        let overdueTasks = periodTasks.filter { task in
             guard let dueDate = task.dueDate, !task.isCompleted else { return false }
             return dueDate < now
         }
 
-        let lastActivity = allTasks.compactMap { $0.updatedAt }.max()
+        let lastActivity = periodTasks.compactMap { $0.updatedAt }.max()
 
-        // Calculate velocity (tasks completed per week in last 30 days)
-        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now
-        let recentCompleted = completedTasks.filter { task in
-            guard let completedAt = task.completedAt else { return false }
-            return completedAt >= thirtyDaysAgo
-        }
-        let velocity = Double(recentCompleted.count) / 4.0 // 4 weeks in 30 days
+        // Calculate velocity (tasks completed per week in the period)
+        let periodDays = max(1, Calendar.current.dateComponents([.day], from: periodStart, to: periodEnd).day ?? 7)
+        let weeksInPeriod = max(1.0, Double(periodDays) / 7.0)
+        let velocity = Double(completedTasks.count) / weeksInPeriod
 
         // Health score calculation
-        // Weights: completion 35%, overdue penalty 25%, recency 20%, velocity stability 20%
         var healthScore: Double = 0
 
         // Completion rate contribution (0-35 points)
         healthScore += (completionRate / 100) * 35
 
-        // Overdue penalty (0-25 points, less overdue = more points)
-        let overdueRatio = Double(overdueTasks.count) / Double(allTasks.count)
+        // Overdue penalty (0-25 points)
+        let overdueRatio = Double(overdueTasks.count) / Double(periodTasks.count)
         healthScore += (1 - overdueRatio) * 25
 
         // Recency contribution (0-20 points)
@@ -217,8 +242,8 @@ class AnalyticsService: ObservableObject {
             healthScore += recencyScore * 20
         }
 
-        // Velocity contribution (0-20 points) - having some activity is good
-        let velocityScore = min(1, velocity / 5) // Cap at 5 tasks/week for max score
+        // Velocity contribution (0-20 points)
+        let velocityScore = min(1, velocity / 5)
         healthScore += velocityScore * 20
 
         return ListHealth(
@@ -227,22 +252,25 @@ class AnalyticsService: ObservableObject {
             completionRate: completionRate,
             overdueCount: overdueTasks.count,
             lastActivityDate: lastActivity,
-            velocity: velocity
+            velocity: velocity,
+            totalTasksInPeriod: periodTasks.count
         )
     }
 
-    /// Get health metrics for all lists
-    func getAllListHealth() -> [(list: TaskList, health: ListHealth)] {
+    /// Get health metrics for all lists within a time period
+    func getAllListHealth(for period: AnalyticsPeriod) -> [(list: TaskList, health: ListHealth)] {
         return taskListService.lists.compactMap { list in
-            guard let health = calculateListHealth(for: list.id) else { return nil }
+            guard let health = calculateListHealth(for: list.id, in: period) else { return nil }
+            // Only include lists that have tasks in the period
+            guard health.totalTasksInPeriod > 0 else { return nil }
             return (list: list, health: health)
         }.sorted { $0.health.healthScore < $1.health.healthScore } // Show lowest health first
     }
 
-    /// Detect stale lists (inactive for 14+ days with incomplete tasks)
-    func getStaleLists() -> [TaskList] {
-        let now = Date()
-        let staleThreshold = Calendar.current.date(byAdding: .day, value: -14, to: now) ?? now
+    /// Detect lists with no activity in the selected period (but have incomplete tasks)
+    func getStaleLists(for period: AnalyticsPeriod) -> [TaskList] {
+        let periodStart = period.startDate
+        let periodEnd = period.endDate
 
         return taskListService.lists.filter { list in
             let listTasks = taskService.tasks.filter { $0.listID == list.id }
@@ -252,11 +280,20 @@ class AnalyticsService: ObservableObject {
             let hasIncompleteTasks = listTasks.contains { !$0.isCompleted }
             guard hasIncompleteTasks else { return false }
 
-            // Check last activity
-            let lastActivity = listTasks.compactMap { $0.updatedAt }.max()
-            guard let lastActivity = lastActivity else { return true }
+            // Check if any activity in period
+            let activityInPeriod = listTasks.contains { task in
+                let createdInPeriod = task.createdAt >= periodStart && task.createdAt < periodEnd
+                let completedInPeriod: Bool
+                if let completedAt = task.completedAt {
+                    completedInPeriod = completedAt >= periodStart && completedAt < periodEnd
+                } else {
+                    completedInPeriod = false
+                }
+                let updatedInPeriod = task.updatedAt >= periodStart && task.updatedAt < periodEnd
+                return createdInPeriod || completedInPeriod || updatedInPeriod
+            }
 
-            return lastActivity < staleThreshold
+            return !activityInPeriod
         }
     }
 
@@ -468,6 +505,17 @@ struct ListHealth {
     let overdueCount: Int
     let lastActivityDate: Date?
     let velocity: Double // tasks per week
+    let totalTasksInPeriod: Int // Number of tasks in the selected period
+
+    init(listID: UUID, healthScore: Double, completionRate: Double, overdueCount: Int, lastActivityDate: Date?, velocity: Double, totalTasksInPeriod: Int = 0) {
+        self.listID = listID
+        self.healthScore = healthScore
+        self.completionRate = completionRate
+        self.overdueCount = overdueCount
+        self.lastActivityDate = lastActivityDate
+        self.velocity = velocity
+        self.totalTasksInPeriod = totalTasksInPeriod
+    }
 
     var healthLevel: HealthLevel {
         switch healthScore {

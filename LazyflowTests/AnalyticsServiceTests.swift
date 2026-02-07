@@ -170,10 +170,11 @@ final class AnalyticsServiceTests: XCTestCase {
     func testListHealth_NoTasks_ReturnsNeutralScore() {
         let list = taskListService.createList(name: "Test List")
 
-        let health = analyticsService.calculateListHealth(for: list.id)
+        let health = analyticsService.calculateListHealth(for: list.id, in: .thisWeek)
 
         XCTAssertNotNil(health)
         XCTAssertEqual(health?.healthScore ?? 0, 50.0, accuracy: 5.0) // Neutral score for empty list
+        XCTAssertEqual(health?.totalTasksInPeriod, 0)
     }
 
     func testListHealth_AllCompleted_ReturnsHighScore() {
@@ -185,10 +186,11 @@ final class AnalyticsServiceTests: XCTestCase {
             taskService.toggleTaskCompletion(task)
         }
 
-        let health = analyticsService.calculateListHealth(for: list.id)
+        let health = analyticsService.calculateListHealth(for: list.id, in: .thisWeek)
 
         XCTAssertNotNil(health)
         XCTAssertGreaterThan(health?.healthScore ?? 0, 70)
+        XCTAssertEqual(health?.totalTasksInPeriod, 5)
     }
 
     func testListHealth_ManyOverdue_ReturnsLowScore() {
@@ -200,10 +202,36 @@ final class AnalyticsServiceTests: XCTestCase {
             _ = taskService.createTask(title: "Overdue \(i)", dueDate: yesterday, category: .work, listID: list.id)
         }
 
-        let health = analyticsService.calculateListHealth(for: list.id)
+        let health = analyticsService.calculateListHealth(for: list.id, in: .thisWeek)
 
         XCTAssertNotNil(health)
         XCTAssertLessThan(health?.healthScore ?? 100, 50)
+    }
+
+    func testListHealth_PeriodFiltering() {
+        let list = taskListService.createList(name: "Test List")
+
+        // Create a task today (should be in thisWeek)
+        _ = taskService.createTask(title: "Today task", category: .work, listID: list.id)
+
+        let weekHealth = analyticsService.calculateListHealth(for: list.id, in: .thisWeek)
+        let todayHealth = analyticsService.calculateListHealth(for: list.id, in: .today)
+
+        XCTAssertEqual(weekHealth?.totalTasksInPeriod, 1)
+        XCTAssertEqual(todayHealth?.totalTasksInPeriod, 1)
+    }
+
+    func testGetAllListHealth_ReturnsOnlyListsWithTasksInPeriod() {
+        let listWithTasks = taskListService.createList(name: "Active List")
+        _ = taskListService.createList(name: "Empty List")
+
+        _ = taskService.createTask(title: "Task", category: .work, listID: listWithTasks.id)
+
+        let allHealth = analyticsService.getAllListHealth(for: .thisWeek)
+
+        // Should only include the list with tasks in period
+        XCTAssertEqual(allHealth.count, 1)
+        XCTAssertEqual(allHealth.first?.list.id, listWithTasks.id)
     }
 
     // MARK: - Stale List Detection Tests
@@ -214,9 +242,69 @@ final class AnalyticsServiceTests: XCTestCase {
         // Create a task today
         _ = taskService.createTask(title: "Recent task", category: .work, listID: list.id)
 
-        let staleLists = analyticsService.getStaleLists()
+        let staleLists = analyticsService.getStaleLists(for: .thisWeek)
 
         XCTAssertFalse(staleLists.contains { $0.id == list.id })
+    }
+
+    func testStaleLists_PeriodAware() {
+        let list = taskListService.createList(name: "Test List")
+
+        // Create incomplete task (makes list potentially stale)
+        _ = taskService.createTask(title: "Incomplete", category: .work, listID: list.id)
+
+        // List has activity today, so shouldn't be stale for thisWeek
+        let staleThisWeek = analyticsService.getStaleLists(for: .thisWeek)
+        XCTAssertFalse(staleThisWeek.contains { $0.id == list.id })
+    }
+
+    // MARK: - Unified Category Stats Tests
+
+    func testUnifiedCategoryStats_SystemCategoriesOnly() {
+        // Create tasks with system categories only
+        _ = taskService.createTask(title: "Work", category: .work)
+        _ = taskService.createTask(title: "Personal", category: .personal)
+
+        let stats = analyticsService.getUnifiedCategoryStats(for: .thisWeek)
+
+        XCTAssertEqual(stats.count, 2)
+        XCTAssertTrue(stats.allSatisfy { !$0.isCustom })
+    }
+
+    func testUnifiedCategoryStats_CustomCategoryTakesPrecedence() {
+        // Create a custom category
+        let customCategory = categoryService.createCategory(name: "My Category", colorHex: "#FF0000", iconName: "star.fill")
+
+        // Create task with custom category (customCategoryID should override system category)
+        _ = taskService.createTask(title: "Custom Task", category: .work, customCategoryID: customCategory.id)
+
+        let stats = analyticsService.getUnifiedCategoryStats(for: .thisWeek)
+
+        // Should have one entry for the custom category
+        XCTAssertEqual(stats.count, 1)
+        XCTAssertTrue(stats.first?.isCustom ?? false)
+        XCTAssertEqual(stats.first?.displayName, "My Category")
+    }
+
+    func testWorkLifeBalance_CustomCategoriesAsLife() {
+        // Create a custom category
+        let customCategory = categoryService.createCategory(name: "Hobby", colorHex: "#00FF00", iconName: "paintbrush.fill")
+
+        // Create work tasks (system)
+        for _ in 0..<3 {
+            _ = taskService.createTask(title: "Work", category: .work)
+        }
+
+        // Create custom category tasks (should count as life)
+        for _ in 0..<2 {
+            _ = taskService.createTask(title: "Hobby", category: .uncategorized, customCategoryID: customCategory.id)
+        }
+
+        let balance = analyticsService.calculateWorkLifeBalance(for: .thisWeek)
+
+        // 3 work / 5 total = 60% work, 2 custom / 5 total = 40% life
+        XCTAssertEqual(balance.workPercentage, 60, accuracy: 0.1)
+        XCTAssertEqual(balance.lifePercentage, 40, accuracy: 0.1)
     }
 
     // MARK: - Time Period Tests
