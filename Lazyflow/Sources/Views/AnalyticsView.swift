@@ -70,7 +70,7 @@ struct AnalyticsView: View {
 
     private var staleLists: [TaskList] {
         _ = refreshTrigger
-        return analyticsService.getStaleLists(for: selectedPeriod)
+        return analyticsService.getStaleLists()
     }
 
     // MARK: - Period Selector
@@ -561,7 +561,7 @@ struct StaleListRow: View {
                     .font(DesignSystem.Typography.subheadline)
                     .foregroundColor(Color.Lazyflow.textPrimary)
 
-                Text("No activity in 14+ days")
+                Text("No activity in \(AnalyticsService.staleThresholdDays)+ days")
                     .font(DesignSystem.Typography.caption2)
                     .foregroundColor(Color.Lazyflow.textTertiary)
             }

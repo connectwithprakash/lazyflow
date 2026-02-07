@@ -267,10 +267,17 @@ class AnalyticsService: ObservableObject {
         }.sorted { $0.health.healthScore < $1.health.healthScore } // Show lowest health first
     }
 
-    /// Detect lists with no activity in the selected period (but have incomplete tasks)
-    func getStaleLists(for period: AnalyticsPeriod) -> [TaskList] {
-        let periodStart = period.startDate
-        let periodEnd = period.endDate
+    /// Minimum days of inactivity to consider a list "stale"
+    static let staleThresholdDays = 7
+
+    /// Detect lists with no activity in 7+ days that have incomplete tasks
+    /// Note: Uses fixed threshold regardless of selected period for consistent UX
+    func getStaleLists() -> [TaskList] {
+        let staleThreshold = Calendar.current.date(
+            byAdding: .day,
+            value: -Self.staleThresholdDays,
+            to: Date()
+        )!
 
         return taskListService.lists.filter { list in
             let listTasks = taskService.tasks.filter { $0.listID == list.id }
@@ -280,20 +287,20 @@ class AnalyticsService: ObservableObject {
             let hasIncompleteTasks = listTasks.contains { !$0.isCompleted }
             guard hasIncompleteTasks else { return false }
 
-            // Check if any activity in period
-            let activityInPeriod = listTasks.contains { task in
-                let createdInPeriod = task.createdAt >= periodStart && task.createdAt < periodEnd
-                let completedInPeriod: Bool
+            // Check if any activity in the last 7 days
+            let recentActivity = listTasks.contains { task in
+                let createdRecently = task.createdAt >= staleThreshold
+                let completedRecently: Bool
                 if let completedAt = task.completedAt {
-                    completedInPeriod = completedAt >= periodStart && completedAt < periodEnd
+                    completedRecently = completedAt >= staleThreshold
                 } else {
-                    completedInPeriod = false
+                    completedRecently = false
                 }
-                let updatedInPeriod = task.updatedAt >= periodStart && task.updatedAt < periodEnd
-                return createdInPeriod || completedInPeriod || updatedInPeriod
+                let updatedRecently = task.updatedAt >= staleThreshold
+                return createdRecently || completedRecently || updatedRecently
             }
 
-            return !activityInPeriod
+            return !recentActivity
         }
     }
 

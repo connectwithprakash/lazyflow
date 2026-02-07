@@ -239,23 +239,27 @@ final class AnalyticsServiceTests: XCTestCase {
     func testStaleLists_ActiveList_NotStale() {
         let list = taskListService.createList(name: "Active List")
 
-        // Create a task today
+        // Create a task today (recent activity)
         _ = taskService.createTask(title: "Recent task", category: .work, listID: list.id)
 
-        let staleLists = analyticsService.getStaleLists(for: .thisWeek)
+        // List with recent activity should not be stale
+        let staleLists = analyticsService.getStaleLists()
 
         XCTAssertFalse(staleLists.contains { $0.id == list.id })
     }
 
-    func testStaleLists_PeriodAware() {
+    func testStaleLists_UsesFixedThreshold() {
         let list = taskListService.createList(name: "Test List")
 
-        // Create incomplete task (makes list potentially stale)
+        // Create incomplete task today (makes list have incomplete tasks but recent activity)
         _ = taskService.createTask(title: "Incomplete", category: .work, listID: list.id)
 
-        // List has activity today, so shouldn't be stale for thisWeek
-        let staleThisWeek = analyticsService.getStaleLists(for: .thisWeek)
-        XCTAssertFalse(staleThisWeek.contains { $0.id == list.id })
+        // List has recent activity, so shouldn't be stale (uses 7-day threshold, not period)
+        let staleLists = analyticsService.getStaleLists()
+        XCTAssertFalse(staleLists.contains { $0.id == list.id })
+
+        // Verify threshold constant is defined
+        XCTAssertEqual(AnalyticsService.staleThresholdDays, 7)
     }
 
     // MARK: - Unified Category Stats Tests
