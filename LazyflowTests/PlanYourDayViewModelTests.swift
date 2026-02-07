@@ -326,6 +326,46 @@ final class PlanYourDayViewModelTests: XCTestCase {
         testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelLearnedTests2")
     }
 
+    func testApplyLearnedPreferences_DoesNotAutoSelectAllDayEvents() {
+        let testDefaults = UserDefaults(suiteName: "PlanYourDayViewModelAllDayTests")!
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelAllDayTests")
+        let learningService = EventPreferenceLearningService(defaults: testDefaults)
+
+        viewModel = PlanYourDayViewModel(learningService: learningService)
+
+        // Train: select "Company Event" 4 times (as timed events)
+        for _ in 0..<4 {
+            learningService.recordSelections([
+                PlanEventItem(
+                    title: "Company Event",
+                    startDate: Date(),
+                    endDate: Date().addingTimeInterval(3600),
+                    isAllDay: false,
+                    isSelected: true
+                ),
+            ])
+        }
+
+        // All-day event with same title should NOT be auto-selected
+        let events = [
+            PlanEventItem(
+                id: "e1",
+                title: "Company Event",
+                startDate: Date(),
+                endDate: Date().addingTimeInterval(86400),
+                isAllDay: true,
+                isSelected: false
+            ),
+        ]
+
+        let result = viewModel.applyLearnedPreferences(events)
+
+        XCTAssertFalse(result[0].isSelected)
+
+        learningService.clearAllLearningData()
+        testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelAllDayTests")
+    }
+
     func testCreateTasks_RecordsSelectionsToLearningService() {
         let testDefaults = UserDefaults(suiteName: "PlanYourDayViewModelRecordTests")!
         testDefaults.removePersistentDomain(forName: "PlanYourDayViewModelRecordTests")

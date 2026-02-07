@@ -210,10 +210,25 @@ struct PlanYourDayView: View {
 
             Button {
                 withAnimation(DesignSystem.Animation.quick) {
-                    if viewModel.allSelected {
-                        viewModel.deselectAll()
+                    if hiddenTimedEvents.isEmpty {
+                        // No hidden events — operate on all
+                        if viewModel.allSelected {
+                            viewModel.deselectAll()
+                        } else {
+                            viewModel.selectAll()
+                        }
                     } else {
-                        viewModel.selectAll()
+                        // Only toggle visible events (exclude collapsed hidden events)
+                        let visibleIDs = Set(
+                            visibleTimedEvents.map(\.id) + viewModel.allDayEvents.map(\.id)
+                        )
+                        let allVisibleSelected = visibleTimedEvents.allSatisfy(\.isSelected)
+                            && viewModel.allDayEvents.allSatisfy(\.isSelected)
+                        if allVisibleSelected {
+                            viewModel.deselectOnly(visibleIDs)
+                        } else {
+                            viewModel.selectOnly(visibleIDs)
+                        }
                     }
                 }
             } label: {

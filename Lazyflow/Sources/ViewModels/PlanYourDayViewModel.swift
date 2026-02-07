@@ -125,12 +125,13 @@ final class PlanYourDayViewModel: ObservableObject {
 
     /// Override default selection based on learned user preferences.
     /// Frequently skipped events get deselected; frequently selected events get selected.
+    /// All-day events are never auto-selected by learning (they stay deselected by default).
     func applyLearnedPreferences(_ items: [PlanEventItem]) -> [PlanEventItem] {
         items.map { item in
             var modified = item
             if learningService.isFrequentlySkipped(item.title) {
                 modified.isSelected = false
-            } else if learningService.isFrequentlySelected(item.title) {
+            } else if !item.isAllDay && learningService.isFrequentlySelected(item.title) {
                 modified.isSelected = true
             }
             return modified
@@ -150,9 +151,23 @@ final class PlanYourDayViewModel: ObservableObject {
         }
     }
 
+    /// Select only events whose IDs are in the given set
+    func selectOnly(_ ids: Set<String>) {
+        for index in events.indices where ids.contains(events[index].id) {
+            events[index].isSelected = true
+        }
+    }
+
     /// Deselect all events
     func deselectAll() {
         for index in events.indices {
+            events[index].isSelected = false
+        }
+    }
+
+    /// Deselect only events whose IDs are in the given set
+    func deselectOnly(_ ids: Set<String>) {
+        for index in events.indices where ids.contains(events[index].id) {
             events[index].isSelected = false
         }
     }

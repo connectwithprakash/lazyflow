@@ -82,7 +82,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Plan Your Day")
                 } footer: {
-                    Text("Events you skip 3+ times will be hidden by default. You can always reveal them.")
+                    Text("Events you consistently skip will be hidden by default. You can always reveal them.")
                 }
 
                 // Daily Summary Notifications
