@@ -262,6 +262,36 @@ final class AnalyticsServiceTests: XCTestCase {
         XCTAssertEqual(AnalyticsService.staleThresholdDays, 7)
     }
 
+    func testStaleLists_DetectsOldInactiveList() {
+        let list = taskListService.createList(name: "Old List")
+
+        // Create incomplete task
+        let task = taskService.createTask(title: "Old Incomplete Task", category: .work, listID: list.id)
+
+        // Backdate the task timestamps to 10 days ago (beyond 7-day threshold)
+        let tenDaysAgo = Calendar.current.date(byAdding: .day, value: -10, to: Date())!
+        let context = persistenceController.viewContext
+        let request = TaskEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
+        if let entity = try? context.fetch(request).first {
+            entity.createdAt = tenDaysAgo
+            entity.updatedAt = tenDaysAgo
+            try? context.save()
+        }
+
+        // Create fresh services that will load the modified data from Core Data
+        let freshTaskService = TaskService(persistenceController: persistenceController)
+        let freshAnalyticsService = AnalyticsService(
+            taskService: freshTaskService,
+            taskListService: taskListService,
+            categoryService: categoryService
+        )
+
+        // List should now be detected as stale (10 days > 7 day threshold)
+        let staleLists = freshAnalyticsService.getStaleLists()
+        XCTAssertTrue(staleLists.contains { $0.id == list.id }, "List with 10-day-old incomplete task should be stale")
+    }
+
     // MARK: - Unified Category Stats Tests
 
     func testUnifiedCategoryStats_SystemCategoriesOnly() {
