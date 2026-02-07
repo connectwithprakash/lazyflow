@@ -9,12 +9,26 @@ final class OpenResponsesProviderTests: XCTestCase {
         super.setUp()
         // Reset any stored configuration
         UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+        // Reset LLMService singleton state for test isolation
+        cleanupLLMServiceState()
     }
 
     override func tearDown() {
         sut = nil
         UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+        // Reset LLMService singleton state for test isolation
+        cleanupLLMServiceState()
         super.tearDown()
+    }
+
+    /// Clean up LLMService.shared state between tests
+    private func cleanupLLMServiceState() {
+        LLMService.shared.removeOpenResponsesProvider(type: .custom)
+        LLMService.shared.removeOpenResponsesProvider(type: .ollama)
+        // Reset to default provider
+        if LLMService.shared.availableProviders.contains(.apple) {
+            LLMService.shared.selectedProvider = .apple
+        }
     }
 
     // MARK: - Configuration Tests
@@ -318,8 +332,8 @@ final class OpenResponsesProviderTests: XCTestCase {
     }
 
     // MARK: - Integration with LLMService Tests
-    // Note: These tests require Apple Intelligence which is not available in CI
-    // They are skipped in CI via -skip-testing flags in .github/workflows/ci.yml
+    // Note: These tests exercise LLMService singleton state management
+    // Test isolation is handled via setUp/tearDown cleanup
 
     func testLLMService_SupportsOpenResponsesProvider() {
 
