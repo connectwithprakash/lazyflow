@@ -287,6 +287,23 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(morningCard.waitForExistence(timeout: 2), "Morning Briefing should be in Insights hub")
     }
 
+    func testInsightsHubContainsAnalytics() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Insights")
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+
+        // Verify Analytics section header exists
+        let analyticsHeader = app.staticTexts["Analytics"]
+        XCTAssertTrue(analyticsHeader.waitForExistence(timeout: 3), "Analytics section should be in Insights hub")
+
+        // Verify Analytics card subtitle exists
+        let analyticsSubtitle = app.staticTexts["Category & list insights"]
+        XCTAssertTrue(analyticsSubtitle.waitForExistence(timeout: 2), "Analytics card subtitle should exist")
+    }
+
     func testInsightsHubContainsDailySummary() throws {
         guard UIDevice.current.userInterfaceIdiom == .phone else {
             throw XCTSkip("This test only runs on iPhone")

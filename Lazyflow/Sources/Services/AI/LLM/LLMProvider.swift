@@ -80,7 +80,7 @@ enum LLMProviderType: String, CaseIterable, Codable, Identifiable {
 
 // MARK: - Errors
 
-enum LLMError: LocalizedError {
+enum LLMError: LocalizedError, Equatable {
     case providerUnavailable(String)
     case noAPIKey
     case invalidResponse
@@ -105,6 +105,26 @@ enum LLMError: LocalizedError {
             return "Rate limited. Please try again later."
         case .modelUnavailable:
             return "The AI model is currently unavailable."
+        }
+    }
+
+    // MARK: - Equatable
+
+    static func == (lhs: LLMError, rhs: LLMError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidResponse, .invalidResponse),
+             (.noAPIKey, .noAPIKey),
+             (.rateLimited, .rateLimited),
+             (.modelUnavailable, .modelUnavailable):
+            return true
+        case let (.providerUnavailable(l), .providerUnavailable(r)):
+            return l == r
+        case let (.apiError(l), .apiError(r)):
+            return l == r
+        case let (.networkError(l), .networkError(r)):
+            return l.localizedDescription == r.localizedDescription
+        default:
+            return false
         }
     }
 }

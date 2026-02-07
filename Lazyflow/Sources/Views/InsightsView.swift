@@ -66,8 +66,22 @@ struct InsightsView: View {
                     }
                     .accessibilityIdentifier("HistoryCard")
 
-                    // MARK: - Analytics Section (placeholder for future)
-                    // Analytics will be added in Issue #130
+                    // MARK: - Analytics Section
+                    sectionHeader("Analytics")
+                        .padding(.top, DesignSystem.Spacing.sm)
+
+                    // Analytics Card
+                    NavigationLink {
+                        AnalyticsView()
+                    } label: {
+                        InsightsCard(
+                            icon: "chart.pie.fill",
+                            iconColor: .purple,
+                            title: "Analytics",
+                            subtitle: "Category & list insights"
+                        )
+                    }
+                    .accessibilityIdentifier("AnalyticsCard")
 
                     Spacer(minLength: DesignSystem.Spacing.xxl)
                 }

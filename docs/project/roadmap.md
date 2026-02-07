@@ -41,7 +41,7 @@ Anyone who:
 
 ### Current & Upcoming
 
-- **v1.8.0** (in development): Navigation restructure - 5-tab layout (Today, Calendar, Upcoming, Insights, Me) with profile-centric organization
+- **v1.8.0** (in development): Navigation restructure - 5-tab layout (Today, Calendar, Upcoming, Insights, Me) with profile-centric organization; Analytics dashboard with category completion rates, work-life balance tracking, and productivity insights
 
 See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.
 

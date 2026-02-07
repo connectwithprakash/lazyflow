@@ -3,6 +3,12 @@ Plan Your Day
 • Calendar context integration shows your schedule alongside task recommendations
 • Regenerate AI insights anytime with one tap
 
+Analytics Dashboard
+• Track productivity with category completion rates
+• Work-life balance insights with 60/40 target tracking
+• Visual charts showing task distribution by category
+• Time period filtering (Today, Week, Month, Quarter)
+
 Smarter AI
 • AI learns from your preferences and adapts over time
 • Improved Daily Summary quality with better productivity insights
