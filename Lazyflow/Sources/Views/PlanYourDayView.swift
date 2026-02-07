@@ -4,6 +4,7 @@ import SwiftUI
 struct PlanYourDayView: View {
     @StateObject private var viewModel = PlanYourDayViewModel()
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
@@ -34,6 +35,15 @@ struct PlanYourDayView: View {
         }
         .task {
             await viewModel.loadEvents()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                if case .noAccess = viewModel.viewState {
+                    _Concurrency.Task {
+                        await viewModel.loadEvents()
+                    }
+                }
+            }
         }
     }
 
