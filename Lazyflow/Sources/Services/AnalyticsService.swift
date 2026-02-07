@@ -18,7 +18,8 @@ class AnalyticsService: ObservableObject {
         self.taskListService = taskListService
 
         // Observe task changes to trigger analytics refresh
-        taskService.objectWillChange
+        // Subscribe to $tasks (not objectWillChange) to ensure data is updated before refresh
+        taskService.$tasks
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.lastUpdated = Date()

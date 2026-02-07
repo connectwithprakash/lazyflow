@@ -28,8 +28,6 @@ struct AnalyticsView: View {
                 Spacer(minLength: DesignSystem.Spacing.xxl)
             }
             .padding(DesignSystem.Spacing.lg)
-            // Force refresh when underlying task data changes
-            .id(analyticsService.lastUpdated)
         }
         .background(Color.adaptiveBackground)
         .navigationTitle("Analytics")
