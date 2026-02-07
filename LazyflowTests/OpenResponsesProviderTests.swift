@@ -7,16 +7,26 @@ final class OpenResponsesProviderTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        // Reset any stored configuration in UserDefaults
-        // Note: We avoid touching LLMService.shared in tests due to Keychain access
-        // issues in CI environments. Test the components directly instead.
-        UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+        // Reset stored configurations using correct production keys
+        // Production uses "openResponsesConfig_<provider>" prefix
+        cleanupPersistedConfigs()
     }
 
     override func tearDown() {
         sut = nil
-        UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
+        cleanupPersistedConfigs()
         super.tearDown()
+    }
+
+    /// Clean up persisted OpenResponsesConfig entries using correct keys
+    private func cleanupPersistedConfigs() {
+        // Match production key format: "openResponsesConfig_<provider.rawValue>"
+        for providerType in [LLMProviderType.ollama, .custom] {
+            let key = "openResponsesConfig_\(providerType.rawValue)"
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        // Also clean up legacy key format (if any)
+        UserDefaults.standard.removeObject(forKey: "openResponsesConfig")
     }
 
     // MARK: - Configuration Tests
@@ -453,6 +463,150 @@ final class OpenResponsesProviderTests: XCTestCase {
         XCTAssertNotEqual(config1, config2)
     }
 
+    // MARK: - Config Persistence Tests (UserDefaults portion)
+    // Note: These tests verify that configs persist correctly to UserDefaults.
+    // Keychain persistence (API key storage) is not tested here due to CI sandbox restrictions.
+
+    func testOpenResponsesConfig_SaveAndLoad_PersistsToUserDefaults() {
+        // Given - a config to save
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: nil, // Skip API key to avoid Keychain
+            model: "test-model"
+        )
+
+        // When - save the config
+        config.save(for: .custom)
+
+        // Then - should be loadable from UserDefaults
+        let loaded = OpenResponsesConfig.load(for: .custom)
+        XCTAssertNotNil(loaded)
+        XCTAssertEqual(loaded?.endpoint, "https://api.test.com/v1/responses")
+        XCTAssertEqual(loaded?.model, "test-model")
+    }
+
+    func testOpenResponsesConfig_SaveAndLoad_ModelChangesPersist() {
+        // Given - initial config with model A
+        let initialConfig = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "model-a"
+        )
+        initialConfig.save(for: .ollama)
+
+        // Verify initial model
+        var loaded = OpenResponsesConfig.load(for: .ollama)
+        XCTAssertEqual(loaded?.model, "model-a")
+
+        // When - change to model B
+        let updatedConfig = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "model-b"
+        )
+        updatedConfig.save(for: .ollama)
+
+        // Then - model B should be persisted
+        loaded = OpenResponsesConfig.load(for: .ollama)
+        XCTAssertEqual(loaded?.model, "model-b")
+        XCTAssertEqual(loaded?.endpoint, "http://localhost:11434/v1/responses")
+    }
+
+    func testOpenResponsesConfig_Delete_RemovesFromUserDefaults() {
+        // Given - a saved config
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: nil,
+            model: "test-model"
+        )
+        config.save(for: .custom)
+        XCTAssertNotNil(OpenResponsesConfig.load(for: .custom))
+
+        // When - delete the config
+        OpenResponsesConfig.delete(for: .custom)
+
+        // Then - should no longer be loadable
+        XCTAssertNil(OpenResponsesConfig.load(for: .custom))
+    }
+
+    func testOpenResponsesConfig_Save_DifferentProviderTypes_Independent() {
+        // Given - configs for different provider types
+        let ollamaConfig = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "ollama-model"
+        )
+        let customConfig = OpenResponsesConfig(
+            endpoint: "https://custom.api.com/v1/responses",
+            apiKey: nil,
+            model: "custom-model"
+        )
+
+        // When - save both
+        ollamaConfig.save(for: .ollama)
+        customConfig.save(for: .custom)
+
+        // Then - should load independently
+        let loadedOllama = OpenResponsesConfig.load(for: .ollama)
+        let loadedCustom = OpenResponsesConfig.load(for: .custom)
+
+        XCTAssertEqual(loadedOllama?.model, "ollama-model")
+        XCTAssertEqual(loadedCustom?.model, "custom-model")
+    }
+
+    // MARK: - Provider Selection Logic Tests
+    // Note: These test the provider type logic without using LLMService.shared
+
+    func testLLMProviderType_AllCases() {
+        // Verify all provider types exist
+        XCTAssertTrue(LLMProviderType.allCases.contains(.apple))
+        XCTAssertTrue(LLMProviderType.allCases.contains(.ollama))
+        XCTAssertTrue(LLMProviderType.allCases.contains(.custom))
+        XCTAssertEqual(LLMProviderType.allCases.count, 3)
+    }
+
+    func testLLMProviderType_IsExternal() {
+        // Apple Intelligence and Ollama are local
+        XCTAssertFalse(LLMProviderType.apple.isExternal)
+        XCTAssertFalse(LLMProviderType.ollama.isExternal)
+
+        // Custom endpoints may be external
+        XCTAssertTrue(LLMProviderType.custom.isExternal)
+    }
+
+    func testLLMProviderType_RawValueRoundtrip() {
+        // Test that provider types can be saved and restored via raw values
+        for providerType in LLMProviderType.allCases {
+            let rawValue = providerType.rawValue
+            let restored = LLMProviderType(rawValue: rawValue)
+            XCTAssertEqual(restored, providerType)
+        }
+    }
+
+    func testOpenResponsesProvider_CanBeConfiguredWithLoadedConfig() {
+        // Given - save a config
+        let savedConfig = OpenResponsesConfig(
+            endpoint: "https://api.test.com/v1/responses",
+            apiKey: nil,
+            model: "saved-model"
+        )
+        savedConfig.save(for: .custom)
+
+        // When - load config and create provider
+        guard let loadedConfig = OpenResponsesConfig.load(for: .custom) else {
+            XCTFail("Config should be loadable")
+            return
+        }
+        let provider = OpenResponsesProvider(config: loadedConfig)
+
+        // Then - provider should be configured correctly
+        XCTAssertTrue(provider.isAvailable)
+        // Verify the provider would use the correct model (via request building)
+        let request = try? provider.buildRequest(prompt: "test", systemPrompt: nil)
+        let body = request?.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+        XCTAssertEqual(body?["model"] as? String, "saved-model")
+    }
+
     // MARK: - AvailableModel Tests
 
     func testAvailableModel_DisplayName_RemovesProviderPrefix() {
@@ -565,25 +719,5 @@ final class OpenResponsesProviderTests: XCTestCase {
     }
 }
 
-// MARK: - LLMError Equatable for Testing
-
-extension LLMError: Equatable {
-    public static func == (lhs: LLMError, rhs: LLMError) -> Bool {
-        switch (lhs, rhs) {
-        case (.invalidResponse, .invalidResponse):
-            return true
-        case (.noAPIKey, .noAPIKey):
-            return true
-        case (.rateLimited, .rateLimited):
-            return true
-        case (.modelUnavailable, .modelUnavailable):
-            return true
-        case let (.providerUnavailable(l), .providerUnavailable(r)):
-            return l == r
-        case let (.apiError(l), .apiError(r)):
-            return l == r
-        default:
-            return false
-        }
-    }
-}
+// Note: LLMError now conforms to Equatable in the main module (LLMProvider.swift)
+// to avoid compiler warning about extending imported types.
