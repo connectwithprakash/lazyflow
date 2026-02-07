@@ -6,13 +6,19 @@ final class AnalyticsServiceTests: XCTestCase {
     var persistenceController: PersistenceController!
     var taskService: TaskService!
     var taskListService: TaskListService!
+    var categoryService: CategoryService!
     var analyticsService: AnalyticsService!
 
     override func setUpWithError() throws {
         persistenceController = PersistenceController(inMemory: true)
         taskService = TaskService(persistenceController: persistenceController)
         taskListService = TaskListService(persistenceController: persistenceController)
-        analyticsService = AnalyticsService(taskService: taskService, taskListService: taskListService)
+        categoryService = CategoryService(persistenceController: persistenceController)
+        analyticsService = AnalyticsService(
+            taskService: taskService,
+            taskListService: taskListService,
+            categoryService: categoryService
+        )
     }
 
     override func tearDownWithError() throws {
@@ -20,6 +26,7 @@ final class AnalyticsServiceTests: XCTestCase {
         persistenceController = nil
         taskService = nil
         taskListService = nil
+        categoryService = nil
         analyticsService = nil
     }
 

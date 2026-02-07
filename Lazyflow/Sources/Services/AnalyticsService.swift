@@ -8,18 +8,32 @@ import Combine
 class AnalyticsService: ObservableObject {
     private let taskService: TaskService
     private let taskListService: TaskListService
+    private let categoryService: CategoryService
     private var cancellables = Set<AnyCancellable>()
 
     /// Triggers view updates when underlying data changes
     @Published private(set) var lastUpdated = Date()
 
-    init(taskService: TaskService = .shared, taskListService: TaskListService = TaskListService()) {
+    init(
+        taskService: TaskService = .shared,
+        taskListService: TaskListService = TaskListService(),
+        categoryService: CategoryService = .shared
+    ) {
         self.taskService = taskService
         self.taskListService = taskListService
+        self.categoryService = categoryService
 
         // Observe task changes to trigger analytics refresh
         // Subscribe to $tasks (not objectWillChange) to ensure data is updated before refresh
         taskService.$tasks
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.lastUpdated = Date()
+            }
+            .store(in: &cancellables)
+
+        // Also observe custom category changes
+        categoryService.$categories
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.lastUpdated = Date()
@@ -31,19 +45,68 @@ class AnalyticsService: ObservableObject {
 
     /// Calculate completion rate for a specific category within a time period
     func calculateCompletionRate(for category: TaskCategory, in period: AnalyticsPeriod) -> Double {
-        let tasks = fetchTasks(for: period).filter { $0.category == category }
+        let tasks = fetchTasks(for: period).filter { $0.customCategoryID == nil && $0.category == category }
         guard !tasks.isEmpty else { return 0 }
 
         let completed = tasks.filter { $0.isCompleted }.count
         return (Double(completed) / Double(tasks.count)) * 100
     }
 
-    /// Get stats for all categories within a time period
+    /// Calculate completion rate for a custom category within a time period
+    func calculateCompletionRate(forCustomCategory categoryID: UUID, in period: AnalyticsPeriod) -> Double {
+        let tasks = fetchTasks(for: period).filter { $0.customCategoryID == categoryID }
+        guard !tasks.isEmpty else { return 0 }
+
+        let completed = tasks.filter { $0.isCompleted }.count
+        return (Double(completed) / Double(tasks.count)) * 100
+    }
+
+    /// Get stats for all categories (both system and custom) within a time period
+    func getUnifiedCategoryStats(for period: AnalyticsPeriod) -> [UnifiedCategoryStats] {
+        let tasks = fetchTasks(for: period)
+        var statsByKey: [String: UnifiedCategoryStats] = [:]
+
+        for task in tasks {
+            let key: String
+            let stats: UnifiedCategoryStats
+
+            if let customID = task.customCategoryID {
+                // Custom category takes precedence
+                key = "custom_\(customID.uuidString)"
+                let customCategory = categoryService.categories.first { $0.id == customID }
+                let existing = statsByKey[key]
+                stats = UnifiedCategoryStats(
+                    customCategory: customCategory,
+                    totalCount: (existing?.totalCount ?? 0) + 1,
+                    completedCount: (existing?.completedCount ?? 0) + (task.isCompleted ? 1 : 0),
+                    totalEstimatedMinutes: (existing?.totalEstimatedMinutes ?? 0) + Int((task.estimatedDuration ?? 0) / 60)
+                )
+            } else {
+                // System category
+                key = "system_\(task.category.rawValue)"
+                let existing = statsByKey[key]
+                stats = UnifiedCategoryStats(
+                    systemCategory: task.category,
+                    totalCount: (existing?.totalCount ?? 0) + 1,
+                    completedCount: (existing?.completedCount ?? 0) + (task.isCompleted ? 1 : 0),
+                    totalEstimatedMinutes: (existing?.totalEstimatedMinutes ?? 0) + Int((task.estimatedDuration ?? 0) / 60)
+                )
+            }
+            statsByKey[key] = stats
+        }
+
+        return Array(statsByKey.values).sorted { $0.totalCount > $1.totalCount }
+    }
+
+    /// Get stats for system categories only (legacy support)
     func getCategoryStats(for period: AnalyticsPeriod) -> [CategoryStats] {
         let tasks = fetchTasks(for: period)
         var statsByCategory: [TaskCategory: CategoryStats] = [:]
 
         for task in tasks {
+            // Skip tasks with custom categories for system category stats
+            guard task.customCategoryID == nil else { continue }
+
             let category = task.category
             var stats = statsByCategory[category] ?? CategoryStats(category: category)
             stats.totalCount += 1
@@ -62,6 +125,7 @@ class AnalyticsService: ObservableObject {
     // MARK: - Work-Life Balance
 
     /// Calculate work-life balance ratio
+    /// Custom categories are treated as "life" since their intent is user-defined
     func calculateWorkLifeBalance(for period: AnalyticsPeriod, targetWorkRatio: Double = 0.6) -> WorkLifeBalance {
         let tasks = fetchTasks(for: period)
         guard !tasks.isEmpty else {
@@ -74,8 +138,14 @@ class AnalyticsService: ObservableObject {
         }
 
         let workCategories: Set<TaskCategory> = [.work, .finance, .learning]
-        let workTasks = tasks.filter { workCategories.contains($0.category) }
-        let lifeTasks = tasks.filter { !workCategories.contains($0.category) }
+        // Work tasks: system category in work set AND no custom category
+        let workTasks = tasks.filter { task in
+            task.customCategoryID == nil && workCategories.contains(task.category)
+        }
+        // Life tasks: everything else (custom categories + non-work system categories)
+        let lifeTasks = tasks.filter { task in
+            task.customCategoryID != nil || !workCategories.contains(task.category)
+        }
 
         let workPercentage = (Double(workTasks.count) / Double(tasks.count)) * 100
         let lifePercentage = (Double(lifeTasks.count) / Double(tasks.count)) * 100
@@ -159,6 +229,14 @@ class AnalyticsService: ObservableObject {
             lastActivityDate: lastActivity,
             velocity: velocity
         )
+    }
+
+    /// Get health metrics for all lists
+    func getAllListHealth() -> [(list: TaskList, health: ListHealth)] {
+        return taskListService.lists.compactMap { list in
+            guard let health = calculateListHealth(for: list.id) else { return nil }
+            return (list: list, health: health)
+        }.sorted { $0.health.healthScore < $1.health.healthScore } // Show lowest health first
     }
 
     /// Detect stale lists (inactive for 14+ days with incomplete tasks)
@@ -281,7 +359,7 @@ enum AnalyticsPeriod: String, CaseIterable, Identifiable {
     }
 }
 
-/// Statistics for a single category
+/// Statistics for a single system category
 struct CategoryStats: Identifiable {
     let id = UUID()
     let category: TaskCategory
@@ -292,6 +370,74 @@ struct CategoryStats: Identifiable {
     var completionRate: Double {
         guard totalCount > 0 else { return 0 }
         return (Double(completedCount) / Double(totalCount)) * 100
+    }
+}
+
+/// Unified category stats supporting both system and custom categories
+struct UnifiedCategoryStats: Identifiable {
+    let id = UUID()
+
+    /// System category (nil if custom)
+    let systemCategory: TaskCategory?
+    /// Custom category (nil if system)
+    let customCategory: CustomCategory?
+
+    var totalCount: Int = 0
+    var completedCount: Int = 0
+    var totalEstimatedMinutes: Int = 0
+
+    /// Initialize for system category
+    init(systemCategory: TaskCategory, totalCount: Int = 0, completedCount: Int = 0, totalEstimatedMinutes: Int = 0) {
+        self.systemCategory = systemCategory
+        self.customCategory = nil
+        self.totalCount = totalCount
+        self.completedCount = completedCount
+        self.totalEstimatedMinutes = totalEstimatedMinutes
+    }
+
+    /// Initialize for custom category
+    init(customCategory: CustomCategory?, totalCount: Int = 0, completedCount: Int = 0, totalEstimatedMinutes: Int = 0) {
+        self.systemCategory = nil
+        self.customCategory = customCategory
+        self.totalCount = totalCount
+        self.completedCount = completedCount
+        self.totalEstimatedMinutes = totalEstimatedMinutes
+    }
+
+    var completionRate: Double {
+        guard totalCount > 0 else { return 0 }
+        return (Double(completedCount) / Double(totalCount)) * 100
+    }
+
+    var displayName: String {
+        if let system = systemCategory {
+            return system.displayName
+        } else if let custom = customCategory {
+            return custom.displayName
+        }
+        return "Unknown"
+    }
+
+    var color: Color {
+        if let system = systemCategory {
+            return system.color
+        } else if let custom = customCategory {
+            return custom.color
+        }
+        return .gray
+    }
+
+    var iconName: String {
+        if let system = systemCategory {
+            return system.iconName
+        } else if let custom = customCategory {
+            return custom.iconName
+        }
+        return "tag.fill"
+    }
+
+    var isCustom: Bool {
+        customCategory != nil
     }
 }
 

@@ -27,6 +27,12 @@ struct AnalyticsView: View {
                 // Work-Life Balance
                 workLifeBalanceSection
 
+                // List Health
+                listHealthSection
+
+                // Stale Lists
+                staleListsSection
+
                 Spacer(minLength: DesignSystem.Spacing.xxl)
             }
             .padding(DesignSystem.Spacing.lg)
@@ -47,14 +53,24 @@ struct AnalyticsView: View {
         return analyticsService.getOverviewStats(for: selectedPeriod)
     }
 
-    private var categoryStats: [CategoryStats] {
+    private var unifiedCategoryStats: [UnifiedCategoryStats] {
         _ = refreshTrigger
-        return analyticsService.getCategoryStats(for: selectedPeriod)
+        return analyticsService.getUnifiedCategoryStats(for: selectedPeriod)
     }
 
     private var workLifeBalance: WorkLifeBalance {
         _ = refreshTrigger
         return analyticsService.calculateWorkLifeBalance(for: selectedPeriod)
+    }
+
+    private var listHealthData: [(list: TaskList, health: ListHealth)] {
+        _ = refreshTrigger
+        return analyticsService.getAllListHealth()
+    }
+
+    private var staleLists: [TaskList] {
+        _ = refreshTrigger
+        return analyticsService.getStaleLists()
     }
 
     // MARK: - Period Selector
@@ -106,7 +122,7 @@ struct AnalyticsView: View {
     // MARK: - Category Distribution Section
 
     private var categoryDistributionSection: some View {
-        let stats = categoryStats
+        let stats = unifiedCategoryStats
 
         return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             sectionHeader("Category Distribution")
@@ -117,14 +133,14 @@ struct AnalyticsView: View {
                 VStack(spacing: DesignSystem.Spacing.sm) {
                     // Donut Chart (iOS 17+)
                     if #available(iOS 17.0, *) {
-                        CategoryDonutChart(stats: stats)
+                        UnifiedCategoryDonutChart(stats: stats)
                             .frame(height: 200)
                             .padding(.vertical, DesignSystem.Spacing.sm)
                     }
 
                     // Legend/Bar representation
                     ForEach(stats.prefix(6)) { stat in
-                        CategoryStatRow(stat: stat)
+                        UnifiedCategoryStatRow(stat: stat)
                     }
 
                     if stats.count > 6 {
@@ -143,7 +159,7 @@ struct AnalyticsView: View {
     // MARK: - Completion Rates Section
 
     private var completionRatesSection: some View {
-        let filteredStats = categoryStats
+        let filteredStats = unifiedCategoryStats
             .filter { $0.totalCount > 0 }
             .sorted { $0.completionRate > $1.completionRate }
 
@@ -155,7 +171,7 @@ struct AnalyticsView: View {
             } else {
                 VStack(spacing: DesignSystem.Spacing.sm) {
                     ForEach(filteredStats) { stat in
-                        CompletionRateRow(stat: stat)
+                        UnifiedCompletionRateRow(stat: stat)
                     }
                 }
                 .padding(DesignSystem.Spacing.md)
@@ -224,6 +240,56 @@ struct AnalyticsView: View {
             .padding(DesignSystem.Spacing.md)
             .background(Color.adaptiveSurface)
             .cornerRadius(DesignSystem.CornerRadius.large)
+        }
+    }
+
+    // MARK: - List Health Section
+
+    private var listHealthSection: some View {
+        let lists = listHealthData
+
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            sectionHeader("List Health")
+
+            if lists.isEmpty {
+                emptyStateCard(message: "No lists to analyze")
+            } else {
+                VStack(spacing: DesignSystem.Spacing.sm) {
+                    ForEach(lists.prefix(5), id: \.list.id) { item in
+                        ListHealthRow(list: item.list, health: item.health)
+                    }
+
+                    if lists.count > 5 {
+                        Text("+\(lists.count - 5) more lists")
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                    }
+                }
+                .padding(DesignSystem.Spacing.md)
+                .background(Color.adaptiveSurface)
+                .cornerRadius(DesignSystem.CornerRadius.large)
+            }
+        }
+    }
+
+    // MARK: - Stale Lists Section
+
+    private var staleListsSection: some View {
+        let stale = staleLists
+
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            if !stale.isEmpty {
+                sectionHeader("Needs Attention")
+
+                VStack(spacing: DesignSystem.Spacing.sm) {
+                    ForEach(stale) { list in
+                        StaleListRow(list: list)
+                    }
+                }
+                .padding(DesignSystem.Spacing.md)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(DesignSystem.CornerRadius.large)
+            }
         }
     }
 
@@ -351,6 +417,161 @@ struct CompletionRateRow: View {
     }
 }
 
+// MARK: - Unified Category Components (supports custom categories)
+
+struct UnifiedCategoryStatRow: View {
+    let stat: UnifiedCategoryStats
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Circle()
+                .fill(stat.color)
+                .frame(width: 12, height: 12)
+
+            HStack(spacing: DesignSystem.Spacing.xxs) {
+                Text(stat.displayName)
+                    .font(DesignSystem.Typography.subheadline)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+
+                if stat.isCustom {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 8))
+                        .foregroundColor(Color.Lazyflow.textTertiary)
+                }
+            }
+
+            Spacer()
+
+            Text("\(stat.totalCount) tasks")
+                .font(DesignSystem.Typography.caption1)
+                .foregroundColor(Color.Lazyflow.textSecondary)
+        }
+    }
+}
+
+struct UnifiedCompletionRateRow: View {
+    let stat: UnifiedCategoryStats
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            HStack {
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Image(systemName: stat.iconName)
+                        .foregroundColor(stat.color)
+                    Text(stat.displayName)
+                        .font(DesignSystem.Typography.subheadline)
+                    if stat.isCustom {
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                    }
+                }
+
+                Spacer()
+
+                Text("\(Int(stat.completionRate))%")
+                    .font(DesignSystem.Typography.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(stat.completionRate >= 70 ? .green : (stat.completionRate >= 40 ? .orange : .red))
+            }
+
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.2))
+                        .frame(height: 6)
+
+                    Rectangle()
+                        .fill(stat.color)
+                        .frame(width: geometry.size.width * CGFloat(stat.completionRate / 100), height: 6)
+                }
+                .cornerRadius(3)
+            }
+            .frame(height: 6)
+
+            Text("\(stat.completedCount)/\(stat.totalCount) completed")
+                .font(DesignSystem.Typography.caption2)
+                .foregroundColor(Color.Lazyflow.textTertiary)
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
+    }
+}
+
+// MARK: - List Health Components
+
+struct ListHealthRow: View {
+    let list: TaskList
+    let health: ListHealth
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            // List color indicator
+            Circle()
+                .fill(list.color)
+                .frame(width: 12, height: 12)
+
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                Text(list.name)
+                    .font(DesignSystem.Typography.subheadline)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Text("\(Int(health.completionRate))% done")
+                        .font(DesignSystem.Typography.caption2)
+
+                    if health.overdueCount > 0 {
+                        Text("• \(health.overdueCount) overdue")
+                            .font(DesignSystem.Typography.caption2)
+                            .foregroundColor(.orange)
+                    }
+
+                    Text("• \(String(format: "%.1f", health.velocity))/wk")
+                        .font(DesignSystem.Typography.caption2)
+                }
+                .foregroundColor(Color.Lazyflow.textTertiary)
+            }
+
+            Spacer()
+
+            // Health score badge
+            Text(health.healthLevel.rawValue)
+                .font(DesignSystem.Typography.caption2)
+                .fontWeight(.medium)
+                .padding(.horizontal, DesignSystem.Spacing.sm)
+                .padding(.vertical, DesignSystem.Spacing.xxs)
+                .background(health.healthLevel.color.opacity(0.2))
+                .foregroundColor(health.healthLevel.color)
+                .cornerRadius(DesignSystem.CornerRadius.small)
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
+    }
+}
+
+struct StaleListRow: View {
+    let list: TaskList
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.orange)
+
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                Text(list.name)
+                    .font(DesignSystem.Typography.subheadline)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+
+                Text("No activity in 14+ days")
+                    .font(DesignSystem.Typography.caption2)
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
+    }
+}
+
 // MARK: - Donut Chart (iOS 17+)
 
 @available(iOS 17.0, *)
@@ -374,6 +595,30 @@ struct CategoryDonutChart: View {
 
     private func generateAccessibilityValue() -> String {
         stats.map { "\($0.category.displayName): \($0.totalCount) tasks" }.joined(separator: ", ")
+    }
+}
+
+@available(iOS 17.0, *)
+struct UnifiedCategoryDonutChart: View {
+    let stats: [UnifiedCategoryStats]
+
+    var body: some View {
+        Chart(stats) { stat in
+            SectorMark(
+                angle: .value("Tasks", stat.totalCount),
+                innerRadius: .ratio(0.6),
+                angularInset: 2
+            )
+            .foregroundStyle(stat.color)
+            .cornerRadius(4)
+        }
+        .chartLegend(.hidden)
+        .accessibilityLabel("Category distribution chart")
+        .accessibilityValue(generateAccessibilityValue())
+    }
+
+    private func generateAccessibilityValue() -> String {
+        stats.map { "\($0.displayName): \($0.totalCount) tasks" }.joined(separator: ", ")
     }
 }
 
