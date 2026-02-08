@@ -7,6 +7,7 @@ struct InsightsView: View {
     @Binding var navigationPath: NavigationPath
     @State private var showMorningBriefing = false
     @State private var showDailySummary = false
+    @State private var showAIQuality = false
     @StateObject private var summaryService = DailySummaryService.shared
 
     init(navigationPath: Binding<NavigationPath> = .constant(NavigationPath())) {
@@ -48,6 +49,19 @@ struct InsightsView: View {
                         )
                     }
                     .accessibilityIdentifier("DailySummaryCard")
+
+                    // AI Quality Card
+                    Button {
+                        showAIQuality = true
+                    } label: {
+                        InsightsCard(
+                            icon: "sparkles",
+                            iconColor: .green,
+                            title: "AI Quality",
+                            subtitle: "Correction & refinement rates"
+                        )
+                    }
+                    .accessibilityIdentifier("AIQualityCard")
 
                     // MARK: - History Section
                     sectionHeader("Activity")
@@ -95,6 +109,9 @@ struct InsightsView: View {
             }
             .sheet(isPresented: $showDailySummary) {
                 DailySummaryView()
+            }
+            .sheet(isPresented: $showAIQuality) {
+                AIQualityView()
             }
             .onAppear {
                 // Preload insights data in background
