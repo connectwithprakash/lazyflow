@@ -31,6 +31,7 @@ DANGEROUS_PATTERNS=(
     "drop table"
     "DROP TABLE"
     "--no-verify"
+    "gh pr merge"
 )
 
 for PATTERN in "${DANGEROUS_PATTERNS[@]}"; do

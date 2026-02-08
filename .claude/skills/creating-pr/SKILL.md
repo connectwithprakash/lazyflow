@@ -46,4 +46,10 @@ Creates a properly formatted PR. Base branch defaults to `main` if not specified
    gh pr create --title "..." --body "..." --base {base-branch}
    ```
 
-6. **Return the PR URL** to the user
+6. **Wait for CI checks** before merging:
+   ```bash
+   gh pr checks <pr-number> --watch
+   ```
+   NEVER merge until all checks pass. Even if local tests pass, CI catches signing, Xcode version, and flakiness issues.
+
+7. **Return the PR URL** to the user

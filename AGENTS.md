@@ -77,6 +77,7 @@ Four levels of autonomy. When multiple levels apply, the **highest triggered lev
 - Deploy to TestFlight or App Store
 - Modify `fastlane/Appfile` or `fastlane/Matchfile`
 - Force push, reset --hard, or other destructive git operations
+- **NEVER merge a PR without CI checks passing** — always verify with `gh pr checks` first
 
 ## Release Workflow
 
