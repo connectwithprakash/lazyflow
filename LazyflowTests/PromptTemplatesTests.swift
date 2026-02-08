@@ -933,7 +933,7 @@ final class PromptTemplatesTests: XCTestCase {
             timeOfDay: "evening"
         )
 
-        XCTAssertTrue(prompt.contains("evening"), "Should include time of day")
+        XCTAssertTrue(prompt.contains("Time of day: evening"), "Should include interpolated time of day")
     }
 
     func testBuildDailySummaryPrompt_PersonalizationGuidance() {
@@ -970,7 +970,7 @@ final class PromptTemplatesTests: XCTestCase {
             timeOfDay: "morning"
         )
 
-        XCTAssertTrue(prompt.contains("morning"), "Should include time of day")
+        XCTAssertTrue(prompt.contains("Time of day: morning"), "Should include interpolated time of day")
     }
 
     func testBuildMorningBriefingPrompt_PersonalizationGuidance() {
@@ -1007,7 +1007,7 @@ final class PromptTemplatesTests: XCTestCase {
             learningContext: ""
         )
 
-        XCTAssertTrue(prompt.contains("evening"), "Should default to evening when no timeOfDay provided")
+        XCTAssertTrue(prompt.contains("Time of day: evening"), "Should default to evening when no timeOfDay provided")
     }
 
     func testBuildMorningBriefingPrompt_TimeOfDayDefaultsToMorning() {
@@ -1028,6 +1028,6 @@ final class PromptTemplatesTests: XCTestCase {
             hasCalendarData: false
         )
 
-        XCTAssertTrue(prompt.contains("morning"), "Should default to morning when no timeOfDay provided")
+        XCTAssertTrue(prompt.contains("Time of day: morning"), "Should default to morning when no timeOfDay provided")
     }
 }

@@ -710,7 +710,7 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertNotNil(summary.encouragement)
     }
 
-    func testPreloadInsightsData_DoesNotSetHasTodaySummary() async throws {
+    func testGenerateSummary_NoPersist_DoesNotSetHasTodaySummary() async throws {
         // Create and complete a task
         let task = taskService.createTask(title: "Test Task", dueDate: Date())
         taskService.toggleTaskCompletion(task)
@@ -726,7 +726,7 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertGreaterThan(summary.tasksCompleted, 0)
     }
 
-    func testPreloadInsightsData_StillPopulatesTodaySummary() async throws {
+    func testGenerateSummary_NoPersist_StillPopulatesTodaySummary() async throws {
         // Create and complete a task
         let task = taskService.createTask(title: "Test Task", dueDate: Date())
         taskService.toggleTaskCompletion(task)

@@ -470,12 +470,12 @@ enum PromptTemplates {
         - Be encouraging about FUTURE potential, not false praise for the past
 
         PERSONALIZATION RULES:
-        - Reference 1-2 specific task names from the completed tasks list above (do not just say "tasks")
+        - Reference 1-2 specific task names from the completed tasks list above if available (do not just say "tasks")
         - Mention the top category by name if available
         - Adjust greeting and tone for \(timeOfDay): morning=energizing, afternoon=encouraging, evening=reflective and wind-down, night=brief and restful
 
         Provide:
-        1. A 2-3 sentence summary that honestly reflects their day, mentioning specific task names
+        1. A 2-3 sentence summary that honestly reflects their day, mentioning specific task names when available
         2. One sentence of encouragement focused on tomorrow or their potential
 
         Respond in JSON format only:
@@ -631,13 +631,13 @@ enum PromptTemplates {
         - Be encouraging about TODAY and the future, not falsely positive about poor past results
 
         PERSONALIZATION RULES:
-        - Reference specific task names from the priorities list above (do not just say "your tasks")
+        - Reference specific task names from the priorities list above if available (do not just say "your tasks")
         - Mention the top category by name when relevant
         - Adjust greeting and tone for \(timeOfDay): morning=energizing, afternoon=encouraging, evening=reflective and wind-down, night=brief and restful
 
         Provide:
-        1. A 2-3 sentence greeting that honestly reflects yesterday\(hasCalendarData ? " and today's schedule" : ""), referencing specific task names
-        2. One sentence highlighting today's focus areas based on priorities\(hasCalendarData ? " and available time" : ""), naming specific tasks
+        1. A 2-3 sentence greeting that honestly reflects yesterday\(hasCalendarData ? " and today's schedule" : ""), referencing specific task names when available
+        2. One sentence highlighting today's focus areas based on priorities\(hasCalendarData ? " and available time" : ""), naming specific tasks when available
         3. A brief motivational message about today's potential
 
         Respond in JSON format only:
