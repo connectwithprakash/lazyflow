@@ -56,7 +56,7 @@ struct InsightsView: View {
                     } label: {
                         InsightsCard(
                             icon: "sparkles",
-                            iconColor: .green,
+                            iconColor: Color.Lazyflow.success,
                             title: "AI Quality",
                             subtitle: "Correction & refinement rates"
                         )

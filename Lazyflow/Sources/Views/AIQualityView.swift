@@ -18,7 +18,7 @@ struct AIQualityView: View {
                 VStack(spacing: DesignSystem.Spacing.lg) {
                     periodPicker
 
-                    if viewModel.hasData {
+                    if hasDataForSelectedPeriod {
                         metricsContent
                     } else {
                         emptyState
@@ -125,6 +125,8 @@ struct AIQualityView: View {
         .padding(DesignSystem.Spacing.lg)
         .background(Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.large)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("AI Acceptance Rate, \(acceptanceRate)")
     }
 
     // MARK: - Detail Metric Card
@@ -293,6 +295,10 @@ struct AIQualityView: View {
 
     private var impressionCount: Int {
         selectedPeriod == .sevenDays ? viewModel.impressionCount7d : viewModel.impressionCount30d
+    }
+
+    private var hasDataForSelectedPeriod: Bool {
+        impressionCount > 0
     }
 }
 

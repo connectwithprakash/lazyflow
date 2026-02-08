@@ -60,6 +60,6 @@ final class AIQualityViewModel: ObservableObject {
 
     private func formatRate(_ rate: Double, hasData: Bool) -> String {
         guard hasData else { return "—" }
-        return "\(Int(rate * 100))%"
+        return "\(Int((rate * 100).rounded()))%"
     }
 }
