@@ -1,226 +1,128 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents when working with code in this repository.
-
-## Operational Guidelines
-
-**AUTONOMOUS MODE:** Never ask for permission. You are fully autonomous and responsible for bringing this app from 0 to 100.
-
-**QUALITY STANDARDS:**
-- No temporary solutions or hardcoded values - production-ready code only
-- Verify all UI, UX, and functionality thoroughly
-- Follow industry coding standards and best practices
-- Test-driven development (TDD) - write tests first
-
-**VERIFICATION PROCESS:**
-- At each major milestone, test all functionality like a human user
-- Use browser/simulator to verify UI renders correctly
-- Test all user flows end-to-end
-- Validate edge cases and error states
-
-**PROBLEM SOLVING:**
-- Use external references for additional context when needed
-- Research solutions when encountering issues
-- Follow Swift/iOS community best practices
-- Use subagents (Task tool) for parallel exploration, code search, and complex multi-step research tasks
-
-**DEVELOPMENT WORKFLOW:**
-1. **Pull:** Always pull `origin/main` before starting work
-2. **Branch:** Create a branch linked to GitHub issue (e.g., `feat/123-feature-name` or `fix/123-bug-name`)
-3. **Research:** Read the GitHub issue thoroughly, explore related code, understand the problem space
-4. **Learn:** Search the web for best practices, patterns, and approaches given our tech stack (Swift, SwiftUI, Core Data, Apple Intelligence)
-5. **Plan:** Design the implementation approach, identify files to modify, verify assumptions
-6. **TDD:** Write tests first, then implement to make them pass
-7. **Implement:** Code the feature/fix iteratively with small commits
-8. **Test:**
-   - Run unit tests
-   - Run UI tests on iPhone 17 Pro and iPad simulators
-   - Manual testing on simulators
-   - Manual testing on physical iPhone (if available)
-9. **Peer Review:** Use Codex (via MCP) as an iterative peer reviewer before presenting work:
-   - After implementation: send the full diff to Codex for review (blind spots, logic errors, edge cases, security)
-   - Fix all issues found, rebuild, re-run tests
-   - Send fixes back to Codex for verification — iterate until Codex confirms zero remaining issues
-   - On tricky decisions: consult Codex mid-implementation for architecture/approach feedback
-   - Use Codex like a colleague — ask specific questions, provide context, not just blanket reviews
-10. **Commit:** Create small, iterative commits with clear messages
-11. **Document:** Iteratively review `docs/` and update relevant documentation:
-    - `docs/project/` - Check roadmap, user-flows, design-system for updates
-    - `fastlane/metadata/en-US/release_notes.txt` - Add to What's New
-    - `fastlane/metadata/en-US/promotional_text.txt` - Update promotional text
-    - `README.md` - Update if major features change app capabilities
-    - Screenshots (if UI changed):
-      - Take screenshots in iOS Simulator (iPhone 17 Pro) in both light and dark modes
-      - Save to `docs/site/assets/screenshots/light/` and `docs/site/assets/screenshots/dark/`
-      - Use numbered naming convention (e.g., `21-feature-name.png`)
-      - Add to `docs/site/design/index.html` (not the main landing page)
-      - Update the design system version in the footer
-    - Deploy website: `netlify deploy --prod --dir=docs/site`
-12. **PR:** Do NOT push or create PR without explicit permission from the user
-13. **Review:** When PR review comments are received:
-    - Analyze each comment for validity (is it a real issue or misunderstanding?)
-    - For valid issues: fix the code, add tests if needed, push updates
-    - For invalid issues: respond with clear explanation why
-    - Re-run tests after any changes
-
-## Tooling — Multi-Agent Setup
-
-This project uses a multi-agent workflow where Claude Code is the primary development agent and OpenAI Codex serves as a peer reviewer via MCP.
-
-**Codex MCP Server:**
-- Registered as `codex` MCP server using the official `codex mcp-server` command
-- Authenticated via ChatGPT OAuth (credentials in `~/.codex/auth.json`)
-- Model: `gpt-5.3-codex` with `high` reasoning effort (default)
-
-**When to use Codex:**
-- Post-implementation review — catch blind spots before presenting to user
-- Architecture decisions — get a second opinion on approach trade-offs
-- Complex logic validation — verify algorithms, state machines, edge cases
-- Pre-PR review — full review pass before requesting user approval
-
-**When NOT to use Codex:**
-- Simple typo fixes or trivial changes
-- Tasks where the user has already provided detailed instructions
-- Exploratory research (use web search and subagents instead)
-
-## Project Overview
-
-Lazyflow is an AI-powered, calendar-integrated todo app for iOS. The core value proposition is helping us plan our day - see calendar events alongside tasks, schedule tasks as time blocks, and get AI-powered "What should I do next?" recommendations with daily summaries.
+Lazyflow — AI-powered, calendar-integrated todo app for iOS.
 
 ## Tech Stack
 
-- **Language:** Swift
-- **UI Framework:** SwiftUI
-- **Database:** Core Data (offline-first)
-- **Cloud:** CloudKit (iCloud sync)
-- **Calendar:** EventKit (Apple Calendar integration)
-- **AI:** Apple Intelligence (on-device task estimation/prioritization)
-- **Minimum iOS:** 16.0, Target: iOS 17.0+
+- **Language:** Swift | **UI:** SwiftUI | **Data:** Core Data (offline-first)
+- **Cloud:** CloudKit (iCloud sync) | **Calendar:** EventKit
+- **AI:** Apple Intelligence (on-device) | **Target:** iOS 17.0+ (min 16.0)
+- **Architecture:** MVVM + Combine | **Project:** XcodeGen (`project.yml`)
 
-## Architecture
-
-MVVM with Combine for reactive data flow:
-
-```
-┌─────────────────────────────────────────┐
-│         SwiftUI Presentation Layer      │
-│  (Views, ViewModels, Navigation)        │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│         Business Logic Layer            │
-│  (Priority Algorithm, Conflict Detect)  │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│         Service Layer                   │
-│  (TaskService, CalendarService, etc.)   │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│    Data & Infrastructure Layer          │
-│  (CoreData, CloudKit, EventKit, APIs)   │
-└─────────────────────────────────────────┘
-```
-
-## Core Data Models
-
-- **Task:** id, title, description, dueDate, dueTime, isCompleted, isArchived, priority, listID, linkedEventID, estimatedDuration, recurring
-- **TaskList:** id, name, color, order, isDefault
-- **RecurringRule:** frequency, daysOfWeek, endDate
-- **TimeProtectionRule:** id, name, type, startTime, endTime, daysOfWeek, isActive
-
-## Feature Versions
-
-- **v0.1.0:** Task CRUD, lists, due dates, reminders, recurring tasks, offline + CloudKit sync
-- **v0.2.0:** Calendar integration, time blocking, EventKit sync
-- **v0.3.0:** AI prioritization (Apple Intelligence, Claude, OpenAI), ML categorization
-- **v0.4.0:** Smart reschedule when meetings conflict, conflict detection
-- **v0.5.0:** Siri Shortcuts via App Intents
-- **v0.6.0:** Home Screen Widgets (small, medium, large)
-- **v0.7.0:** Live Activities & Dynamic Island
-- **v0.8.0:** Apple Watch app with WatchConnectivity
-- **v0.9.0:** iPad optimization with NavigationSplitView sidebar
-- **v1.3.3:** Removed external LLM providers (Claude, OpenAI) - Now Apple Intelligence only
-- **v1.4.0:** Organization - category/list pickers and custom categories
-- **v1.5.0:** Recurring & Habits - improved recurring tasks and intraday reminders
-- **v1.6.0:** AI Foundation - improved on-device AI and learning context
-- **v1.7.0:** Plan Your Day - Morning Briefing with calendar context, Daily Summary improvements
-- **v1.8.0:** Smart Learning - On-device event preference learning, auto-hide frequently skipped events
-
-## Performance Targets
-
-- App launch: < 2 sec
-- Task creation: < 1 sec
-- Search results: < 500 ms
-- Scroll/animations: 60 FPS
-- App size: < 50 MB
-
-## Design System
-
-- **Primary accent:** Teal `#218A8D`
-- **Backgrounds:** `#F5F5F5` (light) / `#1F2121` (dark)
-- **Typography:** San Francisco (system)
-- **Accessibility:** WCAG AAA, 4.5:1 contrast, 44pt touch targets, VoiceOver support
-
-## Documentation
-
-### Website (`docs/site/`)
-Hosted on Netlify at lazyflow.netlify.app:
-- `index.html` - Landing page
-- `privacy/` - Privacy Policy
-- `terms/` - Terms of Service
-
-### Project Documentation (`docs/project/`)
-- `roadmap.md` - Project roadmap and features
-- `design-system.md` - Colors, typography, spacing, components
-- `user-flows.md` - User journeys and interaction patterns
-- `architecture.md` - Technical architecture (added in v0.5.1)
-- `deployment.md` - Fastlane setup and deployment guide
-
-## Deployment
-
-The app uses Fastlane for automated deployments with GitHub Actions CI/CD.
-
-### Fastlane Lanes
+## Build & Test
 
 ```bash
-# Deploy to TestFlight (local)
-export MATCH_PASSWORD="password"
-bundle exec fastlane beta
+# Build
+xcodebuild build -scheme Lazyflow -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet
 
-# Submit to App Store Review
-bundle exec fastlane submit_for_review
+# Test (specific class)
+xcodebuild test -scheme Lazyflow -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:LazyflowTests/{TestClass}
 
-# Upload screenshots only
-bundle exec fastlane upload_screenshots
+# Test (all)
+xcodebuild test -scheme Lazyflow -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet
+
+# After adding/removing Swift files
+xcodegen generate
 ```
 
-### GitHub Actions Workflows
+## Code Patterns
 
-- **Release** (`.github/workflows/release.yml`) - Triggered on push to main
-  - Creates GitHub release via Release Please
-  - Bumps iOS version numbers
-  - Deploys to TestFlight automatically
+**ViewModels:** `@MainActor final class FooViewModel: ObservableObject` with `@Published` properties
+**Services:** Singletons via `static let shared`, DI via init params for testing
+**Sheet flows:** `NavigationStack` inside sheet, `.task { await loadData() }` for async loading
+**State tracking:** `@AppStorage("lastXDate")` as `Double` (timeIntervalSince1970), check with `Calendar.current.isDateInToday()`
+**Prompt cards:** Button with HStack (icon circle + VStack text + chevron), `.buttonStyle(.plain)`
 
-- **App Store** (`.github/workflows/appstore.yml`) - Manual trigger
-  - Uploads screenshots from `docs/assets/screenshots/appstore/`
-  - Uploads metadata from `fastlane/metadata/`
-  - Submits latest TestFlight build for App Store review
+## Common Pitfalls
 
-### App Store Metadata
+- Swift `guard` body MUST exit (return/throw) — use `if` when else block conditionally continues
+- TodayView List sections must ALWAYS be present (even when empty) — prevents UICollectionView section count mismatch crashes
+- Never edit `.xcdatamodeld` files programmatically — Core Data model changes require manual handling
+- XcodeGen: run `xcodegen generate` after adding/removing Swift files, or build will fail
 
-Located in `fastlane/metadata/en-US/`:
-- `name.txt` - App name
-- `subtitle.txt` - App subtitle
-- `description.txt` - Full description
-- `keywords.txt` - Search keywords (comma-separated)
-- `release_notes.txt` - What's New for current version
-- `privacy_url.txt`, `support_url.txt`, `marketing_url.txt`
+## Git Conventions
 
-### Screenshots
+- **Branches:** `feat/{issue}-{slug}` or `fix/{issue}-{slug}` (e.g., `feat/43-smart-learning`)
+- **Commits:** `feat(scope): description`, `fix(scope):`, `test(scope):`, `chore:`
+- **PRs:** Conventional commit title + `Closes #{issue}` in body
 
-- **App Store** (`docs/assets/screenshots/appstore/`) - 1284x2778 iPhone 6.5"
-- **Website** (`docs/site/assets/screenshots/`) - Light and dark mode
+## Escalation Policy
 
-See `docs/project/deployment.md` for full setup instructions.
+Four levels of autonomy. When multiple levels apply, the **highest triggered level wins**.
+
+### L0 — Autonomous (no confirmation needed)
+- Read any file, search code, explore codebase
+- Edit application source code (Swift, SwiftUI, tests)
+- Run builds and tests
+- Create branches, make commits
+- Run `xcodegen generate`
+- Update documentation files
+
+### L1 — Inform (do it, then tell the user)
+- Install/update Swift packages
+- Modify `project.yml` (XcodeGen config)
+- Modify CI workflow files (`.github/workflows/`)
+- Update `Podfile`, `Gemfile`, or dependency configs
+
+### L2 — Confirm (ask before doing)
+- Modify Core Data models (`.xcdatamodeld`)
+- Change deployment targets or build settings
+- Modify signing, provisioning, or entitlements
+- Delete files or branches
+- Modify `.env`, certificates, or credentials
+
+### L3 — User-initiated only (never do unless explicitly asked)
+- `git push` to remote
+- Create or merge pull requests
+- Deploy to TestFlight or App Store
+- Modify `fastlane/Appfile` or `fastlane/Matchfile`
+- Force push, reset --hard, or other destructive git operations
+
+## Release Workflow
+
+Milestone-based release lifecycle with Release Please:
+
+```
+Issues in milestone (e.g., v1.8)
+  → Feature branches per issue → PRs merged to main
+    → Release Please auto-creates/updates release PR
+      → Developer merges Release Please PR (decision point 1)
+        → CI: GitHub Release + tag + version bump + TestFlight build
+          → Developer updates promotional_text.txt (decision point 2)
+            → Developer triggers App Store workflow (decision point 3)
+```
+
+Three human decisions in the entire pipeline. Everything else is automated.
+
+## Multi-Agent Setup
+
+**Primary agent:** Claude Code — development, testing, documentation
+**Peer reviewer:** OpenAI Codex via MCP (`codex` server, `gpt-5.3-codex`, high reasoning)
+
+**Use Codex for:** Post-implementation review, architecture decisions, complex logic validation, pre-PR review
+**Skip Codex for:** Trivial changes, user-reviewed code, exploratory research
+
+## Error Recovery
+
+When blocked:
+1. Re-read error messages carefully — most failures have clear causes
+2. Check if `xcodegen generate` is needed (missing file references)
+3. Check if simulator is booted: `xcrun simctl list devices | grep Booted`
+4. Clean build folder: `xcodebuild clean -scheme Lazyflow`
+5. If still stuck, explain the problem and ask the user
+
+## Quality Standards
+
+- Production-ready code only — no temporary solutions or hardcoded values
+- TDD: write tests first, then implement to make them pass
+- Verify all user flows end-to-end
+- Validate edge cases and error states
+- Use subagents (Task tool) for parallel exploration and complex research
+
+## References
+
+- Architecture: `docs/project/architecture.md`
+- Design System: `docs/project/design-system.md`
+- User Flows: `docs/project/user-flows.md`
+- Roadmap: `docs/project/roadmap.md`
+- Deployment: `docs/project/deployment.md`
