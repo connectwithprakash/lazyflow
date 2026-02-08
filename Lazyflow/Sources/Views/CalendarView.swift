@@ -163,6 +163,7 @@ struct CalendarView: View {
                 // Undo: delete the created task
                 taskService.deleteTask(action.task)
             }
+            .background(Color.adaptiveBackground)
     }
 
     // MARK: - Sheets Modifier
