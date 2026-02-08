@@ -94,6 +94,9 @@ final class DailySummaryService: ObservableObject {
             planned: plannedTasks.count
         )
 
+        // Carryover: unfinished tasks due today + overdue, sorted by priority
+        let carryoverData = buildCarryoverData()
+
         // Create initial summary without AI content
         var summary = DailySummaryData(
             date: date,
@@ -102,7 +105,9 @@ final class DailySummaryService: ObservableObject {
             completedTasks: taskSummaries,
             topCategory: topCategory,
             totalMinutesWorked: totalMinutes,
-            productivityScore: productivityScore
+            productivityScore: productivityScore,
+            carryoverTasks: carryoverData.tasks,
+            suggestedPriorities: carryoverData.priorities
         )
 
         // Generate AI summary if LLM is available
@@ -223,6 +228,41 @@ final class DailySummaryService: ObservableObject {
         }
 
         return score
+    }
+
+    // MARK: - Carryover
+
+    /// Build carryover data from unfinished today tasks and overdue tasks
+    private func buildCarryoverData() -> (tasks: [CarryoverTaskSummary], priorities: [String]) {
+        let todayTasks = taskService.fetchTodayTasks()
+        let overdueTasks = taskService.fetchOverdueTasks()
+
+        // Combine unfinished today + overdue, deduplicate by ID
+        var seen = Set<UUID>()
+        var unfinished: [Task] = []
+
+        for task in overdueTasks {
+            if seen.insert(task.id).inserted {
+                unfinished.append(task)
+            }
+        }
+        for task in todayTasks where !task.isCompleted {
+            if seen.insert(task.id).inserted {
+                unfinished.append(task)
+            }
+        }
+
+        // Sort by priority descending
+        unfinished.sort { $0.priority.rawValue > $1.priority.rawValue }
+
+        // Cap at 10 items
+        let capped = Array(unfinished.prefix(10))
+        let carryoverSummaries = capped.map { CarryoverTaskSummary(from: $0) }
+
+        // Suggest top 1-3 priorities (highest priority tasks)
+        let priorities = Array(capped.prefix(3).map { $0.title })
+
+        return (tasks: carryoverSummaries, priorities: priorities)
     }
 
     // MARK: - Streak Management
