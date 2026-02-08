@@ -5,6 +5,13 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1](https://github.com/connectwithprakash/lazyflow/compare/v1.8.0...v1.8.1) (2026-02-08)
+
+
+### Bug Fixes
+
+* **ui:** add adaptive background to Calendar tab ([#193](https://github.com/connectwithprakash/lazyflow/issues/193)) ([#197](https://github.com/connectwithprakash/lazyflow/issues/197)) ([f021e50](https://github.com/connectwithprakash/lazyflow/commit/f021e50c409b919dc215188c43fb07576f66fe29))
+
 ## [1.8.0](https://github.com/connectwithprakash/lazyflow/compare/v1.7.0...v1.8.0) (2026-02-08)
 
 
