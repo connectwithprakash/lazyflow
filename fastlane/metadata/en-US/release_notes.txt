@@ -1,15 +1,10 @@
 Plan Your Day
-• Morning Briefing: Start your day with AI-powered planning based on your calendar and priorities
-• Calendar context integration shows your schedule alongside task recommendations
-• Regenerate AI insights anytime with one tap
+• add personalization to Morning Briefing and Daily Summary
+• show AI correction/refinement rates in Insights
+• add category and list analytics dashboard
+• restructure navigation from 6 tabs to 5 tabs
+• add Plan Your Day morning planning flow
+• smart learning for event-to-task preferences
 
-Analytics Dashboard
-• Track productivity with category completion rates
-• Work-life balance insights with 60/40 target tracking
-• Visual charts showing task distribution by category
-• Time period filtering (Today, Week, Month, Quarter)
-
-Smarter AI
-• AI learns from your preferences and adapts over time
-• Improved Daily Summary quality with better productivity insights
-• Notification actions to quickly access Morning Briefing and Daily Summary
+Bug Fixes
+• update simulator destination and fix LiveActivity group warning
