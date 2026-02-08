@@ -1,6 +1,7 @@
 import XCTest
 @testable import Lazyflow
 
+@MainActor
 final class EventPreferenceLearningServiceTests: XCTestCase {
     var service: EventPreferenceLearningService!
     var testDefaults: UserDefaults!

@@ -2,6 +2,7 @@ import Foundation
 
 /// Service for learning user preferences about which calendar events to convert to tasks.
 /// Tracks selection patterns in Plan Your Day and uses them to improve defaults over time.
+@MainActor
 final class EventPreferenceLearningService: ObservableObject {
     static let shared = EventPreferenceLearningService()
 
@@ -30,7 +31,7 @@ final class EventPreferenceLearningService: ObservableObject {
     // MARK: - Title Normalization
 
     /// Normalize an event title for consistent matching
-    static func normalizeTitle(_ title: String) -> String {
+    nonisolated static func normalizeTitle(_ title: String) -> String {
         title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
