@@ -568,10 +568,13 @@ final class LazyflowUITests: XCTestCase {
         // Wait for Settings navigation bar to appear
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
 
-        // Verify key settings sections exist
-        let appearance = app.staticTexts["Appearance"]
-        XCTAssertTrue(appearance.waitForExistence(timeout: 2), "Appearance section should exist")
-        XCTAssertTrue(app.staticTexts["Tasks"].exists, "Tasks section should exist")
+        // Verify key settings sections exist by checking their content
+        // (Section headers may render differently across iOS versions)
+        let themePicker = app.staticTexts["Theme"]
+        XCTAssertTrue(themePicker.waitForExistence(timeout: 2), "Theme picker should exist in Appearance section")
+
+        let showCompleted = app.switches["Show Completed Tasks"]
+        XCTAssertTrue(showCompleted.waitForExistence(timeout: 2), "Show Completed Tasks toggle should exist in Tasks section")
     }
 
     func testChangeTheme() throws {
