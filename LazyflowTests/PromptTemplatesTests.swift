@@ -918,4 +918,116 @@ final class PromptTemplatesTests: XCTestCase {
         XCTAssertTrue(prompt.contains("CRITICAL RULES"), "Should include critical rules section")
         XCTAssertTrue(prompt.contains("MUST accurately reflect"), "Should require data accuracy")
     }
+
+    // MARK: - Personalization Tests (#183)
+
+    func testBuildDailySummaryPrompt_IncludesTimeOfDay() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 5,
+            totalPlanned: 8,
+            topCategory: "Work",
+            timeWorked: "3h 30m",
+            currentStreak: 3,
+            taskList: "- Complete report (Work)\n- Review PR (Work)",
+            learningContext: "",
+            timeOfDay: "evening"
+        )
+
+        XCTAssertTrue(prompt.contains("Time of day: evening"), "Should include interpolated time of day")
+    }
+
+    func testBuildDailySummaryPrompt_PersonalizationGuidance() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 3,
+            totalPlanned: 5,
+            topCategory: "Work",
+            timeWorked: "2h",
+            currentStreak: 2,
+            taskList: "- Fix login bug (Work)\n- Write tests (Development)",
+            learningContext: "",
+            timeOfDay: "afternoon"
+        )
+
+        XCTAssertTrue(prompt.contains("specific task"), "Should instruct to reference specific tasks by name")
+    }
+
+    func testBuildMorningBriefingPrompt_IncludesTimeOfDay() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 4,
+            yesterdayPlanned: 6,
+            yesterdayTopCategory: "Work",
+            todayTaskCount: 5,
+            todayHighPriority: 2,
+            todayOverdue: 0,
+            todayTimeEstimate: "4h",
+            weeklyTasksCompleted: 15,
+            weeklyCompletionRate: "75%",
+            currentStreak: 5,
+            todayTaskList: "- [HIGH] Sprint planning (Work)\n- Review design (Design)",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false,
+            timeOfDay: "morning"
+        )
+
+        XCTAssertTrue(prompt.contains("Time of day: morning"), "Should include interpolated time of day")
+    }
+
+    func testBuildMorningBriefingPrompt_PersonalizationGuidance() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 3,
+            yesterdayPlanned: 5,
+            yesterdayTopCategory: "Personal",
+            todayTaskCount: 4,
+            todayHighPriority: 1,
+            todayOverdue: 0,
+            todayTimeEstimate: "3h",
+            weeklyTasksCompleted: 10,
+            weeklyCompletionRate: "65%",
+            currentStreak: 3,
+            todayTaskList: "- [HIGH] Finish proposal (Work)",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false,
+            timeOfDay: "afternoon"
+        )
+
+        XCTAssertTrue(prompt.contains("specific task"), "Should instruct to reference specific tasks by name")
+        XCTAssertTrue(prompt.contains("tone"), "Should include tone guidance for time of day")
+    }
+
+    func testBuildDailySummaryPrompt_TimeOfDayDefaultsToEvening() {
+        let prompt = PromptTemplates.buildDailySummaryPrompt(
+            tasksCompleted: 2,
+            totalPlanned: 3,
+            topCategory: nil,
+            timeWorked: "1h",
+            currentStreak: 1,
+            taskList: "",
+            learningContext: ""
+        )
+
+        XCTAssertTrue(prompt.contains("Time of day: evening"), "Should default to evening when no timeOfDay provided")
+    }
+
+    func testBuildMorningBriefingPrompt_TimeOfDayDefaultsToMorning() {
+        let prompt = PromptTemplates.buildMorningBriefingPrompt(
+            yesterdayCompleted: 2,
+            yesterdayPlanned: 3,
+            yesterdayTopCategory: nil,
+            todayTaskCount: 4,
+            todayHighPriority: 1,
+            todayOverdue: 0,
+            todayTimeEstimate: "2h",
+            weeklyTasksCompleted: 8,
+            weeklyCompletionRate: "60%",
+            currentStreak: 1,
+            todayTaskList: "",
+            scheduleContext: nil,
+            learningContext: "",
+            hasCalendarData: false
+        )
+
+        XCTAssertTrue(prompt.contains("Time of day: morning"), "Should default to morning when no timeOfDay provided")
+    }
 }

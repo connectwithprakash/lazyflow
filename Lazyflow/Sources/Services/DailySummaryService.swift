@@ -164,7 +164,9 @@ final class DailySummaryService: ObservableObject {
             currentStreak: streakData.currentStreak,
             taskList: taskList,
             learningContext: enrichedContext,
-            isFirstDay: isFirstDay
+            isFirstDay: isFirstDay,
+            // Adapts tone: morning=energizing, evening=reflective, etc.
+            timeOfDay: AIContext.TimeContext().timeOfDay
         )
 
         let response = try await llmService.complete(
@@ -984,7 +986,8 @@ final class DailySummaryService: ObservableObject {
             hasCalendarData: data.hasCalendarData,
             isFirstDay: isFirstDay,
             streakJustBroken: streakJustBroken,
-            previousStreak: previousStreak
+            previousStreak: previousStreak,
+            timeOfDay: AIContext.TimeContext().timeOfDay
         )
 
         let response = try await llmService.complete(

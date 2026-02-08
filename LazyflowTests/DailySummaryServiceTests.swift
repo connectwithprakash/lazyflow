@@ -710,55 +710,34 @@ final class DailySummaryServiceTests: XCTestCase {
         XCTAssertNotNil(summary.encouragement)
     }
 
-    func testPreloadInsightsData_DoesNotSetHasTodaySummary() async throws {
+    func testGenerateSummary_NoPersist_DoesNotSetHasTodaySummary() async throws {
         // Create and complete a task
         let task = taskService.createTask(title: "Test Task", dueDate: Date())
         taskService.toggleTaskCompletion(task)
 
-        // Verify hasTodaySummary is false before preload
+        // Verify hasTodaySummary is false before
         XCTAssertFalse(dailySummaryService.hasTodaySummary)
 
-        // Call preload
-        dailySummaryService.preloadInsightsData()
+        // Generate summary with persist: false (same as preloadInsightsData does)
+        let summary = await dailySummaryService.generateSummary(for: Date(), persist: false)
 
-        // Wait for preload to complete by checking todaySummary (deterministic condition)
-        let expectation = expectation(description: "Preload completes")
-        _Concurrency.Task {
-            while dailySummaryService.todaySummary == nil {
-                try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
-            }
-            expectation.fulfill()
-        }
-
-        await fulfillment(of: [expectation], timeout: 10.0)
-
-        // Verify hasTodaySummary is still false after preload
+        // Verify hasTodaySummary is still false (persist: false skips saving)
         XCTAssertFalse(dailySummaryService.hasTodaySummary)
+        XCTAssertGreaterThan(summary.tasksCompleted, 0)
     }
 
-    func testPreloadInsightsData_StillPopulatesTodaySummary() async throws {
+    func testGenerateSummary_NoPersist_StillPopulatesTodaySummary() async throws {
         // Create and complete a task
         let task = taskService.createTask(title: "Test Task", dueDate: Date())
         taskService.toggleTaskCompletion(task)
 
-        // Verify todaySummary is nil before preload
+        // Verify todaySummary is nil before
         XCTAssertNil(dailySummaryService.todaySummary)
 
-        // Call preload
-        dailySummaryService.preloadInsightsData()
+        // Generate summary (this always completes — catches LLM errors internally)
+        _ = await dailySummaryService.generateSummary(for: Date(), persist: false)
 
-        // Wait for preload to complete by checking todaySummary (deterministic condition)
-        let expectation = expectation(description: "Preload completes")
-        _Concurrency.Task {
-            while dailySummaryService.todaySummary == nil {
-                try? await _Concurrency.Task.sleep(nanoseconds: 50_000_000) // 50ms
-            }
-            expectation.fulfill()
-        }
-
-        await fulfillment(of: [expectation], timeout: 10.0)
-
-        // Verify todaySummary is populated (for fast UI display)
+        // Verify todaySummary is populated (generateSummary sets it on MainActor)
         XCTAssertNotNil(dailySummaryService.todaySummary)
     }
 

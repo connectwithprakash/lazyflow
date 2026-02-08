@@ -89,7 +89,7 @@ jobs:
   ui-tests:
     runs-on: macos-15
     timeout-minutes: 60
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
@@ -99,15 +99,29 @@ jobs:
       - name: Ensure iOS Simulator Runtime
         run: |
           set -euo pipefail
+          # Install the latest iOS simulator runtime if none are available
           if ! xcrun simctl list runtimes available | grep -q "com.apple.CoreSimulator.SimRuntime.iOS"; then
             echo "No available iOS runtime found, installing..."
             xcodebuild -downloadPlatform iOS
           fi
-          if ! xcrun simctl list runtimes available | grep -q "com.apple.CoreSimulator.SimRuntime.iOS"; then
-            echo "::error::No iOS simulator runtime available after install attempt"
+          # Create a simulator if the preferred device is missing
+          DEVICE_NAME="iPhone 16 Pro"
+          DEVICE_TYPE_ID="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
+          if ! xcrun simctl list devices available | grep -w "$DEVICE_NAME" | grep -qv "Max"; then
+            RUNTIME=$(xcrun simctl list runtimes available | grep "com.apple.CoreSimulator.SimRuntime.iOS" | tail -1 | awk '{print $NF}')
+            if [ -z "$RUNTIME" ]; then
+              echo "::error::No iOS simulator runtime available"
+              exit 1
+            fi
+            echo "Creating $DEVICE_NAME (type: $DEVICE_TYPE_ID) with runtime $RUNTIME"
+            xcrun simctl create "$DEVICE_NAME" "$DEVICE_TYPE_ID" "$RUNTIME"
+          fi
+          # Verify the exact device exists
+          if ! xcrun simctl list devices available | grep -w "$DEVICE_NAME" | grep -qv "Max"; then
+            echo "::error::$DEVICE_NAME simulator not available after setup"
             exit 1
           fi
-          echo "iOS simulator runtime is available"
+          echo "$DEVICE_NAME simulator is available"
 
       - name: Cache DerivedData
         uses: actions/cache@v4
@@ -123,7 +137,7 @@ jobs:
           xcodebuild test \
             -project Lazyflow.xcodeproj \
             -scheme Lazyflow \
-            -destination 'platform=iOS Simulator,name=Any iOS Simulator Device' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -only-testing:LazyflowUITests \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty
