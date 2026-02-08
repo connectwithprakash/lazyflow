@@ -22,6 +22,7 @@ final class PlanYourDayViewModel: ObservableObject {
 
     private let calendarService: CalendarService
     private let taskService: TaskService
+    private let learningService: EventPreferenceLearningService
 
     // MARK: - Computed Properties
 
@@ -74,10 +75,12 @@ final class PlanYourDayViewModel: ObservableObject {
 
     init(
         calendarService: CalendarService = .shared,
-        taskService: TaskService = .shared
+        taskService: TaskService = .shared,
+        learningService: EventPreferenceLearningService = .shared
     ) {
         self.calendarService = calendarService
         self.taskService = taskService
+        self.learningService = learningService
     }
 
     // MARK: - Actions
@@ -103,7 +106,7 @@ final class PlanYourDayViewModel: ObservableObject {
             events = []
             viewState = .empty
         } else {
-            events = items
+            events = applyLearnedPreferences(items)
             viewState = .selection
         }
     }
@@ -120,6 +123,21 @@ final class PlanYourDayViewModel: ObservableObject {
             .map { PlanEventItem(from: $0) }
     }
 
+    /// Override default selection based on learned user preferences.
+    /// Frequently skipped events get deselected; frequently selected events get selected.
+    /// All-day events are never auto-selected by learning (they stay deselected by default).
+    func applyLearnedPreferences(_ items: [PlanEventItem]) -> [PlanEventItem] {
+        items.map { item in
+            var modified = item
+            if learningService.isFrequentlySkipped(item.title) {
+                modified.isSelected = false
+            } else if !item.isAllDay && learningService.isFrequentlySelected(item.title) {
+                modified.isSelected = true
+            }
+            return modified
+        }
+    }
+
     /// Toggle selection for a single event
     func toggleSelection(for eventID: String) {
         guard let index = events.firstIndex(where: { $0.id == eventID }) else { return }
@@ -133,9 +151,23 @@ final class PlanYourDayViewModel: ObservableObject {
         }
     }
 
+    /// Select only events whose IDs are in the given set
+    func selectOnly(_ ids: Set<String>) {
+        for index in events.indices where ids.contains(events[index].id) {
+            events[index].isSelected = true
+        }
+    }
+
     /// Deselect all events
     func deselectAll() {
         for index in events.indices {
+            events[index].isSelected = false
+        }
+    }
+
+    /// Deselect only events whose IDs are in the given set
+    func deselectOnly(_ ids: Set<String>) {
+        for index in events.indices where ids.contains(events[index].id) {
             events[index].isSelected = false
         }
     }
@@ -146,6 +178,9 @@ final class PlanYourDayViewModel: ObservableObject {
         guard !selected.isEmpty else { return }
 
         viewState = .creating
+
+        // Record all event selection states for learning (before processing)
+        learningService.recordSelections(events)
 
         var totalMinutes = 0
 

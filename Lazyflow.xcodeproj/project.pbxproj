@@ -78,6 +78,7 @@
 		868C5108CBC9EEC25ABE4CE7 /* ListsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 868AB7877C9C7AEA584AECC2 /* ListsViewModel.swift */; };
 		8866988C5945766F87C8620D /* TaskActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28E22B96CFCEC9E8C7E4324F /* TaskActivityAttributes.swift */; };
 		89C5AA721859327B73862644 /* DailySummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B2071A23A13F5E9CB0EC8A /* DailySummaryService.swift */; };
+		8AC2370A648F531F5B8C3745 /* EventPreferenceLearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9677642FAF385A19C8ED2C87 /* EventPreferenceLearningService.swift */; };
 		8EE2EC378E8A63587EB39A61 /* CustomCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5760FDBBA61D5FF9EB511AF0 /* CustomCategory.swift */; };
 		905E6CDA8C1894B18A2EAFBB /* SubtaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5374569A0EFD2E70AAE8FCE6 /* SubtaskRowView.swift */; };
 		90F8CCF020896A9866C7A658 /* AILearningServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520D2083114EE9998027CF09 /* AILearningServiceTests.swift */; };
@@ -85,8 +86,10 @@
 		953627B556867E6DCBB150FE /* PromptTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32C1D671B06C4132CCC73838 /* PromptTemplates.swift */; };
 		983E5B535FAF3C3E60C023EF /* TaskListServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2191176F2DC72BA5B861C6C8 /* TaskListServiceTests.swift */; };
 		985A5392DFFF44E008AC895E /* LargeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B1DD57CA77E2480568958 /* LargeWidgetView.swift */; };
+		9A1F85D8CB1A571D1B3BFC02 /* EventSelectionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA6EE1291F4F721FA608217 /* EventSelectionRecord.swift */; };
 		9A410F4E4A3A34CCFD9DFAF1 /* WatchTodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995E5EE728F68F1923B8D461 /* WatchTodayView.swift */; };
 		9B43D6068F9B88F8430A6CE7 /* SmartRescheduleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02792F18772E41185C3AA44 /* SmartRescheduleService.swift */; };
+		9C48711EFBD089B3EBAEB7C0 /* EventPreferenceLearningServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68FC02D90A38A01F152672E3 /* EventPreferenceLearningServiceTests.swift */; };
 		9D5A72A541E7A731607690EE /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB72FB63D1752B0B54B7C9AF /* OnboardingView.swift */; };
 		9F686AB8D6159F67405563EB /* TaskCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494953CFA458D3070B16B33F /* TaskCategory.swift */; };
 		A0709C4B108F2C4872AA5D15 /* ConflictDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795DC26627EBE7C54E1A28A1 /* ConflictDetectionService.swift */; };
@@ -211,6 +214,7 @@
 		0966885EA526F6266DACE369 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
 		096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
 		0A10EC43A4CC1C21F47B3205 /* PlanYourDayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanYourDayData.swift; sourceTree = "<group>"; };
+		0BA6EE1291F4F721FA608217 /* EventSelectionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSelectionRecord.swift; sourceTree = "<group>"; };
 		0C5F23987492CF9DBF92700E /* DailySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryView.swift; sourceTree = "<group>"; };
 		0D0233412D63AEFF7D4A0AC9 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		0FFD252151F38D56B1B17808 /* LazyflowWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWidget.swift; sourceTree = "<group>"; };
@@ -264,6 +268,7 @@
 		64508FE3566220E62129F09B /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
 		66D08236382AB86632220B7E /* LLMIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMIntegrationTests.swift; sourceTree = "<group>"; };
 		68F731F96242074EDA7DF785 /* WatchTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTask.swift; sourceTree = "<group>"; };
+		68FC02D90A38A01F152672E3 /* EventPreferenceLearningServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPreferenceLearningServiceTests.swift; sourceTree = "<group>"; };
 		69B2071A23A13F5E9CB0EC8A /* DailySummaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryService.swift; sourceTree = "<group>"; };
 		6C0477ADBA7929DC3A7753B3 /* ListDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailView.swift; sourceTree = "<group>"; };
 		7093DE3C5A54912EB3A2FB18 /* ExpandableTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableTaskRowView.swift; sourceTree = "<group>"; };
@@ -294,6 +299,7 @@
 		94E48CA4F360C3D54A5D9A74 /* TaskList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskList.swift; sourceTree = "<group>"; };
 		95F6607E1E65BF26BDD3899A /* AILearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILearningService.swift; sourceTree = "<group>"; };
 		95FFADDD9ADA948F8B90FD98 /* RecurringRuleEntity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RecurringRuleEntity+Extensions.swift"; sourceTree = "<group>"; };
+		9677642FAF385A19C8ED2C87 /* EventPreferenceLearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPreferenceLearningService.swift; sourceTree = "<group>"; };
 		96B4790C4DFDF82098E35533 /* Lazyflow.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Lazyflow.xcdatamodel; sourceTree = "<group>"; };
 		995E5EE728F68F1923B8D461 /* WatchTodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTodayView.swift; sourceTree = "<group>"; };
 		9C2C6D7CF3D5DE85D39BCFD9 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -467,6 +473,7 @@
 				F1B80002E148BF3F059F003E /* CategoryServiceTests.swift */,
 				79878ECB4B8D1E2274BF2E3E /* ConflictDetectionServiceTests.swift */,
 				F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */,
+				68FC02D90A38A01F152672E3 /* EventPreferenceLearningServiceTests.swift */,
 				4682DC1EE1661DFC28274E38 /* HistoryViewModelTests.swift */,
 				A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */,
 				B2F8B47155C202D2CA845026 /* ListsViewModelTests.swift */,
@@ -548,6 +555,7 @@
 				166F9BD804327CDD4977E7C1 /* LLM */,
 				766E1ADEBDA6F3C3BF445A09 /* AIContextService.swift */,
 				95F6607E1E65BF26BDD3899A /* AILearningService.swift */,
+				9677642FAF385A19C8ED2C87 /* EventPreferenceLearningService.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -676,6 +684,7 @@
 			children = (
 				DF133341D7E7D7CD967A0BAB /* AIContext.swift */,
 				02FEA3CA7C9ABC475E1EB332 /* AICorrection.swift */,
+				0BA6EE1291F4F721FA608217 /* EventSelectionRecord.swift */,
 				8A98881B182C06832E4A3E81 /* UserPatterns.swift */,
 			);
 			path = AI;
@@ -941,6 +950,7 @@
 				E2348389624C78DAE63B632F /* CategoryServiceTests.swift in Sources */,
 				00FCF99113DE7C7D45EE56E3 /* ConflictDetectionServiceTests.swift in Sources */,
 				84B9FAA6C2AA0387D83D18B1 /* DailySummaryServiceTests.swift in Sources */,
+				9C48711EFBD089B3EBAEB7C0 /* EventPreferenceLearningServiceTests.swift in Sources */,
 				A1920639E96CE06499173246 /* HistoryViewModelTests.swift in Sources */,
 				1A794F33E3F2F1436A5C1690 /* LLMIntegrationTests.swift in Sources */,
 				BC78DE81741B8AEC0C960DB9 /* LazyflowTests.swift in Sources */,
@@ -1009,6 +1019,8 @@
 				13E9D197333A8203696DD6EE /* DailySummaryView.swift in Sources */,
 				7F2C2B0C3C574AC99E818D9F /* Date+Extensions.swift in Sources */,
 				F6538631367C9A9E80D16A5E /* DesignSystem.swift in Sources */,
+				8AC2370A648F531F5B8C3745 /* EventPreferenceLearningService.swift in Sources */,
+				9A1F85D8CB1A571D1B3BFC02 /* EventSelectionRecord.swift in Sources */,
 				FED75A36AB181F97B5562181 /* ExpandableTaskRowView.swift in Sources */,
 				6FC1B87B18463CF203566DB1 /* GetTodayTasksIntent.swift in Sources */,
 				A58EA91216CC9AA0D8F7D20B /* HistoryView.swift in Sources */,
