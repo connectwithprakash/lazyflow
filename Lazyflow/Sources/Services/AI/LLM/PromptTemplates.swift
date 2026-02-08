@@ -599,6 +599,8 @@ enum PromptTemplates {
         """
         }
 
+        // "Morning briefing" is the product feature name; timeOfDay adapts the tone
+        // so it reads naturally even when opened in the afternoon or evening.
         return """
         Generate a morning briefing for a productivity app user.
 

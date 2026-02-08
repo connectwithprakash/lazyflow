@@ -165,6 +165,7 @@ final class DailySummaryService: ObservableObject {
             taskList: taskList,
             learningContext: enrichedContext,
             isFirstDay: isFirstDay,
+            // Adapts tone: morning=energizing, evening=reflective, etc.
             timeOfDay: AIContext.TimeContext().timeOfDay
         )
 
