@@ -404,7 +404,8 @@ enum PromptTemplates {
         currentStreak: Int,
         taskList: String,
         learningContext: String,
-        isFirstDay: Bool = false
+        isFirstDay: Bool = false,
+        timeOfDay: String = "evening"
     ) -> String {
         let contextSection = learningContext.isEmpty ? "" : """
 
@@ -450,6 +451,8 @@ enum PromptTemplates {
         return """
         Generate a brief daily summary for a productivity app user.
 
+        Time of day: \(timeOfDay)
+
         Today's Stats:
         - Tasks completed: \(tasksCompleted) of \(totalPlanned) planned
         - Top category: \(topCategory ?? "Various")
@@ -466,8 +469,13 @@ enum PromptTemplates {
         - Never say someone made "progress" if they completed zero tasks
         - Be encouraging about FUTURE potential, not false praise for the past
 
+        PERSONALIZATION RULES:
+        - Reference 1-2 specific task names from the completed tasks list above (do not just say "tasks")
+        - Mention the top category by name if available
+        - Adjust greeting and tone for \(timeOfDay): morning=energizing, afternoon=encouraging, evening=reflective and wind-down, night=brief and restful
+
         Provide:
-        1. A 2-3 sentence summary that honestly reflects their day
+        1. A 2-3 sentence summary that honestly reflects their day, mentioning specific task names
         2. One sentence of encouragement focused on tomorrow or their potential
 
         Respond in JSON format only:
@@ -513,7 +521,8 @@ enum PromptTemplates {
         hasCalendarData: Bool,
         isFirstDay: Bool = false,
         streakJustBroken: Bool = false,
-        previousStreak: Int = 0
+        previousStreak: Int = 0,
+        timeOfDay: String = "morning"
     ) -> String {
         let scheduleSection = scheduleContext.map { "\n\nToday's Calendar:\n\($0)" } ?? ""
         let contextSection = learningContext.isEmpty ? "" : """
@@ -593,6 +602,8 @@ enum PromptTemplates {
         return """
         Generate a morning briefing for a productivity app user.
 
+        Time of day: \(timeOfDay)
+
         Yesterday's Results:
         - Completed: \(yesterdayCompleted) of \(yesterdayPlanned) tasks
         - Top category: \(yesterdayTopCategory ?? "Various")
@@ -619,14 +630,19 @@ enum PromptTemplates {
         - Match your enthusiasm level to the actual metrics
         - Be encouraging about TODAY and the future, not falsely positive about poor past results
 
+        PERSONALIZATION RULES:
+        - Reference specific task names from the priorities list above (do not just say "your tasks")
+        - Mention the top category by name when relevant
+        - Adjust greeting and tone for \(timeOfDay): morning=energizing, afternoon=encouraging, evening=reflective and wind-down, night=brief and restful
+
         Provide:
-        1. A 2-3 sentence morning greeting that honestly reflects yesterday\(hasCalendarData ? " and today's schedule" : "")
-        2. One sentence highlighting today's focus areas based on priorities\(hasCalendarData ? " and available time" : "")
+        1. A 2-3 sentence greeting that honestly reflects yesterday\(hasCalendarData ? " and today's schedule" : ""), referencing specific task names
+        2. One sentence highlighting today's focus areas based on priorities\(hasCalendarData ? " and available time" : ""), naming specific tasks
         3. A brief motivational message about today's potential
 
         Respond in JSON format only:
         {
-            "summary": "<honest morning greeting matching the stats>",
+            "summary": "<honest greeting matching the stats>",
             "todayFocus": "<today's priorities and focus>",
             "motivation": "<forward-looking encouraging message>"
         }
