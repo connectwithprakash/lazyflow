@@ -5,6 +5,23 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0](https://github.com/connectwithprakash/lazyflow/compare/v1.7.0...v1.8.0) (2026-02-08)
+
+
+### Features
+
+* **ai:** add personalization to Morning Briefing and Daily Summary ([#195](https://github.com/connectwithprakash/lazyflow/issues/195)) ([9cc14c2](https://github.com/connectwithprakash/lazyflow/commit/9cc14c278852edab98806689b6e6df6aa58e18ad))
+* **ai:** show AI correction/refinement rates in Insights ([#196](https://github.com/connectwithprakash/lazyflow/issues/196)) ([0a13749](https://github.com/connectwithprakash/lazyflow/commit/0a137498917d1e647564173dd9027cc1ed15e7a8))
+* **analytics:** add category and list analytics dashboard ([#186](https://github.com/connectwithprakash/lazyflow/issues/186)) ([19cd902](https://github.com/connectwithprakash/lazyflow/commit/19cd902ce591e970eca814e6fe220f76f7f4d798))
+* **nav:** restructure navigation from 6 tabs to 5 tabs ([#184](https://github.com/connectwithprakash/lazyflow/issues/184)) ([344d7ca](https://github.com/connectwithprakash/lazyflow/commit/344d7ca8535b561360e9a9bd97429839755caa83))
+* **plan:** add Plan Your Day morning planning flow ([#41](https://github.com/connectwithprakash/lazyflow/issues/41)) ([3e35112](https://github.com/connectwithprakash/lazyflow/commit/3e35112758de3b89df26529406d96c98ca8af27f))
+* **plan:** smart learning for event-to-task preferences ([#192](https://github.com/connectwithprakash/lazyflow/issues/192)) ([c6e17bc](https://github.com/connectwithprakash/lazyflow/commit/c6e17bc552022f51317a1bbd6fcf7b4bd9ef3a0a))
+
+
+### Bug Fixes
+
+* **ci:** update simulator destination and fix LiveActivity group warning ([#191](https://github.com/connectwithprakash/lazyflow/issues/191)) ([00d1789](https://github.com/connectwithprakash/lazyflow/commit/00d1789e5b94f628ff9967285e9d6dc24b43174e))
+
 ## [1.7.0](https://github.com/connectwithprakash/lazyflow/compare/v1.6.1...v1.7.0) (2026-02-06)
 
 
