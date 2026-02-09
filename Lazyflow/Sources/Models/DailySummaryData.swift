@@ -50,24 +50,6 @@ struct DailySummaryData: Codable, Identifiable {
         self.createdAt = createdAt
     }
 
-    // Custom decoder for backward compatibility with persisted summaries
-    // that don't have carryoverTasks/suggestedPriorities keys
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        date = try container.decode(Date.self, forKey: .date)
-        tasksCompleted = try container.decode(Int.self, forKey: .tasksCompleted)
-        totalTasksPlanned = try container.decode(Int.self, forKey: .totalTasksPlanned)
-        completedTasks = try container.decode([CompletedTaskSummary].self, forKey: .completedTasks)
-        topCategory = try container.decodeIfPresent(TaskCategory.self, forKey: .topCategory)
-        totalMinutesWorked = try container.decode(Int.self, forKey: .totalMinutesWorked)
-        productivityScore = try container.decode(Double.self, forKey: .productivityScore)
-        aiSummary = try container.decodeIfPresent(String.self, forKey: .aiSummary)
-        encouragement = try container.decodeIfPresent(String.self, forKey: .encouragement)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        carryoverTasks = try container.decodeIfPresent([CarryoverTaskSummary].self, forKey: .carryoverTasks) ?? []
-        suggestedPriorities = try container.decodeIfPresent([String].self, forKey: .suggestedPriorities) ?? []
-    }
 
     /// Completion percentage (0-100)
     var completionPercentage: Int {
