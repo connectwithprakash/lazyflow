@@ -16,6 +16,10 @@ struct DailySummaryData: Codable, Identifiable {
     var encouragement: String?
     let createdAt: Date
 
+    // Carryover: unfinished tasks due today or overdue
+    var carryoverTasks: [CarryoverTaskSummary]
+    var suggestedPriorities: [String]
+
     init(
         id: UUID = UUID(),
         date: Date,
@@ -27,6 +31,8 @@ struct DailySummaryData: Codable, Identifiable {
         productivityScore: Double,
         aiSummary: String? = nil,
         encouragement: String? = nil,
+        carryoverTasks: [CarryoverTaskSummary] = [],
+        suggestedPriorities: [String] = [],
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -39,7 +45,28 @@ struct DailySummaryData: Codable, Identifiable {
         self.productivityScore = productivityScore
         self.aiSummary = aiSummary
         self.encouragement = encouragement
+        self.carryoverTasks = carryoverTasks
+        self.suggestedPriorities = suggestedPriorities
         self.createdAt = createdAt
+    }
+
+    // Custom decoder for backward compatibility with persisted summaries
+    // that don't have carryoverTasks/suggestedPriorities keys
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        date = try container.decode(Date.self, forKey: .date)
+        tasksCompleted = try container.decode(Int.self, forKey: .tasksCompleted)
+        totalTasksPlanned = try container.decode(Int.self, forKey: .totalTasksPlanned)
+        completedTasks = try container.decode([CompletedTaskSummary].self, forKey: .completedTasks)
+        topCategory = try container.decodeIfPresent(TaskCategory.self, forKey: .topCategory)
+        totalMinutesWorked = try container.decode(Int.self, forKey: .totalMinutesWorked)
+        productivityScore = try container.decode(Double.self, forKey: .productivityScore)
+        aiSummary = try container.decodeIfPresent(String.self, forKey: .aiSummary)
+        encouragement = try container.decodeIfPresent(String.self, forKey: .encouragement)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        carryoverTasks = try container.decodeIfPresent([CarryoverTaskSummary].self, forKey: .carryoverTasks) ?? []
+        suggestedPriorities = try container.decodeIfPresent([String].self, forKey: .suggestedPriorities) ?? []
     }
 
     /// Completion percentage (0-100)
@@ -56,6 +83,11 @@ struct DailySummaryData: Codable, Identifiable {
         let hours = totalMinutesWorked / 60
         let minutes = totalMinutesWorked % 60
         return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
+    }
+
+    /// Whether there are unfinished tasks to carry over
+    var hasCarryover: Bool {
+        !carryoverTasks.isEmpty
     }
 
     /// Check if this was a productive day
@@ -102,6 +134,27 @@ struct CompletedTaskSummary: Codable, Identifiable {
         self.priority = priority
         self.estimatedDuration = estimatedDuration
         self.completedAt = completedAt
+    }
+}
+
+// MARK: - Carryover Task Summary
+
+/// Lightweight summary of an unfinished task for carryover display
+struct CarryoverTaskSummary: Codable, Identifiable {
+    let id: UUID
+    let title: String
+    let category: TaskCategory
+    let priority: Priority
+    let dueDate: Date?
+    let isOverdue: Bool
+
+    init(from task: Task) {
+        self.id = task.id
+        self.title = task.title
+        self.category = task.category
+        self.priority = task.priority
+        self.dueDate = task.dueDate
+        self.isOverdue = task.isOverdue
     }
 }
 

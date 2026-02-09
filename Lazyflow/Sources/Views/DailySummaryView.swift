@@ -119,6 +119,11 @@ struct DailySummaryView: View {
                 encouragementCard(encouragement)
             }
 
+            // Carryover Section
+            if summary.hasCarryover {
+                carryoverSection(summary)
+            }
+
             // Completed Tasks
             if !summary.completedTasks.isEmpty {
                 completedTasksSection(summary.completedTasks)
@@ -259,6 +264,76 @@ struct DailySummaryView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.adaptiveSurface)
+        .cornerRadius(DesignSystem.CornerRadius.large)
+    }
+
+    // MARK: - Carryover Section
+
+    private func carryoverSection(_ summary: DailySummaryData) -> some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            HStack {
+                Image(systemName: "arrow.uturn.forward.circle.fill")
+                    .foregroundColor(Color.Lazyflow.warning)
+                Text("Carryover")
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+                Spacer()
+                Text("\(summary.carryoverTasks.count)")
+                    .font(DesignSystem.Typography.subheadline)
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+            }
+
+            if !summary.suggestedPriorities.isEmpty {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Text("Tomorrow's priorities:")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                    ForEach(Array(summary.suggestedPriorities.enumerated()), id: \.offset) { index, title in
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Text("\(index + 1).")
+                                .font(DesignSystem.Typography.subheadline)
+                                .foregroundColor(Color.Lazyflow.accent)
+                                .fontWeight(.semibold)
+                            Text(title)
+                                .font(DesignSystem.Typography.subheadline)
+                                .foregroundColor(Color.Lazyflow.textPrimary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+                .padding(.bottom, DesignSystem.Spacing.xs)
+            }
+
+            Divider()
+
+            ForEach(summary.carryoverTasks) { task in
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Circle()
+                        .fill(task.category.color)
+                        .frame(width: 8, height: 8)
+
+                    Text(task.title)
+                        .font(DesignSystem.Typography.subheadline)
+                        .foregroundColor(Color.Lazyflow.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    if task.isOverdue {
+                        Text("Overdue")
+                            .font(DesignSystem.Typography.caption2)
+                            .foregroundColor(Color.Lazyflow.error)
+                    }
+
+                    Image(systemName: task.priority.iconName)
+                        .font(.system(size: 12))
+                        .foregroundColor(task.priority.color)
+                }
+                .padding(.vertical, DesignSystem.Spacing.xs)
+            }
+        }
+        .padding()
         .background(Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.large)
     }
