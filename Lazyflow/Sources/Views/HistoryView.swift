@@ -73,14 +73,6 @@ struct HistoryView: View {
         .safeAreaInset(edge: .bottom) {
             bottomSearchBar
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    isSearchFocused = false
-                }
-            }
-        }
         .background(Color.adaptiveBackground)
     }
 
@@ -106,37 +98,38 @@ struct HistoryView: View {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 16))
                             .foregroundColor(Color.Lazyflow.textTertiary)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Clear search")
                 }
             }
             .padding(.horizontal, DesignSystem.Spacing.md)
-            .padding(.vertical, DesignSystem.Spacing.sm)
+            .frame(height: 36)
             .background(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
-                    .fill(Color.Lazyflow.textPrimary.opacity(0.08))
+                Capsule()
+                    .fill(.ultraThinMaterial)
             )
 
             if isSearchFocused {
                 Button("Cancel") {
-                    isSearchFocused = false
                     viewModel.searchQuery = ""
+                    isSearchFocused = false
                 }
-                .font(DesignSystem.Typography.body)
+                .font(DesignSystem.Typography.subheadline)
+                .fontWeight(.medium)
                 .foregroundColor(Color.Lazyflow.accent)
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .frame(height: 36)
+                .background(
+                    Capsule()
+                        .fill(.ultraThinMaterial)
+                )
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isSearchFocused)
-        .padding(.horizontal, DesignSystem.Spacing.lg)
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .background(
-            Color.adaptiveBackground
-                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: -2)
-        )
+        .padding(.horizontal, DesignSystem.Spacing.xl)
+        .padding(.bottom, DesignSystem.Spacing.lg)
     }
 
     // MARK: - Stats Header
