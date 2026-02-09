@@ -6,7 +6,6 @@ struct HistoryView: View {
     @StateObject private var viewModel = HistoryViewModel()
     @State private var selectedTask: Task?
     @State private var showFilters = false
-    @State private var isSearchActive = false
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
@@ -43,21 +42,6 @@ struct HistoryView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            if !isSearchActive {
-                Button {
-                    withAnimation {
-                        isSearchActive = true
-                        isSearchFocused = true
-                    }
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(Color.Lazyflow.accent)
-                }
-                .accessibilityLabel("Search")
-            }
-        }
-
         ToolbarItem(placement: .navigationBarTrailing) {
             Button {
                 showFilters = true
@@ -73,11 +57,6 @@ struct HistoryView: View {
 
     private var historyContent: some View {
         VStack(spacing: 0) {
-            // Search bar (shown only when active)
-            if isSearchActive {
-                searchBar
-            }
-
             Group {
                 if viewModel.completedTasks.isEmpty {
                     VStack(spacing: 0) {
@@ -91,10 +70,21 @@ struct HistoryView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
+        .safeAreaInset(edge: .bottom) {
+            bottomSearchBar
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isSearchFocused = false
+                }
+            }
+        }
         .background(Color.adaptiveBackground)
     }
 
-    private var searchBar: some View {
+    private var bottomSearchBar: some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
             HStack(spacing: DesignSystem.Spacing.md) {
                 Image(systemName: "magnifyingglass")
@@ -107,6 +97,7 @@ struct HistoryView: View {
                     .autocorrectionDisabled()
                     .submitLabel(.search)
                     .focused($isSearchFocused)
+                    .accessibilityLabel("Search history")
 
                 if !viewModel.searchQuery.isEmpty {
                     Button {
@@ -115,8 +106,11 @@ struct HistoryView: View {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 16))
                             .foregroundColor(Color.Lazyflow.textTertiary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Clear search")
                 }
             }
             .padding(.horizontal, DesignSystem.Spacing.md)
@@ -126,18 +120,23 @@ struct HistoryView: View {
                     .fill(Color.Lazyflow.textPrimary.opacity(0.08))
             )
 
-            Button("Cancel") {
-                withAnimation {
-                    isSearchActive = false
+            if isSearchFocused {
+                Button("Cancel") {
                     isSearchFocused = false
                     viewModel.searchQuery = ""
                 }
+                .font(DesignSystem.Typography.body)
+                .foregroundColor(Color.Lazyflow.accent)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
-            .font(DesignSystem.Typography.body)
-            .foregroundColor(Color.Lazyflow.accent)
         }
+        .animation(.easeInOut(duration: 0.2), value: isSearchFocused)
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(
+            Color.adaptiveBackground
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: -2)
+        )
     }
 
     // MARK: - Stats Header
