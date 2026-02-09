@@ -51,11 +51,12 @@ Orchestrates the full development workflow for a GitHub issue. Detects `bug` lab
 
 ## Phase 5: Review
 
-1. Invoke `/review` to run Codex peer review
-2. Fix any issues found, re-run tests, re-verify
-3. Update documentation if needed (auto-loads `updating-documentation` knowledge)
+1. Invoke `/codex-peer-review` to run Codex peer review
+2. Fix ALL issues found (critical, warning, AND nits) — re-run tests, re-verify
+3. Continue review rounds until Codex returns zero findings and recommends "ship"
+4. Update documentation if needed (auto-loads `updating-documentation` knowledge)
 
-**Exit criteria:** Codex review passes or only known-risk items remain.
+**Exit criteria:** Codex review recommends "ship" with zero unresolved issues. "ship-with-known-risks" is NOT acceptable — fix everything or justify to the user why a specific item cannot be fixed.
 
 ## Phase 6: Commit & Report
 

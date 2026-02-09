@@ -49,9 +49,11 @@ After round 3 (or early exit), output a summary:
 - Recommendation: ship | ship-with-known-risks | hold
 ```
 
-**ship** = zero unresolved criticals or warnings
-**ship-with-known-risks** = unresolved nits or minor warnings with justification
+**ship** = zero unresolved issues of any severity (target outcome)
+**ship-with-known-risks** = unresolved nits or minor warnings — NOT acceptable, fix them or escalate to user
 **hold** = unresolved critical issues remain
+
+**Goal: always reach "ship".** Fix all criticals, warnings, AND nits before concluding. If a nit truly cannot be fixed (out of scope, requires architectural change), explain why to the user and get explicit approval to skip it.
 
 ## When NOT to Use
 
