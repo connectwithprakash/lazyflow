@@ -5,10 +5,19 @@ struct WeekdayButton: View {
     let isSelected: Bool
     let action: () -> Void
 
+    private static let formatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale.current
+        return f
+    }()
+
     private var dayLetter: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        let symbols = formatter.veryShortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
+        let symbols = Self.formatter.veryShortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
+        return symbols[day - 1]
+    }
+
+    private var dayName: String {
+        let symbols = Self.formatter.weekdaySymbols ?? ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
         return symbols[day - 1]
     }
 
@@ -25,5 +34,6 @@ struct WeekdayButton: View {
                 )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("\(dayName), \(isSelected ? "selected" : "not selected")")
     }
 }

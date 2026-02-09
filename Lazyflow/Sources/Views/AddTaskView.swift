@@ -368,10 +368,6 @@ struct AddTaskView: View {
                 Menu {
                     Button {
                         showReminderSheet = true
-                        if !viewModel.hasReminder {
-                            viewModel.hasReminder = true
-                            viewModel.reminderDate = viewModel.dueDate ?? Date()
-                        }
                     } label: {
                         Label(
                             viewModel.hasReminder ? "Reminder: \(formatReminderTime(viewModel.reminderDate))" : "Reminder",
@@ -383,7 +379,7 @@ struct AddTaskView: View {
                         showDurationSheet = true
                     } label: {
                         Label(
-                            viewModel.estimatedDuration != nil ? "Duration: \(formatDuration(viewModel.estimatedDuration!))" : "Duration",
+                            durationMenuLabel,
                             systemImage: "clock"
                         )
                     }
@@ -411,6 +407,13 @@ struct AddTaskView: View {
     /// Whether any overflow option (Reminder, Duration, Repeat) has a value set
     private var hasOverflowOptionSet: Bool {
         viewModel.hasReminder || viewModel.estimatedDuration != nil || viewModel.isRecurring
+    }
+
+    private var durationMenuLabel: String {
+        if let duration = viewModel.estimatedDuration {
+            return "Duration: \(formatDuration(duration))"
+        }
+        return "Duration"
     }
 
     // MARK: - Subtasks Section

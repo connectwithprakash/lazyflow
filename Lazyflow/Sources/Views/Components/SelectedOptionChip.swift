@@ -18,6 +18,7 @@ struct SelectedOptionChip: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .bold))
             }
+            .accessibilityLabel("Remove \(title)")
         }
         .foregroundColor(color)
         .padding(.horizontal, 10)

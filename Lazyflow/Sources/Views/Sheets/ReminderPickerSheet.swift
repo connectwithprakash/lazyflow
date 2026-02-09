@@ -8,47 +8,55 @@ struct ReminderPickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                Toggle("Set Reminder", isOn: $hasReminder.animation())
-                    .font(DesignSystem.Typography.subheadline)
-                    .padding(.horizontal)
-
-                if hasReminder {
-                    DatePicker(
-                        "Remind at",
-                        selection: Binding(
-                            get: { reminderDate ?? Date() },
-                            set: { reminderDate = $0 }
-                        ),
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                    .font(DesignSystem.Typography.subheadline)
-                    .padding(.horizontal)
-
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                        Text("Quick Options")
-                            .font(DesignSystem.Typography.caption1)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                            .padding(.horizontal)
-
-                        HStack(spacing: DesignSystem.Spacing.sm) {
-                            ReminderQuickOption(title: "Morning", time: "9:00 AM") {
-                                setReminderTime(hour: 9, minute: 0)
-                            }
-                            ReminderQuickOption(title: "Noon", time: "12:00 PM") {
-                                setReminderTime(hour: 12, minute: 0)
-                            }
-                            ReminderQuickOption(title: "Evening", time: "6:00 PM") {
-                                setReminderTime(hour: 18, minute: 0)
+            ScrollView {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                    Toggle("Set Reminder", isOn: Binding(
+                        get: { hasReminder },
+                        set: { newValue in
+                            hasReminder = newValue
+                            if newValue && reminderDate == nil {
+                                reminderDate = defaultDate ?? Date()
                             }
                         }
+                    ).animation())
+                        .font(DesignSystem.Typography.subheadline)
                         .padding(.horizontal)
+
+                    if hasReminder {
+                        DatePicker(
+                            "Remind at",
+                            selection: Binding(
+                                get: { reminderDate ?? Date() },
+                                set: { reminderDate = $0 }
+                            ),
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                        .font(DesignSystem.Typography.subheadline)
+                        .padding(.horizontal)
+
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            Text("Quick Options")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                                .padding(.horizontal)
+
+                            HStack(spacing: DesignSystem.Spacing.sm) {
+                                ReminderQuickOption(title: "Morning", time: "9:00 AM") {
+                                    setReminderTime(hour: 9, minute: 0)
+                                }
+                                ReminderQuickOption(title: "Noon", time: "12:00 PM") {
+                                    setReminderTime(hour: 12, minute: 0)
+                                }
+                                ReminderQuickOption(title: "Evening", time: "6:00 PM") {
+                                    setReminderTime(hour: 18, minute: 0)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
                     }
                 }
-
-                Spacer()
+                .padding(.top, DesignSystem.Spacing.lg)
             }
-            .padding(.top, DesignSystem.Spacing.lg)
             .navigationTitle("Reminder")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
