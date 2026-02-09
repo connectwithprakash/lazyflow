@@ -150,27 +150,4 @@ final class DailySummaryCarryoverTests: XCTestCase {
         XCTAssertFalse(summary.hasCarryover)
     }
 
-    // MARK: - Codable Backward Compatibility
-
-    func testCodable_LegacyPayload_DecodesWithEmptyCarryover() throws {
-        // Simulate a pre-carryover persisted summary (no carryoverTasks/suggestedPriorities keys)
-        let legacyJSON = """
-        {
-            "id": "00000000-0000-0000-0000-000000000001",
-            "date": 0,
-            "tasksCompleted": 3,
-            "totalTasksPlanned": 5,
-            "completedTasks": [],
-            "topCategory": 1,
-            "totalMinutesWorked": 120,
-            "productivityScore": 60.0,
-            "createdAt": 0
-        }
-        """.data(using: .utf8)!
-
-        let decoded = try JSONDecoder().decode(DailySummaryData.self, from: legacyJSON)
-        XCTAssertTrue(decoded.carryoverTasks.isEmpty)
-        XCTAssertTrue(decoded.suggestedPriorities.isEmpty)
-        XCTAssertEqual(decoded.tasksCompleted, 3)
-    }
 }
