@@ -151,8 +151,12 @@ struct SuggestionFeedback: Codable {
     }
 
     mutating func cleanExpiredSnoozes() {
+        let countBefore = snoozedUntil.count
         let now = Date()
         snoozedUntil = snoozedUntil.filter { $0.value > now }
+        if snoozedUntil.count < countBefore {
+            save()
+        }
     }
 
     // MARK: - Decay
