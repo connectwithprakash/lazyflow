@@ -4,6 +4,7 @@ import SwiftUI
 struct UpcomingView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var taskService = TaskService.shared
+    @StateObject private var listService = TaskListService.shared
     @State private var selectedTask: Task?
     @State private var showAddTask = false
     @State private var taskToSchedule: Task?
@@ -136,7 +137,9 @@ struct UpcomingView: View {
                             onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
                             onDelete: { taskService.deleteTask($0) },
                             onStartWorking: { taskService.startWorking(on: $0) },
-                            onStopWorking: { taskService.stopWorking(on: $0) }
+                            onStopWorking: { taskService.stopWorking(on: $0) },
+                            showListIndicator: true,
+                            listColorHex: listColorHex(for: task)
                         )
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .listRowBackground(Color.adaptiveBackground)
@@ -162,7 +165,9 @@ struct UpcomingView: View {
                             onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
                             onDelete: { taskService.deleteTask($0) },
                             onStartWorking: { taskService.startWorking(on: $0) },
-                            onStopWorking: { taskService.stopWorking(on: $0) }
+                            onStopWorking: { taskService.stopWorking(on: $0) },
+                            showListIndicator: true,
+                            listColorHex: listColorHex(for: task)
                         )
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .listRowBackground(Color.adaptiveBackground)
@@ -237,6 +242,13 @@ struct UpcomingView: View {
         var updatedTask = task
         updatedTask.dueDate = dueDate
         taskService.updateTask(updatedTask)
+    }
+
+    private func listColorHex(for task: Task) -> String? {
+        guard let listID = task.listID,
+              let list = listService.getList(byID: listID),
+              !list.isDefault else { return nil }
+        return list.colorHex
     }
 
     private func pushToTomorrow(_ task: Task) {

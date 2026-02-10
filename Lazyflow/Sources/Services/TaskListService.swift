@@ -4,6 +4,8 @@ import Combine
 
 /// Service responsible for all TaskList-related CRUD operations
 final class TaskListService: ObservableObject {
+    static let shared = TaskListService()
+
     private let persistenceController: PersistenceController
 
     @Published private(set) var lists: [TaskList] = []

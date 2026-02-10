@@ -16,7 +16,7 @@ class AnalyticsService: ObservableObject {
 
     init(
         taskService: TaskService = .shared,
-        taskListService: TaskListService = TaskListService(),
+        taskListService: TaskListService = .shared,
         categoryService: CategoryService = .shared
     ) {
         self.taskService = taskService

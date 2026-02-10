@@ -199,6 +199,19 @@ struct PriorityBadge: View {
 struct DueDateBadge: View {
     let date: Date
     let isOverdue: Bool
+    var isDueToday: Bool = false
+
+    private var foregroundColor: Color {
+        if isOverdue { return Color.Lazyflow.error }
+        if isDueToday { return Color.Lazyflow.accent }
+        return Color.Lazyflow.textTertiary
+    }
+
+    private var backgroundColor: Color {
+        if isOverdue { return Color.Lazyflow.error.opacity(0.15) }
+        if isDueToday { return Color.Lazyflow.accent.opacity(0.12) }
+        return Color.secondary.opacity(0.1)
+    }
 
     var body: some View {
         HStack(spacing: 4) {
@@ -208,14 +221,10 @@ struct DueDateBadge: View {
                 .font(DesignSystem.Typography.caption2)
                 .lineLimit(1)
         }
-        .foregroundColor(isOverdue ? Color.Lazyflow.error : Color.Lazyflow.textTertiary)
+        .foregroundColor(foregroundColor)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(
-            isOverdue
-                ? Color.Lazyflow.error.opacity(0.15)
-                : Color.secondary.opacity(0.1)
-        )
+        .background(backgroundColor)
         .cornerRadius(DesignSystem.CornerRadius.small)
         .fixedSize()
         .accessibilityHidden(true) // Info conveyed via parent row label
@@ -241,6 +250,37 @@ struct CategoryBadge: View {
             .cornerRadius(DesignSystem.CornerRadius.small)
             .fixedSize()
             .accessibilityHidden(true) // Info conveyed via parent row label
+        }
+    }
+}
+
+struct TaskCategoryBadge: View {
+    let systemCategory: TaskCategory
+    var customCategoryID: UUID?
+    var isCompleted: Bool = false
+
+    private var display: (name: String, color: Color, iconName: String) {
+        CategoryService.shared.getCategoryDisplay(systemCategory: systemCategory, customCategoryID: customCategoryID)
+    }
+
+    /// True when a real category exists (handles stale customCategoryID gracefully)
+    private var hasCategory: Bool {
+        let info = display
+        // If customCategoryID is dangling (deleted), getCategoryDisplay falls back to system.
+        // Only show badge when there's a meaningful category.
+        if let _ = customCategoryID {
+            return info.name != TaskCategory.uncategorized.displayName
+        }
+        return systemCategory != .uncategorized
+    }
+
+    var body: some View {
+        if hasCategory {
+            Image(systemName: display.iconName)
+                .font(.caption2)
+                .foregroundColor(display.color)
+                .opacity(isCompleted ? 0.5 : 1.0)
+                .accessibilityHidden(true)
         }
     }
 }

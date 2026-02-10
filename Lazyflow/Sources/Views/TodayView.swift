@@ -22,6 +22,7 @@ struct TodayView: View {
     @State private var showAutoCompleteCelebration = false
     @State private var autoCompletedParentTitle = ""
     @StateObject private var summaryService = DailySummaryService.shared
+    @StateObject private var listService = TaskListService.shared
     @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
     @AppStorage("morningBriefingEnabled") private var morningBriefingEnabled: Bool = true
     @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
@@ -263,6 +264,13 @@ struct TodayView: View {
     private func applyBatchReschedule(_ batchSuggestion: BatchRescheduleSuggestion) {
         _ = rescheduleService.applyBatchReschedule(batch: batchSuggestion, taskService: TaskService.shared)
         scanForConflicts()
+    }
+
+    private func listColorHex(for task: Task) -> String? {
+        guard let listID = task.listID,
+              let list = listService.getList(byID: listID),
+              !list.isDefault else { return nil }
+        return list.colorHex
     }
 
     private func pushToTomorrow(_ task: Task) {
@@ -524,7 +532,9 @@ struct TodayView: View {
             onStartWorking: isCompleted ? nil : { viewModel.startWorking(on: $0) },
             onStopWorking: isCompleted ? nil : { viewModel.stopWorking(on: $0) },
             hideSubtaskBadge: true,
-            showProgressRing: task.hasSubtasks
+            showProgressRing: task.hasSubtasks,
+            showListIndicator: true,
+            listColorHex: listColorHex(for: task)
         )
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: task.hasSubtasks ? 0 : 4, trailing: 16))
 

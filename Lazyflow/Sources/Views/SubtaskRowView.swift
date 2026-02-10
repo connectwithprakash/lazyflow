@@ -39,7 +39,7 @@ struct SubtaskRowView: View {
             Button {
                 onTap()
             } label: {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                     // Title
                     Text(subtask.title)
                         .font(DesignSystem.Typography.subheadline)

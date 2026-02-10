@@ -20,7 +20,7 @@ final class ListsViewModel: ObservableObject {
     private let taskService: TaskService
     private var cancellables = Set<AnyCancellable>()
 
-    init(taskListService: TaskListService = TaskListService(), taskService: TaskService = TaskService()) {
+    init(taskListService: TaskListService = .shared, taskService: TaskService = TaskService()) {
         self.taskListService = taskListService
         self.taskService = taskService
         setupBindings()

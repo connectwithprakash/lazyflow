@@ -193,7 +193,7 @@ struct ListDetailView: View {
 
 struct EditListSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var listService = TaskListService()
+    @StateObject private var listService = TaskListService.shared
 
     let list: TaskList
 
