@@ -419,6 +419,7 @@ struct AddTaskView: View {
                             .font(.system(size: 20))
                             .foregroundColor(Color.Lazyflow.accent)
                     }
+                    .accessibilityLabel("Add subtask")
                 }
             }
 
@@ -440,6 +441,7 @@ struct AddTaskView: View {
                             .foregroundColor(newSubtaskTitle.isEmpty ? Color.Lazyflow.textTertiary : Color.Lazyflow.accent)
                     }
                     .disabled(newSubtaskTitle.isEmpty)
+                    .accessibilityLabel("Confirm subtask")
 
                     Button {
                         withAnimation(.easeInOut(duration: 0.2)) {
@@ -451,6 +453,7 @@ struct AddTaskView: View {
                             .font(.system(size: 22))
                             .foregroundColor(Color.Lazyflow.textTertiary)
                     }
+                    .accessibilityLabel("Cancel adding subtask")
                 }
                 .padding(DesignSystem.Spacing.sm)
                 .background(Color.secondary.opacity(0.1))
@@ -482,6 +485,7 @@ struct AddTaskView: View {
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(Color.Lazyflow.textTertiary)
                             }
+                            .accessibilityLabel("Remove \(subtask)")
                         }
                         .padding(.vertical, 4)
                     }

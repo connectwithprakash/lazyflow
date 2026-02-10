@@ -448,7 +448,7 @@ struct TaskDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DesignSystem.Spacing.sm)
             } else {
-                ForEach(subtasks) { subtask in
+                ForEach(Array(subtasks.enumerated()), id: \.element.id) { index, subtask in
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         // Checkbox
                         Button {
@@ -468,6 +468,32 @@ struct TaskDetailView: View {
                             .strikethrough(subtask.isCompleted)
 
                         Spacer()
+
+                        // Reorder buttons
+                        if subtasks.count > 1 {
+                            VStack(spacing: 0) {
+                                Button {
+                                    moveSubtask(from: index, direction: .up)
+                                } label: {
+                                    Image(systemName: "chevron.up")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundColor(index == 0 ? Color.clear : Color.Lazyflow.textTertiary)
+                                }
+                                .disabled(index == 0)
+                                .accessibilityLabel("Move \(subtask.title) up")
+
+                                Button {
+                                    moveSubtask(from: index, direction: .down)
+                                } label: {
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundColor(index == subtasks.count - 1 ? Color.clear : Color.Lazyflow.textTertiary)
+                                }
+                                .disabled(index == subtasks.count - 1)
+                                .accessibilityLabel("Move \(subtask.title) down")
+                            }
+                            .buttonStyle(.plain)
+                        }
 
                         // Delete
                         Button {
@@ -680,6 +706,17 @@ struct TaskDetailView: View {
 
     private func deleteSubtask(_ subtask: Task) {
         taskService.deleteTask(subtask)
+        loadSubtasks()
+    }
+
+    private enum MoveDirection { case up, down }
+
+    private func moveSubtask(from index: Int, direction: MoveDirection) {
+        let destination = direction == .up ? index - 1 : index + 1
+        guard destination >= 0, destination < subtasks.count else { return }
+        var reordered = subtasks
+        reordered.swapAt(index, destination)
+        taskService.reorderSubtasks(reordered, parentID: originalTask.id)
         loadSubtasks()
     }
 
