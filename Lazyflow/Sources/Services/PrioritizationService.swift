@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-import SwiftUI
 
 /// Service for intelligent task prioritization and suggestions
 final class PrioritizationService: ObservableObject {
@@ -46,6 +45,20 @@ final class PrioritizationService: ObservableObject {
             .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
             .sink { [weak self] tasks in
                 self?.analyzeAndPrioritize(tasks)
+            }
+            .store(in: &cancellables)
+
+        // Periodically check for expired snoozes (every 60 seconds)
+        Timer.publish(every: 60, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                let countBefore = self.suggestionFeedback.snoozedUntil.count
+                self.suggestionFeedback.cleanExpiredSnoozes()
+                if countBefore > self.suggestionFeedback.snoozedUntil.count {
+                    // Snoozes expired — re-analyze to restore tasks
+                    self.analyzeAndPrioritize(self.taskService.tasks)
+                }
             }
             .store(in: &cancellables)
     }
@@ -278,8 +291,7 @@ final class PrioritizationService: ObservableObject {
         // Optionally get AI-enhanced reasoning
         if llmService.isReady {
             var suggestion = await getAIEnhancedSuggestion(task: nextTask, reasons: reasons)
-            suggestion.confidenceLevel = confidence.label
-            suggestion.confidenceColor = confidence.color
+            suggestion.confidence = confidence
             return suggestion
         }
 
@@ -288,8 +300,31 @@ final class PrioritizationService: ObservableObject {
             score: score,
             reasons: reasons,
             aiInsight: nil,
-            confidenceLevel: confidence.label,
-            confidenceColor: confidence.color
+            confidence: confidence
+        )
+    }
+
+    /// Get a suggestion for a specific task with AI-enhanced reasoning
+    func getSuggestion(for task: Task) async -> TaskSuggestion {
+        let score = effectiveScore(for: task)
+        let reasons = generateReasons(for: task, score: score)
+        let allScores = taskService.tasks
+            .filter { !$0.isCompleted && !$0.isArchived }
+            .map { effectiveScore(for: $0) }
+        let confidence = confidenceLevel(score: score, allScores: allScores)
+
+        if llmService.isReady {
+            var suggestion = await getAIEnhancedSuggestion(task: task, reasons: reasons)
+            suggestion.confidence = confidence
+            return suggestion
+        }
+
+        return TaskSuggestion(
+            task: task,
+            score: score,
+            reasons: reasons,
+            aiInsight: nil,
+            confidence: confidence
         )
     }
 
@@ -309,8 +344,7 @@ final class PrioritizationService: ObservableObject {
                 score: score,
                 reasons: reasons,
                 aiInsight: nil,
-                confidenceLevel: confidence.label,
-                confidenceColor: confidence.color
+                confidence: confidence
             )
         }
     }
@@ -328,19 +362,19 @@ final class PrioritizationService: ObservableObject {
     }
 
     /// Determine confidence level relative to current batch
-    private func confidenceLevel(score: Double, allScores: [Double]) -> (label: String, color: Color) {
-        guard !allScores.isEmpty else { return ("Good Fit", Color.Lazyflow.textSecondary) }
+    private func confidenceLevel(score: Double, allScores: [Double]) -> ConfidenceLevel {
+        guard !allScores.isEmpty else { return .consider }
 
         let sortedScores = allScores.sorted(by: >)
         let rank = sortedScores.firstIndex(where: { $0 <= score }) ?? sortedScores.count
         let percentile = Double(rank) / Double(sortedScores.count)
 
         if percentile <= 0.1 {
-            return ("Top Pick", Color.Lazyflow.success)
+            return .recommended
         } else if percentile <= 0.3 {
-            return ("Strong", Color.Lazyflow.accent)
+            return .goodFit
         } else {
-            return ("Good Fit", Color.Lazyflow.textSecondary)
+            return .consider
         }
     }
 
@@ -517,14 +551,19 @@ final class PrioritizationService: ObservableObject {
 
 // MARK: - Supporting Types
 
+enum ConfidenceLevel: String {
+    case recommended = "Recommended"
+    case goodFit = "Good Fit"
+    case consider = "Consider"
+}
+
 struct TaskSuggestion: Identifiable {
     var id: UUID { task.id }
     let task: Task
     let score: Double
     let reasons: [String]
     let aiInsight: String?
-    var confidenceLevel: String = "Good Fit"
-    var confidenceColor: Color = Color.Lazyflow.textSecondary
+    var confidence: ConfidenceLevel = .consider
 
     var scorePercentage: Int {
         Int(score)

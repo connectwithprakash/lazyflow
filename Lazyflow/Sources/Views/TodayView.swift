@@ -1,6 +1,18 @@
 import SwiftUI
 import UIKit
 
+// MARK: - ConfidenceLevel View Helpers
+
+extension ConfidenceLevel {
+    var color: Color {
+        switch self {
+        case .recommended: return Color.Lazyflow.success
+        case .goodFit: return Color.Lazyflow.accent
+        case .consider: return Color.Lazyflow.textSecondary
+        }
+    }
+}
+
 /// Main Today view showing overdue and today's tasks
 struct TodayView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -13,7 +25,7 @@ struct TodayView: View {
     @State private var taskSuggestion: TaskSuggestion?
     @State private var selectedConflict: TaskConflict?
     @State private var showBatchReschedule = false
-    @State private var showAlternatives = false
+    @State private var showAlternatives = true
     @State private var showSnoozeDialog = false
     @State private var showSkipDialog = false
     @State private var snoozeSkipTarget: TaskSuggestion?
@@ -124,9 +136,9 @@ struct TodayView: View {
             NextTaskSuggestionSheet(
                 suggestion: suggestion,
                 onViewDetails: {
-                    // Mild positive feedback (engagement)
+                    // Mild positive feedback (engagement signal only)
                     prioritizationService.recordSuggestionFeedback(
-                        task: suggestion.task, action: .startedImmediately, score: suggestion.score
+                        task: suggestion.task, action: .viewedDetails, score: suggestion.score
                     )
                     viewModel.selectedTask = suggestion.task
                     taskSuggestion = nil
@@ -750,15 +762,15 @@ struct TodayView: View {
                     // Confidence badge
                     HStack(spacing: DesignSystem.Spacing.xs) {
                         Circle()
-                            .fill(suggestion.confidenceColor)
+                            .fill(suggestion.confidence.color)
                             .frame(width: 6, height: 6)
-                        Text(suggestion.confidenceLevel)
+                        Text(suggestion.confidence.rawValue)
                             .font(DesignSystem.Typography.caption2)
-                            .foregroundColor(suggestion.confidenceColor)
+                            .foregroundColor(suggestion.confidence.color)
                     }
                     .padding(.horizontal, DesignSystem.Spacing.sm)
                     .padding(.vertical, DesignSystem.Spacing.xs)
-                    .background(suggestion.confidenceColor.opacity(0.12))
+                    .background(suggestion.confidence.color.opacity(0.12))
                     .cornerRadius(DesignSystem.CornerRadius.small)
                 }
 
@@ -804,7 +816,7 @@ struct TodayView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Suggested task: \(suggestion.task.title), \(suggestion.confidenceLevel) pick\(suggestion.task.dueDate != nil ? ", due \(suggestion.task.dueDate!.relativeFormatted)" : "")\(suggestion.task.priority != .none ? ", \(suggestion.task.priority.displayName) priority" : "")")
+        .accessibilityLabel("Suggested task: \(suggestion.task.title), \(suggestion.confidence.rawValue) pick\(suggestion.task.dueDate != nil ? ", due \(suggestion.task.dueDate!.relativeFormatted)" : "")\(suggestion.task.priority != .none ? ", \(suggestion.task.priority.displayName) priority" : "")")
     }
 
     private func nextUpAlternativeRow(_ suggestion: TaskSuggestion) -> some View {
@@ -842,10 +854,9 @@ struct TodayView: View {
 
     private func fetchSuggestionDetails(for task: Task) {
         _Concurrency.Task {
-            if let suggestion = await prioritizationService.getNextTaskSuggestion() {
-                await MainActor.run {
-                    taskSuggestion = suggestion
-                }
+            let suggestion = await prioritizationService.getSuggestion(for: task)
+            await MainActor.run {
+                taskSuggestion = suggestion
             }
         }
     }
@@ -1032,15 +1043,15 @@ struct NextTaskSuggestionSheet: View {
                             // Confidence badge
                             HStack(spacing: DesignSystem.Spacing.xs) {
                                 Circle()
-                                    .fill(suggestion.confidenceColor)
+                                    .fill(suggestion.confidence.color)
                                     .frame(width: 6, height: 6)
-                                Text(suggestion.confidenceLevel)
+                                Text(suggestion.confidence.rawValue)
                                     .font(DesignSystem.Typography.caption2)
-                                    .foregroundColor(suggestion.confidenceColor)
+                                    .foregroundColor(suggestion.confidence.color)
                             }
                             .padding(.horizontal, DesignSystem.Spacing.sm)
                             .padding(.vertical, DesignSystem.Spacing.xs)
-                            .background(suggestion.confidenceColor.opacity(0.12))
+                            .background(suggestion.confidence.color.opacity(0.12))
                             .cornerRadius(DesignSystem.CornerRadius.small)
                         }
 

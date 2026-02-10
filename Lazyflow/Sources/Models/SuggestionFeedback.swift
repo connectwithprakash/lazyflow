@@ -4,6 +4,7 @@ import Foundation
 
 enum FeedbackAction: String, Codable {
     case startedImmediately
+    case viewedDetails
     case snoozed1Hour
     case snoozedEvening
     case snoozedTomorrow
@@ -15,6 +16,7 @@ enum FeedbackAction: String, Codable {
     var adjustmentDelta: Double {
         switch self {
         case .startedImmediately: return 5
+        case .viewedDetails: return 1
         case .snoozed1Hour: return -2
         case .snoozedEvening, .snoozedTomorrow: return -3
         case .skippedNotRelevant, .skippedWrongTime, .skippedNeedsFocus: return -5
