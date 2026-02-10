@@ -49,6 +49,7 @@ struct DetectedDateBanner: View {
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(Color.Lazyflow.textTertiary)
             }
+            .accessibilityLabel("Dismiss date suggestion")
         }
         .padding(DesignSystem.Spacing.sm)
         .background(Color.Lazyflow.accent.opacity(0.1))

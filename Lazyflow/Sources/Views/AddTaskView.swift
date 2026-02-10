@@ -118,7 +118,7 @@ struct AddTaskView: View {
                     Divider()
                         .padding(.horizontal)
 
-                    // Quick action buttons (2-row grid, no horizontal scroll)
+                    // Quick action buttons (3-row grid)
                     quickActionsGrid
                         .padding(.horizontal)
 
@@ -265,7 +265,7 @@ struct AddTaskView: View {
         }
     }
 
-    // MARK: - Quick Actions Grid (2-row layout, no scroll)
+    // MARK: - Quick Actions Grid (3-row layout)
 
     private var quickActionsGrid: some View {
         VStack(spacing: DesignSystem.Spacing.sm) {
@@ -302,7 +302,7 @@ struct AddTaskView: View {
                 }
             }
 
-            // Row 2: Priority, Category, List + More overflow
+            // Row 2: Priority, Category, List
             HStack(spacing: DesignSystem.Spacing.sm) {
                 // Priority
                 Menu {
@@ -363,57 +363,38 @@ struct AddTaskView: View {
                 ) {
                     showListPicker = true
                 }
+            }
 
-                // More overflow menu (Reminder, Duration, Repeat)
-                Menu {
-                    Button {
-                        showReminderSheet = true
-                    } label: {
-                        Label(
-                            viewModel.hasReminder ? "Reminder: \(formatReminderTime(viewModel.reminderDate))" : "Reminder",
-                            systemImage: viewModel.hasReminder ? "bell.fill" : "bell"
-                        )
-                    }
+            // Row 3: Reminder, Duration, Repeat
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                QuickActionButton(
+                    icon: viewModel.hasReminder ? "bell.fill" : "bell",
+                    title: viewModel.hasReminder ? formatReminderTime(viewModel.reminderDate) : "Remind",
+                    isSelected: viewModel.hasReminder,
+                    color: Color.Lazyflow.info
+                ) {
+                    showReminderSheet = true
+                }
 
-                    Button {
-                        showDurationSheet = true
-                    } label: {
-                        Label(
-                            durationMenuLabel,
-                            systemImage: "clock"
-                        )
-                    }
+                QuickActionButton(
+                    icon: "clock",
+                    title: viewModel.estimatedDuration != nil ? formatDuration(viewModel.estimatedDuration!) : "Duration",
+                    isSelected: viewModel.estimatedDuration != nil,
+                    color: Color.Lazyflow.accent
+                ) {
+                    showDurationSheet = true
+                }
 
-                    Button {
-                        showRecurringSheet = true
-                    } label: {
-                        Label(
-                            viewModel.isRecurring ? "Repeat: \(viewModel.recurringFrequency.displayName)" : "Repeat",
-                            systemImage: "repeat"
-                        )
-                    }
-                } label: {
-                    QuickActionButtonContent(
-                        icon: "ellipsis.circle",
-                        title: "More",
-                        isSelected: hasOverflowOptionSet,
-                        color: Color.Lazyflow.textTertiary
-                    )
+                QuickActionButton(
+                    icon: "repeat",
+                    title: viewModel.isRecurring ? recurringDisplayTitle : "Repeat",
+                    isSelected: viewModel.isRecurring,
+                    color: Color.Lazyflow.info
+                ) {
+                    showRecurringSheet = true
                 }
             }
         }
-    }
-
-    /// Whether any overflow option (Reminder, Duration, Repeat) has a value set
-    private var hasOverflowOptionSet: Bool {
-        viewModel.hasReminder || viewModel.estimatedDuration != nil || viewModel.isRecurring
-    }
-
-    private var durationMenuLabel: String {
-        if let duration = viewModel.estimatedDuration {
-            return "Duration: \(formatDuration(duration))"
-        }
-        return "Duration"
     }
 
     // MARK: - Subtasks Section
@@ -1008,6 +989,28 @@ struct ListPickerSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                // No List option
+                Button {
+                    selectedListID = nil
+                    dismiss()
+                } label: {
+                    HStack {
+                        Image(systemName: "tray")
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                            .frame(width: 28)
+
+                        Text("No List")
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+
+                        Spacer()
+
+                        if selectedListID == nil {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(Color.Lazyflow.accent)
+                        }
+                    }
+                }
+
                 ForEach(lists) { list in
                     Button {
                         selectedListID = list.id

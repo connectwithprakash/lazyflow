@@ -22,7 +22,7 @@ struct RecurringOptionsSheet: View {
                             Spacer()
 
                             Picker("Frequency", selection: $viewModel.recurringFrequency) {
-                                ForEach(RecurringFrequency.allCases) { frequency in
+                                ForEach(viewModel.availableFrequencies) { frequency in
                                     Text(frequency.displayName).tag(frequency)
                                 }
                             }
