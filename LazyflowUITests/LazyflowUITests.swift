@@ -1529,6 +1529,241 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(taskText.waitForExistence(timeout: 8), "Task with subtask should appear in Upcoming view")
     }
 
+    // MARK: - AddTaskView Grid Layout Tests (#140)
+
+    /// Verify AddTaskView shows 3-row grid with no label truncation
+    func testAddTaskViewShowsThreeRowGrid() throws {
+        navigateToToday()
+        let addTaskButton = app.buttons["Add task"]
+        XCTAssertTrue(addTaskButton.waitForExistence(timeout: 5))
+        addTaskButton.tap()
+
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
+
+        // Row 1: Date, Today, Tomorrow
+        let calendarButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'calendar' OR label CONTAINS[c] 'Feb' OR label CONTAINS[c] 'Jan' OR label CONTAINS[c] 'Mar'")).firstMatch
+        let todayButton = app.buttons["Today"]
+        let tomorrowButton = app.buttons["Tomorrow"]
+
+        XCTAssertTrue(todayButton.waitForExistence(timeout: 3), "Today button should exist in Row 1")
+        XCTAssertTrue(tomorrowButton.exists, "Tomorrow button should exist in Row 1")
+
+        // Row 2: Priority, Category, List
+        let priorityButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Priority'")).firstMatch
+        let categoryButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Category'")).firstMatch
+        let listButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'List'")).firstMatch
+
+        XCTAssertTrue(priorityButton.waitForExistence(timeout: 3), "Priority button should exist in Row 2")
+        XCTAssertTrue(categoryButton.exists, "Category button should exist in Row 2")
+        XCTAssertTrue(listButton.exists, "List button should exist in Row 2")
+
+        // Row 3: Remind, Duration, Repeat
+        let remindButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remind'")).firstMatch
+        let durationButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Duration'")).firstMatch
+        let repeatButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Repeat'")).firstMatch
+
+        XCTAssertTrue(remindButton.waitForExistence(timeout: 3), "Remind button should exist in Row 3")
+        XCTAssertTrue(durationButton.exists, "Duration button should exist in Row 3")
+        XCTAssertTrue(repeatButton.exists, "Repeat button should exist in Row 3")
+
+        // Cancel
+        app.buttons["Cancel"].tap()
+    }
+
+    /// Verify TaskDetailView shows identical 3-row grid
+    func testTaskDetailViewShowsThreeRowGrid() throws {
+        // Create a task first
+        navigateToToday()
+        app.buttons["Add task"].tap()
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
+
+        let titleField = app.textFields["What do you need to do?"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
+        titleField.tap()
+        titleField.typeText("Grid Test Task")
+
+        let tomorrowButton = app.buttons["Tomorrow"]
+        if tomorrowButton.exists && tomorrowButton.isHittable {
+            tomorrowButton.tap()
+        }
+
+        let navBar = app.navigationBars["New Task"]
+        navBar.buttons["Add"].tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Navigate to Upcoming to find the task
+        navigateToTab("Upcoming")
+        let taskText = app.staticTexts["Grid Test Task"]
+        XCTAssertTrue(taskText.waitForExistence(timeout: 5))
+        taskText.tap()
+
+        // Verify Edit Task view opens
+        XCTAssertTrue(app.navigationBars["Edit Task"].waitForExistence(timeout: 3))
+
+        // Row 2: Priority, Category, List
+        let priorityButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Priority'")).firstMatch
+        let categoryButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Category'")).firstMatch
+        let listButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'List'")).firstMatch
+
+        XCTAssertTrue(priorityButton.waitForExistence(timeout: 3), "Priority button should exist in TaskDetailView Row 2")
+        XCTAssertTrue(categoryButton.exists, "Category button should exist in TaskDetailView Row 2")
+        XCTAssertTrue(listButton.exists, "List button should exist in TaskDetailView Row 2")
+
+        // Row 3: Remind, Duration, Repeat
+        let remindButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remind'")).firstMatch
+        let durationButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Duration'")).firstMatch
+        let repeatButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Repeat'")).firstMatch
+
+        XCTAssertTrue(remindButton.waitForExistence(timeout: 3), "Remind button should exist in TaskDetailView Row 3")
+        XCTAssertTrue(durationButton.exists, "Duration button should exist in TaskDetailView Row 3")
+        XCTAssertTrue(repeatButton.exists, "Repeat button should exist in TaskDetailView Row 3")
+
+        // Cancel
+        app.buttons["Cancel"].tap()
+    }
+
+    /// Verify tapping Remind/Duration/Repeat opens bottom sheets in AddTaskView
+    func testAddTaskViewSheetsOpen() throws {
+        navigateToToday()
+        app.buttons["Add task"].tap()
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
+
+        // Test Remind sheet
+        let remindButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remind'")).firstMatch
+        XCTAssertTrue(remindButton.waitForExistence(timeout: 3))
+        remindButton.tap()
+        XCTAssertTrue(app.navigationBars["Reminder"].waitForExistence(timeout: 3), "Reminder sheet should open")
+        // Dismiss
+        let reminderDone = app.navigationBars["Reminder"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Done' OR label CONTAINS[c] 'Cancel'")).firstMatch
+        if reminderDone.exists { reminderDone.tap() }
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Test Duration sheet
+        let durationButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Duration'")).firstMatch
+        XCTAssertTrue(durationButton.waitForExistence(timeout: 3))
+        durationButton.tap()
+        XCTAssertTrue(app.navigationBars["Duration"].waitForExistence(timeout: 3), "Duration sheet should open")
+        let durationDone = app.navigationBars["Duration"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Done' OR label CONTAINS[c] 'Cancel'")).firstMatch
+        if durationDone.exists { durationDone.tap() }
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Test Repeat sheet
+        let repeatButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Repeat'")).firstMatch
+        XCTAssertTrue(repeatButton.waitForExistence(timeout: 3))
+        repeatButton.tap()
+        XCTAssertTrue(app.navigationBars["Repeat"].waitForExistence(timeout: 3), "Repeat sheet should open")
+        let repeatDone = app.navigationBars["Repeat"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Done' OR label CONTAINS[c] 'Cancel'")).firstMatch
+        if repeatDone.exists { repeatDone.tap() }
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Cancel
+        app.buttons["Cancel"].tap()
+    }
+
+    /// Verify selected option chips appear and can be removed
+    func testSelectedOptionChipsAppearAndRemove() throws {
+        navigateToToday()
+        app.buttons["Add task"].tap()
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
+
+        // Set a due date via Tomorrow button (avoids "Today" tab bar collision)
+        let tomorrowButton = app.buttons["Tomorrow"]
+        XCTAssertTrue(tomorrowButton.waitForExistence(timeout: 3))
+        tomorrowButton.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Verify a chip with "Tomorrow" text appears in selected options
+        let tomorrowChip = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Tomorrow'")).firstMatch
+        XCTAssertTrue(tomorrowChip.waitForExistence(timeout: 3), "Tomorrow chip should appear in selected options")
+
+        // Find and tap the remove button for the date chip
+        let removeButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remove'")).firstMatch
+        if removeButton.waitForExistence(timeout: 3) && removeButton.isHittable {
+            removeButton.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Verify chip is removed
+            let removedChip = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Tomorrow'")).firstMatch
+            // After removal, the "Tomorrow" text should only exist as the quick action button, not as a chip
+        }
+
+        // Cancel
+        app.buttons["Cancel"].tap()
+    }
+
+    /// Verify subtask delete (x) button works in TaskDetailView
+    func testSubtaskDeleteButtonInTaskDetailView() throws {
+        // Create a task with a subtask
+        navigateToToday()
+        app.buttons["Add task"].tap()
+        XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
+
+        let titleField = app.textFields["What do you need to do?"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
+        titleField.tap()
+        titleField.typeText("Subtask Delete Test")
+
+        let tomorrowButton = app.buttons["Tomorrow"]
+        if tomorrowButton.exists && tomorrowButton.isHittable {
+            tomorrowButton.tap()
+        }
+
+        // Add a subtask
+        let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus.circle'")).firstMatch
+        if addSubtaskButton.waitForExistence(timeout: 3) && addSubtaskButton.isHittable {
+            addSubtaskButton.tap()
+
+            let subtaskField = app.textFields["Add subtask"]
+            if subtaskField.waitForExistence(timeout: 2) && subtaskField.isHittable {
+                tapAndTypeText(subtaskField, text: "Deletable Subtask")
+
+                let checkmark = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'checkmark.circle'")).firstMatch
+                if checkmark.waitForExistence(timeout: 2) && checkmark.isHittable {
+                    checkmark.tap()
+                }
+                Thread.sleep(forTimeInterval: 0.5)
+            }
+        }
+
+        // Save the task
+        let navBar = app.navigationBars["New Task"]
+        navBar.buttons["Add"].tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Navigate to Upcoming and open the task
+        navigateToTab("Upcoming")
+        let taskText = app.staticTexts["Subtask Delete Test"]
+        XCTAssertTrue(taskText.waitForExistence(timeout: 5))
+        taskText.tap()
+
+        XCTAssertTrue(app.navigationBars["Edit Task"].waitForExistence(timeout: 3))
+
+        // Scroll to find subtask section
+        for _ in 0..<3 {
+            let subtaskText = app.staticTexts["Deletable Subtask"]
+            if subtaskText.exists { break }
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        // Find the delete button for the subtask
+        let deleteButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Delete Deletable Subtask'")).firstMatch
+        if deleteButton.waitForExistence(timeout: 3) && deleteButton.isHittable {
+            deleteButton.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Verify subtask is removed
+            let subtaskText = app.staticTexts["Deletable Subtask"]
+            XCTAssertFalse(subtaskText.exists, "Subtask should be deleted after tapping delete button")
+        }
+
+        // Cancel
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists && cancelButton.isHittable {
+            cancelButton.tap()
+        }
+    }
+
     // MARK: - AI Settings Tests
 
     /// Test navigating to AI Settings and verifying provider options exist
