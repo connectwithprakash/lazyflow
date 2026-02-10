@@ -12,7 +12,6 @@ struct AddTaskView: View {
     @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
 
     @State private var showDatePicker = false
-    @State private var showPriorityPicker = false
     @State private var showListPicker = false
     @State private var showAISuggestions = false
     @State private var aiAnalysis: TaskAnalysis?
@@ -21,9 +20,9 @@ struct AddTaskView: View {
     @State private var pendingSubtasks: [String] = []
     @State private var showAddSubtaskField = false
     @State private var newSubtaskTitle = ""
-    @State private var showDurationPicker = false
-    @State private var showRecurringOptions = false
-    @State private var showReminderPicker = false
+    @State private var showDurationSheet = false
+    @State private var showRecurringSheet = false
+    @State private var showReminderSheet = false
 
     // Store original values before AI analysis for un-apply
     @State private var originalTitleBeforeAI: String = ""
@@ -119,34 +118,9 @@ struct AddTaskView: View {
                     Divider()
                         .padding(.horizontal)
 
-                    // Quick action buttons (2-row grid, no horizontal scroll)
+                    // Quick action buttons (3-row grid)
                     quickActionsGrid
                         .padding(.horizontal)
-
-                    // Duration and Recurring options (Row 3)
-                    optionalActionsRow
-                        .padding(.horizontal)
-
-                    // Duration picker (expandable)
-                    if showDurationPicker {
-                        durationPickerSection
-                            .padding(.horizontal)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-
-                    // Recurring options (expandable)
-                    if showRecurringOptions {
-                        recurringOptionsSection
-                            .padding(.horizontal)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-
-                    // Reminder picker (expandable)
-                    if showReminderPicker {
-                        reminderPickerSection
-                            .padding(.horizontal)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
 
                     // Subtasks section
                     subtasksSection
@@ -216,6 +190,22 @@ struct AddTaskView: View {
                 )
                 .presentationDetents([.medium])
             }
+            .sheet(isPresented: $showDurationSheet) {
+                DurationPickerSheet(estimatedDuration: $viewModel.estimatedDuration)
+                    .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $showRecurringSheet) {
+                RecurringOptionsSheet(viewModel: viewModel)
+                    .presentationDetents([.medium, .large])
+            }
+            .sheet(isPresented: $showReminderSheet) {
+                ReminderPickerSheet(
+                    hasReminder: $viewModel.hasReminder,
+                    reminderDate: $viewModel.reminderDate,
+                    defaultDate: viewModel.dueDate
+                )
+                .presentationDetents([.medium])
+            }
             .sheet(isPresented: $showAISuggestions) {
                 if let analysis = aiAnalysis {
                     AISuggestionsSheet(
@@ -275,16 +265,16 @@ struct AddTaskView: View {
         }
     }
 
-    // MARK: - Quick Actions Grid (2-row layout, no scroll)
+    // MARK: - Quick Actions Grid (3-row layout)
 
     private var quickActionsGrid: some View {
         VStack(spacing: DesignSystem.Spacing.sm) {
             // Row 1: Date options
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Due Date picker - shows actual date format to avoid confusion
+                // Due Date picker
                 QuickActionButton(
                     icon: "calendar",
-                    title: viewModel.hasDueDate ? (viewModel.dueDate?.shortFormatted ?? "Date") : "Date",
+                    title: dateButtonTitle,
                     isSelected: viewModel.hasDueDate,
                     color: Color.Lazyflow.accent
                 ) {
@@ -312,7 +302,7 @@ struct AddTaskView: View {
                 }
             }
 
-            // Row 2: Other options
+            // Row 2: Priority, Category, List
             HStack(spacing: DesignSystem.Spacing.sm) {
                 // Priority
                 Menu {
@@ -373,423 +363,37 @@ struct AddTaskView: View {
                 ) {
                     showListPicker = true
                 }
+            }
 
-                // Reminder
+            // Row 3: Reminder, Duration, Repeat
+            HStack(spacing: DesignSystem.Spacing.sm) {
                 QuickActionButton(
-                    icon: "bell",
+                    icon: viewModel.hasReminder ? "bell.fill" : "bell",
                     title: viewModel.hasReminder ? formatReminderTime(viewModel.reminderDate) : "Remind",
-                    isSelected: viewModel.hasReminder || showReminderPicker,
+                    isSelected: viewModel.hasReminder,
                     color: Color.Lazyflow.info
                 ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showReminderPicker.toggle()
-                        if showReminderPicker {
-                            showDurationPicker = false
-                            showRecurringOptions = false
-                            if !viewModel.hasReminder {
-                                viewModel.hasReminder = true
-                                viewModel.reminderDate = viewModel.dueDate ?? Date()
-                            }
-                        }
-                    }
+                    showReminderSheet = true
+                }
+
+                QuickActionButton(
+                    icon: "clock",
+                    title: viewModel.estimatedDuration != nil ? formatDuration(viewModel.estimatedDuration!) : "Duration",
+                    isSelected: viewModel.estimatedDuration != nil,
+                    color: Color.Lazyflow.accent
+                ) {
+                    showDurationSheet = true
+                }
+
+                QuickActionButton(
+                    icon: "repeat",
+                    title: viewModel.isRecurring ? recurringDisplayTitle : "Repeat",
+                    isSelected: viewModel.isRecurring,
+                    color: Color.Lazyflow.info
+                ) {
+                    showRecurringSheet = true
                 }
             }
-        }
-    }
-
-    // MARK: - Optional Actions Row (Duration, Recurring)
-
-    private var optionalActionsRow: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            // Duration
-            QuickActionButton(
-                icon: "clock",
-                title: viewModel.estimatedDuration != nil ? formatDuration(viewModel.estimatedDuration!) : "Duration",
-                isSelected: viewModel.estimatedDuration != nil || showDurationPicker,
-                color: Color.Lazyflow.accent
-            ) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showDurationPicker.toggle()
-                    if showDurationPicker {
-                        showRecurringOptions = false
-                        showReminderPicker = false
-                    }
-                }
-            }
-
-            // Recurring
-            // TODO: [Design Milestone] Revisit show/hide toggle behavior for recurring options.
-            // Consider: direct toggle vs two-step enable, smart toggle based on state.
-            QuickActionButton(
-                icon: "repeat",
-                title: viewModel.isRecurring ? viewModel.recurringFrequency.displayName : "Repeat",
-                isSelected: viewModel.isRecurring || showRecurringOptions,
-                color: Color.Lazyflow.info
-            ) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showRecurringOptions.toggle()
-                    if showRecurringOptions {
-                        showDurationPicker = false
-                        showReminderPicker = false
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - Duration Picker Section
-
-    private var durationPickerSection: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Text("Estimated Duration")
-                .font(DesignSystem.Typography.caption1)
-                .foregroundColor(Color.Lazyflow.textSecondary)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    ForEach(TaskViewModel.durationPresets, id: \.0) { preset in
-                        DurationChip(
-                            title: preset.0,
-                            isSelected: viewModel.estimatedDuration == preset.1,
-                            action: {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    if viewModel.estimatedDuration == preset.1 {
-                                        viewModel.estimatedDuration = nil
-                                    } else {
-                                        viewModel.estimatedDuration = preset.1
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .padding(.horizontal, DesignSystem.Spacing.sm)
-        .background(Color.secondary.opacity(0.05))
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-    }
-
-    // MARK: - Recurring Options Section
-
-    private var recurringOptionsSection: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            // Toggle
-            Toggle("Repeat this task", isOn: $viewModel.isRecurring.animation())
-                .font(DesignSystem.Typography.subheadline)
-
-            if viewModel.isRecurring {
-                // Frequency picker
-                HStack {
-                    Text("Frequency")
-                        .font(DesignSystem.Typography.subheadline)
-                        .foregroundColor(Color.Lazyflow.textSecondary)
-
-                    Spacer()
-
-                    Picker("Frequency", selection: $viewModel.recurringFrequency) {
-                        ForEach(RecurringFrequency.allCases) { frequency in
-                            Text(frequency.displayName).tag(frequency)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                }
-
-                // Custom interval (for custom frequency)
-                if viewModel.recurringFrequency == .custom {
-                    Stepper(
-                        "Every \(viewModel.recurringInterval) day\(viewModel.recurringInterval == 1 ? "" : "s")",
-                        value: $viewModel.recurringInterval,
-                        in: 1...365
-                    )
-                    .font(DesignSystem.Typography.subheadline)
-                }
-
-                // Weekday picker (for weekly frequency)
-                if viewModel.recurringFrequency == .weekly {
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                        Text("On days")
-                            .font(DesignSystem.Typography.caption1)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            ForEach(1...7, id: \.self) { day in
-                                WeekdayButton(
-                                    day: day,
-                                    isSelected: viewModel.recurringDaysOfWeek.contains(day),
-                                    action: {
-                                        if viewModel.recurringDaysOfWeek.contains(day) {
-                                            viewModel.recurringDaysOfWeek.removeAll { $0 == day }
-                                        } else {
-                                            viewModel.recurringDaysOfWeek.append(day)
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Hourly options
-                if viewModel.recurringFrequency == .hourly {
-                    hourlyOptionsView
-                }
-
-                // Times per day options
-                if viewModel.recurringFrequency == .timesPerDay {
-                    timesPerDayOptionsView
-                }
-
-                // Active hours (for intraday frequencies)
-                if viewModel.recurringFrequency == .hourly || viewModel.recurringFrequency == .timesPerDay {
-                    activeHoursView
-                }
-
-                // End date
-                Toggle("End Date", isOn: Binding(
-                    get: { viewModel.recurringEndDate != nil },
-                    set: { newValue in
-                        if newValue {
-                            viewModel.recurringEndDate = Date().addingDays(30)
-                        } else {
-                            viewModel.recurringEndDate = nil
-                        }
-                    }
-                ))
-                .font(DesignSystem.Typography.subheadline)
-
-                if viewModel.recurringEndDate != nil {
-                    DatePicker(
-                        "Ends on",
-                        selection: Binding(
-                            get: { viewModel.recurringEndDate ?? Date() },
-                            set: { viewModel.recurringEndDate = $0 }
-                        ),
-                        displayedComponents: .date
-                    )
-                    .font(DesignSystem.Typography.subheadline)
-                }
-            }
-        }
-        .padding(DesignSystem.Spacing.md)
-        .background(Color.secondary.opacity(0.05))
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-    }
-
-    // MARK: - Hourly Options View
-
-    private var hourlyOptionsView: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Text("Repeat Interval")
-                .font(DesignSystem.Typography.caption1)
-                .foregroundColor(Color.Lazyflow.textSecondary)
-
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                Text("Every")
-                    .font(DesignSystem.Typography.subheadline)
-
-                Picker("Hours", selection: $viewModel.hourInterval) {
-                    ForEach(1...12, id: \.self) { hour in
-                        Text("\(hour)").tag(hour)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(width: 60)
-
-                Text("hour\(viewModel.hourInterval == 1 ? "" : "s")")
-                    .font(DesignSystem.Typography.subheadline)
-
-                Spacer()
-            }
-
-            Text("e.g., \"Drink water\", \"Take a break\"")
-                .font(DesignSystem.Typography.caption2)
-                .foregroundColor(Color.Lazyflow.textTertiary)
-        }
-    }
-
-    // MARK: - Times Per Day Options View
-
-    private var timesPerDayOptionsView: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                Picker("Times", selection: $viewModel.timesPerDay) {
-                    ForEach(2...12, id: \.self) { count in
-                        Text("\(count)").tag(count)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(width: 60)
-
-                Text("times per day")
-                    .font(DesignSystem.Typography.subheadline)
-
-                Spacer()
-            }
-
-            // Toggle for specific times vs auto-distribute
-            Toggle("Set specific times", isOn: $viewModel.useSpecificTimes.animation())
-                .font(DesignSystem.Typography.subheadline)
-
-            if viewModel.useSpecificTimes {
-                specificTimesEditor
-            } else {
-                Text("Reminders will be evenly distributed during active hours")
-                    .font(DesignSystem.Typography.caption2)
-                    .foregroundColor(Color.Lazyflow.textTertiary)
-            }
-        }
-    }
-
-    // MARK: - Specific Times Editor
-
-    private var specificTimesEditor: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            ForEach(0..<viewModel.timesPerDay, id: \.self) { index in
-                HStack {
-                    Text("Time \(index + 1)")
-                        .font(DesignSystem.Typography.caption1)
-                        .foregroundColor(Color.Lazyflow.textSecondary)
-                        .frame(width: 60, alignment: .leading)
-
-                    DatePicker(
-                        "",
-                        selection: specificTimeBinding(for: index),
-                        displayedComponents: .hourAndMinute
-                    )
-                    .labelsHidden()
-                }
-            }
-        }
-        .padding(.top, DesignSystem.Spacing.xs)
-    }
-
-    private func specificTimeBinding(for index: Int) -> Binding<Date> {
-        Binding(
-            get: {
-                if index < viewModel.specificTimes.count {
-                    return viewModel.specificTimes[index]
-                }
-                // Default times distributed throughout the day
-                let calendar = Calendar.current
-                var components = DateComponents()
-                components.hour = 8 + (index * (12 / max(viewModel.timesPerDay, 1)))
-                components.minute = 0
-                return calendar.date(from: components) ?? Date()
-            },
-            set: { newValue in
-                // Ensure array has enough elements
-                while viewModel.specificTimes.count <= index {
-                    let calendar = Calendar.current
-                    var components = DateComponents()
-                    let nextIndex = viewModel.specificTimes.count
-                    components.hour = 8 + (nextIndex * (12 / max(viewModel.timesPerDay, 1)))
-                    components.minute = 0
-                    viewModel.specificTimes.append(calendar.date(from: components) ?? Date())
-                }
-                viewModel.specificTimes[index] = newValue
-            }
-        )
-    }
-
-    // MARK: - Active Hours View
-
-    private var activeHoursView: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Text("Active Hours")
-                .font(DesignSystem.Typography.caption1)
-                .foregroundColor(Color.Lazyflow.textSecondary)
-
-            HStack(spacing: DesignSystem.Spacing.md) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("From")
-                        .font(DesignSystem.Typography.caption2)
-                        .foregroundColor(Color.Lazyflow.textTertiary)
-
-                    DatePicker(
-                        "",
-                        selection: $viewModel.activeHoursStart,
-                        displayedComponents: .hourAndMinute
-                    )
-                    .labelsHidden()
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("To")
-                        .font(DesignSystem.Typography.caption2)
-                        .foregroundColor(Color.Lazyflow.textTertiary)
-
-                    DatePicker(
-                        "",
-                        selection: $viewModel.activeHoursEnd,
-                        displayedComponents: .hourAndMinute
-                    )
-                    .labelsHidden()
-                }
-
-                Spacer()
-            }
-
-            Text("Reminders only during these hours")
-                .font(DesignSystem.Typography.caption2)
-                .foregroundColor(Color.Lazyflow.textTertiary)
-        }
-        .padding(.top, DesignSystem.Spacing.sm)
-    }
-
-    // MARK: - Reminder Picker Section
-
-    private var reminderPickerSection: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            // Toggle
-            Toggle("Set Reminder", isOn: $viewModel.hasReminder.animation())
-                .font(DesignSystem.Typography.subheadline)
-
-            if viewModel.hasReminder {
-                // Date and Time picker
-                DatePicker(
-                    "Remind at",
-                    selection: Binding(
-                        get: { viewModel.reminderDate ?? Date() },
-                        set: { viewModel.reminderDate = $0 }
-                    ),
-                    displayedComponents: [.date, .hourAndMinute]
-                )
-                .font(DesignSystem.Typography.subheadline)
-
-                // Quick options
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                    Text("Quick Options")
-                        .font(DesignSystem.Typography.caption1)
-                        .foregroundColor(Color.Lazyflow.textSecondary)
-
-                    HStack(spacing: DesignSystem.Spacing.sm) {
-                        ReminderQuickOption(title: "Morning", time: "9:00 AM") {
-                            setReminderTime(hour: 9, minute: 0)
-                        }
-                        ReminderQuickOption(title: "Noon", time: "12:00 PM") {
-                            setReminderTime(hour: 12, minute: 0)
-                        }
-                        ReminderQuickOption(title: "Evening", time: "6:00 PM") {
-                            setReminderTime(hour: 18, minute: 0)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(DesignSystem.Spacing.md)
-        .background(Color.secondary.opacity(0.05))
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-    }
-
-    private func setReminderTime(hour: Int, minute: Int) {
-        let calendar = Calendar.current
-        var components = calendar.dateComponents([.year, .month, .day], from: viewModel.reminderDate ?? Date())
-        components.hour = hour
-        components.minute = minute
-        if let newDate = calendar.date(from: components) {
-            viewModel.reminderDate = newDate
         }
     }
 
@@ -815,6 +419,7 @@ struct AddTaskView: View {
                             .font(.system(size: 20))
                             .foregroundColor(Color.Lazyflow.accent)
                     }
+                    .accessibilityLabel("Add subtask")
                 }
             }
 
@@ -836,6 +441,7 @@ struct AddTaskView: View {
                             .foregroundColor(newSubtaskTitle.isEmpty ? Color.Lazyflow.textTertiary : Color.Lazyflow.accent)
                     }
                     .disabled(newSubtaskTitle.isEmpty)
+                    .accessibilityLabel("Confirm subtask")
 
                     Button {
                         withAnimation(.easeInOut(duration: 0.2)) {
@@ -847,6 +453,7 @@ struct AddTaskView: View {
                             .font(.system(size: 22))
                             .foregroundColor(Color.Lazyflow.textTertiary)
                     }
+                    .accessibilityLabel("Cancel adding subtask")
                 }
                 .padding(DesignSystem.Spacing.sm)
                 .background(Color.secondary.opacity(0.1))
@@ -878,6 +485,7 @@ struct AddTaskView: View {
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(Color.Lazyflow.textTertiary)
                             }
+                            .accessibilityLabel("Remove \(subtask)")
                         }
                         .padding(.vertical, 4)
                     }
@@ -1098,6 +706,27 @@ struct AddTaskView: View {
         }
     }
 
+    private var dateButtonTitle: String {
+        guard viewModel.hasDueDate, let date = viewModel.dueDate else { return "Date" }
+        if viewModel.hasDueTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(date.shortFormatted) \(tf.string(from: time))"
+        }
+        return date.shortFormatted
+    }
+
+    private func dateChipTitle(date: Date) -> String {
+        if viewModel.hasDueTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(date.relativeFormatted) \(tf.string(from: time))"
+        }
+        return date.relativeFormatted
+    }
+
     private var selectedListName: String {
         if let listID = viewModel.selectedListID,
            let list = listService.lists.first(where: { $0.id == listID }) {
@@ -1158,7 +787,7 @@ struct AddTaskView: View {
                 if viewModel.hasDueDate, let date = viewModel.dueDate {
                     SelectedOptionChip(
                         icon: "calendar",
-                        title: date.relativeFormatted,
+                        title: dateChipTitle(date: date),
                         color: date.isPast ? Color.Lazyflow.error : Color.Lazyflow.accent,
                         onRemove: { viewModel.clearDueDate() }
                     )
@@ -1259,80 +888,6 @@ struct AddTaskView: View {
     }
 }
 
-// MARK: - Quick Action Button
-
-struct QuickActionButton: View {
-    let icon: String
-    let title: String
-    let isSelected: Bool
-    let color: Color
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            QuickActionButtonContent(icon: icon, title: title, isSelected: isSelected, color: color)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-struct QuickActionButtonContent: View {
-    let icon: String
-    let title: String
-    let isSelected: Bool
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-            Text(title)
-                .font(DesignSystem.Typography.subheadline)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
-        .foregroundColor(isSelected ? color : Color.Lazyflow.textSecondary)
-        .padding(.horizontal, DesignSystem.Spacing.sm)
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .background(
-            isSelected
-                ? color.opacity(0.15)
-                : Color.secondary.opacity(0.1)
-        )
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-    }
-}
-
-// MARK: - Selected Option Chip
-
-struct SelectedOptionChip: View {
-    let icon: String
-    let title: String
-    let color: Color
-    let onRemove: () -> Void
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-            Text(title)
-                .font(DesignSystem.Typography.caption1)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-            Button(action: onRemove) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
-            }
-        }
-        .foregroundColor(color)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(color.opacity(0.15))
-        .cornerRadius(DesignSystem.CornerRadius.full)
-        .fixedSize(horizontal: true, vertical: false)
-    }
-}
-
 // MARK: - Date Picker Sheet
 
 struct DatePickerSheet: View {
@@ -1380,7 +935,18 @@ struct DatePickerSheet: View {
                 .padding(.horizontal)
 
                 // Time toggle
-                Toggle("Add Time", isOn: $hasTime)
+                Toggle("Add Time", isOn: Binding(
+                    get: { hasTime },
+                    set: { newValue in
+                        hasTime = newValue
+                        if newValue && !hasDate {
+                            hasDate = true
+                            if selectedDate == nil {
+                                selectedDate = Date()
+                            }
+                        }
+                    }
+                ))
                     .padding(.horizontal)
 
                 if hasTime {
@@ -1459,6 +1025,28 @@ struct ListPickerSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                // No List option
+                Button {
+                    selectedListID = nil
+                    dismiss()
+                } label: {
+                    HStack {
+                        Image(systemName: "tray")
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                            .frame(width: 28)
+
+                        Text("No List")
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+
+                        Spacer()
+
+                        if selectedListID == nil {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(Color.Lazyflow.accent)
+                        }
+                    }
+                }
+
                 ForEach(lists) { list in
                     Button {
                         selectedListID = list.id
@@ -2068,145 +1656,6 @@ struct ToggleApplyButton: View {
         }
         .animation(.easeInOut(duration: 0.2), value: isApplied)
         .accessibilityLabel(isApplied ? "Un-apply suggestion" : "Apply suggestion")
-    }
-}
-
-// MARK: - Detected Date Banner
-
-struct DetectedDateBanner: View {
-    let date: Date
-    let time: Date?
-    let matchedText: String
-    let onApply: () -> Void
-    let onDismiss: () -> Void
-
-    var body: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 16))
-                .foregroundColor(Color.Lazyflow.accent)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Date detected: \"\(matchedText)\"")
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-
-                HStack(spacing: 4) {
-                    Text(date.relativeFormatted)
-                        .font(DesignSystem.Typography.subheadline)
-                        .fontWeight(.medium)
-
-                    if let time = time {
-                        Text("at \(time.timeFormatted)")
-                            .font(DesignSystem.Typography.subheadline)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                    }
-                }
-            }
-
-            Spacer()
-
-            Button(action: onApply) {
-                Text("Apply")
-                    .font(DesignSystem.Typography.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, DesignSystem.Spacing.md)
-                    .padding(.vertical, DesignSystem.Spacing.xs)
-                    .background(Color.Lazyflow.accent)
-                    .cornerRadius(DesignSystem.CornerRadius.small)
-            }
-
-            Button(action: onDismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(Color.Lazyflow.textTertiary)
-            }
-        }
-        .padding(DesignSystem.Spacing.sm)
-        .background(Color.Lazyflow.accent.opacity(0.1))
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-    }
-}
-
-// MARK: - Duration Chip
-
-struct DurationChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(DesignSystem.Typography.subheadline)
-                .foregroundColor(isSelected ? .white : Color.Lazyflow.textPrimary)
-                .padding(.horizontal, DesignSystem.Spacing.md)
-                .padding(.vertical, DesignSystem.Spacing.sm)
-                .background(
-                    isSelected
-                        ? Color.Lazyflow.accent
-                        : Color.secondary.opacity(0.1)
-                )
-                .cornerRadius(DesignSystem.CornerRadius.full)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Weekday Button
-
-struct WeekdayButton: View {
-    let day: Int
-    let isSelected: Bool
-    let action: () -> Void
-
-    private var dayLetter: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        let symbols = formatter.veryShortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
-        return symbols[day - 1]
-    }
-
-    var body: some View {
-        Button(action: action) {
-            Text(dayLetter)
-                .font(DesignSystem.Typography.caption1)
-                .fontWeight(.medium)
-                .foregroundColor(isSelected ? .white : Color.Lazyflow.textPrimary)
-                .frame(width: 32, height: 32)
-                .background(
-                    Circle()
-                        .fill(isSelected ? Color.Lazyflow.accent : Color.secondary.opacity(0.1))
-                )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Reminder Quick Option
-
-struct ReminderQuickOption: View {
-    let title: String
-    let time: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 2) {
-                Text(title)
-                    .font(DesignSystem.Typography.caption1)
-                    .fontWeight(.medium)
-                Text(time)
-                    .font(DesignSystem.Typography.caption2)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, DesignSystem.Spacing.sm)
-            .background(Color.secondary.opacity(0.1))
-            .cornerRadius(DesignSystem.CornerRadius.small)
-        }
-        .buttonStyle(PlainButtonStyle())
     }
 }
 
