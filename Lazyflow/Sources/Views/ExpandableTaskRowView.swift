@@ -20,6 +20,8 @@ struct ExpandableTaskRowView: View {
     var onSubtaskDelete: ((Task) -> Void)?
     var onSubtaskPromote: ((Task) -> Void)?
     var onAddSubtask: ((Task) -> Void)?
+    var showListIndicator: Bool = false
+    var listColorHex: String? = nil
 
     @State private var isExpanded: Bool = true
     @State private var isPressed = false
@@ -44,7 +46,9 @@ struct ExpandableTaskRowView: View {
                 onStartWorking: onStartWorking,
                 onStopWorking: onStopWorking,
                 hideSubtaskBadge: true,
-                showProgressRing: task.hasSubtasks
+                showProgressRing: task.hasSubtasks,
+                showListIndicator: showListIndicator,
+                listColorHex: listColorHex
             )
 
             // Subtasks section

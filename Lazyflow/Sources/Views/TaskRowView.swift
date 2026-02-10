@@ -18,6 +18,8 @@ struct TaskRowView: View {
     var hideSubtaskBadge: Bool = false
     var expandableSubtaskBadge: AnyView? = nil
     var showProgressRing: Bool = false  // Show subtask progress on checkbox
+    var showListIndicator: Bool = false  // Show list color dot in metadata
+    var listColorHex: String? = nil  // List color for the dot indicator
 
     @State private var isPressed = false
     @State private var isPulsing = false
@@ -53,52 +55,35 @@ struct TaskRowView: View {
                 Button {
                     onTap()
                 } label: {
-                    HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                            // Title
-                            Text(task.title)
-                                .font(DesignSystem.Typography.body)
-                                .foregroundColor(
-                                    task.isCompleted
-                                        ? Color.Lazyflow.textTertiary
-                                        : Color.Lazyflow.textPrimary
-                                )
-                                .strikethrough(task.isCompleted, color: Color.Lazyflow.textTertiary)
-                                .lineLimit(2)
-                                .truncationMode(.tail)
-                                .multilineTextAlignment(.leading)
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        // Title
+                        Text(task.title)
+                            .font(DesignSystem.Typography.body)
+                            .foregroundColor(
+                                task.isCompleted
+                                    ? Color.Lazyflow.textTertiary
+                                    : Color.Lazyflow.textPrimary
+                            )
+                            .strikethrough(task.isCompleted, color: Color.Lazyflow.textTertiary)
+                            .lineLimit(2)
+                            .truncationMode(.tail)
+                            .multilineTextAlignment(.leading)
 
-                            // Metadata row
-                            if hasMetadata {
-                                metadataRow
-                            }
-                        }
-                        .layoutPriority(1)
-
-                        Spacer(minLength: 0)
-
-                        // Recurring indicator with frequency
-                        if task.isRecurring {
-                            HStack(spacing: 2) {
-                                Image(systemName: "repeat")
-                                    .font(.system(size: 12))
-                                if let rule = task.recurringRule {
-                                    Text(rule.compactDisplayFormat)
-                                        .font(.system(size: 11))
-                                }
-                            }
-                            .foregroundColor(Color.Lazyflow.textTertiary)
-                            .layoutPriority(2)
+                        // Metadata row
+                        if hasMetadata {
+                            metadataRow
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
             .padding(.vertical, DesignSystem.Spacing.sm)
             .padding(.horizontal, DesignSystem.Spacing.md)
+            .opacity(task.isCompleted ? 0.75 : 1.0)
         }
-        .background(Color.adaptiveSurface)
+        .background(task.isOverdue && !task.isCompleted ? Color.Lazyflow.error.opacity(0.04) : Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.medium)
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         .scaleEffect(isPressed ? 0.98 : 1.0)
@@ -229,9 +214,17 @@ struct TaskRowView: View {
             }
         }
 
-        // Category
-        if task.category != .uncategorized {
-            components.append(task.category.displayName)
+        // Category (system or custom, handles stale customCategoryID)
+        let categoryDisplay = CategoryService.shared.getCategoryDisplay(systemCategory: task.category, customCategoryID: task.customCategoryID)
+        if categoryDisplay.name != TaskCategory.uncategorized.displayName {
+            components.append(categoryDisplay.name)
+        }
+
+        // List name (when shown)
+        if showListIndicator, let listID = task.listID,
+           let list = TaskListService.shared.getList(byID: listID),
+           !list.isDefault {
+            components.append("in \(list.name)")
         }
 
         return components.joined(separator: ", ")
@@ -339,12 +332,40 @@ struct TaskRowView: View {
 
     // MARK: - Metadata
 
+    private var hasNonEmptyNotes: Bool {
+        task.notes != nil && !(task.notes?.isEmpty ?? true)
+    }
+
+    private var hasCategory: Bool {
+        let display = CategoryService.shared.getCategoryDisplay(systemCategory: task.category, customCategoryID: task.customCategoryID)
+        return display.name != TaskCategory.uncategorized.displayName
+    }
+
+    private var hasSubtaskBadge: Bool {
+        (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil
+    }
+
+    private var hasTimeTracking: Bool {
+        task.isInProgress || (task.isCompleted && task.startedAt != nil)
+    }
+
+    private var hasListDot: Bool {
+        showListIndicator && listColorHex != nil
+    }
+
     private var hasMetadata: Bool {
-        task.dueDate != nil || task.category != .uncategorized || task.notes != nil || task.estimatedDuration != nil || (task.hasSubtasks && !hideSubtaskBadge) || expandableSubtaskBadge != nil || task.isInProgress || (task.isCompleted && task.startedAt != nil)
+        task.dueDate != nil || hasCategory || hasNonEmptyNotes
+            || task.estimatedDuration != nil || hasSubtaskBadge
+            || hasTimeTracking || task.isRecurring || hasListDot
     }
 
     private var metadataRow: some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
+            // List color dot (first element, opt-in)
+            if showListIndicator, let colorHex = listColorHex {
+                ListColorDot(colorHex: colorHex)
+            }
+
             // Subtask progress - either expandable badge or regular badge
             if let expandableBadge = expandableSubtaskBadge {
                 expandableBadge
@@ -373,14 +394,16 @@ struct TaskRowView: View {
                 .foregroundColor(Color.Lazyflow.textTertiary)
             }
 
-            // Category
-            if task.category != .uncategorized && !task.isCompleted {
-                CategoryBadge(category: task.category)
-            }
+            // Category (icon-only, visible even when completed but dimmed)
+            TaskCategoryBadge(
+                systemCategory: task.category,
+                customCategoryID: task.customCategoryID,
+                isCompleted: task.isCompleted
+            )
 
             // Due date
             if let dueDate = task.dueDate {
-                DueDateBadge(date: dueDate, isOverdue: task.isOverdue)
+                DueDateBadge(date: dueDate, isOverdue: task.isOverdue, isDueToday: task.isDueToday)
             }
 
             // Estimated Duration (only show if not tracking time)
@@ -395,10 +418,23 @@ struct TaskRowView: View {
             }
 
             // Notes indicator
-            if task.notes != nil {
+            if hasNonEmptyNotes {
                 Image(systemName: "note.text")
-                    .font(.system(size: 10))
-                    .foregroundColor(Color.Lazyflow.textTertiary)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+            }
+
+            // Recurring indicator (moved from standalone position)
+            if task.isRecurring {
+                HStack(spacing: 2) {
+                    Image(systemName: "repeat")
+                        .font(.system(size: 10))
+                    if let rule = task.recurringRule {
+                        Text(rule.compactDisplayFormat)
+                            .font(DesignSystem.Typography.caption2)
+                    }
+                }
+                .foregroundColor(Color.Lazyflow.textTertiary)
             }
         }
     }

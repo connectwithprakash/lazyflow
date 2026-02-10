@@ -4,7 +4,7 @@ import SwiftUI
 struct AddTaskView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: TaskViewModel
-    @StateObject private var listService = TaskListService()
+    @StateObject private var listService = TaskListService.shared
     @StateObject private var categoryService = CategoryService.shared
     @StateObject private var llmService = LLMService.shared
     @FocusState private var isTitleFocused: Bool
