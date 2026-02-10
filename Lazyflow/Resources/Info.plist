@@ -14,23 +14,10 @@
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.lazyflow.app</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>lazyflow</string>
-			</array>
-		</dict>
-	</array>
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
+	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
+	<string>1</string>
 	<key>INAlternativeAppNames</key>
 	<array>
 		<dict>
@@ -53,21 +40,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
-	</array>
-	<key>UTExportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>Lazyflow Task</string>
-			<key>UTTypeIdentifier</key>
-			<string>com.lazyflow.task</string>
-			<key>UTTypeTagSpecification</key>
-			<dict/>
-		</dict>
 	</array>
 </dict>
 </plist>

@@ -144,6 +144,7 @@
 		E2348389624C78DAE63B632F /* CategoryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B80002E148BF3F059F003E /* CategoryServiceTests.swift */; };
 		E435287E27FA6C60ECCABC09 /* TaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C7BF0359B1373B7432656A /* TaskService.swift */; };
 		E4ED9FF28B86F5A163A1466F /* SubtaskProgressBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63AE12B89929F764DCED4335 /* SubtaskProgressBadge.swift */; };
+		E97B7C99E687C8BE9AE24ADD /* SuggestionFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B5F8B95312586F263E5348 /* SuggestionFeedback.swift */; };
 		EB90EC843C74EF6627FB1A31 /* CompleteTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7C039CEAFEC1DDD74B7E84 /* CompleteTaskIntent.swift */; };
 		EDAE3C708E1600C9D2D1A1C1 /* WatchTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68F731F96242074EDA7DF785 /* WatchTask.swift */; };
 		EF4E56943CA23C8B21A7FDDE /* LazyflowLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA6E85B014FF9813EF3522A /* LazyflowLiveActivity.swift */; };
@@ -355,6 +356,7 @@
 		D9EA2BF6794DBB1AD8720E5E /* LLMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProvider.swift; sourceTree = "<group>"; };
 		DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
 		DF133341D7E7D7CD967A0BAB /* AIContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIContext.swift; sourceTree = "<group>"; };
+		E3B5F8B95312586F263E5348 /* SuggestionFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionFeedback.swift; sourceTree = "<group>"; };
 		E42E7BB474065EDF44330E69 /* ReminderPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderPickerSheet.swift; sourceTree = "<group>"; };
 		E7DBD6476A3F8A043E9A1970 /* PromptTemplatesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptTemplatesTests.swift; sourceTree = "<group>"; };
 		E8C28B175A2ABFA5B21D7837 /* TaskListService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListService.swift; sourceTree = "<group>"; };
@@ -456,6 +458,7 @@
 				B263F189EA72FAE978FD5299 /* Priority.swift */,
 				5F018E899F22FF4A0E0F8001 /* RecurringRule.swift */,
 				95FFADDD9ADA948F8B90FD98 /* RecurringRuleEntity+Extensions.swift */,
+				E3B5F8B95312586F263E5348 /* SuggestionFeedback.swift */,
 				9D7E695AE8A50888BB2CF464 /* Task.swift */,
 				494953CFA458D3070B16B33F /* TaskCategory.swift */,
 				94E48CA4F360C3D54A5D9A74 /* TaskList.swift */,
@@ -1126,6 +1129,7 @@
 				3A7406E4C946A842FD3F1131 /* SubtaskDetailView.swift in Sources */,
 				E4ED9FF28B86F5A163A1466F /* SubtaskProgressBadge.swift in Sources */,
 				905E6CDA8C1894B18A2EAFBB /* SubtaskRowView.swift in Sources */,
+				E97B7C99E687C8BE9AE24ADD /* SuggestionFeedback.swift in Sources */,
 				FB4C171E524EA0FF9A7AD456 /* Task.swift in Sources */,
 				8866988C5945766F87C8620D /* TaskActivityAttributes.swift in Sources */,
 				9F686AB8D6159F67405563EB /* TaskCategory.swift in Sources */,
