@@ -291,7 +291,7 @@ struct TaskDetailView: View {
                 // Due Date picker
                 QuickActionButton(
                     icon: "calendar",
-                    title: viewModel.hasDueDate ? (viewModel.dueDate?.shortFormatted ?? "Date") : "Date",
+                    title: dateButtonTitle,
                     isSelected: viewModel.hasDueDate,
                     color: Color.Lazyflow.accent
                 ) {
@@ -501,7 +501,7 @@ struct TaskDetailView: View {
                 if viewModel.hasDueDate, let date = viewModel.dueDate {
                     SelectedOptionChip(
                         icon: "calendar",
-                        title: date.relativeFormatted,
+                        title: dateChipTitle(date: date),
                         color: date.isPast ? Color.Lazyflow.error : Color.Lazyflow.accent,
                         onRemove: { viewModel.clearDueDate() }
                     )
@@ -556,6 +556,27 @@ struct TaskDetailView: View {
     }
 
     // MARK: - Display Helpers
+
+    private var dateButtonTitle: String {
+        guard viewModel.hasDueDate, let date = viewModel.dueDate else { return "Date" }
+        if viewModel.hasDueTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(date.shortFormatted) \(tf.string(from: time))"
+        }
+        return date.shortFormatted
+    }
+
+    private func dateChipTitle(date: Date) -> String {
+        if viewModel.hasDueTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(date.relativeFormatted) \(tf.string(from: time))"
+        }
+        return date.relativeFormatted
+    }
 
     private var selectedListName: String {
         if let listID = viewModel.selectedListID,

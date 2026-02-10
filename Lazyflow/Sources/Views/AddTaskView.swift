@@ -271,10 +271,10 @@ struct AddTaskView: View {
         VStack(spacing: DesignSystem.Spacing.sm) {
             // Row 1: Date options
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Due Date picker - shows actual date format to avoid confusion
+                // Due Date picker
                 QuickActionButton(
                     icon: "calendar",
-                    title: viewModel.hasDueDate ? (viewModel.dueDate?.shortFormatted ?? "Date") : "Date",
+                    title: dateButtonTitle,
                     isSelected: viewModel.hasDueDate,
                     color: Color.Lazyflow.accent
                 ) {
@@ -702,6 +702,27 @@ struct AddTaskView: View {
         }
     }
 
+    private var dateButtonTitle: String {
+        guard viewModel.hasDueDate, let date = viewModel.dueDate else { return "Date" }
+        if viewModel.hasDueTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(date.shortFormatted) \(tf.string(from: time))"
+        }
+        return date.shortFormatted
+    }
+
+    private func dateChipTitle(date: Date) -> String {
+        if viewModel.hasDueTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(date.relativeFormatted) \(tf.string(from: time))"
+        }
+        return date.relativeFormatted
+    }
+
     private var selectedListName: String {
         if let listID = viewModel.selectedListID,
            let list = listService.lists.first(where: { $0.id == listID }) {
@@ -762,7 +783,7 @@ struct AddTaskView: View {
                 if viewModel.hasDueDate, let date = viewModel.dueDate {
                     SelectedOptionChip(
                         icon: "calendar",
-                        title: date.relativeFormatted,
+                        title: dateChipTitle(date: date),
                         color: date.isPast ? Color.Lazyflow.error : Color.Lazyflow.accent,
                         onRemove: { viewModel.clearDueDate() }
                     )
@@ -910,7 +931,18 @@ struct DatePickerSheet: View {
                 .padding(.horizontal)
 
                 // Time toggle
-                Toggle("Add Time", isOn: $hasTime)
+                Toggle("Add Time", isOn: Binding(
+                    get: { hasTime },
+                    set: { newValue in
+                        hasTime = newValue
+                        if newValue && !hasDate {
+                            hasDate = true
+                            if selectedDate == nil {
+                                selectedDate = Date()
+                            }
+                        }
+                    }
+                ))
                     .padding(.horizontal)
 
                 if hasTime {
