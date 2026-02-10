@@ -821,6 +821,10 @@ struct TodayView: View {
 
     private func nextUpAlternativeRow(_ suggestion: TaskSuggestion) -> some View {
         Button {
+            // Log mild positive feedback for selecting an alternative
+            prioritizationService.recordSuggestionFeedback(
+                task: suggestion.task, action: .viewedDetails, score: suggestion.score
+            )
             fetchSuggestionDetails(for: suggestion.task)
         } label: {
             HStack(spacing: DesignSystem.Spacing.md) {
