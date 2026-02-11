@@ -550,8 +550,9 @@ struct TodayView: View {
                         .id(task.id)
                 }
             } header: {
-                if !viewModel.overdueTasks.isEmpty {
-                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: viewModel.overdueTasks.count)
+                let filteredOverdue = overdueTasks(excluding: nextUpPrimaryTaskID)
+                if !filteredOverdue.isEmpty {
+                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: filteredOverdue.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
@@ -565,8 +566,9 @@ struct TodayView: View {
                         .id(task.id)
                 }
             } header: {
-                if !viewModel.todayTasks.isEmpty {
-                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: viewModel.todayTasks.count)
+                let filteredToday = todayTasks(excluding: nextUpPrimaryTaskID)
+                if !filteredToday.isEmpty {
+                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: filteredToday.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
@@ -798,6 +800,7 @@ struct TodayView: View {
                         .foregroundColor(Color.Lazyflow.accent)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Show recommendation details")
                 .accessibleTouchTarget()
             }
             .padding(.horizontal, DesignSystem.Spacing.lg)
