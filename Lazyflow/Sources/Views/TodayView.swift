@@ -554,6 +554,7 @@ struct TodayView: View {
                                         onStopWorking: { viewModel.stopWorking(on: $0) },
                                         onSchedule: { scheduleTaskAction($0) }
                                     )
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                             }
                         }
 
@@ -571,6 +572,7 @@ struct TodayView: View {
                                 .frame(minHeight: DesignSystem.TouchTarget.minimum)
                         }
                         .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                         .accessibilityLabel(showAlternatives ? "Hide alternative suggestions" : "Show \(alternatives.count) more suggestions")
                         .accessibilityValue(showAlternatives ? "Expanded" : "Collapsed")
                         .accessibilityHint("Double tap to \(showAlternatives ? "hide" : "show") alternatives")
