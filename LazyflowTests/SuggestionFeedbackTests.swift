@@ -181,9 +181,9 @@ final class SuggestionFeedbackTests: XCTestCase {
     // MARK: - ConfidenceLevel Tests
 
     func testConfidenceLevel_RawValues() {
-        XCTAssertEqual(ConfidenceLevel.recommended.rawValue, "Recommended")
-        XCTAssertEqual(ConfidenceLevel.goodFit.rawValue, "Good Fit")
-        XCTAssertEqual(ConfidenceLevel.consider.rawValue, "Consider")
+        XCTAssertEqual(ConfidenceLevel.recommended.rawValue, "Top Pick")
+        XCTAssertEqual(ConfidenceLevel.goodFit.rawValue, "Strong")
+        XCTAssertEqual(ConfidenceLevel.consider.rawValue, "Good Fit")
     }
 
     // MARK: - Codable Tests

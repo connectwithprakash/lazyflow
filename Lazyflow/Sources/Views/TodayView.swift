@@ -511,11 +511,17 @@ struct TodayView: View {
                                 showUndoToast(.pushedToTomorrow(task), snapshot: task)
                                 pushToTomorrow(task)
                             },
+                            onMoveToToday: { task in
+                                showUndoToast(.movedToToday(task), snapshot: task)
+                                moveToToday(task)
+                            },
                             onDelete: { task in
                                 showUndoToast(.deleted(task), snapshot: task)
                                 viewModel.deleteTask(task, allowUndo: true)
                             },
-                            onStartWorking: { viewModel.startWorking(on: $0) }
+                            onStartWorking: { viewModel.startWorking(on: $0) },
+                            onStopWorking: { viewModel.stopWorking(on: $0) },
+                            onSchedule: { scheduleTaskAction($0) }
                         )
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     }
@@ -536,11 +542,17 @@ struct TodayView: View {
                                             showUndoToast(.pushedToTomorrow(task), snapshot: task)
                                             pushToTomorrow(task)
                                         },
+                                        onMoveToToday: { task in
+                                            showUndoToast(.movedToToday(task), snapshot: task)
+                                            moveToToday(task)
+                                        },
                                         onDelete: { task in
                                             showUndoToast(.deleted(task), snapshot: task)
                                             viewModel.deleteTask(task, allowUndo: true)
                                         },
-                                        onStartWorking: { viewModel.startWorking(on: $0) }
+                                        onStartWorking: { viewModel.startWorking(on: $0) },
+                                        onStopWorking: { viewModel.stopWorking(on: $0) },
+                                        onSchedule: { scheduleTaskAction($0) }
                                     )
                             }
                         }
@@ -1091,11 +1103,13 @@ struct NextUpPrimaryCard: View {
                     Text(suggestion.confidence.rawValue)
                         .font(DesignSystem.Typography.caption2)
                         .foregroundColor(suggestion.confidence.color)
+                        .lineLimit(1)
                 }
                 .padding(.horizontal, DesignSystem.Spacing.sm)
                 .padding(.vertical, DesignSystem.Spacing.xs)
                 .background(suggestion.confidence.color.opacity(0.12))
                 .cornerRadius(DesignSystem.CornerRadius.small)
+                .fixedSize()
             }
             .padding()
             .background(
@@ -1353,10 +1367,14 @@ private struct NextUpSwipeActionsModifier: ViewModifier {
     let task: Task
     let onToggle: () -> Void
     let onPushToTomorrow: ((Task) -> Void)?
+    let onMoveToToday: ((Task) -> Void)?
     let onDelete: ((Task) -> Void)?
     let onStartWorking: ((Task) -> Void)?
+    let onStopWorking: ((Task) -> Void)?
+    let onSchedule: ((Task) -> Void)?
 
     private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
+    private let impactLight = UIImpactFeedbackGenerator(style: .light)
     private let notificationFeedback = UINotificationFeedbackGenerator()
 
     func body(content: Content) -> some View {
@@ -1367,6 +1385,16 @@ private struct NextUpSwipeActionsModifier: ViewModifier {
                     onDelete?(task)
                 } label: {
                     Label("Delete", systemImage: "trash")
+                }
+
+                if task.isOverdue || (!task.isDueToday && task.dueDate != nil) {
+                    Button {
+                        impactMedium.impactOccurred()
+                        onMoveToToday?(task)
+                    } label: {
+                        Label("Today", systemImage: "star.fill")
+                    }
+                    .tint(.blue)
                 }
 
                 if task.isDueToday || task.isOverdue {
@@ -1388,7 +1416,15 @@ private struct NextUpSwipeActionsModifier: ViewModifier {
                 }
                 .tint(Color.Lazyflow.success)
 
-                if !task.isInProgress {
+                if task.isInProgress {
+                    Button {
+                        impactMedium.impactOccurred()
+                        onStopWorking?(task)
+                    } label: {
+                        Label("Pause", systemImage: "pause.fill")
+                    }
+                    .tint(.orange)
+                } else {
                     Button {
                         impactMedium.impactOccurred()
                         onStartWorking?(task)
@@ -1397,6 +1433,14 @@ private struct NextUpSwipeActionsModifier: ViewModifier {
                     }
                     .tint(Color.Lazyflow.accent)
                 }
+
+                Button {
+                    impactLight.impactOccurred()
+                    onSchedule?(task)
+                } label: {
+                    Label("Schedule", systemImage: "calendar.badge.plus")
+                }
+                .tint(.purple)
             }
     }
 }
@@ -1406,15 +1450,21 @@ extension View {
         task: Task,
         onToggle: @escaping () -> Void,
         onPushToTomorrow: ((Task) -> Void)? = nil,
+        onMoveToToday: ((Task) -> Void)? = nil,
         onDelete: ((Task) -> Void)? = nil,
-        onStartWorking: ((Task) -> Void)? = nil
+        onStartWorking: ((Task) -> Void)? = nil,
+        onStopWorking: ((Task) -> Void)? = nil,
+        onSchedule: ((Task) -> Void)? = nil
     ) -> some View {
         modifier(NextUpSwipeActionsModifier(
             task: task,
             onToggle: onToggle,
             onPushToTomorrow: onPushToTomorrow,
+            onMoveToToday: onMoveToToday,
             onDelete: onDelete,
-            onStartWorking: onStartWorking
+            onStartWorking: onStartWorking,
+            onStopWorking: onStopWorking,
+            onSchedule: onSchedule
         ))
     }
 }

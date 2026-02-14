@@ -554,9 +554,9 @@ final class PrioritizationService: ObservableObject {
 // MARK: - Supporting Types
 
 enum ConfidenceLevel: String {
-    case recommended = "Recommended"
-    case goodFit = "Good Fit"
-    case consider = "Consider"
+    case recommended = "Top Pick"
+    case goodFit = "Strong"
+    case consider = "Good Fit"
 }
 
 struct TaskSuggestion: Identifiable {
