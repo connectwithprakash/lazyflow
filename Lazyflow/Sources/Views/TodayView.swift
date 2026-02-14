@@ -850,9 +850,15 @@ struct TodayView: View {
             fetchSuggestionDetails(for: suggestion.task)
         } label: {
             HStack(spacing: DesignSystem.Spacing.md) {
-                Image(systemName: suggestion.task.priority.iconName)
-                    .foregroundColor(suggestion.task.priority.color)
-                    .font(.system(size: 14))
+                if suggestion.task.priority != .none {
+                    Image(systemName: suggestion.task.priority.iconName)
+                        .foregroundColor(suggestion.task.priority.color)
+                        .font(.system(size: 14))
+                } else {
+                    Circle()
+                        .fill(Color.Lazyflow.textTertiary)
+                        .frame(width: 6, height: 6)
+                }
 
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                     Text(suggestion.task.title)
@@ -874,7 +880,7 @@ struct TodayView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(Color.Lazyflow.textTertiary)
             }
-            .padding(DesignSystem.Spacing.md)
+            .padding()
             .background(Color.adaptiveSurface)
             .cornerRadius(DesignSystem.CornerRadius.large)
         }
@@ -1051,10 +1057,16 @@ struct NextUpPrimaryCard: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: DesignSystem.Spacing.md) {
-                // Priority icon
-                Image(systemName: suggestion.task.priority.iconName)
-                    .foregroundColor(suggestion.task.priority.color)
-                    .font(.system(size: 16))
+                // Priority icon (neutral dot for no-priority tasks)
+                if suggestion.task.priority != .none {
+                    Image(systemName: suggestion.task.priority.iconName)
+                        .foregroundColor(suggestion.task.priority.color)
+                        .font(.system(size: 16))
+                } else {
+                    Circle()
+                        .fill(Color.Lazyflow.textTertiary)
+                        .frame(width: 8, height: 8)
+                }
 
                 // Title + reason
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
