@@ -813,9 +813,9 @@ struct TodayView: View {
 
             Spacer()
 
-            if let primary = prioritizationService.getTopThreeSuggestions().first {
+            if let primary = prioritizationService.topThreeSuggestions.first {
                 Button {
-                    fetchSuggestionDetails(for: primary.task)
+                    fetchSuggestionDetails(for: primary)
                 } label: {
                     Image(systemName: "info.circle")
                         .font(.system(size: 14))

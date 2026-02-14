@@ -78,11 +78,13 @@ final class PrioritizationService: ObservableObject {
         // Sort by score (highest first)
         scoredTasks.sort { $0.score > $1.score }
 
-        prioritizedTasks = scoredTasks.map { $0.task }
-        suggestedNextTask = prioritizedTasks.first
-
-        // Compute top 3 suggestions (filter snoozed, apply diversity)
+        // Filter snoozed tasks for all suggestion outputs
         let unsnoozed = scoredTasks.filter { !suggestionFeedback.isSnoozed($0.task.id) }
+
+        prioritizedTasks = scoredTasks.map { $0.task }
+        suggestedNextTask = unsnoozed.first?.task
+
+        // Compute top 3 suggestions (apply diversity)
         topThreeSuggestions = selectDiverseTopThree(from: unsnoozed)
     }
 
