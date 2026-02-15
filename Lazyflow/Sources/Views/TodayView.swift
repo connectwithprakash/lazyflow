@@ -832,23 +832,7 @@ struct TodayView: View {
 
     @ViewBuilder
     private func nextUpAlternativeRow(suggestion: TaskSuggestion) -> some View {
-        // Reason label for alternative
-        if let reason = suggestion.reasons.first {
-            HStack(spacing: DesignSystem.Spacing.xs) {
-                Circle()
-                    .fill(Color.Lazyflow.textTertiary)
-                    .frame(width: 4, height: 4)
-                Text(reason)
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.textSecondary)
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, DesignSystem.Spacing.lg)
-            .padding(.top, DesignSystem.Spacing.xs)
-            .accessibilityLabel("Alternative suggestion: \(reason)")
-        }
-
-        // Full TaskRowView (reactive, with built-in swipe actions)
+        // Bare TaskRowView — no chrome for alternatives, keeps section compact
         flatTaskRows(task: suggestion.task, isCompleted: false)
     }
 
