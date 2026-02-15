@@ -17,6 +17,12 @@ struct ContentView: View {
     @State private var insightsNavigationPath = NavigationPath()
     @State private var profileNavigationPath = NavigationPath()
 
+    // Focus Mode coordinator (in-memory, not persisted)
+    @StateObject private var focusCoordinator = FocusSessionCoordinator(
+        taskService: TaskService.shared,
+        prioritizationService: PrioritizationService.shared
+    )
+
     /// Consolidated sheet types to avoid multiple .sheet conflicts
     enum SheetType: Identifiable {
         case search
@@ -78,13 +84,26 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
-            if horizontalSizeClass == .regular {
-                iPadNavigationView
-            } else {
-                iPhoneTabView
+        ZStack(alignment: .bottom) {
+            Group {
+                if horizontalSizeClass == .regular {
+                    iPadNavigationView
+                } else {
+                    iPhoneTabView
+                }
+            }
+
+            if focusCoordinator.shouldShowPill {
+                ReturnToFocusPill()
+                    .padding(.bottom, DesignSystem.Spacing.xxxl + DesignSystem.Spacing.xxxl)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: focusCoordinator.shouldShowPill)
             }
         }
+        .fullScreenCover(isPresented: $focusCoordinator.isFocusPresented) {
+            FocusModeView()
+                .environmentObject(focusCoordinator)
+        }
+        .environmentObject(focusCoordinator)
         .tint(Color.Lazyflow.accent)
         .preferredColorScheme(appearanceMode.colorScheme)
         .onChange(of: horizontalSizeClass) { _, newValue in
