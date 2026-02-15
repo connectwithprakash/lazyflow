@@ -503,20 +503,14 @@ struct TodayView: View {
                     // Alternatives (5+ tasks, collapsible)
                     let alternatives = incompleteCount >= 5 ? Array(suggestions.dropFirst()) : []
                     if !alternatives.isEmpty {
-                        if showAlternatives {
-                            ForEach(Array(alternatives.enumerated()), id: \.element.id) { index, alt in
-                                nextUpAlternativeRow(suggestion: alt)
-                                    .transition(.move(edge: .top).combined(with: .opacity))
-                                    .animation(
-                                        .spring(response: 0.35, dampingFraction: 0.8)
-                                            .delay(Double(index) * 0.05),
-                                        value: showAlternatives
-                                    )
-                            }
+                        // Data-driven: empty array when collapsed, SwiftUI List diffs smoothly
+                        let visibleAlternatives = showAlternatives ? alternatives : []
+                        ForEach(visibleAlternatives) { alt in
+                            nextUpAlternativeRow(suggestion: alt)
                         }
 
                         Button {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            withAnimation(.easeInOut(duration: 0.3)) {
                                 showAlternatives.toggle()
                             }
                         } label: {
