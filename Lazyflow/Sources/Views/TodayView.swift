@@ -495,35 +495,9 @@ struct TodayView: View {
                 let incompleteCount = viewModel.totalTaskCount
                 let suggestions = prioritizationService.getTopThreeSuggestions()
                 if incompleteCount >= 3, !suggestions.isEmpty {
-                    // Primary card with featured styling
+                    // Primary card: TaskRowView wrapped with suggestion chrome
                     if let primary = suggestions.first {
-                        NextUpPrimaryCard(
-                            suggestion: primary,
-                            onTap: { fetchSuggestionDetails(for: primary.task) }
-                        )
-                        .nextUpSwipeActions(
-                            task: primary.task,
-                            onToggle: {
-                                showUndoToast(.completed(primary.task), snapshot: primary.task)
-                                viewModel.toggleTaskCompletion(primary.task)
-                            },
-                            onPushToTomorrow: { task in
-                                showUndoToast(.pushedToTomorrow(task), snapshot: task)
-                                pushToTomorrow(task)
-                            },
-                            onMoveToToday: { task in
-                                showUndoToast(.movedToToday(task), snapshot: task)
-                                moveToToday(task)
-                            },
-                            onDelete: { task in
-                                showUndoToast(.deleted(task), snapshot: task)
-                                viewModel.deleteTask(task, allowUndo: true)
-                            },
-                            onStartWorking: { viewModel.startWorking(on: $0) },
-                            onStopWorking: { viewModel.stopWorking(on: $0) },
-                            onSchedule: { scheduleTaskAction($0) }
-                        )
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        nextUpPrimaryCard(primary)
                     }
 
                     // Alternatives (5+ tasks, collapsible)
@@ -826,20 +800,57 @@ struct TodayView: View {
                 .foregroundColor(Color.Lazyflow.textPrimary)
 
             Spacer()
-
-            if let primary = prioritizationService.topThreeSuggestions.first {
-                Button {
-                    fetchSuggestionDetails(for: primary)
-                } label: {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 14))
-                        .foregroundColor(Color.Lazyflow.accent)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Why these suggestions")
-                .accessibleTouchTarget()
-            }
         }
+    }
+
+    @ViewBuilder
+    private func nextUpPrimaryCard(_ suggestion: TaskSuggestion) -> some View {
+        // Suggestion chrome: confidence badge + top reason
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            // Confidence badge
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Circle()
+                    .fill(suggestion.confidence.color)
+                    .frame(width: 6, height: 6)
+                Text(suggestion.confidence.rawValue)
+                    .font(DesignSystem.Typography.caption2)
+                    .foregroundColor(suggestion.confidence.color)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, DesignSystem.Spacing.sm)
+            .padding(.vertical, DesignSystem.Spacing.xs)
+            .background(suggestion.confidence.color.opacity(0.12))
+            .cornerRadius(DesignSystem.CornerRadius.small)
+            .fixedSize()
+
+            if let topReason = suggestion.reasons.first {
+                Text(topReason)
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundColor(Color.Lazyflow.accent)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Button {
+                fetchSuggestionDetails(for: suggestion.task)
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color.Lazyflow.accent)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("View suggestion details")
+            .accessibleTouchTarget()
+        }
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+        .padding(.top, DesignSystem.Spacing.sm)
+        .padding(.bottom, DesignSystem.Spacing.xs)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Suggested: \(suggestion.confidence.rawValue) pick\(suggestion.reasons.first.map { ", \($0)" } ?? "")")
+
+        // Full TaskRowView for the task (reactive, with built-in swipe actions)
+        flatTaskRows(task: suggestion.task, isCompleted: false)
     }
 
     private func nextUpAlternativeRow(suggestion: TaskSuggestion) -> some View {
@@ -1046,115 +1057,6 @@ struct TodayView: View {
         .buttonStyle(.plain)
     }
 
-}
-
-// MARK: - Next Up Primary Card
-
-struct NextUpPrimaryCard: View {
-    let suggestion: TaskSuggestion
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: DesignSystem.Spacing.md) {
-                // Priority icon (neutral dot for no-priority tasks)
-                if suggestion.task.priority != .none {
-                    Image(systemName: suggestion.task.priority.iconName)
-                        .foregroundColor(suggestion.task.priority.color)
-                        .font(.system(size: 16))
-                } else {
-                    Circle()
-                        .fill(Color.Lazyflow.textTertiary)
-                        .frame(width: 8, height: 8)
-                }
-
-                // Title + reason
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                    Text(suggestion.task.title)
-                        .font(DesignSystem.Typography.headline)
-                        .foregroundColor(Color.Lazyflow.textPrimary)
-                        .lineLimit(2)
-
-                    // Top reason chip
-                    if let reason = suggestion.reasons.first {
-                        Text(reason)
-                            .font(DesignSystem.Typography.caption1)
-                            .foregroundColor(Color.Lazyflow.accent)
-                            .lineLimit(1)
-                    }
-
-                    // Max 2 metadata: priority badge + due date (or duration if no due date)
-                    HStack(spacing: DesignSystem.Spacing.sm) {
-                        if suggestion.task.priority != .none {
-                            PriorityBadge(priority: suggestion.task.priority)
-                        }
-
-                        if let dueDate = suggestion.task.dueDate {
-                            DueDateBadge(
-                                date: dueDate,
-                                isOverdue: suggestion.task.isOverdue,
-                                isDueToday: suggestion.task.isDueToday
-                            )
-                        } else if let duration = suggestion.task.formattedDuration {
-                            HStack(spacing: 4) {
-                                Image(systemName: "clock")
-                                    .font(.caption2)
-                                Text(duration)
-                                    .font(DesignSystem.Typography.caption2)
-                            }
-                            .foregroundColor(Color.Lazyflow.textTertiary)
-                        }
-                    }
-                }
-
-                Spacer()
-
-                // Confidence badge
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Circle()
-                        .fill(suggestion.confidence.color)
-                        .frame(width: 6, height: 6)
-                    Text(suggestion.confidence.rawValue)
-                        .font(DesignSystem.Typography.caption2)
-                        .foregroundColor(suggestion.confidence.color)
-                        .lineLimit(1)
-                }
-                .padding(.horizontal, DesignSystem.Spacing.sm)
-                .padding(.vertical, DesignSystem.Spacing.xs)
-                .background(suggestion.confidence.color.opacity(0.12))
-                .cornerRadius(DesignSystem.CornerRadius.small)
-                .fixedSize()
-            }
-            .padding()
-            .background(
-                Color.adaptiveSurface
-                    .overlay(Color.Lazyflow.accent.opacity(0.06))
-            )
-            .cornerRadius(DesignSystem.CornerRadius.large)
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityDescription)
-        .accessibilityHint("Double tap to view suggestion details")
-    }
-
-    private var accessibilityDescription: String {
-        var components = ["Suggested task", suggestion.task.title, "\(suggestion.confidence.rawValue) pick"]
-
-        if suggestion.task.priority != .none {
-            components.append("\(suggestion.task.priority.displayName) priority")
-        }
-
-        if let dueDate = suggestion.task.dueDate {
-            if suggestion.task.isOverdue {
-                components.append("Overdue, was due \(dueDate.relativeFormatted)")
-            } else {
-                components.append("Due \(dueDate.relativeFormatted)")
-            }
-        }
-
-        return components.joined(separator: ", ")
-    }
 }
 
 // MARK: - Next Task Suggestion Sheet
