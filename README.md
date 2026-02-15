@@ -101,4 +101,4 @@ If you find Lazyflow useful, consider supporting its development:
 
 ---
 
-Built with [Claude Code](https://claude.ai/code)
+Built with [Claude Code](https://claude.ai/code) | Peer-reviewed by [Codex](https://openai.com/codex)
