@@ -140,12 +140,18 @@ struct TodayView: View {
                     prioritizationService.recordSuggestionFeedback(
                         task: suggestion.task, action: .viewedDetails, score: suggestion.score
                     )
-                    viewModel.selectedTask = suggestion.task
+                    let task = suggestion.task
                     taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        viewModel.selectedTask = task
+                    }
                 },
                 onSchedule: {
-                    taskToSchedule = suggestion.task
+                    let task = suggestion.task
                     taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        taskToSchedule = task
+                    }
                 },
                 onStart: {
                     prioritizationService.recordSuggestionFeedback(
@@ -155,16 +161,20 @@ struct TodayView: View {
                     taskSuggestion = nil
                 },
                 onSnooze: {
-                    snoozeSkipTarget = suggestion
+                    let target = suggestion
+                    snoozeSkipTarget = target
                     taskSuggestion = nil
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard snoozeSkipTarget?.task.id == target.task.id else { return }
                         showSnoozeDialog = true
                     }
                 },
                 onSkip: {
-                    snoozeSkipTarget = suggestion
+                    let target = suggestion
+                    snoozeSkipTarget = target
                     taskSuggestion = nil
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard snoozeSkipTarget?.task.id == target.task.id else { return }
                         showSkipDialog = true
                     }
                 }
@@ -492,7 +502,7 @@ struct TodayView: View {
             // Section 2: Next Up - ALWAYS present (even when empty)
             // Gating: 0-2 tasks = hidden, 3-4 = primary only, 5+ = primary + alternatives
             Section {
-                let incompleteCount = viewModel.totalTaskCount
+                let incompleteCount = viewModel.allIncompleteTaskCount
                 let suggestions = prioritizationService.cachedSuggestions
                 if incompleteCount >= 3, !suggestions.isEmpty {
                     // Primary card: TaskRowView wrapped with suggestion chrome
@@ -530,7 +540,7 @@ struct TodayView: View {
                     }
                 }
             } header: {
-                if viewModel.totalTaskCount >= 3, !prioritizationService.topThreeSuggestions.isEmpty {
+                if viewModel.allIncompleteTaskCount >= 3, !prioritizationService.cachedSuggestions.isEmpty {
                     nextUpSectionHeader
                 }
             }
@@ -1206,117 +1216,8 @@ struct ReasonChipsView: View {
                     .padding(.vertical, DesignSystem.Spacing.xs)
                     .background(Color.Lazyflow.accent.opacity(0.15))
                     .cornerRadius(DesignSystem.CornerRadius.full)
-                    .lineLimit(1)
             }
         }
-    }
-}
-
-// MARK: - Next Up Swipe Actions
-
-private struct NextUpSwipeActionsModifier: ViewModifier {
-    let task: Task
-    let onToggle: () -> Void
-    let onPushToTomorrow: ((Task) -> Void)?
-    let onMoveToToday: ((Task) -> Void)?
-    let onDelete: ((Task) -> Void)?
-    let onStartWorking: ((Task) -> Void)?
-    let onStopWorking: ((Task) -> Void)?
-    let onSchedule: ((Task) -> Void)?
-
-    private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
-    private let impactLight = UIImpactFeedbackGenerator(style: .light)
-    private let notificationFeedback = UINotificationFeedbackGenerator()
-
-    func body(content: Content) -> some View {
-        content
-            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button(role: .destructive) {
-                    notificationFeedback.notificationOccurred(.warning)
-                    onDelete?(task)
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-
-                if task.isOverdue || (!task.isDueToday && task.dueDate != nil) {
-                    Button {
-                        impactMedium.impactOccurred()
-                        onMoveToToday?(task)
-                    } label: {
-                        Label("Today", systemImage: "star.fill")
-                    }
-                    .tint(.blue)
-                }
-
-                if task.isDueToday || task.isOverdue {
-                    Button {
-                        impactMedium.impactOccurred()
-                        onPushToTomorrow?(task)
-                    } label: {
-                        Label("Tomorrow", systemImage: "arrow.right.to.line")
-                    }
-                    .tint(.orange)
-                }
-            }
-            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                Button {
-                    notificationFeedback.notificationOccurred(.success)
-                    onToggle()
-                } label: {
-                    Label("Done", systemImage: "checkmark")
-                }
-                .tint(Color.Lazyflow.success)
-
-                if task.isInProgress {
-                    Button {
-                        impactMedium.impactOccurred()
-                        onStopWorking?(task)
-                    } label: {
-                        Label("Pause", systemImage: "pause.fill")
-                    }
-                    .tint(.orange)
-                } else {
-                    Button {
-                        impactMedium.impactOccurred()
-                        onStartWorking?(task)
-                    } label: {
-                        Label("Start", systemImage: "play.fill")
-                    }
-                    .tint(Color.Lazyflow.accent)
-                }
-
-                Button {
-                    impactLight.impactOccurred()
-                    onSchedule?(task)
-                } label: {
-                    Label("Schedule", systemImage: "calendar.badge.plus")
-                }
-                .tint(.purple)
-            }
-    }
-}
-
-extension View {
-    func nextUpSwipeActions(
-        task: Task,
-        onToggle: @escaping () -> Void,
-        onPushToTomorrow: ((Task) -> Void)? = nil,
-        onMoveToToday: ((Task) -> Void)? = nil,
-        onDelete: ((Task) -> Void)? = nil,
-        onStartWorking: ((Task) -> Void)? = nil,
-        onStopWorking: ((Task) -> Void)? = nil,
-        onSchedule: ((Task) -> Void)? = nil
-    ) -> some View {
-        modifier(NextUpSwipeActionsModifier(
-            task: task,
-            onToggle: onToggle,
-            onPushToTomorrow: onPushToTomorrow,
-            onMoveToToday: onMoveToToday,
-            onDelete: onDelete,
-            onStartWorking: onStartWorking,
-            onStopWorking: onStopWorking,
-            onSchedule: onSchedule
-        ))
     }
 }
 

@@ -208,4 +208,35 @@ final class SuggestionFeedbackTests: XCTestCase {
         let decoded = try JSONDecoder().decode(FeedbackAction.self, from: encoded)
         XCTAssertEqual(decoded, action)
     }
+
+    // MARK: - Prune Deleted Tasks
+
+    func testPruneDeletedTasks_RemovesStaleAdjustments() {
+        var feedback = SuggestionFeedback()
+        let activeID = UUID()
+        let deletedID = UUID()
+
+        feedback.adjustments[activeID] = 5.0
+        feedback.adjustments[deletedID] = -3.0
+        feedback.snoozedUntil[deletedID] = Date().addingTimeInterval(3600)
+
+        feedback.pruneDeletedTasks(activeTaskIDs: [activeID])
+
+        XCTAssertEqual(feedback.adjustments[activeID], 5.0)
+        XCTAssertNil(feedback.adjustments[deletedID])
+        XCTAssertNil(feedback.snoozedUntil[deletedID])
+    }
+
+    func testPruneDeletedTasks_NoOpWhenAllActive() {
+        var feedback = SuggestionFeedback()
+        let id1 = UUID()
+        let id2 = UUID()
+
+        feedback.adjustments[id1] = 3.0
+        feedback.adjustments[id2] = -2.0
+
+        feedback.pruneDeletedTasks(activeTaskIDs: [id1, id2])
+
+        XCTAssertEqual(feedback.adjustments.count, 2)
+    }
 }

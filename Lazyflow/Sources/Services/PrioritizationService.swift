@@ -2,6 +2,7 @@ import Foundation
 import Combine
 
 /// Service for intelligent task prioritization and suggestions
+@MainActor
 final class PrioritizationService: ObservableObject {
     static let shared = PrioritizationService()
 
@@ -70,6 +71,10 @@ final class PrioritizationService: ObservableObject {
     func analyzeAndPrioritize(_ tasks: [Task]) {
         let incompleteTasks = tasks.filter { !$0.isCompleted && !$0.isArchived }
 
+        // Prune feedback for deleted tasks to prevent unbounded UserDefaults growth
+        let activeIDs = Set(tasks.map(\.id))
+        suggestionFeedback.pruneDeletedTasks(activeTaskIDs: activeIDs)
+
         // Calculate scores using effectiveScore (base + feedback adjustments)
         var scoredTasks: [(task: Task, score: Double)] = incompleteTasks.map { task in
             let score = effectiveScore(for: task)
@@ -89,7 +94,8 @@ final class PrioritizationService: ObservableObject {
         topThreeSuggestions = selectDiverseTopThree(from: unsnoozed)
 
         // Cache fully-built TaskSuggestion objects to avoid recomputing per render
-        let allScores = scoredTasks.map(\.score)
+        // Use unsnoozed scores for confidence — snoozed tasks shouldn't inflate the curve
+        let allScores = unsnoozed.map(\.score)
         cachedSuggestions = topThreeSuggestions.map { task in
             let score = effectiveScore(for: task)
             let reasons = generateReasons(for: task, score: score)

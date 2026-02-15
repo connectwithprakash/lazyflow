@@ -159,6 +159,18 @@ struct SuggestionFeedback: Codable {
         }
     }
 
+    // MARK: - Stale Data Cleanup
+
+    /// Remove adjustments and events for tasks that no longer exist
+    mutating func pruneDeletedTasks(activeTaskIDs: Set<UUID>) {
+        let staleCount = adjustments.count
+        adjustments = adjustments.filter { activeTaskIDs.contains($0.key) }
+        snoozedUntil = snoozedUntil.filter { activeTaskIDs.contains($0.key) }
+        if adjustments.count < staleCount {
+            save()
+        }
+    }
+
     // MARK: - Decay
 
     /// Apply 5% weekly decay if >=7 days since last decay.
