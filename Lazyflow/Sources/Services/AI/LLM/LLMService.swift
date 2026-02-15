@@ -169,10 +169,13 @@ final class LLMService: ObservableObject {
     }
 
     /// Analyze multiple tasks and suggest optimal order
-    func suggestTaskOrder(tasks: [Task]) async throws -> [TaskOrderSuggestion] {
+    func suggestTaskOrder(
+        tasks: [Task],
+        behaviorContext: String? = nil
+    ) async throws -> [TaskOrderSuggestion] {
         guard !tasks.isEmpty else { return [] }
 
-        let prompt = buildOrderingPrompt(tasks: tasks)
+        let prompt = buildOrderingPrompt(tasks: tasks, behaviorContext: behaviorContext)
         let response = try await sendRequest(prompt: prompt)
         return parseOrderingResponse(response, tasks: tasks)
     }
@@ -223,11 +226,11 @@ final class LLMService: ObservableObject {
         return PromptTemplates.buildPrioritySuggestionPrompt(title: title, notes: notes, dueDate: dueDate)
     }
 
-    private func buildOrderingPrompt(tasks: [Task]) -> String {
+    private func buildOrderingPrompt(tasks: [Task], behaviorContext: String? = nil) -> String {
         let taskData = tasks.enumerated().map { index, task in
             (index: index + 1, title: task.title, dueDate: task.dueDate, priority: task.priority.displayName)
         }
-        return PromptTemplates.buildTaskOrderingPrompt(tasks: taskData)
+        return PromptTemplates.buildTaskOrderingPrompt(tasks: taskData, userBehaviorContext: behaviorContext)
     }
 
     private func buildFullAnalysisPrompt(task: Task) -> String {
@@ -252,16 +255,80 @@ final class LLMService: ObservableObject {
     }
 
     private func parseOrderingResponse(_ response: String, tasks: [Task]) -> [TaskOrderSuggestion] {
+        let n = tasks.count
+        guard n > 0 else { return [] }
+
         guard let data = extractJSON(from: response),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let order = json["order"] as? [Int] else {
+              let rawOrder = json["order"] as? [Int] else {
             return tasks.enumerated().map { TaskOrderSuggestion(task: $1, suggestedPosition: $0 + 1) }
         }
 
-        return order.enumerated().compactMap { position, taskNumber in
-            guard taskNumber > 0, taskNumber <= tasks.count else { return nil }
-            return TaskOrderSuggestion(task: tasks[taskNumber - 1], suggestedPosition: position + 1)
+        let candidate = Self.sanitizePermutation(rawOrder, n: n)
+        let clamped = Self.clampPermutationGreedy(candidate, maxDisplacement: 2)
+
+        return clamped.enumerated().map { position, taskNumber in
+            TaskOrderSuggestion(task: tasks[taskNumber - 1], suggestedPosition: position + 1)
         }
+    }
+
+    /// Ensure the raw LLM output is a valid permutation of 1...n.
+    /// Deduplicates, removes out-of-range values, and appends missing entries.
+    static func sanitizePermutation(_ raw: [Int], n: Int) -> [Int] {
+        var seen = Set<Int>()
+        var result: [Int] = []
+
+        for value in raw where (1...n).contains(value) {
+            if seen.insert(value).inserted {
+                result.append(value)
+            }
+        }
+
+        for value in 1...n where !seen.contains(value) {
+            result.append(value)
+        }
+        return result
+    }
+
+    /// Greedy bounded assignment: each task can move at most maxDisplacement positions
+    /// from its baseline position (1-indexed identity permutation).
+    static func clampPermutationGreedy(_ candidate: [Int], maxDisplacement: Int) -> [Int] {
+        let n = candidate.count
+        guard n > 1 else { return candidate }
+
+        // Baseline is identity: task i belongs at position i-1
+        let low = (1...n).map { max(0, ($0 - 1) - maxDisplacement) }
+        let high = (1...n).map { min(n - 1, ($0 - 1) + maxDisplacement) }
+        let candidateRank = Dictionary(uniqueKeysWithValues: candidate.enumerated().map { ($1, $0) })
+
+        var unplaced = Set(1...n)
+        var result = Array(repeating: 0, count: n)
+
+        for slot in 0..<n {
+            // Tasks that must be placed now (their window closes at this slot)
+            let mustPlaceNow = unplaced.filter { high[$0 - 1] == slot }
+            let eligible: [Int]
+            if mustPlaceNow.isEmpty {
+                eligible = unplaced.filter { low[$0 - 1] <= slot && slot <= high[$0 - 1] }
+            } else {
+                eligible = Array(mustPlaceNow)
+            }
+
+            guard let chosen = eligible.min(by: { lhs, rhs in
+                // Prefer tightest deadline first, then LLM's preferred rank
+                let lhsHigh = high[lhs - 1]
+                let rhsHigh = high[rhs - 1]
+                if lhsHigh != rhsHigh { return lhsHigh < rhsHigh }
+                return (candidateRank[lhs] ?? Int.max) < (candidateRank[rhs] ?? Int.max)
+            }) else {
+                return Array(1...n)
+            }
+
+            result[slot] = chosen
+            unplaced.remove(chosen)
+        }
+
+        return result
     }
 
     private func parseFullAnalysisResponse(_ response: String) -> TaskAnalysis {

@@ -129,7 +129,10 @@ enum PromptTemplates {
     // MARK: - Task Ordering Prompt
 
     /// Build prompt for suggesting optimal task order
-    static func buildTaskOrderingPrompt(tasks: [(index: Int, title: String, dueDate: Date?, priority: String)]) -> String {
+    static func buildTaskOrderingPrompt(
+        tasks: [(index: Int, title: String, dueDate: Date?, priority: String)],
+        userBehaviorContext: String? = nil
+    ) -> String {
         let taskList = tasks.map { task in
             var item = "\(task.index). \(task.title)"
             if let dueDate = task.dueDate {
@@ -141,13 +144,20 @@ enum PromptTemplates {
             return item
         }.joined(separator: "\n")
 
+        let behaviorSection: String
+        if let context = userBehaviorContext, !context.isEmpty {
+            behaviorSection = "\n\n\(context)\n"
+        } else {
+            behaviorSection = ""
+        }
+
         return """
         Suggest the best order to complete these tasks today.
 
         Tasks:
         \(taskList)
 
-        Consider: due dates first, then priority, then quick wins (short tasks).
+        Consider: due dates first, then priority.\(behaviorSection)
 
         Respond in JSON format:
         {
