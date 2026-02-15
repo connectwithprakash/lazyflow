@@ -156,11 +156,17 @@ struct TodayView: View {
                 },
                 onSnooze: {
                     snoozeSkipTarget = suggestion
-                    showSnoozeDialog = true
+                    taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        showSnoozeDialog = true
+                    }
                 },
                 onSkip: {
                     snoozeSkipTarget = suggestion
-                    showSkipDialog = true
+                    taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        showSkipDialog = true
+                    }
                 }
             )
         }
@@ -169,19 +175,16 @@ struct TodayView: View {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozed1Hour, score: target.score
                 )
-                taskSuggestion = nil
             }
             Button("This Evening (6 PM)") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozedEvening, score: target.score
                 )
-                taskSuggestion = nil
             }
             Button("Tomorrow Morning (9 AM)") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozedTomorrow, score: target.score
                 )
-                taskSuggestion = nil
             }
             Button("Cancel", role: .cancel) {}
         }
@@ -190,19 +193,16 @@ struct TodayView: View {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNotRelevant, score: target.score
                 )
-                taskSuggestion = nil
             }
             Button("Wrong time of day") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedWrongTime, score: target.score
                 )
-                taskSuggestion = nil
             }
             Button("Needs more focus time") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNeedsFocus, score: target.score
                 )
-                taskSuggestion = nil
             }
             Button("Cancel", role: .cancel) {}
         }
@@ -493,7 +493,7 @@ struct TodayView: View {
             // Gating: 0-2 tasks = hidden, 3-4 = primary only, 5+ = primary + alternatives
             Section {
                 let incompleteCount = viewModel.totalTaskCount
-                let suggestions = prioritizationService.getTopThreeSuggestions()
+                let suggestions = prioritizationService.cachedSuggestions
                 if incompleteCount >= 3, !suggestions.isEmpty {
                     // Primary card: TaskRowView wrapped with suggestion chrome
                     if let primary = suggestions.first {
@@ -823,7 +823,7 @@ struct TodayView: View {
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.vertical, DesignSystem.Spacing.xs)
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-        .accessibilityElement(children: .ignore)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel("Suggested: \(suggestion.confidence.rawValue) pick\(suggestion.reasons.first.map { ", \($0)" } ?? "")")
 
         // Full TaskRowView for the task (reactive, with built-in swipe actions)

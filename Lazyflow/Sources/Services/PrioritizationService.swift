@@ -10,6 +10,7 @@ final class PrioritizationService: ObservableObject {
     @Published private(set) var suggestedNextTask: Task?
     @Published private(set) var prioritizedTasks: [Task] = []
     @Published private(set) var topThreeSuggestions: [Task] = []
+    @Published private(set) var cachedSuggestions: [TaskSuggestion] = []
     @Published private(set) var isAnalyzing = false
 
     // MARK: - Dependencies
@@ -86,6 +87,21 @@ final class PrioritizationService: ObservableObject {
 
         // Compute top 3 suggestions (apply diversity)
         topThreeSuggestions = selectDiverseTopThree(from: unsnoozed)
+
+        // Cache fully-built TaskSuggestion objects to avoid recomputing per render
+        let allScores = scoredTasks.map(\.score)
+        cachedSuggestions = topThreeSuggestions.map { task in
+            let score = effectiveScore(for: task)
+            let reasons = generateReasons(for: task, score: score)
+            let confidence = confidenceLevel(score: score, allScores: allScores)
+            return TaskSuggestion(
+                task: task,
+                score: score,
+                reasons: reasons,
+                aiInsight: nil,
+                confidence: confidence
+            )
+        }
     }
 
     /// Canonical effective score: base priority + feedback adjustment, clamped 0-100
