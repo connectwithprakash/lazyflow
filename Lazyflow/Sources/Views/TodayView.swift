@@ -821,8 +821,8 @@ struct TodayView: View {
             .accessibleTouchTarget()
         }
         .padding(.horizontal, DesignSystem.Spacing.lg)
-        .padding(.top, DesignSystem.Spacing.sm)
-        .padding(.bottom, DesignSystem.Spacing.xs)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Suggested: \(suggestion.confidence.rawValue) pick\(suggestion.reasons.first.map { ", \($0)" } ?? "")")
 
