@@ -506,29 +506,6 @@ struct TodayView: View {
                         if showAlternatives {
                             ForEach(alternatives) { alt in
                                 nextUpAlternativeRow(suggestion: alt)
-                                    .nextUpSwipeActions(
-                                        task: alt.task,
-                                        onToggle: {
-                                            showUndoToast(.completed(alt.task), snapshot: alt.task)
-                                            viewModel.toggleTaskCompletion(alt.task)
-                                        },
-                                        onPushToTomorrow: { task in
-                                            showUndoToast(.pushedToTomorrow(task), snapshot: task)
-                                            pushToTomorrow(task)
-                                        },
-                                        onMoveToToday: { task in
-                                            showUndoToast(.movedToToday(task), snapshot: task)
-                                            moveToToday(task)
-                                        },
-                                        onDelete: { task in
-                                            showUndoToast(.deleted(task), snapshot: task)
-                                            viewModel.deleteTask(task, allowUndo: true)
-                                        },
-                                        onStartWorking: { viewModel.startWorking(on: $0) },
-                                        onStopWorking: { viewModel.stopWorking(on: $0) },
-                                        onSchedule: { scheduleTaskAction($0) }
-                                    )
-                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                             }
                         }
 
@@ -853,52 +830,26 @@ struct TodayView: View {
         flatTaskRows(task: suggestion.task, isCompleted: false)
     }
 
+    @ViewBuilder
     private func nextUpAlternativeRow(suggestion: TaskSuggestion) -> some View {
-        Button {
-            prioritizationService.recordSuggestionFeedback(
-                task: suggestion.task, action: .viewedDetails, score: suggestion.score
-            )
-            fetchSuggestionDetails(for: suggestion.task)
-        } label: {
-            HStack(spacing: DesignSystem.Spacing.md) {
-                if suggestion.task.priority != .none {
-                    Image(systemName: suggestion.task.priority.iconName)
-                        .foregroundColor(suggestion.task.priority.color)
-                        .font(.system(size: 14))
-                } else {
-                    Circle()
-                        .fill(Color.Lazyflow.textTertiary)
-                        .frame(width: 6, height: 6)
-                }
-
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                    Text(suggestion.task.title)
-                        .font(DesignSystem.Typography.body)
-                        .foregroundColor(Color.Lazyflow.textPrimary)
-                        .lineLimit(1)
-
-                    if let reason = suggestion.reasons.first {
-                        Text(reason)
-                            .font(DesignSystem.Typography.caption1)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                            .lineLimit(1)
-                    }
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Color.Lazyflow.textTertiary)
+        // Reason label for alternative
+        if let reason = suggestion.reasons.first {
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Circle()
+                    .fill(Color.Lazyflow.textTertiary)
+                    .frame(width: 4, height: 4)
+                Text(reason)
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+                    .lineLimit(1)
             }
-            .padding()
-            .background(Color.adaptiveSurface)
-            .cornerRadius(DesignSystem.CornerRadius.large)
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.top, DesignSystem.Spacing.xs)
+            .accessibilityLabel("Alternative suggestion: \(reason)")
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Alternative: \(suggestion.task.title)\(suggestion.reasons.first.map { ", \($0)" } ?? "")")
-        .accessibilityHint("Double tap to view suggestion details")
+
+        // Full TaskRowView (reactive, with built-in swipe actions)
+        flatTaskRows(task: suggestion.task, isCompleted: false)
     }
 
     private func fetchSuggestionDetails(for task: Task) {
