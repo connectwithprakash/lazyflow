@@ -44,6 +44,7 @@ struct TodayView: View {
     @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
     @AppStorage("lastPlanYourDayDate") private var lastPlanYourDayDate: Double = 0
     @State private var showPlanYourDay = false
+    @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
 
     var body: some View {
         Group {
@@ -160,6 +161,13 @@ struct TodayView: View {
                         task: suggestion.task, action: .startedImmediately, score: suggestion.score
                     )
                     viewModel.startWorking(on: suggestion.task)
+                    taskSuggestion = nil
+                },
+                onEnterFocus: {
+                    prioritizationService.recordSuggestionFeedback(
+                        task: suggestion.task, action: .startedImmediately, score: suggestion.score
+                    )
+                    focusCoordinator.enterFocus(task: suggestion.task)
                     taskSuggestion = nil
                 },
                 onSnooze: {
@@ -1011,6 +1019,7 @@ struct NextTaskSuggestionSheet: View {
     let onViewDetails: () -> Void
     let onSchedule: () -> Void
     let onStart: () -> Void
+    var onEnterFocus: (() -> Void)?
     var onSnooze: (() -> Void)?
     var onSkip: (() -> Void)?
 
@@ -1139,7 +1148,17 @@ struct NextTaskSuggestionSheet: View {
                         }
                         .buttonStyle(PrimaryButtonStyle())
 
-                        // Row 2: Schedule + More menu
+                        // Row 2: Enter Focus
+                        if let onEnterFocus {
+                            Button {
+                                onEnterFocus()
+                            } label: {
+                                Label("Enter Focus", systemImage: "scope")
+                            }
+                            .buttonStyle(SecondaryButtonStyle())
+                        }
+
+                        // Row 3: Schedule + More menu
                         HStack(spacing: DesignSystem.Spacing.sm) {
                             Button {
                                 onSchedule()
@@ -1669,4 +1688,5 @@ struct SubtaskExpansionHeader: View {
 #Preview {
     TodayView()
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environmentObject(FocusSessionCoordinator())
 }
