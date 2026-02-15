@@ -499,18 +499,41 @@ final class PrioritizationService: ObservableObject {
 
     // MARK: - Batch Prioritization with AI
 
-    /// Use AI to suggest optimal task order
+    /// Use AI to suggest optimal task order, enriched with behavioral signals.
+    /// Tasks are pre-sorted by heuristic score so the displacement clamp constrains
+    /// movement relative to the deterministic baseline ordering.
     func getAITaskOrder() async -> [TaskOrderSuggestion]? {
         guard llmService.isReady else { return nil }
 
+        // Sort by heuristic score (descending) — this becomes the baseline for ±2 clamping.
+        // Precompute scores once and use deterministic tie-break (due date, then ID).
         let incompleteTasks = taskService.tasks.filter { !$0.isCompleted && !$0.isArchived }
-        guard !incompleteTasks.isEmpty else { return nil }
+        let scored = incompleteTasks.map { (task: $0, score: effectiveScore(for: $0)) }
+        let sortedTasks = scored.sorted { a, b in
+            if a.score != b.score { return a.score > b.score }
+            // Tie-break: earlier due date first, then deterministic by ID
+            let aDue = a.task.dueDate ?? .distantFuture
+            let bDue = b.task.dueDate ?? .distantFuture
+            if aDue != bDue { return aDue < bDue }
+            return a.task.id.uuidString < b.task.id.uuidString
+        }.map(\.task)
+        guard !sortedTasks.isEmpty else { return nil }
 
         isAnalyzing = true
         defer { isAnalyzing = false }
 
+        // Extract behavioral signals and pass as context (nil on cold start or no signals)
+        let signals = BehavioralSignals.extract(from: suggestionFeedback, completionPatterns: completionPatterns)
+        let behaviorContext: String? = {
+            let prompt = signals.toPromptString()
+            return prompt.isEmpty ? nil : prompt
+        }()
+
         do {
-            return try await llmService.suggestTaskOrder(tasks: Array(incompleteTasks.prefix(10)))
+            return try await llmService.suggestTaskOrder(
+                tasks: Array(sortedTasks.prefix(10)),
+                behaviorContext: behaviorContext
+            )
         } catch {
             print("Failed to get AI task order: \(error)")
             return nil
