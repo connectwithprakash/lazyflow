@@ -76,11 +76,11 @@ final class PlanYourDayViewModel: ObservableObject {
     init(
         calendarService: CalendarService = .shared,
         taskService: TaskService = .shared,
-        learningService: EventPreferenceLearningService = .shared
+        learningService: EventPreferenceLearningService? = nil
     ) {
         self.calendarService = calendarService
         self.taskService = taskService
-        self.learningService = learningService
+        self.learningService = learningService ?? .shared
     }
 
     // MARK: - Actions

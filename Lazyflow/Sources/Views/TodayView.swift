@@ -1,6 +1,18 @@
 import SwiftUI
 import UIKit
 
+// MARK: - ConfidenceLevel View Helpers
+
+extension ConfidenceLevel {
+    var color: Color {
+        switch self {
+        case .recommended: return Color.Lazyflow.success
+        case .goodFit: return Color.Lazyflow.accent
+        case .consider: return Color.Lazyflow.textSecondary
+        }
+    }
+}
+
 /// Main Today view showing overdue and today's tasks
 struct TodayView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -13,6 +25,10 @@ struct TodayView: View {
     @State private var taskSuggestion: TaskSuggestion?
     @State private var selectedConflict: TaskConflict?
     @State private var showBatchReschedule = false
+    @AppStorage("nextUpShowAlternatives") private var showAlternatives = false
+    @State private var showSnoozeDialog = false
+    @State private var showSkipDialog = false
+    @State private var snoozeSkipTarget: TaskSuggestion?
     @State private var undoAction: UndoAction?
     @State private var undoSnapshot: Task?
     @State private var showDailySummary = false
@@ -115,6 +131,92 @@ struct TodayView: View {
                 TaskService.shared.createSubtask(title: subtaskTitle, parentTaskID: task.id)
                 viewModel.refreshTasks()
             }
+        }
+        .sheet(item: $taskSuggestion) { suggestion in
+            NextTaskSuggestionSheet(
+                suggestion: suggestion,
+                onViewDetails: {
+                    // Mild positive feedback (engagement signal only)
+                    prioritizationService.recordSuggestionFeedback(
+                        task: suggestion.task, action: .viewedDetails, score: suggestion.score
+                    )
+                    let task = suggestion.task
+                    taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard taskSuggestion == nil else { return }
+                        viewModel.selectedTask = task
+                    }
+                },
+                onSchedule: {
+                    let task = suggestion.task
+                    taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard taskSuggestion == nil else { return }
+                        taskToSchedule = task
+                    }
+                },
+                onStart: {
+                    prioritizationService.recordSuggestionFeedback(
+                        task: suggestion.task, action: .startedImmediately, score: suggestion.score
+                    )
+                    viewModel.startWorking(on: suggestion.task)
+                    taskSuggestion = nil
+                },
+                onSnooze: {
+                    let target = suggestion
+                    snoozeSkipTarget = target
+                    taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard snoozeSkipTarget?.task.id == target.task.id else { return }
+                        showSnoozeDialog = true
+                    }
+                },
+                onSkip: {
+                    let target = suggestion
+                    snoozeSkipTarget = target
+                    taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard snoozeSkipTarget?.task.id == target.task.id else { return }
+                        showSkipDialog = true
+                    }
+                }
+            )
+        }
+        .confirmationDialog("Snooze suggestion", isPresented: $showSnoozeDialog, presenting: snoozeSkipTarget) { target in
+            Button("In 1 Hour") {
+                prioritizationService.recordSuggestionFeedback(
+                    task: target.task, action: .snoozed1Hour, score: target.score
+                )
+            }
+            Button("This Evening (6 PM)") {
+                prioritizationService.recordSuggestionFeedback(
+                    task: target.task, action: .snoozedEvening, score: target.score
+                )
+            }
+            Button("Tomorrow Morning (9 AM)") {
+                prioritizationService.recordSuggestionFeedback(
+                    task: target.task, action: .snoozedTomorrow, score: target.score
+                )
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .confirmationDialog("Skip suggestion", isPresented: $showSkipDialog, presenting: snoozeSkipTarget) { target in
+            Button("Not relevant right now") {
+                prioritizationService.recordSuggestionFeedback(
+                    task: target.task, action: .skippedNotRelevant, score: target.score
+                )
+            }
+            Button("Wrong time of day") {
+                prioritizationService.recordSuggestionFeedback(
+                    task: target.task, action: .skippedWrongTime, score: target.score
+                )
+            }
+            Button("Needs more focus time") {
+                prioritizationService.recordSuggestionFeedback(
+                    task: target.task, action: .skippedNeedsFocus, score: target.score
+                )
+            }
+            Button("Cancel", role: .cancel) {}
         }
         .autoCompleteCelebration(isPresented: $showAutoCompleteCelebration, parentTitle: autoCompletedParentTitle)
         .onReceive(NotificationCenter.default.publisher(for: .parentTaskAutoCompleted)) { notification in
@@ -360,9 +462,36 @@ struct TodayView: View {
 
     // MARK: - Subviews
 
+    /// IDs of all tasks visible in Next Up (used for deduplication from Today/Overdue)
+    /// Uses same count basis (allIncompleteTaskCount) as section rendering
+    private var nextUpVisibleTaskIDs: Set<UUID> {
+        let incompleteCount = viewModel.allIncompleteTaskCount
+        let suggestions = prioritizationService.cachedSuggestions
+        guard incompleteCount >= 3, !suggestions.isEmpty else { return [] }
+        if incompleteCount >= 5, showAlternatives {
+            // Primary + alternatives all visible
+            return Set(suggestions.map(\.task.id))
+        } else {
+            // Only primary visible
+            return suggestions.first.map { Set([$0.task.id]) } ?? []
+        }
+    }
+
+    /// Overdue tasks with visible Next Up tasks filtered out
+    private func overdueTasks(excluding ids: Set<UUID>) -> [Task] {
+        guard !ids.isEmpty else { return viewModel.overdueTasks }
+        return viewModel.overdueTasks.filter { !ids.contains($0.id) }
+    }
+
+    /// Today tasks with visible Next Up tasks filtered out
+    private func todayTasks(excluding ids: Set<UUID>) -> [Task] {
+        guard !ids.isEmpty else { return viewModel.todayTasks }
+        return viewModel.todayTasks.filter { !ids.contains($0.id) }
+    }
+
     private var taskListView: some View {
         List {
-            // Progress header section
+            // Section 1: Progress header
             Section {
                 progressHeader
             }
@@ -370,7 +499,55 @@ struct TodayView: View {
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
-            // Prompt cards section - always present to maintain stable section count
+            // Section 2: Next Up - ALWAYS present (even when empty)
+            // Gating: 0-2 tasks = hidden, 3-4 = primary only, 5+ = primary + alternatives
+            Section {
+                let incompleteCount = viewModel.allIncompleteTaskCount
+                let suggestions = prioritizationService.cachedSuggestions
+                if incompleteCount >= 3, !suggestions.isEmpty {
+                    // Primary card: TaskRowView wrapped with suggestion chrome
+                    if let primary = suggestions.first {
+                        nextUpPrimaryCard(primary)
+                    }
+
+                    // Alternatives (5+ tasks, collapsible)
+                    let alternatives = incompleteCount >= 5 ? Array(suggestions.dropFirst()) : []
+                    if !alternatives.isEmpty {
+                        // Data-driven: empty array when collapsed, SwiftUI List diffs smoothly
+                        let visibleAlternatives = showAlternatives ? alternatives : []
+                        ForEach(visibleAlternatives) { alt in
+                            nextUpAlternativeRow(suggestion: alt)
+                        }
+
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                showAlternatives.toggle()
+                            }
+                        } label: {
+                            Text(showAlternatives
+                                ? "Hide alternatives"
+                                : "Show \(alternatives.count) more")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.accent)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .frame(minHeight: DesignSystem.TouchTarget.minimum)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                        .accessibilityLabel(showAlternatives ? "Hide alternative suggestions" : "Show \(alternatives.count) more suggestions")
+                        .accessibilityValue(showAlternatives ? "Expanded" : "Collapsed")
+                        .accessibilityHint("Double tap to \(showAlternatives ? "hide" : "show") alternatives")
+                    }
+                }
+            } header: {
+                if viewModel.allIncompleteTaskCount >= 3, !prioritizationService.cachedSuggestions.isEmpty {
+                    nextUpSectionHeader
+                }
+            }
+            .listRowBackground(Color.adaptiveBackground)
+            .listRowSeparator(.hidden)
+
+            // Section 3: Prompt cards - ALWAYS present
             Section {
                 if shouldShowPlanYourDayPrompt {
                     planYourDayPromptCard
@@ -384,52 +561,50 @@ struct TodayView: View {
                 if !conflictService.detectedConflicts.isEmpty {
                     conflictsBanner
                 }
-                if let suggestedTask = prioritizationService.suggestedNextTask {
-                    nextTaskSuggestionCard(suggestedTask)
-                }
             }
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
-            // Overdue tasks section - ALWAYS present (even when empty) to prevent section count mismatch crashes
+            // Section 4: Overdue tasks - ALWAYS present (even when empty)
             Section {
-                ForEach(viewModel.overdueTasks) { task in
+                let filteredOverdue = overdueTasks(excluding: nextUpVisibleTaskIDs)
+                ForEach(filteredOverdue) { task in
                     flatTaskRows(task: task, isCompleted: false)
                         .id(task.id)
                 }
             } header: {
-                // Only show header when there are overdue tasks
-                if !viewModel.overdueTasks.isEmpty {
-                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: viewModel.overdueTasks.count)
+                let filteredOverdue = overdueTasks(excluding: nextUpVisibleTaskIDs)
+                if !filteredOverdue.isEmpty {
+                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: filteredOverdue.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
-            // Today tasks section - ALWAYS present (even when empty)
+            // Section 5: Today tasks - ALWAYS present (even when empty)
             Section {
-                ForEach(viewModel.todayTasks) { task in
+                let filteredToday = todayTasks(excluding: nextUpVisibleTaskIDs)
+                ForEach(filteredToday) { task in
                     flatTaskRows(task: task, isCompleted: false)
                         .id(task.id)
                 }
             } header: {
-                // Only show header when there are today tasks
-                if !viewModel.todayTasks.isEmpty {
-                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: viewModel.todayTasks.count)
+                let filteredToday = todayTasks(excluding: nextUpVisibleTaskIDs)
+                if !filteredToday.isEmpty {
+                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: filteredToday.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
-            // Completed tasks section - ALWAYS present (even when empty)
+            // Section 6: Completed tasks - ALWAYS present (even when empty)
             Section {
                 ForEach(viewModel.completedTodayTasks) { task in
                     flatTaskRows(task: task, isCompleted: true)
                         .id(task.id)
                 }
             } header: {
-                // Only show header when there are completed tasks
                 if !viewModel.completedTodayTasks.isEmpty {
                     completedSectionHeader(count: viewModel.completedTodayTasks.count)
                 }
@@ -437,7 +612,7 @@ struct TodayView: View {
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
-            // Empty state section - ALWAYS present, shows content only when no tasks
+            // Section 7: Empty state - ALWAYS present
             Section {
                 if viewModel.totalTaskCount == 0 && viewModel.completedTaskCount == 0 {
                     EmptyStateView(
@@ -600,84 +775,82 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Next Task Suggestion Card
+    // MARK: - Next Up Section
 
-    private func nextTaskSuggestionCard(_ task: Task) -> some View {
-        Button {
-            fetchSuggestionDetails(for: task)
-        } label: {
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                HStack {
-                    Image(systemName: "sparkles")
-                        .foregroundColor(Color.Lazyflow.accent)
+    private var nextUpSectionHeader: some View {
+        HStack {
+            Image(systemName: "sparkles")
+                .foregroundColor(Color.Lazyflow.accent)
 
-                    Text("What should I do next?")
-                        .font(DesignSystem.Typography.headline)
-                        .foregroundColor(Color.Lazyflow.textPrimary)
+            Text("Next Up")
+                .font(DesignSystem.Typography.headline)
+                .foregroundColor(Color.Lazyflow.textPrimary)
 
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color.Lazyflow.textTertiary)
-                }
-
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Circle()
-                        .fill(task.priority.color)
-                        .frame(width: 8, height: 8)
-
-                    Text(task.title)
-                        .font(DesignSystem.Typography.subheadline)
-                        .foregroundColor(Color.Lazyflow.textPrimary)
-                        .lineLimit(1)
-                }
-
-                if let dueDate = task.dueDate {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 12))
-                        Text(dueDate.relativeFormatted)
-                            .font(DesignSystem.Typography.caption1)
-                    }
-                    .foregroundColor(dueDate < Date() ? Color.Lazyflow.error : Color.Lazyflow.textSecondary)
-                }
-            }
-            .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.Lazyflow.accent.opacity(0.1), Color.Lazyflow.accent.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(DesignSystem.CornerRadius.large)
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large)
-                    .stroke(Color.Lazyflow.accent.opacity(0.3), lineWidth: 1)
-            )
+            Spacer()
         }
-        .buttonStyle(.plain)
-        .sheet(item: $taskSuggestion) { suggestion in
-            NextTaskSuggestionSheet(suggestion: suggestion) {
-                viewModel.selectedTask = suggestion.task
-                taskSuggestion = nil
-            } onSchedule: {
-                taskToSchedule = suggestion.task
-                taskSuggestion = nil
-            } onStart: {
-                // Mark as started / start timer
-                taskSuggestion = nil
+    }
+
+    @ViewBuilder
+    private func nextUpPrimaryCard(_ suggestion: TaskSuggestion) -> some View {
+        // Suggestion chrome: confidence badge + top reason
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            // Confidence badge
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Circle()
+                    .fill(suggestion.confidence.color)
+                    .frame(width: 6, height: 6)
+                Text(suggestion.confidence.rawValue)
+                    .font(DesignSystem.Typography.caption2)
+                    .foregroundColor(suggestion.confidence.color)
+                    .lineLimit(1)
             }
+            .padding(.horizontal, DesignSystem.Spacing.sm)
+            .padding(.vertical, DesignSystem.Spacing.xs)
+            .background(suggestion.confidence.color.opacity(0.12))
+            .cornerRadius(DesignSystem.CornerRadius.small)
+            .fixedSize()
+
+            if let topReason = suggestion.reasons.first {
+                Text(topReason)
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundColor(Color.Lazyflow.accent)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Button {
+                fetchSuggestionDetails(for: suggestion.task)
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color.Lazyflow.accent)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("View suggestion details")
+            .accessibleTouchTarget()
         }
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Suggested: \(suggestion.confidence.rawValue) pick\(suggestion.reasons.first.map { ", \($0)" } ?? "")")
+
+        // Full TaskRowView for the task (reactive, with built-in swipe actions)
+        flatTaskRows(task: suggestion.task, isCompleted: false)
+    }
+
+    @ViewBuilder
+    private func nextUpAlternativeRow(suggestion: TaskSuggestion) -> some View {
+        // Bare TaskRowView — no chrome for alternatives, keeps section compact
+        flatTaskRows(task: suggestion.task, isCompleted: false)
     }
 
     private func fetchSuggestionDetails(for task: Task) {
         _Concurrency.Task {
-            if let suggestion = await prioritizationService.getNextTaskSuggestion() {
-                await MainActor.run {
-                    taskSuggestion = suggestion
-                }
+            let suggestion = await prioritizationService.getSuggestion(for: task)
+            await MainActor.run {
+                taskSuggestion = suggestion
             }
         }
     }
@@ -838,6 +1011,8 @@ struct NextTaskSuggestionSheet: View {
     let onViewDetails: () -> Void
     let onSchedule: () -> Void
     let onStart: () -> Void
+    var onSnooze: (() -> Void)?
+    var onSkip: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -845,93 +1020,85 @@ struct NextTaskSuggestionSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.xl) {
-                    // Score indicator
-                    VStack(spacing: DesignSystem.Spacing.sm) {
-                        ZStack {
-                            Circle()
-                                .stroke(Color.Lazyflow.accent.opacity(0.2), lineWidth: 8)
-                                .frame(width: 100, height: 100)
-
-                            Circle()
-                                .trim(from: 0, to: CGFloat(suggestion.score) / 100)
-                                .stroke(Color.Lazyflow.accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                                .frame(width: 100, height: 100)
-                                .rotationEffect(.degrees(-90))
-
-                            VStack(spacing: 0) {
-                                Text("\(suggestion.scorePercentage)")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(Color.Lazyflow.accent)
-                                Text("Priority")
-                                    .font(DesignSystem.Typography.caption2)
-                                    .foregroundColor(Color.Lazyflow.textSecondary)
-                            }
-                        }
-
-                        Text("This is your top priority right now")
-                            .font(DesignSystem.Typography.subheadline)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                    }
-                    .padding(.top, DesignSystem.Spacing.lg)
-
-                    // Task card
+                    // Task card (top of sheet)
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                        HStack {
+                        // Header: priority icon + title + confidence badge
+                        HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
                             Image(systemName: suggestion.task.priority.iconName)
                                 .foregroundColor(suggestion.task.priority.color)
+                                .font(.system(size: 16))
+
                             Text(suggestion.task.title)
                                 .font(DesignSystem.Typography.title3)
                                 .foregroundColor(Color.Lazyflow.textPrimary)
-                        }
 
-                        if let dueDate = suggestion.task.dueDate {
+                            Spacer()
+
+                            // Confidence badge
                             HStack(spacing: DesignSystem.Spacing.xs) {
-                                Image(systemName: "calendar")
-                                Text(dueDate.relativeFormatted)
+                                Circle()
+                                    .fill(suggestion.confidence.color)
+                                    .frame(width: 6, height: 6)
+                                Text(suggestion.confidence.rawValue)
+                                    .font(DesignSystem.Typography.caption2)
+                                    .foregroundColor(suggestion.confidence.color)
                             }
-                            .font(DesignSystem.Typography.subheadline)
-                            .foregroundColor(dueDate < Date() ? Color.Lazyflow.error : Color.Lazyflow.textSecondary)
+                            .padding(.horizontal, DesignSystem.Spacing.sm)
+                            .padding(.vertical, DesignSystem.Spacing.xs)
+                            .background(suggestion.confidence.color.opacity(0.12))
+                            .cornerRadius(DesignSystem.CornerRadius.small)
                         }
 
-                        if let duration = suggestion.task.estimatedDuration {
-                            HStack(spacing: DesignSystem.Spacing.xs) {
-                                Image(systemName: "clock")
-                                Text("\(Int(duration / 60)) min")
+                        // Metadata badges
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            if let dueDate = suggestion.task.dueDate {
+                                DueDateBadge(
+                                    date: dueDate,
+                                    isOverdue: dueDate < Date(),
+                                    isDueToday: Calendar.current.isDateInToday(dueDate)
+                                )
                             }
-                            .font(DesignSystem.Typography.subheadline)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
+
+                            if let duration = suggestion.task.estimatedDuration {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "clock")
+                                        .font(.caption2)
+                                    Text("\(Int(duration / 60)) min")
+                                        .font(DesignSystem.Typography.caption2)
+                                }
+                                .foregroundColor(Color.Lazyflow.textTertiary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.secondary.opacity(0.1))
+                                .cornerRadius(DesignSystem.CornerRadius.small)
+                                .fixedSize()
+                            }
+
+                            if suggestion.task.category != .uncategorized {
+                                CategoryBadge(category: suggestion.task.category)
+                            }
                         }
 
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            Image(systemName: suggestion.task.category.iconName)
-                            Text(suggestion.task.category.displayName)
-                        }
-                        .font(DesignSystem.Typography.caption1)
-                        .foregroundColor(Color.Lazyflow.textTertiary)
+                        // Subtitle
+                        Text("Based on priority, deadlines, and your patterns")
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.textTertiary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(Color.adaptiveSurface)
                     .cornerRadius(DesignSystem.CornerRadius.large)
                     .padding(.horizontal)
+                    .padding(.top, DesignSystem.Spacing.sm)
 
-                    // Reasons
+                    // Reason chips (wrapped multi-line)
                     if !suggestion.reasons.isEmpty {
                         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                             Text("Why this task?")
                                 .font(DesignSystem.Typography.headline)
                                 .foregroundColor(Color.Lazyflow.textPrimary)
 
-                            ForEach(suggestion.reasons, id: \.self) { reason in
-                                HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(Color.Lazyflow.success)
-                                        .font(.system(size: 14))
-                                    Text(reason)
-                                        .font(DesignSystem.Typography.subheadline)
-                                        .foregroundColor(Color.Lazyflow.textSecondary)
-                                }
-                            }
+                            ReasonChipsView(reasons: suggestion.reasons)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal)
@@ -962,43 +1129,55 @@ struct NextTaskSuggestionSheet: View {
 
                     Spacer(minLength: 20)
 
-                    // Action buttons
+                    // Action buttons (consolidated to 2 rows)
                     VStack(spacing: DesignSystem.Spacing.sm) {
+                        // Row 1: Start Now
                         Button {
                             onStart()
                         } label: {
                             Label("Start Now", systemImage: "play.fill")
-                                .font(DesignSystem.Typography.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.Lazyflow.accent)
-                                .foregroundColor(.white)
-                                .cornerRadius(DesignSystem.CornerRadius.medium)
                         }
+                        .buttonStyle(PrimaryButtonStyle())
 
+                        // Row 2: Schedule + More menu
                         HStack(spacing: DesignSystem.Spacing.sm) {
                             Button {
                                 onSchedule()
                             } label: {
                                 Label("Schedule", systemImage: "calendar.badge.plus")
-                                    .font(DesignSystem.Typography.subheadline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.adaptiveSurface)
-                                    .foregroundColor(Color.Lazyflow.textPrimary)
-                                    .cornerRadius(DesignSystem.CornerRadius.medium)
                             }
+                            .buttonStyle(SecondaryButtonStyle())
 
-                            Button {
-                                onViewDetails()
+                            Menu {
+                                Button {
+                                    onViewDetails()
+                                } label: {
+                                    Label("View Details", systemImage: "info.circle")
+                                }
+
+                                if onSnooze != nil {
+                                    Button {
+                                        onSnooze?()
+                                    } label: {
+                                        Label("Snooze...", systemImage: "moon.fill")
+                                    }
+                                }
+
+                                if onSkip != nil {
+                                    Button {
+                                        onSkip?()
+                                    } label: {
+                                        Label("Skip...", systemImage: "forward.fill")
+                                    }
+                                }
                             } label: {
-                                Label("Details", systemImage: "info.circle")
-                                    .font(DesignSystem.Typography.subheadline)
+                                Text("More")
+                                    .font(DesignSystem.Typography.headline)
+                                    .foregroundColor(Color.Lazyflow.accent)
                                     .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.adaptiveSurface)
-                                    .foregroundColor(Color.Lazyflow.textPrimary)
-                                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                                    .frame(height: DesignSystem.TouchTarget.comfortable)
+                                    .background(Color.Lazyflow.accent.opacity(0.1))
+                                    .cornerRadius(DesignSystem.CornerRadius.large)
                             }
                         }
                     }
@@ -1018,6 +1197,27 @@ struct NextTaskSuggestionSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+// MARK: - Reason Chips View
+
+struct ReasonChipsView: View {
+    let reasons: [String]
+
+    var body: some View {
+        // Use LazyVGrid with flexible columns for wrapping chips
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: DesignSystem.Spacing.sm)], alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            ForEach(reasons, id: \.self) { reason in
+                Text(reason)
+                    .font(DesignSystem.Typography.caption2)
+                    .foregroundColor(Color.Lazyflow.accent)
+                    .padding(.horizontal, DesignSystem.Spacing.sm)
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .background(Color.Lazyflow.accent.opacity(0.15))
+                    .cornerRadius(DesignSystem.CornerRadius.full)
+            }
+        }
     }
 }
 

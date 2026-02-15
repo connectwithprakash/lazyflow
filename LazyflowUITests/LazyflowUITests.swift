@@ -104,16 +104,16 @@ final class LazyflowUITests: XCTestCase {
             let sidebarText = app.staticTexts[tabName]
             let sidebarCell = app.cells.staticTexts[tabName]
 
-            if sidebarButton.waitForExistence(timeout: 1) && sidebarButton.isHittable {
+            if sidebarButton.waitForExistence(timeout: 3) && sidebarButton.isHittable {
                 sidebarButton.tap()
-            } else if sidebarText.waitForExistence(timeout: 1) && sidebarText.isHittable {
+            } else if sidebarText.waitForExistence(timeout: 3) && sidebarText.isHittable {
                 sidebarText.tap()
-            } else if sidebarCell.waitForExistence(timeout: 1) && sidebarCell.isHittable {
+            } else if sidebarCell.waitForExistence(timeout: 3) && sidebarCell.isHittable {
                 sidebarCell.tap()
             } else {
                 // Fallback: try to find any element containing the tab name
                 let anyElement = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR identifier == %@", tabName, tabName)).firstMatch
-                if anyElement.waitForExistence(timeout: 1) && anyElement.isHittable {
+                if anyElement.waitForExistence(timeout: 3) && anyElement.isHittable {
                     anyElement.tap()
                 }
             }
@@ -165,7 +165,7 @@ final class LazyflowUITests: XCTestCase {
 
         // Try to find and tap card, scrolling if necessary
         for _ in 0..<3 {
-            if cardText.waitForExistence(timeout: 1) && cardText.isHittable {
+            if cardText.waitForExistence(timeout: 3) && cardText.isHittable {
                 let coordinate = cardText.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 coordinate.tap()
                 Thread.sleep(forTimeInterval: 0.5)
@@ -646,9 +646,11 @@ final class LazyflowUITests: XCTestCase {
 
     func testConflictsBannerAppears() throws {
         navigateToToday()
-        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 2))
-        // Conflicts banner appears when there are scheduling conflicts
-        // This test verifies the view loads without crashing
+        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 5),
+                       "Today view should load within 5 seconds")
+        // Conflicts banner is only visible when scheduling conflicts exist.
+        // Without seeded conflict data this test verifies the Today view
+        // loads without crashing when the conflict detection path is active.
     }
 
     func testPushToTomorrowSwipeAction() throws {
@@ -811,68 +813,65 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Settings")
 
         // Scroll to find Morning Briefing settings
-        // Note: SwiftUI Form renders as UITableView, not ScrollView
         let settingsTable = app.tables.firstMatch
-        if settingsTable.waitForExistence(timeout: 3) {
+        if settingsTable.waitForExistence(timeout: 5) {
             settingsTable.swipeUp()
         }
 
         // Look for Morning Briefing toggle in Daily Summary section
         let morningToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Morning'")).firstMatch
-        if morningToggle.waitForExistence(timeout: 3) {
-            XCTAssertTrue(morningToggle.exists, "Morning briefing toggle should exist in settings")
+        guard morningToggle.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Morning Briefing toggle not reachable in Settings")
         }
+        XCTAssertTrue(morningToggle.exists, "Morning briefing toggle should exist in settings")
     }
 
     func testMorningBriefingPromptCard() throws {
         // Navigate to Today view
         navigateToToday()
 
-        // The morning briefing prompt card may appear in the morning hours
-        // If it appears, verify it has the expected content
+        // Morning briefing prompt card is time-dependent (only shows in morning hours)
         let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
-        if briefingCard.waitForExistence(timeout: 2) {
-            XCTAssertTrue(briefingCard.exists)
-
-            // Tap on the card to open morning briefing
-            briefingCard.tap()
-
-            // Verify morning briefing view opens
-            let briefingNav = app.navigationBars["Good Morning"]
-            XCTAssertTrue(briefingNav.waitForExistence(timeout: 3), "Morning briefing view should open")
+        guard briefingCard.waitForExistence(timeout: 3) else {
+            throw XCTSkip("Morning Briefing card not available (only shows in morning hours)")
         }
+
+        // Tap on the card to open morning briefing
+        briefingCard.tap()
+
+        // Verify morning briefing view opens
+        let briefingNav = app.navigationBars["Good Morning"]
+        XCTAssertTrue(briefingNav.waitForExistence(timeout: 5), "Morning briefing view should open")
     }
 
     func testMorningBriefingViewContent() throws {
         // Navigate to Today view
         navigateToToday()
 
-        // Try to access morning briefing through settings or direct navigation
-        // First check if there's a briefing card to tap
+        // Morning briefing card is time-dependent (only shows in morning hours)
         let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
-        if briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable {
-            briefingCard.tap()
+        guard briefingCard.waitForExistence(timeout: 3) && briefingCard.isHittable else {
+            throw XCTSkip("Morning Briefing card not available (only shows in morning hours)")
+        }
 
-            // Verify morning briefing content sections (Form renders as table)
-            _ = app.tables.firstMatch
+        briefingCard.tap()
 
-            // Verify key sections exist
-            let yesterdaySection = app.staticTexts["Yesterday"]
-            let todayPlanSection = app.staticTexts["Today's Plan"]
-            let weekSection = app.staticTexts["This Week"]
+        // Verify key sections exist
+        let yesterdaySection = app.staticTexts["Yesterday"]
+        let todayPlanSection = app.staticTexts["Today's Plan"]
+        let weekSection = app.staticTexts["This Week"]
 
-            // At least one section should be visible
-            let hasContent = yesterdaySection.waitForExistence(timeout: 3) ||
-                            todayPlanSection.exists ||
-                            weekSection.exists
+        // At least one section should be visible
+        let hasContent = yesterdaySection.waitForExistence(timeout: 5) ||
+                        todayPlanSection.exists ||
+                        weekSection.exists
 
-            XCTAssertTrue(hasContent, "Morning briefing should have content sections")
+        XCTAssertTrue(hasContent, "Morning briefing should have content sections")
 
-            // Dismiss the briefing
-            let doneButton = app.buttons["Done"]
-            if doneButton.exists && doneButton.isHittable {
-                doneButton.tap()
-            }
+        // Dismiss the briefing
+        let doneButton = app.buttons["Done"]
+        if doneButton.exists && doneButton.isHittable {
+            doneButton.tap()
         }
     }
 
@@ -880,30 +879,36 @@ final class LazyflowUITests: XCTestCase {
         navigateToToday()
 
         let briefingCard = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Start Your Day'")).firstMatch
-        if briefingCard.waitForExistence(timeout: 2) && briefingCard.isHittable {
-            briefingCard.tap()
+        guard briefingCard.waitForExistence(timeout: 3) && briefingCard.isHittable else {
+            throw XCTSkip("Morning Briefing card not available (only shows in morning hours)")
+        }
 
-            // Wait for briefing view
-            let briefingNav = app.navigationBars["Good Morning"]
-            XCTAssertTrue(briefingNav.waitForExistence(timeout: 3))
+        briefingCard.tap()
 
-            // Find and tap refresh button
-            let refreshButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'arrow.clockwise' OR label CONTAINS[c] 'Refresh'")).firstMatch
-            if refreshButton.waitForExistence(timeout: 2) && refreshButton.isHittable {
-                refreshButton.tap()
+        // Wait for briefing view
+        let briefingNav = app.navigationBars["Good Morning"]
+        XCTAssertTrue(briefingNav.waitForExistence(timeout: 5))
 
-                // Wait for refresh to complete (loading indicator should appear and disappear)
-                sleep(2)
+        // Find and tap refresh button
+        let refreshButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'arrow.clockwise' OR label CONTAINS[c] 'Refresh'")).firstMatch
+        if refreshButton.waitForExistence(timeout: 3) && refreshButton.isHittable {
+            refreshButton.tap()
 
-                // View should still exist after refresh
-                XCTAssertTrue(briefingNav.exists)
-            }
+            // Wait for refresh to complete
+            let expectation = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "exists == true"),
+                object: briefingNav
+            )
+            _ = XCTWaiter.wait(for: [expectation], timeout: 5)
 
-            // Dismiss
-            let doneButton = app.buttons["Done"]
-            if doneButton.exists {
-                doneButton.tap()
-            }
+            // View should still exist after refresh
+            XCTAssertTrue(briefingNav.exists)
+        }
+
+        // Dismiss
+        let doneButton = app.buttons["Done"]
+        if doneButton.exists {
+            doneButton.tap()
         }
     }
 
@@ -935,8 +940,12 @@ final class LazyflowUITests: XCTestCase {
         // Tap regenerate button with retry logic
         tapWithRetry(regenerateButton)
 
-        // Wait for regeneration to complete
-        Thread.sleep(forTimeInterval: 2)
+        // Wait for regeneration to complete using predicate-based wait
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true"),
+            object: briefingNav
+        )
+        _ = XCTWaiter.wait(for: [expectation], timeout: 5)
 
         // View should still exist after regenerate
         XCTAssertTrue(briefingNav.exists, "View should remain stable after regeneration")
@@ -976,11 +985,9 @@ final class LazyflowUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 0.5)
         }
 
-        // Skip test if toggle cannot be found (environment issue, not a failure)
+        // Skip test if toggle cannot be found (scroll issues on some simulators)
         guard promptToggle.waitForExistence(timeout: 5) else {
-            // This is a known flaky test due to scroll issues on some simulators
-            // Mark as success when we can't find the toggle after extensive scrolling
-            return
+            throw XCTSkip("Morning Briefing toggle not reachable after scrolling")
         }
 
         // Get initial state - SwiftUI Toggle reports "0" or "1"
@@ -1007,17 +1014,17 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Settings")
 
         // Scroll to find Daily Summary section
-        // Note: SwiftUI Form renders as UITableView, not ScrollView
         let settingsTable = app.tables.firstMatch
-        if settingsTable.waitForExistence(timeout: 3) {
+        if settingsTable.waitForExistence(timeout: 5) {
             settingsTable.swipeUp()
         }
 
         // Look for Daily Summary toggle
         let summaryToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Summary' OR label CONTAINS[c] 'Evening'")).firstMatch
-        if summaryToggle.waitForExistence(timeout: 3) {
-            XCTAssertTrue(summaryToggle.exists, "Daily summary toggle should exist in settings")
+        guard summaryToggle.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Daily Summary toggle not reachable in Settings")
         }
+        XCTAssertTrue(summaryToggle.exists, "Daily summary toggle should exist in settings")
     }
 
     func testDailySummarySection() throws {

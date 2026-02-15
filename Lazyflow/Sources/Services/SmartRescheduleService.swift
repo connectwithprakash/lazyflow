@@ -3,6 +3,7 @@ import EventKit
 import Combine
 
 /// Service for intelligent task rescheduling suggestions
+@MainActor
 final class SmartRescheduleService: ObservableObject {
     static let shared = SmartRescheduleService()
 

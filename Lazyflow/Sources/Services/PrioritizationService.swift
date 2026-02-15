@@ -1,7 +1,9 @@
 import Foundation
 import Combine
+import UIKit
 
 /// Service for intelligent task prioritization and suggestions
+@MainActor
 final class PrioritizationService: ObservableObject {
     static let shared = PrioritizationService()
 
@@ -9,6 +11,8 @@ final class PrioritizationService: ObservableObject {
 
     @Published private(set) var suggestedNextTask: Task?
     @Published private(set) var prioritizedTasks: [Task] = []
+    @Published private(set) var topThreeSuggestions: [Task] = []
+    @Published private(set) var cachedSuggestions: [TaskSuggestion] = []
     @Published private(set) var isAnalyzing = false
 
     // MARK: - Dependencies
@@ -20,6 +24,7 @@ final class PrioritizationService: ObservableObject {
     // MARK: - Pattern Learning Storage
 
     @Published private(set) var completionPatterns: CompletionPatterns
+    private(set) var suggestionFeedback: SuggestionFeedback
 
     private init(
         taskService: TaskService = .shared,
@@ -28,6 +33,11 @@ final class PrioritizationService: ObservableObject {
         self.taskService = taskService
         self.llmService = llmService
         self.completionPatterns = CompletionPatterns.load()
+        self.suggestionFeedback = SuggestionFeedback.load()
+
+        // Apply decay on load
+        self.suggestionFeedback.applyDecayIfNeeded()
+        self.suggestionFeedback.cleanExpiredSnoozes()
 
         setupObservers()
     }
@@ -40,6 +50,30 @@ final class PrioritizationService: ObservableObject {
                 self?.analyzeAndPrioritize(tasks)
             }
             .store(in: &cancellables)
+
+        // Periodically check for expired snoozes (every 60 seconds)
+        Timer.publish(every: 60, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.refreshExpiredSnoozes()
+            }
+            .store(in: &cancellables)
+
+        // Re-analyze on foreground return (snoozes may have expired while backgrounded)
+        NotificationCenter.default
+            .publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                self?.refreshExpiredSnoozes()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func refreshExpiredSnoozes() {
+        let countBefore = suggestionFeedback.snoozedUntil.count
+        suggestionFeedback.cleanExpiredSnoozes()
+        if countBefore > suggestionFeedback.snoozedUntil.count {
+            analyzeAndPrioritize(taskService.tasks)
+        }
     }
 
     // MARK: - Auto-Prioritization Algorithm
@@ -48,17 +82,81 @@ final class PrioritizationService: ObservableObject {
     func analyzeAndPrioritize(_ tasks: [Task]) {
         let incompleteTasks = tasks.filter { !$0.isCompleted && !$0.isArchived }
 
-        // Calculate scores for each task
+        // Housekeeping: prune deleted tasks and apply decay if overdue
+        let activeIDs = Set(tasks.map(\.id))
+        suggestionFeedback.pruneDeletedTasks(activeTaskIDs: activeIDs)
+        suggestionFeedback.applyDecayIfNeeded()
+
+        // Calculate scores using effectiveScore (base + feedback adjustments)
         var scoredTasks: [(task: Task, score: Double)] = incompleteTasks.map { task in
-            let score = calculatePriorityScore(for: task)
+            let score = effectiveScore(for: task)
             return (task, score)
         }
 
         // Sort by score (highest first)
         scoredTasks.sort { $0.score > $1.score }
 
+        // Filter snoozed tasks for all suggestion outputs
+        let unsnoozed = scoredTasks.filter { !suggestionFeedback.isSnoozed($0.task.id) }
+
         prioritizedTasks = scoredTasks.map { $0.task }
-        suggestedNextTask = prioritizedTasks.first
+        suggestedNextTask = unsnoozed.first?.task
+
+        // Compute top 3 suggestions (apply diversity)
+        topThreeSuggestions = selectDiverseTopThree(from: unsnoozed)
+
+        // Cache fully-built TaskSuggestion objects to avoid recomputing per render
+        // Use unsnoozed scores for confidence — snoozed tasks shouldn't inflate the curve
+        let allScores = unsnoozed.map(\.score)
+        cachedSuggestions = topThreeSuggestions.map { task in
+            let score = effectiveScore(for: task)
+            let reasons = generateReasons(for: task, score: score)
+            let confidence = confidenceLevel(score: score, allScores: allScores)
+            return TaskSuggestion(
+                task: task,
+                score: score,
+                reasons: reasons,
+                aiInsight: nil,
+                confidence: confidence
+            )
+        }
+    }
+
+    /// Canonical effective score: base priority + feedback adjustment, clamped 0-100
+    func effectiveScore(for task: Task) -> Double {
+        let base = calculatePriorityScore(for: task)
+        let adj = suggestionFeedback.getAdjustment(for: task.id)
+        return max(0, min(100, base + adj))
+    }
+
+    /// Select top 3 with soft diversity: primary = top score, alternatives prefer different categories unless score gap > 10
+    private func selectDiverseTopThree(from scored: [(task: Task, score: Double)]) -> [Task] {
+        guard !scored.isEmpty else { return [] }
+
+        var result: [Task] = []
+        let primary = scored[0]
+        result.append(primary.task)
+
+        let remaining = scored.dropFirst()
+        var usedCategories: Set<TaskCategory> = [primary.task.category]
+
+        // Pick alternatives preferring different categories
+        for item in remaining where result.count < 3 {
+            let scoreGap = primary.score - item.score
+            if scoreGap > 10 || !usedCategories.contains(item.task.category) {
+                result.append(item.task)
+                usedCategories.insert(item.task.category)
+            }
+        }
+
+        // Fill remaining slots if we didn't find diverse enough options
+        for item in remaining where result.count < 3 {
+            if !result.contains(where: { $0.id == item.task.id }) {
+                result.append(item.task)
+            }
+        }
+
+        return result
     }
 
     /// Calculate priority score for a task (0-100)
@@ -213,26 +311,105 @@ final class PrioritizationService: ObservableObject {
         return 0
     }
 
+    /// Scores of all unsnoozed incomplete tasks — used as the reference curve for confidence levels
+    private var unsnoozedScores: [Double] {
+        taskService.tasks
+            .filter { !$0.isCompleted && !$0.isArchived && !suggestionFeedback.isSnoozed($0.id) }
+            .map { effectiveScore(for: $0) }
+    }
+
     // MARK: - "What Should I Do Next?" Feature
 
     /// Get the next suggested task with reasoning
     func getNextTaskSuggestion() async -> TaskSuggestion? {
         guard let nextTask = suggestedNextTask else { return nil }
 
-        let score = calculatePriorityScore(for: nextTask)
+        let score = effectiveScore(for: nextTask)
         let reasons = generateReasons(for: nextTask, score: score)
+        let confidence = confidenceLevel(score: score, allScores: unsnoozedScores)
 
         // Optionally get AI-enhanced reasoning
         if llmService.isReady {
-            return await getAIEnhancedSuggestion(task: nextTask, reasons: reasons)
+            var suggestion = await getAIEnhancedSuggestion(task: nextTask, reasons: reasons)
+            suggestion.confidence = confidence
+            return suggestion
         }
 
         return TaskSuggestion(
             task: nextTask,
             score: score,
             reasons: reasons,
-            aiInsight: nil
+            aiInsight: nil,
+            confidence: confidence
         )
+    }
+
+    /// Get a suggestion for a specific task with AI-enhanced reasoning
+    func getSuggestion(for task: Task) async -> TaskSuggestion {
+        let score = effectiveScore(for: task)
+        let reasons = generateReasons(for: task, score: score)
+        let confidence = confidenceLevel(score: score, allScores: unsnoozedScores)
+
+        if llmService.isReady {
+            var suggestion = await getAIEnhancedSuggestion(task: task, reasons: reasons)
+            suggestion.confidence = confidence
+            return suggestion
+        }
+
+        return TaskSuggestion(
+            task: task,
+            score: score,
+            reasons: reasons,
+            aiInsight: nil,
+            confidence: confidence
+        )
+    }
+
+    /// Get top 3 task suggestions with scores and reasons
+    func getTopThreeSuggestions() -> [TaskSuggestion] {
+        let scores = unsnoozedScores
+
+        return topThreeSuggestions.map { task in
+            let score = effectiveScore(for: task)
+            let reasons = generateReasons(for: task, score: score)
+            let confidence = confidenceLevel(score: score, allScores: scores)
+            return TaskSuggestion(
+                task: task,
+                score: score,
+                reasons: reasons,
+                aiInsight: nil,
+                confidence: confidence
+            )
+        }
+    }
+
+    /// Record user feedback on a suggestion and re-analyze
+    func recordSuggestionFeedback(task: Task, action: FeedbackAction, score: Double) {
+        suggestionFeedback.recordFeedback(
+            taskID: task.id,
+            action: action,
+            originalScore: score,
+            taskCategory: task.category
+        )
+        // Re-analyze to update suggestions
+        analyzeAndPrioritize(taskService.tasks)
+    }
+
+    /// Determine confidence level relative to current batch
+    private func confidenceLevel(score: Double, allScores: [Double]) -> ConfidenceLevel {
+        guard !allScores.isEmpty else { return .consider }
+
+        let sortedScores = allScores.sorted(by: >)
+        let rank = sortedScores.firstIndex(where: { $0 <= score }) ?? sortedScores.count
+        let percentile = Double(rank) / Double(sortedScores.count)
+
+        if percentile <= 0.1 {
+            return .recommended
+        } else if percentile <= 0.3 {
+            return .goodFit
+        } else {
+            return .consider
+        }
     }
 
     private func generateReasons(for task: Task, score: Double) -> [String] {
@@ -284,7 +461,7 @@ final class PrioritizationService: ObservableObject {
     }
 
     private func getAIEnhancedSuggestion(task: Task, reasons: [String]) async -> TaskSuggestion {
-        let score = calculatePriorityScore(for: task)
+        let score = effectiveScore(for: task)
 
         do {
             let prompt = """
@@ -408,12 +585,19 @@ final class PrioritizationService: ObservableObject {
 
 // MARK: - Supporting Types
 
+enum ConfidenceLevel: String {
+    case recommended = "Top Pick"
+    case goodFit = "Strong"
+    case consider = "Good Fit"
+}
+
 struct TaskSuggestion: Identifiable {
     var id: UUID { task.id }
     let task: Task
     let score: Double
     let reasons: [String]
     let aiInsight: String?
+    var confidence: ConfidenceLevel = .consider
 
     var scorePercentage: Int {
         Int(score)

@@ -146,6 +146,11 @@ final class TodayViewModel: ObservableObject {
         overdueTasks.count + todayTasks.count
     }
 
+    /// Count of ALL incomplete tasks (not just today/overdue) — used for Next Up gating
+    var allIncompleteTaskCount: Int {
+        taskService.tasks.filter { !$0.isCompleted && !$0.isArchived }.count
+    }
+
     var completedTaskCount: Int {
         completedTodayTasks.count
     }
