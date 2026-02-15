@@ -504,13 +504,19 @@ struct TodayView: View {
                     let alternatives = incompleteCount >= 5 ? Array(suggestions.dropFirst()) : []
                     if !alternatives.isEmpty {
                         if showAlternatives {
-                            ForEach(alternatives) { alt in
+                            ForEach(Array(alternatives.enumerated()), id: \.element.id) { index, alt in
                                 nextUpAlternativeRow(suggestion: alt)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                                    .animation(
+                                        .spring(response: 0.35, dampingFraction: 0.8)
+                                            .delay(Double(index) * 0.05),
+                                        value: showAlternatives
+                                    )
                             }
                         }
 
                         Button {
-                            withAnimation(DesignSystem.Animation.standard) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                                 showAlternatives.toggle()
                             }
                         } label: {
