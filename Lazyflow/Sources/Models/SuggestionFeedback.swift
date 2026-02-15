@@ -161,12 +161,13 @@ struct SuggestionFeedback: Codable {
 
     // MARK: - Stale Data Cleanup
 
-    /// Remove adjustments and events for tasks that no longer exist
+    /// Remove adjustments and snoozes for tasks that no longer exist
     mutating func pruneDeletedTasks(activeTaskIDs: Set<UUID>) {
-        let staleCount = adjustments.count
+        let adjBefore = adjustments.count
+        let snoozeBefore = snoozedUntil.count
         adjustments = adjustments.filter { activeTaskIDs.contains($0.key) }
         snoozedUntil = snoozedUntil.filter { activeTaskIDs.contains($0.key) }
-        if adjustments.count < staleCount {
+        if adjustments.count < adjBefore || snoozedUntil.count < snoozeBefore {
             save()
         }
     }

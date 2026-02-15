@@ -143,6 +143,7 @@ struct TodayView: View {
                     let task = suggestion.task
                     taskSuggestion = nil
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard taskSuggestion == nil else { return }
                         viewModel.selectedTask = task
                     }
                 },
@@ -150,6 +151,7 @@ struct TodayView: View {
                     let task = suggestion.task
                     taskSuggestion = nil
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard taskSuggestion == nil else { return }
                         taskToSchedule = task
                     }
                 },
@@ -460,20 +462,18 @@ struct TodayView: View {
 
     // MARK: - Subviews
 
-    /// The primary suggested task ID (used for deduplication from Today/Overdue)
-    /// Only deduplicate when Next Up is visible (3+ tasks)
     /// IDs of all tasks visible in Next Up (used for deduplication from Today/Overdue)
+    /// Uses same count basis (allIncompleteTaskCount) as section rendering
     private var nextUpVisibleTaskIDs: Set<UUID> {
-        let incompleteCount = viewModel.totalTaskCount
-        guard incompleteCount >= 3 else { return [] }
-        let suggestions = prioritizationService.topThreeSuggestions
-        guard !suggestions.isEmpty else { return [] }
+        let incompleteCount = viewModel.allIncompleteTaskCount
+        let suggestions = prioritizationService.cachedSuggestions
+        guard incompleteCount >= 3, !suggestions.isEmpty else { return [] }
         if incompleteCount >= 5, showAlternatives {
             // Primary + alternatives all visible
-            return Set(suggestions.map(\.id))
+            return Set(suggestions.map(\.task.id))
         } else {
             // Only primary visible
-            return suggestions.first.map { Set([$0.id]) } ?? []
+            return suggestions.first.map { Set([$0.task.id]) } ?? []
         }
     }
 
@@ -833,7 +833,7 @@ struct TodayView: View {
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.vertical, DesignSystem.Spacing.xs)
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("Suggested: \(suggestion.confidence.rawValue) pick\(suggestion.reasons.first.map { ", \($0)" } ?? "")")
 
         // Full TaskRowView for the task (reactive, with built-in swipe actions)
