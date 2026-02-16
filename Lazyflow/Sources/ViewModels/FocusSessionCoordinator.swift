@@ -28,10 +28,10 @@ final class FocusSessionCoordinator: ObservableObject {
 
     init(
         taskService: TaskService = .shared,
-        prioritizationService: PrioritizationService = .shared
+        prioritizationService: PrioritizationService? = nil
     ) {
         self.taskService = taskService
-        self.prioritizationService = prioritizationService
+        self.prioritizationService = prioritizationService ?? PrioritizationService.shared
 
         // Observe task changes to invalidate stale focus state
         // (covers both full-screen and pill modes)
