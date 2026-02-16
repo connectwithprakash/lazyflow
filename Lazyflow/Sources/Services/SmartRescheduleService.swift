@@ -20,11 +20,11 @@ final class SmartRescheduleService: ObservableObject {
     private init(
         calendarService: CalendarService = .shared,
         conflictService: ConflictDetectionService = .shared,
-        prioritizationService: PrioritizationService = .shared
+        prioritizationService: PrioritizationService? = nil
     ) {
         self.calendarService = calendarService
         self.conflictService = conflictService
-        self.prioritizationService = prioritizationService
+        self.prioritizationService = prioritizationService ?? PrioritizationService.shared
     }
 
     // MARK: - Reschedule Suggestions

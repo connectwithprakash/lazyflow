@@ -761,7 +761,6 @@ final class DailySummaryService: ObservableObject {
             )
         }
 
-        let calendar = Calendar.current
         let now = Date()
 
         // Separate all-day and timed events
