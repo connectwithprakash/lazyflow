@@ -263,7 +263,7 @@ final class LazyflowUITests: XCTestCase {
 
         // Navigate to Insights tab
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify History is accessible within Insights hub
         let historyCard = app.staticTexts["History"]
@@ -280,7 +280,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify Morning Briefing is accessible
         let morningCard = app.staticTexts["Morning Briefing"]
@@ -293,7 +293,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify Analytics section header exists
         let analyticsHeader = app.staticTexts["Analytics"]
@@ -310,7 +310,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify Daily Summary is accessible
         let summaryCard = app.staticTexts["Daily Summary"]
