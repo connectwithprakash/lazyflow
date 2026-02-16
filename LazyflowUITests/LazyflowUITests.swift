@@ -993,8 +993,8 @@ final class LazyflowUITests: XCTestCase {
         // Get initial state - SwiftUI Toggle reports "0" or "1"
         let wasOnValue = promptToggle.value as? String ?? "0"
 
-        // Tap the toggle directly - SwiftUI Toggle handles tap well
-        promptToggle.tap()
+        // Tap using coordinate to ensure hit on toggle switch area (iPad layout can offset taps)
+        promptToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
 
         // Wait for state change animation to complete
         Thread.sleep(forTimeInterval: 1.0)
