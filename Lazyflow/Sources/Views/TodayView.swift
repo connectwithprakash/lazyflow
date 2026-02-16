@@ -167,8 +167,12 @@ struct TodayView: View {
                     prioritizationService.recordSuggestionFeedback(
                         task: suggestion.task, action: .startedImmediately, score: suggestion.score
                     )
-                    focusCoordinator.enterFocus(task: suggestion.task)
+                    let task = suggestion.task
                     taskSuggestion = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        guard taskSuggestion == nil else { return }
+                        focusCoordinator.enterFocus(task: task)
+                    }
                 },
                 onSnooze: {
                     let target = suggestion

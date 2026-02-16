@@ -1906,4 +1906,5 @@ final class LazyflowUITests: XCTestCase {
             cancelButton.tap()
         }
     }
+
 }

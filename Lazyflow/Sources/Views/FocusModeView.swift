@@ -8,10 +8,6 @@ struct FocusModeView: View {
     @State private var showSwitchSheet = false
     @State private var showTaskDetail = false
 
-    /// Snapshot of the task title/id for the success overlay,
-    /// so it renders even after the task is completed.
-    @State private var completedTaskTitle: String?
-
     var body: some View {
         ZStack {
             Color.adaptiveBackground.ignoresSafeArea()
@@ -216,7 +212,6 @@ struct FocusModeView: View {
 
     private func performCompletion(_ task: Task) {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
-        completedTaskTitle = task.title
         showSuccess = true
         coordinator.markComplete()
 
