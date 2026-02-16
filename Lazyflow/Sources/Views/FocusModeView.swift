@@ -85,6 +85,7 @@ struct FocusModeView: View {
                     .foregroundColor(Color.Lazyflow.textSecondary)
                     .frame(width: DesignSystem.TouchTarget.minimum, height: DesignSystem.TouchTarget.minimum)
             }
+            .accessibilityLabel("More options")
         }
         .padding(.horizontal, DesignSystem.Spacing.md)
     }
