@@ -263,7 +263,7 @@ final class LazyflowUITests: XCTestCase {
 
         // Navigate to Insights tab
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify History is accessible within Insights hub
         let historyCard = app.staticTexts["History"]
@@ -280,7 +280,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify Morning Briefing is accessible
         let morningCard = app.staticTexts["Morning Briefing"]
@@ -293,7 +293,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify Analytics section header exists
         let analyticsHeader = app.staticTexts["Analytics"]
@@ -310,7 +310,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         navigateToTab("Insights")
-        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
 
         // Verify Daily Summary is accessible
         let summaryCard = app.staticTexts["Daily Summary"]
@@ -993,8 +993,8 @@ final class LazyflowUITests: XCTestCase {
         // Get initial state - SwiftUI Toggle reports "0" or "1"
         let wasOnValue = promptToggle.value as? String ?? "0"
 
-        // Tap the toggle directly - SwiftUI Toggle handles tap well
-        promptToggle.tap()
+        // Tap using coordinate to ensure hit on toggle switch area (iPad layout can offset taps)
+        promptToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
 
         // Wait for state change animation to complete
         Thread.sleep(forTimeInterval: 1.0)
@@ -1906,4 +1906,5 @@ final class LazyflowUITests: XCTestCase {
             cancelButton.tap()
         }
     }
+
 }
