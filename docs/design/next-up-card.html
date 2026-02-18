@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazyflow — Next Up Card</title>
+<style>
+  /* ========================================
+     LAZYFLOW DESIGN SYSTEM TOKENS
+     Mirroring DesignSystem.swift exactly
+     ======================================== */
+  :root {
+    --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 8px; --sp-md: 12px;
+    --sp-lg: 16px; --sp-xl: 20px; --sp-xxl: 24px; --sp-xxxl: 32px;
+    --radius-small: 4px; --radius-medium: 8px; --radius-large: 12px;
+    --radius-xl: 16px; --radius-full: 9999px;
+    --touch-min: 44px; --touch-comfortable: 48px;
+    --accent: #218A8D; --accent-light: #2BA5A8; --accent-dark: #1A6F71;
+    --success: #22C876; --error: #FF5459; --warning: #E68157; --info: #5A6C71;
+    --shadow-small: 0 2px 4px rgba(0,0,0,0.08);
+    --shadow-medium: 0 4px 8px rgba(0,0,0,0.12);
+    --shadow-large: 0 8px 16px rgba(0,0,0,0.16);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  }
+
+  [data-theme="light"] {
+    --bg: #F5F5F5; --surface: #FFFFFF; --text-primary: #1C1C1E;
+    --text-secondary: #6B7280; --text-tertiary: #5A6C71;
+    --divider: rgba(0,0,0,0.08); --checkbox-border: #C7C7CC;
+    --action-bg: rgba(0,0,0,0.04); --action-bg-hover: rgba(0,0,0,0.08);
+    --toast-bg: #1C1C1E; --toast-text: #FFFFFF;
+    --focus-bg: rgba(33,138,141,0.08);
+  }
+
+  [data-theme="dark"] {
+    --bg: #1F2121; --surface: #272A2A; --text-primary: #F5F5F5;
+    --text-secondary: #9CA3AF; --text-tertiary: #5A6C71;
+    --divider: rgba(255,255,255,0.08); --checkbox-border: #48484A;
+    --action-bg: rgba(255,255,255,0.06); --action-bg-hover: rgba(255,255,255,0.12);
+    --toast-bg: #3A3D3D; --toast-text: #F5F5F5;
+    --focus-bg: rgba(33,138,141,0.15);
+  }
+
+  /* ========================================
+     BASE
+     ======================================== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: #0A0A0A;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 40px 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ========================================
+     PAGE HEADER
+     ======================================== */
+  .page-header { text-align: center; margin-bottom: 32px; max-width: 600px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; color: #F5F5F5; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .page-header p { font-size: 15px; color: #9CA3AF; line-height: 1.5; }
+  .page-header .badge {
+    display: inline-block; font-size: 11px; font-weight: 600; color: var(--accent);
+    background: rgba(33,138,141,0.15); padding: 4px 10px; border-radius: var(--radius-full);
+    margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  /* ========================================
+     THEME TOGGLE
+     ======================================== */
+  .theme-toggle {
+    display: flex; gap: 2px; background: #272A2A;
+    border-radius: var(--radius-full); padding: 3px; margin-bottom: 24px;
+  }
+  .theme-toggle button {
+    font-family: var(--font); font-size: 13px; font-weight: 500; color: #9CA3AF;
+    background: transparent; border: none; padding: 6px 16px;
+    border-radius: var(--radius-full); cursor: pointer; transition: all 0.15s ease;
+  }
+  .theme-toggle button.active { background: #3A3D3D; color: #F5F5F5; }
+
+  /* ========================================
+     PHONE FRAMES
+     ======================================== */
+  .phones-container { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .phone-wrapper { display: flex; flex-direction: column; align-items: center; gap: 12px; transform: scale(0.78); transform-origin: top center; margin-bottom: -150px; }
+  .phone-label { font-size: 13px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; }
+  .phone-frame {
+    width: 402px; height: 874px; background: var(--bg);
+    border-radius: 55px; border: 3px solid #333; overflow: hidden;
+    position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .phone-frame::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 126px; height: 37px; background: #1C1C1E; border-radius: 0 0 22px 22px; z-index: 10;
+  }
+  [data-theme="dark"] .phone-frame::before { background: #000; }
+  .phone-content { padding: 56px var(--sp-lg) var(--sp-lg); height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; scroll-behavior: smooth; }
+  .phone-content::-webkit-scrollbar { display: none; }
+
+  /* ========================================
+     SECTION HEADER
+     ======================================== */
+  .section-header { display: flex; align-items: center; gap: var(--sp-sm); margin-bottom: var(--sp-md); padding: 0 var(--sp-xs); }
+  .section-header .icon { font-size: 17px; }
+  .section-header h2 { font-size: 17px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.2px; }
+
+  /* ========================================
+     NEXT UP CARD
+     ======================================== */
+  .next-up-card {
+    background: var(--surface); border-radius: var(--radius-large);
+    box-shadow: var(--shadow-small); overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+    transform-origin: center top; cursor: pointer;
+  }
+  .next-up-card:active { transform: scale(0.98); }
+
+  .next-up-card.completing {
+    animation: cardComplete 0.26s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.06s;
+  }
+  @keyframes cardComplete {
+    0%   { transform: scale(1); opacity: 1; }
+    50%  { transform: scale(0.97); opacity: 0.6; }
+    100% { transform: scale(0.94) translateY(-8px); opacity: 0; }
+  }
+
+  .next-up-card.entering {
+    animation: cardEnter 0.25s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+  }
+  @keyframes cardEnter {
+    0%   { transform: scale(0.96) translateY(6px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .card-body { display: flex; gap: var(--sp-md); padding: var(--sp-lg); padding-bottom: var(--sp-md); }
+
+  /* Checkbox — 44pt hit area around 26pt circle */
+  .checkbox-wrapper {
+    flex-shrink: 0; width: var(--touch-min); height: var(--touch-min);
+    display: flex; align-items: flex-start; justify-content: center; padding-top: 1px;
+    cursor: pointer;
+  }
+  .checkbox {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2.5px solid var(--checkbox-border);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease; position: relative;
+  }
+  .checkbox-wrapper:hover .checkbox {
+    border-color: var(--success); background: rgba(34,200,118,0.08);
+  }
+  .checkbox.checked {
+    border-color: var(--success); background: var(--success);
+    animation: checkboxPop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes checkboxPop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  .checkbox .checkmark { opacity: 0; transform: scale(0); transition: all 0.12s ease; }
+  .checkbox.checked .checkmark { opacity: 1; transform: scale(1); }
+  .checkbox .checkmark svg { width: 14px; height: 14px; }
+
+  /* Task info */
+  .task-info { flex: 1; min-width: 0; }
+  .task-title {
+    font-size: 17px; font-weight: 600; color: var(--text-primary);
+    line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+    letter-spacing: -0.2px; margin-bottom: var(--sp-sm);
+    transition: all 0.15s ease;
+  }
+  .task-title.completed {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+  }
+  .task-meta {
+    display: flex; align-items: center; gap: var(--sp-sm);
+    flex-wrap: wrap; margin-bottom: var(--sp-sm);
+  }
+  .meta-badge {
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+    font-size: 12px; font-weight: 500; padding: 3px 8px;
+    border-radius: var(--radius-small); line-height: 1.3;
+  }
+  .meta-badge.due { color: var(--warning); background: rgba(230,129,87,0.12); }
+  .meta-badge.due.today { color: var(--accent); background: rgba(33,138,141,0.12); }
+  .meta-badge.duration { color: var(--text-tertiary); background: rgba(90,108,113,0.1); }
+  .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-tertiary); opacity: 0.5; }
+  .task-reason {
+    font-size: 13px; font-weight: 400; color: var(--text-secondary);
+    line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Divider */
+  .card-divider { height: 1px; background: var(--divider); margin: 0 var(--sp-lg); }
+
+  /* Action Row */
+  .action-row { display: flex; align-items: center; gap: var(--sp-sm); padding: var(--sp-md) var(--sp-lg); }
+  .action-btn {
+    font-family: var(--font); font-size: 14px; font-weight: 600; border: none;
+    border-radius: var(--radius-medium); padding: 8px 14px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.15s ease; line-height: 1; flex: 1; justify-content: center;
+    min-height: var(--touch-min);
+  }
+  .action-btn.start { background: var(--accent); color: white; }
+  .action-btn.start:hover { background: var(--accent-light); }
+  .action-btn.start:active { background: var(--accent-dark); transform: scale(0.97); }
+  .action-btn.start.working {
+    background: var(--success); color: white;
+    animation: btnPulse 0.3s ease;
+  }
+  @keyframes btnPulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
+  }
+
+  .action-btn.focus { background: var(--focus-bg); color: var(--accent); }
+  .action-btn.focus:hover { background: rgba(33,138,141,0.18); }
+  .action-btn.focus:active { transform: scale(0.97); }
+
+  .action-btn.icon-only {
+    background: var(--action-bg); color: var(--text-secondary);
+    flex: 0; padding: 0; width: var(--touch-min); min-width: var(--touch-min);
+    font-size: 16px;
+  }
+  .action-btn.icon-only:hover { background: var(--action-bg-hover); color: var(--text-primary); }
+  .action-btn .icon-sm { font-size: 13px; }
+
+  /* ========================================
+     UNDO TOAST
+     ======================================== */
+  .undo-toast {
+    position: absolute; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--toast-bg); color: var(--toast-text);
+    font-size: 14px; font-weight: 500; padding: 12px 20px;
+    border-radius: var(--radius-full); display: flex; align-items: center; gap: 12px;
+    box-shadow: var(--shadow-large); opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+    white-space: nowrap; z-index: 20;
+  }
+  .undo-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .undo-toast .undo-btn {
+    font-family: var(--font); font-size: 14px; font-weight: 700;
+    color: var(--accent-light); background: none; border: none; cursor: pointer; padding: 0;
+  }
+  .undo-toast .undo-btn:hover { color: var(--accent); }
+
+  /* ========================================
+     ACTION FEEDBACK TOAST (Start / Focus)
+     ======================================== */
+  .action-toast {
+    position: absolute; top: 60px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--toast-bg); color: var(--toast-text);
+    font-size: 13px; font-weight: 600; padding: 8px 16px;
+    border-radius: var(--radius-full); box-shadow: var(--shadow-medium);
+    opacity: 0; transition: all 0.25s cubic-bezier(0.34, 1.3, 0.64, 1);
+    white-space: nowrap; z-index: 25; pointer-events: none;
+  }
+  .action-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ========================================
+     FOCUS MODE — "Calm Precision" Design
+     Option A: Ring-centric layout, tightened
+     Immersive dark, progress ring, minimal UI
+     ======================================== */
+  .focus-overlay {
+    position: absolute; inset: 0;
+    background: #111313;
+    z-index: 30; display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s ease;
+    border-radius: 52px; overflow: hidden;
+  }
+  .focus-overlay.visible { opacity: 1; pointer-events: all; }
+
+  /* Subtle ambient gradient */
+  .focus-ambient {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, rgba(33,138,141,0.06) 0%, transparent 70%);
+    animation: ambientDrift 12s ease-in-out infinite alternate;
+  }
+  @keyframes ambientDrift {
+    0%   { background: radial-gradient(ellipse at 50% 45%, rgba(33,138,141,0.06) 0%, transparent 70%); }
+    100% { background: radial-gradient(ellipse at 55% 50%, rgba(33,138,141,0.08) 0%, transparent 65%); }
+  }
+
+  /* Top bar — pinned top */
+  .focus-top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--sp-lg) var(--sp-xl);
+    position: relative; z-index: 2;
+    flex-shrink: 0;
+  }
+  .focus-icon-btn {
+    width: var(--touch-min); height: var(--touch-min);
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.45);
+    border-radius: 50%; transition: all 0.15s ease;
+  }
+  .focus-icon-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+
+  /* Center block — title + ring + actions grouped together */
+  .focus-center-block {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; z-index: 2;
+    padding: 0 var(--sp-xl);
+  }
+
+  /* Task title — minimal, centered, inside center block */
+  .focus-task-title-area {
+    text-align: center; padding: 0 var(--sp-sm);
+    margin-bottom: 20px;
+  }
+  .focus-task-title-area .focus-task-title {
+    font-size: 20px; font-weight: 600; color: rgba(255,255,255,0.9);
+    line-height: 1.35; letter-spacing: -0.3px;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .focus-task-title-area .focus-subtitle {
+    font-size: 13px; color: rgba(255,255,255,0.35); margin-top: 8px;
+    font-weight: 400;
+  }
+
+  /* Timer ring — 240px, inside center block */
+  .focus-ring-container {
+    position: relative; width: 240px; height: 240px;
+    cursor: pointer; /* tap to pause */
+    margin-bottom: 32px;
+  }
+
+  /* SVG progress ring — 6px stroke */
+  .focus-ring-svg {
+    width: 240px; height: 240px;
+    transform: rotate(-90deg);
+  }
+  .focus-ring-track {
+    fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6;
+  }
+  .focus-ring-progress {
+    fill: none; stroke: var(--accent); stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 691.2; /* 2 * PI * 110 */
+    stroke-dashoffset: 691.2;
+    transition: stroke-dashoffset 1s linear;
+    filter: drop-shadow(0 0 4px rgba(33,138,141,0.25));
+  }
+  /* Paused state — ring dims */
+  .focus-ring-container.paused .focus-ring-progress {
+    stroke: rgba(33,138,141,0.4);
+    filter: none;
+  }
+  /* Glow dot at progress tip */
+  .focus-ring-glow {
+    position: absolute; width: 8px; height: 8px;
+    background: var(--accent); border-radius: 50%;
+    box-shadow: 0 0 8px rgba(33,138,141,0.4);
+    top: 0; left: 50%; transform: translateX(-50%);
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  .focus-ring-glow.visible { opacity: 1; }
+  .focus-ring-container.paused .focus-ring-glow { opacity: 0; }
+
+  /* Timer text inside ring */
+  .focus-timer-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .focus-timer-inner .focus-timer {
+    font-size: 52px; font-weight: 400; color: rgba(255,255,255,0.95);
+    letter-spacing: -2px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .focus-timer-inner .focus-label {
+    font-size: 13px; color: var(--accent); font-weight: 500;
+    margin-top: 10px; letter-spacing: 0.3px;
+    animation: breathe 4s ease-in-out infinite;
+    transition: color 0.2s ease;
+  }
+  /* Paused label style */
+  .focus-ring-container.paused .focus-label {
+    color: rgba(255,255,255,0.4) !important;
+    animation: none;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+
+  /* Focus action bar — inside center block */
+  .focus-action-bar {
+    display: flex; flex-direction: column; gap: var(--sp-md);
+    width: 100%;
+  }
+  .focus-btn-primary {
+    font-family: var(--font); font-size: 17px; font-weight: 600;
+    color: white; background: var(--accent);
+    border: none; border-radius: var(--radius-large);
+    padding: 16px; cursor: pointer; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 56px;
+    transition: all 0.15s ease;
+  }
+  .focus-btn-primary:hover { background: var(--accent-light); }
+  .focus-btn-primary:active { background: var(--accent-dark); transform: scale(0.98); }
+
+  .focus-btn-row { display: flex; gap: var(--sp-sm); }
+  .focus-btn-secondary {
+    font-family: var(--font); font-size: 15px; font-weight: 600;
+    color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.08);
+    border: none; border-radius: var(--radius-large);
+    padding: 14px; cursor: pointer; flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: var(--touch-min);
+    transition: all 0.15s ease;
+  }
+  .focus-btn-secondary:hover { background: rgba(255,255,255,0.12); }
+  .focus-btn-secondary:active { transform: scale(0.98); }
+
+  /* Focus success overlay */
+  .focus-success {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 35; border-radius: 52px;
+  }
+  .focus-success.visible { opacity: 1; pointer-events: all; }
+  .focus-success .success-check {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: var(--success);
+    display: flex; align-items: center; justify-content: center;
+    transform: scale(0.3); opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 40px rgba(34,200,118,0.3);
+  }
+  .focus-success.visible .success-check {
+    transform: scale(1); opacity: 1;
+  }
+
+  /* ========================================
+     SKIPPED ROW INSERT ANIMATION
+     ======================================== */
+  .task-row-inserting {
+    animation: rowSlideIn 0.35s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+    background: rgba(33,138,141,0.06);
+  }
+  @keyframes rowSlideIn {
+    0%   { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; transform: translateX(-10px); }
+    100% { opacity: 1; max-height: 60px; padding-top: 12px; padding-bottom: 12px; transform: translateX(0); }
+  }
+  /* Flash highlight then fade to normal */
+  .task-row-highlight {
+    transition: background 0.8s ease;
+    background: transparent;
+  }
+
+  /* ========================================
+     INSTRUCTIONS
+     ======================================== */
+  .instructions { margin-top: 32px; max-width: 700px; text-align: center; }
+  .instructions h3 { font-size: 15px; font-weight: 600; color: #9CA3AF; margin-bottom: 12px; }
+  .instructions .steps { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .instructions .step { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6B7280; }
+  .instructions .step .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(33,138,141,0.15); color: var(--accent);
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  /* ========================================
+     ANNOTATIONS
+     ======================================== */
+  .annotations { margin-top: 40px; max-width: 700px; width: 100%; }
+  .annotations h3 { font-size: 17px; font-weight: 700; color: #F5F5F5; margin-bottom: 16px; letter-spacing: -0.3px; }
+  .annotation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .annotation-card { background: #1A1D1D; border: 1px solid #333; border-radius: var(--radius-large); padding: 16px; }
+  .annotation-card .label { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .annotation-card .value { font-size: 14px; color: #D1D5DB; line-height: 1.5; }
+  .annotation-card .value code {
+    font-family: "SF Mono", Menlo, monospace; font-size: 12px;
+    background: rgba(255,255,255,0.06); padding: 1px 5px;
+    border-radius: 4px; color: var(--accent-light);
+  }
+</style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="badge">Lazyflow Design</div>
+    <h1>Next Up Card</h1>
+    <p>Single task suggestion with optimistic completion.<br>
+    All buttons are interactive — try every action.<br>
+    <span style="color: var(--accent); font-size: 12px; font-weight: 600;">Codex-reviewed, fully interactive</span></p>
+  </div>
+
+  <div class="theme-toggle">
+    <button class="active" onclick="setTheme('light')">Light</button>
+    <button onclick="setTheme('dark')">Dark</button>
+  </div>
+
+  <div class="phones-container">
+
+    <!-- ==================== INTERACTIVE DEMO ==================== -->
+    <div class="phone-wrapper">
+      <div class="phone-label">Interactive Demo</div>
+      <div class="phone-frame" data-theme="light" id="phone-main">
+        <div class="phone-content">
+
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px;">Today</div>
+            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">Wednesday, Feb 18</div>
+          </div>
+
+          <div class="section-header">
+            <span class="icon">&#10022;</span>
+            <h2>Next Up</h2>
+          </div>
+
+          <div id="card-container" style="position: relative;">
+
+            <!-- Card 1 -->
+            <div class="next-up-card" id="card-1">
+              <div class="card-body" onclick="openDetail(event)">
+                <div class="checkbox-wrapper" onclick="completeTask(event, 1)">
+                  <div class="checkbox" id="checkbox-1">
+                    <span class="checkmark">
+                      <svg viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="2.5 7.5 5.5 10.5 11.5 4"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                <div class="task-info">
+                  <div class="task-title">Review Q4 budget proposal and send feedback to Sarah</div>
+                  <div class="task-meta">
+                    <span class="meta-badge due today">&#128339; Due 4:00 PM</span>
+                    <span class="meta-dot"></span>
+                    <span class="meta-badge duration">&#9201; 15m</span>
+                  </div>
+                  <div class="task-reason">Quick task before your 3 PM meeting</div>
+                </div>
+              </div>
+              <div class="card-divider"></div>
+              <div class="action-row">
+                <button class="action-btn start" id="start-btn-1" onclick="startWorking(event, 1)">
+                  <span class="icon-sm">&#9654;</span> <span class="btn-label">Start</span>
+                </button>
+                <button class="action-btn focus" onclick="enterFocus(event, 1)">
+                  <span class="icon-sm">&#9673;</span> Focus
+                </button>
+                <button class="action-btn icon-only" onclick="menuAction('snooze')" title="Snooze 1 hour">
+                  &#9790;
+                </button>
+                <button class="action-btn icon-only" onclick="skipSuggestion(1)" title="Skip suggestion">
+                  &#9193;
+                </button>
+              </div>
+            </div>
+
+            <!-- Card 2 (hidden, swaps in after completion) -->
+            <div class="next-up-card" id="card-2" style="display: none;">
+              <div class="card-body" onclick="openDetail(event)">
+                <div class="checkbox-wrapper" onclick="completeTask(event, 2)">
+                  <div class="checkbox" id="checkbox-2">
+                    <span class="checkmark">
+                      <svg viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="2.5 7.5 5.5 10.5 11.5 4"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                <div class="task-info">
+                  <div class="task-title">Prepare slides for Monday standup</div>
+                  <div class="task-meta">
+                    <span class="meta-badge due">&#128339; Due Tomorrow</span>
+                    <span class="meta-dot"></span>
+                    <span class="meta-badge duration">&#9201; 30m</span>
+                  </div>
+                  <div class="task-reason">Highest priority task remaining</div>
+                </div>
+              </div>
+              <div class="card-divider"></div>
+              <div class="action-row">
+                <button class="action-btn start" id="start-btn-2" onclick="startWorking(event, 2)">
+                  <span class="icon-sm">&#9654;</span> <span class="btn-label">Start</span>
+                </button>
+                <button class="action-btn focus" onclick="enterFocus(event, 2)">
+                  <span class="icon-sm">&#9673;</span> Focus
+                </button>
+                <button class="action-btn icon-only" onclick="menuAction('snooze')" title="Snooze 1 hour">
+                  &#9790;
+                </button>
+                <button class="action-btn icon-only" onclick="skipSuggestion(2)" title="Skip suggestion">
+                  &#9193;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today's Tasks section — includes ALL tasks (Next Up is just a spotlight) -->
+          <div style="margin-top: 24px;" id="tasks-section">
+            <div class="section-header">
+              <span class="icon" style="font-size: 15px;">&#128203;</span>
+              <h2>Today</h2>
+              <span id="task-count" style="font-size: 13px; color: var(--text-tertiary); margin-left: auto;">5 tasks</span>
+            </div>
+            <div id="task-list" style="background: var(--surface); border-radius: var(--radius-large); box-shadow: var(--shadow-small); overflow: hidden;">
+              <!-- Next Up task 1 (already in list) -->
+              <div class="task-row" id="today-row-1" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--divider); transition: background 0.6s ease;">
+                <div style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--checkbox-border); flex-shrink: 0;"></div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 15px; color: var(--text-primary); font-weight: 500;">Review Q4 budget proposal and send feedback to Sarah</div>
+                  <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 2px;">Due 4:00 PM</div>
+                </div>
+              </div>
+              <!-- Next Up task 2 (already in list) -->
+              <div class="task-row" id="today-row-2" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--divider); transition: background 0.6s ease;">
+                <div style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--checkbox-border); flex-shrink: 0;"></div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 15px; color: var(--text-primary); font-weight: 500;">Prepare slides for Monday standup</div>
+                  <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 2px;">Due Tomorrow</div>
+                </div>
+              </div>
+              <!-- Regular task row -->
+              <div class="task-row" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--divider);">
+                <div style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--checkbox-border); flex-shrink: 0;"></div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 15px; color: var(--text-primary); font-weight: 500;">Call dentist to reschedule</div>
+                  <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 2px;">Due 5:00 PM</div>
+                </div>
+              </div>
+              <!-- Regular task row -->
+              <div class="task-row" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--divider);">
+                <div style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--checkbox-border); flex-shrink: 0;"></div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 15px; color: var(--text-primary); font-weight: 500;">Pick up groceries</div>
+                  <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 2px;">Due 7:00 PM</div>
+                </div>
+              </div>
+              <!-- Completed task -->
+              <div class="task-row" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
+                <div style="width: 22px; height: 22px; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 7.5 5.5 10.5 11.5 4"/></svg>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 15px; color: var(--text-secondary); font-weight: 500; text-decoration: line-through;">Send weekly report</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action feedback toast -->
+          <div class="action-toast" id="action-toast"></div>
+
+          <!-- Undo Toast -->
+          <div class="undo-toast" id="undo-toast">
+            <span>&#10003; Task completed</span>
+            <button class="undo-btn" onclick="undoComplete()">Undo</button>
+          </div>
+
+          <!-- Focus Mode Overlay — "Calm Precision" / Option A: Ring-centric -->
+          <div class="focus-overlay" id="focus-overlay">
+            <div class="focus-ambient"></div>
+
+            <!-- Top bar — pinned -->
+            <div class="focus-top-bar">
+              <button class="focus-icon-btn" onclick="closeFocus()" title="Close">&#10005;</button>
+              <button class="focus-icon-btn" onclick="showActionToast('Open Task Details')" title="More">&#8943;</button>
+            </div>
+
+            <!-- Center block: title + ring + actions grouped -->
+            <div class="focus-center-block">
+
+              <!-- Task title -->
+              <div class="focus-task-title-area">
+                <div class="focus-task-title" id="focus-task-title"></div>
+                <div class="focus-subtitle" id="focus-subtitle">Due 4:00 PM &middot; Est. 15 min</div>
+              </div>
+
+              <!-- Timer with progress ring (tap to pause/resume) -->
+              <div class="focus-ring-container" id="focus-ring-container" onclick="togglePause()" title="Tap to pause/resume">
+                <svg class="focus-ring-svg" viewBox="0 0 240 240">
+                  <circle class="focus-ring-track" cx="120" cy="120" r="110"/>
+                  <circle class="focus-ring-progress" id="focus-ring-progress" cx="120" cy="120" r="110"/>
+                </svg>
+                <div class="focus-ring-glow" id="focus-ring-glow"></div>
+                <div class="focus-timer-inner">
+                  <div class="focus-timer" id="focus-timer">0:00</div>
+                  <div class="focus-label" id="focus-label">Focusing</div>
+                </div>
+              </div>
+
+              <!-- Action bar -->
+              <div class="focus-action-bar">
+                <button class="focus-btn-primary" onclick="focusMarkComplete()">
+                  &#10003; Mark Complete
+                </button>
+                <div class="focus-btn-row">
+                  <button class="focus-btn-secondary" onclick="focusTakeBreak()">
+                    &#9790; Take a Break
+                  </button>
+                  <button class="focus-btn-secondary" onclick="focusSwitchTask()">
+                    &#8634; Switch Task
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Success animation -->
+            <div class="focus-success" id="focus-success">
+              <div class="success-check">
+                <svg width="40" height="40" viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="2.5 7.5 5.5 10.5 11.5 4"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== EMPTY STATE ==================== -->
+    <div class="phone-wrapper">
+      <div class="phone-label">Empty State</div>
+      <div class="phone-frame" data-theme="light" id="phone-empty">
+        <div class="phone-content">
+
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px;">Today</div>
+            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">Wednesday, Feb 18</div>
+          </div>
+
+          <div class="section-header">
+            <span class="icon">&#10022;</span>
+            <h2>Next Up</h2>
+          </div>
+
+          <div style="text-align: center; padding: 32px 20px; color: var(--text-tertiary);">
+            <div style="font-size: 36px; margin-bottom: 8px; opacity: 0.6;">&#127881;</div>
+            <div style="font-size: 15px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px;">All caught up!</div>
+            <div style="font-size: 13px; margin-bottom: 16px;">No tasks need your attention right now.</div>
+            <button style="
+              font-family: var(--font); font-size: 13px; font-weight: 600;
+              color: var(--accent); background: rgba(33,138,141,0.1);
+              border: none; padding: 8px 16px; border-radius: var(--radius-full);
+              cursor: pointer;
+            ">View all tasks</button>
+          </div>
+
+          <div style="margin-top: 24px;">
+            <div class="section-header">
+              <span class="icon">&#9989;</span>
+              <h2>Completed Today</h2>
+            </div>
+            <div style="background: var(--surface); border-radius: var(--radius-large); padding: var(--sp-md) var(--sp-lg); box-shadow: var(--shadow-small);">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+                <div style="width: 22px; height: 22px; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center;">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 7.5 5.5 10.5 11.5 4"/></svg>
+                </div>
+                <span style="font-size: 15px; color: var(--text-secondary); text-decoration: line-through;">Review Q4 budget proposal</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0;">
+                <div style="width: 22px; height: 22px; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center;">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 7.5 5.5 10.5 11.5 4"/></svg>
+                </div>
+                <span style="font-size: 15px; color: var(--text-secondary); text-decoration: line-through;">Prepare standup slides</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Instructions -->
+  <div class="instructions">
+    <h3>Try Everything</h3>
+    <div class="steps">
+      <div class="step"><span class="step-num">1</span> Tap checkbox</div>
+      <div class="step"><span class="step-num">2</span> Tap Undo</div>
+      <div class="step"><span class="step-num">3</span> Tap Start</div>
+      <div class="step"><span class="step-num">4</span> Tap Focus</div>
+      <div class="step"><span class="step-num">5</span> Tap ring to pause</div>
+      <div class="step"><span class="step-num">6</span> Tap Snooze &#9790;</div>
+      <div class="step"><span class="step-num">7</span> Tap Skip &#9193;</div>
+      <div class="step"><span class="step-num">8</span> Toggle Light/Dark</div>
+    </div>
+  </div>
+
+  <!-- Design Annotations -->
+  <div class="annotations">
+    <h3>Design Specifications</h3>
+    <div class="annotation-grid">
+      <div class="annotation-card">
+        <div class="label">Card</div>
+        <div class="value">
+          <code>adaptiveSurface</code> background, <code>CornerRadius.large</code> (12pt)<br>
+          <code>Shadow.small</code> elevation. Tap body opens task detail sheet.<br>
+          Checkbox has 44pt hit area (Apple HIG minimum).
+        </div>
+      </div>
+      <div class="annotation-card">
+        <div class="label">Completion</div>
+        <div class="value">
+          Checkbox pop: 180ms spring (1 &rarr; 1.18 &rarr; 1)<br>
+          Card exit: 260ms (60ms delay). Next card: 250ms (overlaps).<br>
+          Haptic: <code>.success</code>. Undo toast: 5s. Total: ~550ms.
+        </div>
+      </div>
+      <div class="annotation-card">
+        <div class="label">Action Row</div>
+        <div class="value">
+          <code>[Start]</code> — primary CTA, accent fill, starts timer<br>
+          <code>[Focus]</code> — secondary, tonal accent, enters Focus Mode<br>
+          <code>[&#9790;]</code> — icon-only, snooze 1 hour<br>
+          <code>[&#9193;]</code> — icon-only, skip (task returns to Today list)
+        </div>
+      </div>
+      <div class="annotation-card">
+        <div class="label">Reason + Meta</div>
+        <div class="value">
+          Max 2 badges: due + duration (priority only in detail).<br>
+          Reason: 1 line, regular weight, secondary color, ellipsis overflow.<br>
+          Source: <code>cachedSuggestions.first?.topReason</code>
+        </div>
+      </div>
+      <div class="annotation-card">
+        <div class="label">Gating</div>
+        <div class="value">
+          Old: requires 3+ incomplete tasks<br>
+          New: shows with 1+ incomplete tasks<br>
+          Empty: "All caught up!" + "View all tasks" link
+        </div>
+      </div>
+      <div class="annotation-card">
+        <div class="label">Accessibility</div>
+        <div class="value">
+          All touch targets &ge; 44pt. Reduce Motion: fade only.<br>
+          Undo: 5s (up from 4s for accessibility).<br>
+          VoiceOver labels on checkbox, actions, and card.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /*
+   * BUG FIXES APPLIED:
+   *
+   * 1. completeTask: Now cleans up startWorkingInterval for the completed card
+   *    before swapping. Previously, the interval kept running in the background
+   *    after a card with an active "Start Working" timer was completed.
+   *
+   * 2. skipSuggestion: Now cleans up startWorkingInterval for the skipped card.
+   *    Previously, skipping a card with an active "Start Working" timer left the
+   *    interval running and leaked into the next card's state.
+   *
+   * 3. focusTakeBreak: Now clears focusTimerInterval and sets it to null.
+   *    Previously, the interval kept running (in paused mode) after taking a break,
+   *    which was fragile and could lead to stale closures if the user changed cards.
+   *
+   * 4. focusSwitchTask: Now resets the OLD card's Start button and sets the NEW
+   *    card's Start button to "Working..." state. Previously, the old card's button
+   *    stayed green and the new card's button stayed in "Start" state after switching.
+   *
+   * 5. focusMarkComplete: Now sets focusTimerInterval = null after clearing, for
+   *    clean state. Previously, the stale interval ID was left in the variable.
+   *
+   * 6. completeTask: Now resets taskElapsed for the completed card so elapsed time
+   *    does not carry over if the card is brought back via undo and started fresh.
+   *
+   * 7. focusSwitchTask: Now sets focusTimerInterval = null before restarting, and
+   *    properly manages startWorkingCard to avoid orphaned interval references.
+   *
+   * 8. showActionToast: Now clears the previous timeout before setting a new one.
+   *    Previously, rapid successive calls could cause the toast to disappear
+   *    prematurely when an earlier setTimeout fired.
+   */
+
+  let currentCard = 1;
+  let isAnimating = false;
+  let undoTimer = null;
+  let focusTimerInterval = null;
+  let focusSeconds = 0;
+
+  // Shared elapsed time per task (mirrors Core Data's elapsedTime)
+  const taskElapsed = { 1: 0, 2: 0 };
+  let startWorkingInterval = null;
+  let startWorkingCard = null;
+
+  const taskTitles = {
+    1: 'Review Q4 budget proposal and send feedback to Sarah',
+    2: 'Prepare slides for Monday standup'
+  };
+
+  function setTheme(theme) {
+    document.querySelectorAll('.phone-frame').forEach(f => f.setAttribute('data-theme', theme));
+    document.querySelectorAll('.theme-toggle button').forEach(b =>
+      b.classList.toggle('active', b.textContent.toLowerCase() === theme)
+    );
+  }
+
+  // ===== COMPLETE TASK =====
+  function completeTask(event, cardNum) {
+    event.stopPropagation();
+    if (isAnimating) return;
+    isAnimating = true;
+
+    const checkbox = document.getElementById(`checkbox-${cardNum}`);
+    const card = document.getElementById(`card-${cardNum}`);
+    const toast = document.getElementById('undo-toast');
+
+    // Clear any existing undo timer
+    if (undoTimer) clearTimeout(undoTimer);
+
+    // [FIX 1] Clean up startWorkingInterval for the card being completed
+    resetStartBtn(cardNum);
+
+    // [FIX 6] Reset elapsed time for the completed task
+    taskElapsed[cardNum] = 0;
+
+    // 1. Instant checkbox fill + strikethrough title
+    checkbox.classList.add('checked');
+    const title = card.querySelector('.task-title');
+    title.classList.add('completed');
+
+    // 2. Card exit (60ms delay)
+    setTimeout(() => card.classList.add('completing'), 60);
+
+    // 3. Swap cards (overlapping)
+    setTimeout(() => {
+      card.style.display = 'none';
+      card.classList.remove('completing');
+      checkbox.classList.remove('checked');
+      title.classList.remove('completed');
+
+      const nextNum = cardNum === 1 ? 2 : 1;
+      const nextCard = document.getElementById(`card-${nextNum}`);
+      nextCard.style.display = 'block';
+      nextCard.classList.add('entering');
+      currentCard = nextNum;
+
+      // Reset start button state on new card
+      resetStartBtn(nextNum);
+
+      setTimeout(() => {
+        nextCard.classList.remove('entering');
+        isAnimating = false;
+      }, 250);
+
+      // Show undo toast (5s for accessibility)
+      toast.classList.add('visible');
+      undoTimer = setTimeout(() => toast.classList.remove('visible'), 5000);
+    }, 320);
+  }
+
+  // ===== UNDO =====
+  function undoComplete() {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    const toast = document.getElementById('undo-toast');
+    toast.classList.remove('visible');
+    if (undoTimer) clearTimeout(undoTimer);
+
+    const current = document.getElementById(`card-${currentCard}`);
+    current.classList.add('completing');
+
+    setTimeout(() => {
+      current.style.display = 'none';
+      current.classList.remove('completing');
+
+      const prevNum = currentCard === 1 ? 2 : 1;
+      const prevCard = document.getElementById(`card-${prevNum}`);
+      prevCard.style.display = 'block';
+      prevCard.classList.add('entering');
+      currentCard = prevNum;
+
+      resetStartBtn(prevNum);
+
+      setTimeout(() => {
+        prevCard.classList.remove('entering');
+        isAnimating = false;
+      }, 250);
+    }, 300);
+  }
+
+  // ===== START WORKING =====
+  function startWorking(event, cardNum) {
+    event.stopPropagation();
+    const btn = document.getElementById(`start-btn-${cardNum}`);
+    const label = btn.querySelector('.btn-label');
+
+    if (btn.classList.contains('working')) {
+      // Already working — stop
+      btn.classList.remove('working');
+      if (label) label.textContent = 'Start';
+      btn.querySelector('.icon-sm').innerHTML = '&#9654;';
+      if (startWorkingInterval) clearInterval(startWorkingInterval);
+      startWorkingInterval = null;
+      startWorkingCard = null;
+      showActionToast('Timer stopped');
+    } else {
+      // Stop any existing start interval first (prevents leak across tasks)
+      if (startWorkingInterval) {
+        clearInterval(startWorkingInterval);
+        // Reset the old task's Start button if different
+        if (startWorkingCard && startWorkingCard !== cardNum) {
+          resetStartBtn(startWorkingCard);
+        }
+      }
+      // Start working — tick shared elapsed
+      btn.classList.add('working');
+      label.textContent = 'Working...';
+      btn.querySelector('.icon-sm').innerHTML = '&#9209;';
+      startWorkingCard = cardNum;
+      startWorkingInterval = setInterval(() => {
+        taskElapsed[cardNum]++;
+      }, 1000);
+      showActionToast('Timer started — task in progress');
+    }
+  }
+
+  function resetStartBtn(cardNum) {
+    const btn = document.getElementById(`start-btn-${cardNum}`);
+    if (btn) {
+      btn.classList.remove('working');
+      const label = btn.querySelector('.btn-label');
+      if (label) label.textContent = 'Start';
+      const icon = btn.querySelector('.icon-sm');
+      if (icon) icon.innerHTML = '&#9654;';
+    }
+    if (startWorkingCard === cardNum && startWorkingInterval) {
+      clearInterval(startWorkingInterval);
+      startWorkingInterval = null;
+      startWorkingCard = null;
+    }
+  }
+
+  // ===== FOCUS MODE =====
+  let focusCardNum = 1;
+
+  const taskEstimates = { 1: 900, 2: 1800 }; // seconds (15m, 30m)
+  const taskSubtitles = {
+    1: 'Due 4:00 PM \u00B7 Est. 15 min',
+    2: 'Due Tomorrow \u00B7 Est. 30 min'
+  };
+  const RING_CIRCUMFERENCE = 691.2; // 2 * PI * 110
+  let focusPaused = false;
+
+  function enterFocus(event, cardNum) {
+    event.stopPropagation();
+
+    const overlay = document.getElementById('focus-overlay');
+    const glowEl = document.getElementById('focus-ring-glow');
+    const ringContainer = document.getElementById('focus-ring-container');
+    const labelEl = document.getElementById('focus-label');
+
+    // Stop any Start Working interval — Focus takes over elapsed tracking
+    if (startWorkingInterval) {
+      clearInterval(startWorkingInterval);
+      startWorkingInterval = null;
+      startWorkingCard = null;
+    }
+    // Set Start button to Working state (Focus implies working)
+    const startBtn = document.getElementById(`start-btn-${cardNum}`);
+    if (startBtn) {
+      startBtn.classList.add('working');
+      const sl = startBtn.querySelector('.btn-label');
+      if (sl) sl.textContent = 'Working...';
+      const si = startBtn.querySelector('.icon-sm');
+      if (si) si.innerHTML = '&#9209;';
+    }
+
+    const timerEl = document.getElementById('focus-timer');
+    const ringEl = document.getElementById('focus-ring-progress');
+
+    // Resume existing paused session for same task
+    if (focusPaused && focusCardNum === cardNum) {
+      focusPaused = false;
+      // Sync focus timer with shared elapsed (picks up any Start Working time)
+      focusSeconds = taskElapsed[cardNum];
+      const mins = Math.floor(focusSeconds / 60);
+      const secs = focusSeconds % 60;
+      timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      const estimate = taskEstimates[cardNum] || 300;
+      ringEl.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - Math.min(focusSeconds / estimate, 1));
+
+      ringContainer.classList.remove('paused');
+      labelEl.textContent = 'Focusing';
+      overlay.classList.add('visible');
+      setTimeout(() => glowEl.classList.add('visible'), 300);
+
+      // Ensure interval is running (may have been cleared by side path)
+      if (!focusTimerInterval) {
+        focusTimerInterval = setInterval(() => {
+          if (focusPaused) return;
+          focusSeconds++;
+          taskElapsed[cardNum] = focusSeconds;
+          const m = Math.floor(focusSeconds / 60);
+          const s = focusSeconds % 60;
+          timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+          const est = taskEstimates[cardNum] || 300;
+          ringEl.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - Math.min(focusSeconds / est, 1));
+        }, 1000);
+      }
+
+      showActionToast('Resumed from break');
+      return;
+    }
+
+    // Fresh session
+    focusCardNum = cardNum;
+    focusPaused = false;
+    const titleEl = document.getElementById('focus-task-title');
+    const subtitleEl = document.getElementById('focus-subtitle');
+
+    titleEl.textContent = taskTitles[cardNum];
+    subtitleEl.textContent = taskSubtitles[cardNum];
+    // Sync with shared elapsed (may already have time from Start Working)
+    focusSeconds = taskElapsed[cardNum];
+    const mins = Math.floor(focusSeconds / 60);
+    const secs = focusSeconds % 60;
+    timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    const estimate = taskEstimates[cardNum] || 300;
+    ringEl.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - Math.min(focusSeconds / estimate, 1));
+    labelEl.textContent = 'Focusing';
+    ringContainer.classList.remove('paused');
+
+    overlay.classList.add('visible');
+
+    // Show glow dot after brief delay
+    setTimeout(() => glowEl.classList.add('visible'), 500);
+
+    // Start counting + animate ring (writes to shared elapsed)
+    if (focusTimerInterval) clearInterval(focusTimerInterval);
+    focusTimerInterval = setInterval(() => {
+      if (focusPaused) return;
+      focusSeconds++;
+      taskElapsed[cardNum] = focusSeconds;
+      const m = Math.floor(focusSeconds / 60);
+      const s = focusSeconds % 60;
+      timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+
+      const est = taskEstimates[cardNum] || 300;
+      const progress = Math.min(focusSeconds / est, 1);
+      ringEl.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
+    }, 1000);
+  }
+
+  function togglePause() {
+    focusPaused = !focusPaused;
+    const ringContainer = document.getElementById('focus-ring-container');
+    const labelEl = document.getElementById('focus-label');
+
+    if (focusPaused) {
+      ringContainer.classList.add('paused');
+      labelEl.textContent = 'Paused';
+      showActionToast('Paused — tap ring to resume');
+    } else {
+      ringContainer.classList.remove('paused');
+      labelEl.textContent = 'Focusing';
+      showActionToast('Resumed');
+    }
+  }
+
+  function closeFocus() {
+    const overlay = document.getElementById('focus-overlay');
+    const glowEl = document.getElementById('focus-ring-glow');
+    overlay.classList.remove('visible');
+    glowEl.classList.remove('visible');
+    if (focusTimerInterval) clearInterval(focusTimerInterval);
+    focusTimerInterval = null;
+    focusPaused = false;
+
+    // Task stays "working" — restart startWorkingInterval to keep elapsed ticking
+    const cardNum = focusCardNum;
+    if (!startWorkingInterval) {
+      startWorkingInterval = setInterval(() => {
+        taskElapsed[cardNum]++;
+      }, 1000);
+      startWorkingCard = cardNum;
+    }
+    // Sync Start button to show Working state
+    const startBtn = document.getElementById(`start-btn-${cardNum}`);
+    if (startBtn && !startBtn.classList.contains('working')) {
+      startBtn.classList.add('working');
+      const sl = startBtn.querySelector('.btn-label');
+      if (sl) sl.textContent = 'Working...';
+      const si = startBtn.querySelector('.icon-sm');
+      if (si) si.innerHTML = '&#9209;';
+    }
+    showActionToast('Minimized — tap Focus to return');
+  }
+
+  function focusMarkComplete() {
+    const success = document.getElementById('focus-success');
+    success.classList.add('visible');
+
+    setTimeout(() => {
+      success.classList.remove('visible');
+      const overlay = document.getElementById('focus-overlay');
+      overlay.classList.remove('visible');
+      document.getElementById('focus-ring-glow').classList.remove('visible');
+      if (focusTimerInterval) clearInterval(focusTimerInterval);
+      // [FIX 5] Null out for clean state
+      focusTimerInterval = null;
+      focusPaused = false;
+
+      // Reset elapsed for completed task
+      taskElapsed[focusCardNum] = 0;
+      resetStartBtn(focusCardNum);
+
+      // Trigger card completion swap
+      const card = document.getElementById(`card-${focusCardNum}`);
+      card.style.display = 'none';
+      const nextNum = focusCardNum === 1 ? 2 : 1;
+      const nextCard = document.getElementById(`card-${nextNum}`);
+      nextCard.style.display = 'block';
+      nextCard.classList.add('entering');
+      currentCard = nextNum;
+      resetStartBtn(nextNum);
+      setTimeout(() => nextCard.classList.remove('entering'), 250);
+
+      // Show undo toast
+      const toast = document.getElementById('undo-toast');
+      toast.classList.add('visible');
+      if (undoTimer) clearTimeout(undoTimer);
+      undoTimer = setTimeout(() => toast.classList.remove('visible'), 5000);
+    }, 1200);
+  }
+
+  function focusTakeBreak() {
+    // Pause the timer, don't stop it
+    focusPaused = true;
+    document.getElementById('focus-ring-container').classList.add('paused');
+    document.getElementById('focus-label').textContent = 'Paused';
+
+    // [FIX 3] Clear focusTimerInterval so no stale closure keeps running
+    if (focusTimerInterval) clearInterval(focusTimerInterval);
+    focusTimerInterval = null;
+
+    // Reset Start button so user can tap Start during break
+    resetStartBtn(focusCardNum);
+
+    // Minimize the overlay (like dismissFocus — pill will show)
+    const overlay = document.getElementById('focus-overlay');
+    overlay.classList.remove('visible');
+    document.getElementById('focus-ring-glow').classList.remove('visible');
+    showActionToast('On break — tap Focus to resume');
+  }
+
+  function focusSwitchTask() {
+    // Stop old interval (its closure writes to the wrong task)
+    if (focusTimerInterval) clearInterval(focusTimerInterval);
+    // [FIX 7] Null out for clean state
+    focusTimerInterval = null;
+
+    // [FIX 4] Reset OLD card's Start button before switching
+    const oldCardNum = focusCardNum;
+    resetStartBtn(oldCardNum);
+
+    const nextNum = focusCardNum === 1 ? 2 : 1;
+    focusCardNum = nextNum;
+    focusPaused = false;
+
+    document.getElementById('focus-task-title').textContent = taskTitles[nextNum];
+    document.getElementById('focus-subtitle').textContent = taskSubtitles[nextNum];
+    document.getElementById('focus-label').textContent = 'Focusing';
+    document.getElementById('focus-ring-container').classList.remove('paused');
+
+    // Sync timer with shared elapsed for new task (may have Start Working time)
+    focusSeconds = taskElapsed[nextNum];
+    const timerEl = document.getElementById('focus-timer');
+    const ringEl = document.getElementById('focus-ring-progress');
+    const mins = Math.floor(focusSeconds / 60);
+    const secs = focusSeconds % 60;
+    timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    const est = taskEstimates[nextNum] || 300;
+    ringEl.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - Math.min(focusSeconds / est, 1));
+
+    // Restart interval for the new task
+    focusTimerInterval = setInterval(() => {
+      if (focusPaused) return;
+      focusSeconds++;
+      taskElapsed[nextNum] = focusSeconds;
+      const m = Math.floor(focusSeconds / 60);
+      const s = focusSeconds % 60;
+      timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+
+      const e = taskEstimates[nextNum] || 300;
+      const progress = Math.min(focusSeconds / e, 1);
+      ringEl.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
+    }, 1000);
+
+    // Swap the underlying cards too
+    document.getElementById(`card-${currentCard}`).style.display = 'none';
+    document.getElementById(`card-${nextNum}`).style.display = 'block';
+    currentCard = nextNum;
+
+    // [FIX 4] Set NEW card's Start button to Working state (Focus implies working)
+    const newStartBtn = document.getElementById(`start-btn-${nextNum}`);
+    if (newStartBtn) {
+      newStartBtn.classList.add('working');
+      const sl = newStartBtn.querySelector('.btn-label');
+      if (sl) sl.textContent = 'Working...';
+      const si = newStartBtn.querySelector('.icon-sm');
+      if (si) si.innerHTML = '&#9209;';
+    }
+
+    showActionToast('Switched to: ' + taskTitles[nextNum].substring(0, 30) + '...');
+  }
+
+  function menuAction(action) {
+    if (action === 'snooze') {
+      showActionToast('Snoozed for 1 hour');
+    }
+  }
+
+  // ===== SKIP — card swaps, existing row highlights in Today list =====
+  function skipSuggestion(cardNum) {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    const card = document.getElementById(`card-${cardNum}`);
+
+    // [FIX 2] Clean up startWorkingInterval for the card being skipped
+    resetStartBtn(cardNum);
+
+    showActionToast('Suggestion skipped');
+
+    // 1. Animate card out
+    card.classList.add('completing');
+
+    setTimeout(() => {
+      card.style.display = 'none';
+      card.classList.remove('completing');
+
+      // 2. Show next suggestion card
+      const nextNum = cardNum === 1 ? 2 : 1;
+      const nextCard = document.getElementById(`card-${nextNum}`);
+      nextCard.style.display = 'block';
+      nextCard.classList.add('entering');
+      currentCard = nextNum;
+      resetStartBtn(nextNum);
+      setTimeout(() => {
+        nextCard.classList.remove('entering');
+        isAnimating = false;
+      }, 250);
+
+      // 3. Highlight the existing row in Today list (task was always there)
+      highlightExistingRow(cardNum);
+    }, 320);
+  }
+
+  function highlightExistingRow(cardNum) {
+    const row = document.getElementById(`today-row-${cardNum}`);
+    if (!row) return;
+
+    // Scroll to the row
+    setTimeout(() => {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
+    // Flash teal highlight then fade back
+    row.style.background = 'rgba(33,138,141,0.12)';
+    setTimeout(() => {
+      row.style.background = '';
+    }, 1200);
+  }
+
+
+  // ===== ACTION TOAST =====
+  let actionToastTimer = null;
+  function showActionToast(message) {
+    const toast = document.getElementById('action-toast');
+    toast.textContent = message;
+    toast.classList.add('visible');
+    if (actionToastTimer) clearTimeout(actionToastTimer);
+    actionToastTimer = setTimeout(() => toast.classList.remove('visible'), 1500);
+  }
+
+  // ===== CARD TAP (detail) =====
+  function openDetail(event) {
+    if (event.target.closest('.checkbox-wrapper') || event.target.closest('.action-btn')) return;
+    showActionToast('Opening task detail...');
+  }
+</script>
+
+</body>
+</html>
