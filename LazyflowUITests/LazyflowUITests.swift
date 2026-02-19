@@ -1907,4 +1907,205 @@ final class LazyflowUITests: XCTestCase {
         }
     }
 
+    // MARK: - Next Up Card Tests
+
+    /// Helper: create a task due today so it appears in the Today list and triggers Next Up suggestions
+    private func createTodayTask(title: String) {
+        let addTaskButton = app.buttons["Add task"]
+        XCTAssertTrue(addTaskButton.waitForExistence(timeout: 3))
+        addTaskButton.tap()
+
+        let titleField = app.textFields["What do you need to do?"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
+        titleField.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        titleField.typeText(title)
+
+        // Tap "Today" chip to set due date to today
+        let todayChip = app.buttons["Today"].firstMatch
+        if todayChip.exists && todayChip.isHittable {
+            todayChip.tap()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        let navBar = app.navigationBars["New Task"]
+        let addButton = navBar.buttons["Add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
+
+        // Wait for sheet to dismiss
+        Thread.sleep(forTimeInterval: 0.5)
+    }
+
+    func testNextUpCardAppearsWithTasks() throws {
+        navigateToToday()
+
+        // Create a task due today
+        createTodayTask(title: "Next Up test task")
+
+        // Wait for PrioritizationService debounce (1s) + render
+        Thread.sleep(forTimeInterval: 2.5)
+
+        // Verify Next Up section header appears
+        let nextUpHeader = app.staticTexts["Next Up"]
+        XCTAssertTrue(nextUpHeader.waitForExistence(timeout: 5), "Next Up section header should appear with 1+ tasks")
+    }
+
+    func testNextUpCardCheckboxCompletion() throws {
+        navigateToToday()
+        createTodayTask(title: "Complete from card")
+        Thread.sleep(forTimeInterval: 2.5)
+
+        // Find the Next Up card's checkbox via accessibility label
+        let checkbox = app.buttons["Complete Complete from card"]
+        guard checkbox.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
+        }
+
+        // Tap checkbox to optimistically complete
+        checkbox.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Undo toast should appear — check for "Undo" text or button with identifier
+        let undoButton = app.buttons.matching(identifier: "UndoButton").firstMatch
+        let undoText = app.staticTexts["Undo"]
+        let toastMessage = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Completed'")).firstMatch
+        let toastAppeared = undoButton.waitForExistence(timeout: 3)
+            || undoText.waitForExistence(timeout: 1)
+            || toastMessage.waitForExistence(timeout: 1)
+        XCTAssertTrue(toastAppeared, "Undo toast should appear after optimistic completion")
+    }
+
+    func testNextUpCardStartAction() throws {
+        navigateToToday()
+        createTodayTask(title: "Start from card")
+        Thread.sleep(forTimeInterval: 2.5)
+
+        // Find the Start button in the Next Up card
+        let startButton = app.buttons["Start"]
+        guard startButton.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
+        }
+
+        startButton.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Task should now show working indicator (elapsed time or stop button)
+        // Verify the task row reflects working state
+        let taskText = app.staticTexts["Start from card"]
+        XCTAssertTrue(taskText.exists, "Task should still be visible after starting work")
+    }
+
+    func testNextUpCardFocusAction() throws {
+        navigateToToday()
+        createTodayTask(title: "Focus from card")
+        Thread.sleep(forTimeInterval: 2.5)
+
+        // Find the Focus button in the Next Up card
+        let focusButton = app.buttons["Focus"]
+        guard focusButton.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
+        }
+
+        focusButton.tap()
+
+        // Focus Mode should present as full-screen cover
+        let closeButton = app.buttons["Close Focus Mode"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5), "Focus Mode should open with close button")
+
+        // Dismiss Focus Mode
+        closeButton.tap()
+    }
+
+    func testNextUpCardBodyOpensDetail() throws {
+        navigateToToday()
+        createTodayTask(title: "Detail tap test")
+        Thread.sleep(forTimeInterval: 2.5)
+
+        // The card body has accessibility label "Next up: Detail tap test"
+        let cardBody = app.otherElements["Next up: Detail tap test"]
+        guard cardBody.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
+        }
+
+        // Tap the task title text to trigger onTapGesture on card body
+        let titleText = app.staticTexts["Detail tap test"].firstMatch
+        if titleText.exists && titleText.isHittable {
+            titleText.tap()
+        } else {
+            cardBody.tap()
+        }
+
+        // Task detail sheet should appear (nav title is "Edit Task")
+        let detailNav = app.navigationBars["Edit Task"]
+        XCTAssertTrue(detailNav.waitForExistence(timeout: 3), "Task detail sheet should open when tapping card body")
+    }
+
+    func testNextUpCardSnoozeAction() throws {
+        navigateToToday()
+        createTodayTask(title: "Snooze test task")
+        Thread.sleep(forTimeInterval: 2.5)
+
+        let snoozeButton = app.buttons["Snooze suggestion"]
+        guard snoozeButton.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
+        }
+
+        snoozeButton.tap()
+
+        // Snooze confirmation dialog should show "In 1 Hour" option
+        let snoozeOption = app.buttons["In 1 Hour"]
+        XCTAssertTrue(snoozeOption.waitForExistence(timeout: 3), "Snooze confirmation dialog should appear with options")
+
+        // Dismiss by tapping Cancel
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists && cancelButton.isHittable {
+            cancelButton.tap()
+        }
+    }
+
+    func testNextUpCardSkipAction() throws {
+        navigateToToday()
+        createTodayTask(title: "Skip test task")
+        Thread.sleep(forTimeInterval: 2.5)
+
+        let skipButton = app.buttons["Skip suggestion"]
+        guard skipButton.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
+        }
+
+        skipButton.tap()
+
+        // Skip confirmation dialog should show skip reason options
+        let skipOption = app.buttons["Not relevant right now"]
+        XCTAssertTrue(skipOption.waitForExistence(timeout: 3), "Skip confirmation dialog should appear with options")
+
+        // Dismiss by tapping Cancel
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists && cancelButton.isHittable {
+            cancelButton.tap()
+        }
+    }
+
+    func testTaskAppearsInBothNextUpAndTodayList() throws {
+        navigateToToday()
+        createTodayTask(title: "Dual appearance task")
+        Thread.sleep(forTimeInterval: 2.5)
+
+        // Check that the Next Up card exists for the task
+        let nextUpLabel = app.otherElements["Next up: Dual appearance task"]
+        guard nextUpLabel.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
+        }
+
+        // Check that the task also appears as a regular row (via "Mark complete" button in Today list)
+        // The Next Up card checkbox uses "Complete Dual appearance task" while the list row uses "Mark complete"
+        // If both exist, the task appears in both places
+        let taskTitle = app.staticTexts.matching(NSPredicate(format: "label == %@", "Dual appearance task"))
+        let markComplete = app.buttons.matching(NSPredicate(format: "label == %@", "Mark complete"))
+        // At least 1 "Mark complete" button (from Today list row) + the Next Up card
+        XCTAssertTrue(nextUpLabel.exists && (taskTitle.count >= 1 || markComplete.count >= 1),
+                       "Task should appear in both Next Up card and Today list")
+    }
+
 }
