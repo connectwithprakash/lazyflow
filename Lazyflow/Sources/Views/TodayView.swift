@@ -431,21 +431,7 @@ struct TodayView: View {
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
-            // Section 2: Next Up - ALWAYS present (even when empty)
-            Section {
-                if let suggestion = effectiveNextUpSuggestion {
-                    nextUpCard(for: suggestion)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                }
-            } header: {
-                if effectiveNextUpSuggestion != nil {
-                    nextUpSectionHeader
-                }
-            }
-            .listRowBackground(Color.adaptiveBackground)
-            .listRowSeparator(.hidden)
-
-            // Section 3: Prompt cards - ALWAYS present
+            // Section 2: Prompt cards - ALWAYS present (orient before action)
             Section {
                 if shouldShowPlanYourDayPrompt {
                     planYourDayPromptCard
@@ -461,6 +447,20 @@ struct TodayView: View {
                 }
             }
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+            .listRowBackground(Color.adaptiveBackground)
+            .listRowSeparator(.hidden)
+
+            // Section 3: Next Up - ALWAYS present (even when empty)
+            Section {
+                if let suggestion = effectiveNextUpSuggestion {
+                    nextUpCard(for: suggestion)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                }
+            } header: {
+                if effectiveNextUpSuggestion != nil {
+                    nextUpSectionHeader
+                }
+            }
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
@@ -916,10 +916,10 @@ struct TodayView: View {
                 .transition(.opacity)
             }
 
-            // Action rows — layout changes based on state
-            VStack(spacing: DesignSystem.Spacing.sm) {
+            // Action row — single row, layout changes based on state
+            HStack(spacing: DesignSystem.Spacing.sm) {
                 if inProgress {
-                    // In progress: full-width Pause
+                    // Pause + Focus
                     Button {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             optimisticInProgressID = nil
@@ -932,7 +932,10 @@ struct TodayView: View {
                             iconColor: .orange
                         )
                     } label: {
-                        Label("Pause", systemImage: "pause.fill")
+                        HStack(spacing: 4) {
+                            Image(systemName: "pause.fill")
+                            Text("Pause")
+                        }
                     }
                     .buttonStyle(NextUpActionButtonStyle(
                         isPrimary: true,
@@ -942,19 +945,21 @@ struct TodayView: View {
                     .accessibilityLabel("Pause timer")
                     .transition(.opacity)
 
-                    // Full-width Focus
                     Button {
                         prioritizationService.recordSuggestionFeedback(
                             task: task, action: .startedImmediately, score: suggestion.score
                         )
                         focusCoordinator.enterFocus(task: task)
                     } label: {
-                        Label("Focus", systemImage: "scope")
+                        HStack(spacing: 4) {
+                            Image(systemName: "scope")
+                            Text("Focus")
+                        }
                     }
                     .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
                     .transition(.opacity)
                 } else {
-                    // Not started: full-width Start / Resume
+                    // Start/Resume + Focus + Later
                     let hasWorkedBefore = task.accumulatedDuration > 0
                     Button {
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -971,33 +976,40 @@ struct TodayView: View {
                             iconColor: Color.Lazyflow.success
                         )
                     } label: {
-                        Label(hasWorkedBefore ? "Resume" : "Start", systemImage: "play.fill")
+                        HStack(spacing: 4) {
+                            Image(systemName: "play.fill")
+                            Text(hasWorkedBefore ? "Resume" : "Start")
+                        }
                     }
                     .buttonStyle(NextUpActionButtonStyle(isPrimary: true))
                     .accessibilityLabel(hasWorkedBefore ? "Resume working" : "Start working")
                     .transition(.opacity)
 
-                    // Half-width Focus + Not now
-                    HStack(spacing: DesignSystem.Spacing.sm) {
-                        Button {
-                            prioritizationService.recordSuggestionFeedback(
-                                task: task, action: .startedImmediately, score: suggestion.score
-                            )
-                            focusCoordinator.enterFocus(task: task)
-                        } label: {
-                            Label("Focus", systemImage: "scope")
+                    Button {
+                        prioritizationService.recordSuggestionFeedback(
+                            task: task, action: .startedImmediately, score: suggestion.score
+                        )
+                        focusCoordinator.enterFocus(task: task)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "scope")
+                            Text("Focus")
                         }
-                        .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
-
-                        Button {
-                            snoozeSkipTarget = suggestion
-                            showNotNowDialog = true
-                        } label: {
-                            Label("Not now\u{2026}", systemImage: "clock.arrow.circlepath")
-                        }
-                        .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
-                        .accessibilityLabel("Snooze or skip suggestion")
                     }
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                    .transition(.opacity)
+
+                    Button {
+                        snoozeSkipTarget = suggestion
+                        showNotNowDialog = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text("Later")
+                        }
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                    .accessibilityLabel("Snooze or skip suggestion")
                     .transition(.opacity)
                 }
             }
