@@ -571,7 +571,7 @@ HStack(spacing: DesignSystem.Spacing.sm)
 ```
 
 - **Start** becomes **Resume** when `accumulatedDuration > 0`
-- Icon: `play.fill` / `arrow.clockwise` for Resume
+- Icon: `play.fill` for both Start and Resume
 
 ### Action Row — In Progress State
 
@@ -668,13 +668,13 @@ Border-radius: 52px (matches phone frame in prototype)
 | Element | Specification |
 |---------|---------------|
 | **Diameter** | 240px (120pt radius) |
-| **Stroke** | 6pt, round cap |
+| **Stroke** | 6pt, butt cap |
 | **Track** | `white.opacity(0.06)` |
 | **Progress** | `Color.Lazyflow.accent` with glow shadow |
 | **Glow dot** | 8pt circle at progress tip, `accent` with box-shadow |
 | **Timer text** | 52pt, light weight (400), `monospacedDigit` |
 | **Label** | 13pt, accent color, breathe animation (4s) |
-| **Paused label** | 13pt, `white.opacity(0.4)`, no animation |
+| **Paused label** | 13pt, orange, no animation |
 | **Circumference** | `2 × π × 110 = 691.2` (for stroke-dashoffset calc) |
 
 ### Action Bar
@@ -706,7 +706,7 @@ Position: floating above tab bar
 Background: adaptiveSurface
 Shadow: shadow-medium
 Border: subtle 1pt border
-Corner radius: CornerRadius.large
+Corner radius: CornerRadius.extraLarge
 
 Icon states:
   - In progress: timer icon, accent tint
