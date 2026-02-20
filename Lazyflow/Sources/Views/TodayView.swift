@@ -4,6 +4,7 @@ import UIKit
 /// Main Today view showing overdue and today's tasks
 struct TodayView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var viewModel = TodayViewModel()
     @StateObject private var prioritizationService = PrioritizationService.shared
     @StateObject private var conflictService = ConflictDetectionService.shared
@@ -13,8 +14,7 @@ struct TodayView: View {
     @State private var selectedConflict: TaskConflict?
     @State private var showBatchReschedule = false
     @State private var optimisticallyCompletedIDs: Set<UUID> = []
-    @State private var showSnoozeDialog = false
-    @State private var showSkipDialog = false
+    @State private var showNotNowDialog = false
     @State private var snoozeSkipTarget: TaskSuggestion?
     @State private var undoAction: UndoAction?
     @State private var undoSnapshot: Task?
@@ -33,6 +33,9 @@ struct TodayView: View {
     @State private var showPlanYourDay = false
     @State private var actionToast: ActionToastData?
     @State private var highlightedTaskID: UUID?
+    @State private var isNextUpPulsing = false
+    @State private var optimisticInProgressID: UUID?
+    @State private var optimisticPausedID: UUID?
     @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
 
     var body: some View {
@@ -132,44 +135,45 @@ struct TodayView: View {
                 viewModel.refreshTasks()
             }
         }
-        .confirmationDialog("Snooze suggestion", isPresented: $showSnoozeDialog, presenting: snoozeSkipTarget) { target in
-            Button("In 1 Hour") {
+        .confirmationDialog("Not now", isPresented: $showNotNowDialog, presenting: snoozeSkipTarget) { target in
+            // Snooze options
+            Button("Snooze 1 Hour") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozed1Hour, score: target.score
                 )
             }
-            Button("This Evening (6 PM)") {
+            Button("Snooze to Evening (6 PM)") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozedEvening, score: target.score
                 )
             }
-            Button("Tomorrow Morning (9 AM)") {
+            Button("Snooze to Tomorrow (9 AM)") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozedTomorrow, score: target.score
                 )
             }
-            Button("Cancel", role: .cancel) {}
-        }
-        .confirmationDialog("Skip suggestion", isPresented: $showSkipDialog, presenting: snoozeSkipTarget) { target in
-            Button("Not relevant right now") {
+            // Skip options
+            Button("Skip — Not relevant") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNotRelevant, score: target.score
                 )
                 showSkipHighlight(for: target.task)
             }
-            Button("Wrong time of day") {
+            Button("Skip — Wrong time") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedWrongTime, score: target.score
                 )
                 showSkipHighlight(for: target.task)
             }
-            Button("Needs more focus time") {
+            Button("Skip — Needs more focus") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNeedsFocus, score: target.score
                 )
                 showSkipHighlight(for: target.task)
             }
             Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("Snooze for later or skip to see a different suggestion")
         }
         .autoCompleteCelebration(isPresented: $showAutoCompleteCelebration, parentTitle: autoCompletedParentTitle)
         .onReceive(NotificationCenter.default.publisher(for: .parentTaskAutoCompleted)) { notification in
@@ -700,20 +704,68 @@ struct TodayView: View {
         }
     }
 
+    /// Resolve the live task from TaskService (Core Data) instead of stale suggestion snapshot
+    private func liveTask(for suggestion: TaskSuggestion) -> Task {
+        TaskService.shared.tasks.first { $0.id == suggestion.task.id } ?? suggestion.task
+    }
+
+    /// Whether the Next Up task is effectively in progress (optimistic or persisted)
+    private func isNextUpInProgress(_ task: Task) -> Bool {
+        if task.id == optimisticInProgressID { return true }
+        if task.id == optimisticPausedID { return false }
+        return task.isInProgress
+    }
+
     @ViewBuilder
     private func nextUpCard(for suggestion: TaskSuggestion) -> some View {
-        let task = suggestion.task
+        let task = liveTask(for: suggestion)
+        let inProgress = isNextUpInProgress(task)
 
         VStack(spacing: 0) {
             // Card body: checkbox + task info
             HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
-                // Checkbox — 44pt hit area around 26pt circle
+                // Checkbox — with progress ring for subtasks
                 Button {
                     optimisticallyComplete(task, suggestion: suggestion)
                 } label: {
-                    Circle()
-                        .strokeBorder(Color.Lazyflow.textTertiary.opacity(0.5), lineWidth: 2.5)
-                        .frame(width: 26, height: 26)
+                    ZStack {
+                        // Subtask progress ring (outermost)
+                        if task.hasSubtasks {
+                            Circle()
+                                .stroke(Color.Lazyflow.accent.opacity(0.35), lineWidth: 3)
+                                .frame(width: 32, height: 32)
+
+                            if task.subtaskProgress > 0 {
+                                Circle()
+                                    .trim(from: 0, to: task.subtaskProgress)
+                                    .stroke(
+                                        task.allSubtasksCompleted ? Color.Lazyflow.success : Color.Lazyflow.accent,
+                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                    )
+                                    .frame(width: 32, height: 32)
+                                    .rotationEffect(.degrees(-90))
+                            }
+                        }
+
+                        // Inner checkbox circle
+                        Circle()
+                            .strokeBorder(
+                                inProgress ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary.opacity(0.5),
+                                lineWidth: 2.5
+                            )
+                            .frame(width: 26, height: 26)
+                            .animation(.easeInOut(duration: 0.3), value: inProgress)
+
+                        // Pulsing dot when in progress
+                        if inProgress {
+                            Circle()
+                                .fill(Color.Lazyflow.accent)
+                                .frame(width: 10, height: 10)
+                                .scaleEffect(isNextUpPulsing ? 1.0 : 0.85)
+                                .opacity(isNextUpPulsing ? 1.0 : 0.7)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
                 }
                 .frame(width: DesignSystem.TouchTarget.minimum, height: DesignSystem.TouchTarget.minimum)
                 .accessibilityLabel("Complete \(task.title)")
@@ -727,7 +779,7 @@ struct TodayView: View {
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    // Meta badges: due date + duration
+                    // Meta badges
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         if let dueDate = task.dueDate {
                             DueDateBadge(
@@ -737,7 +789,24 @@ struct TodayView: View {
                             )
                         }
 
-                        if let duration = task.estimatedDuration, duration > 0 {
+                        // Live timer when in progress, estimated duration otherwise
+                        if inProgress {
+                            TimelineView(.periodic(from: .now, by: 1)) { _ in
+                                HStack(spacing: DesignSystem.Spacing.xs) {
+                                    Image(systemName: "timer")
+                                        .font(.caption2)
+                                    Text(task.formattedElapsedTime ?? "0:00")
+                                        .font(DesignSystem.Typography.caption2)
+                                        .monospacedDigit()
+                                }
+                                .foregroundColor(Color.Lazyflow.success)
+                                .padding(.horizontal, DesignSystem.Spacing.sm)
+                                .padding(.vertical, DesignSystem.Spacing.xs)
+                                .background(Color.Lazyflow.success.opacity(0.1))
+                                .cornerRadius(DesignSystem.CornerRadius.small)
+                            }
+                            .transition(.opacity)
+                        } else if let duration = task.estimatedDuration, duration > 0 {
                             let mins = Int(duration / 60)
                             HStack(spacing: DesignSystem.Spacing.xs) {
                                 Image(systemName: "clock")
@@ -751,15 +820,43 @@ struct TodayView: View {
                             .background(Color.Lazyflow.textTertiary.opacity(0.1))
                             .cornerRadius(DesignSystem.CornerRadius.small)
                         }
+
+                        // Subtask progress badge
+                        if task.hasSubtasks {
+                            HStack(spacing: DesignSystem.Spacing.xs) {
+                                Image(systemName: "list.bullet")
+                                    .font(.caption2)
+                                Text("\(task.completedSubtaskCount)/\(task.subtasks.count)")
+                                    .font(DesignSystem.Typography.caption2)
+                            }
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                            .padding(.horizontal, DesignSystem.Spacing.sm)
+                            .padding(.vertical, DesignSystem.Spacing.xs)
+                            .background(Color.Lazyflow.textTertiary.opacity(0.1))
+                            .cornerRadius(DesignSystem.CornerRadius.small)
+                        }
                     }
 
-                    // Reason line
-                    if let topReason = suggestion.reasons.first {
-                        Text(topReason)
-                            .font(DesignSystem.Typography.caption1)
-                            .foregroundColor(Color.Lazyflow.textSecondary)
-                            .lineLimit(1)
+                    // Reason line — always present, derived from live task state
+                    Group {
+                        if inProgress {
+                            Text("In progress")
+                                .foregroundColor(Color.Lazyflow.success)
+                        } else if task.isOverdue {
+                            Text("Overdue — consider finishing today")
+                                .foregroundColor(Color.Lazyflow.error)
+                        } else if let topReason = suggestion.reasons.first(where: {
+                            !$0.lowercased().contains("overdue")
+                        }) {
+                            Text(topReason)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        } else {
+                            Text("Suggested for you")
+                                .foregroundColor(Color.Lazyflow.textTertiary)
+                        }
                     }
+                    .font(DesignSystem.Typography.caption1)
+                    .lineLimit(1)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -778,74 +875,131 @@ struct TodayView: View {
                 .frame(height: 1)
                 .padding(.horizontal, DesignSystem.Spacing.lg)
 
-            // Action row: Start, Focus, Snooze, Skip
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                // Start / Working toggle
-                Button {
-                    if task.isInProgress {
+            // Time progress bar when in progress and has estimated duration
+            if inProgress, let estimated = task.estimatedDuration, estimated > 0 {
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    let elapsed = task.elapsedTime ?? 0
+                    let progress = min(elapsed / estimated, 1.0)
+                    let overBudget = elapsed > estimated
+
+                    VStack(spacing: DesignSystem.Spacing.xs) {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Color.secondary.opacity(0.15))
+                                    .frame(height: 6)
+
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(overBudget ? Color.Lazyflow.warning : Color.Lazyflow.success)
+                                    .frame(width: geometry.size.width * progress, height: 6)
+                            }
+                        }
+                        .frame(height: 6)
+
+                        HStack {
+                            let elapsedMins = Int(elapsed / 60)
+                            let estimatedMins = Int(estimated / 60)
+                            Text("\(elapsedMins)m of \(estimatedMins)m")
+                                .font(DesignSystem.Typography.caption2)
+                                .foregroundColor(overBudget ? Color.Lazyflow.warning : Color.Lazyflow.textTertiary)
+                            Spacer()
+                            if overBudget {
+                                Text("Over estimate")
+                                    .font(DesignSystem.Typography.caption2)
+                                    .foregroundColor(Color.Lazyflow.warning)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.top, DesignSystem.Spacing.sm)
+                .transition(.opacity)
+            }
+
+            // Action rows — layout changes based on state
+            VStack(spacing: DesignSystem.Spacing.sm) {
+                if inProgress {
+                    // In progress: full-width Pause
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            optimisticInProgressID = nil
+                            optimisticPausedID = task.id
+                        }
                         viewModel.stopWorking(on: task)
                         actionToast = ActionToastData(
                             message: "Timer paused",
                             icon: "pause.fill",
                             iconColor: .orange
                         )
-                    } else {
+                    } label: {
+                        Label("Pause", systemImage: "pause.fill")
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(
+                        isPrimary: true,
+                        overrideBackground: Color.Lazyflow.success.opacity(0.15),
+                        overrideForeground: Color.Lazyflow.success
+                    ))
+                    .accessibilityLabel("Pause timer")
+                    .transition(.opacity)
+
+                    // Full-width Focus
+                    Button {
+                        prioritizationService.recordSuggestionFeedback(
+                            task: task, action: .startedImmediately, score: suggestion.score
+                        )
+                        focusCoordinator.enterFocus(task: task)
+                    } label: {
+                        Label("Focus", systemImage: "scope")
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                    .transition(.opacity)
+                } else {
+                    // Not started: full-width Start / Resume
+                    let hasWorkedBefore = task.accumulatedDuration > 0
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            optimisticPausedID = nil
+                            optimisticInProgressID = task.id
+                        }
                         prioritizationService.recordSuggestionFeedback(
                             task: task, action: .startedImmediately, score: suggestion.score
                         )
                         viewModel.startWorking(on: task)
                         actionToast = ActionToastData(
-                            message: "Timer started",
+                            message: hasWorkedBefore ? "Timer resumed" : "Timer started",
                             icon: "play.fill",
                             iconColor: Color.Lazyflow.success
                         )
+                    } label: {
+                        Label(hasWorkedBefore ? "Resume" : "Start", systemImage: "play.fill")
                     }
-                } label: {
-                    Label(
-                        task.isInProgress ? "Working..." : "Start",
-                        systemImage: task.isInProgress ? "pause.fill" : "play.fill"
-                    )
-                }
-                .buttonStyle(NextUpActionButtonStyle(
-                    isPrimary: true,
-                    overrideBackground: task.isInProgress ? Color.Lazyflow.success : nil
-                ))
-                .accessibilityLabel(task.isInProgress ? "Pause timer" : "Start working")
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: true))
+                    .accessibilityLabel(hasWorkedBefore ? "Resume working" : "Start working")
+                    .transition(.opacity)
 
-                // Enter Focus
-                Button {
-                    prioritizationService.recordSuggestionFeedback(
-                        task: task, action: .startedImmediately, score: suggestion.score
-                    )
-                    focusCoordinator.enterFocus(task: task)
-                } label: {
-                    Label("Focus", systemImage: "scope")
-                }
-                .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                    // Half-width Focus + Not now
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Button {
+                            prioritizationService.recordSuggestionFeedback(
+                                task: task, action: .startedImmediately, score: suggestion.score
+                            )
+                            focusCoordinator.enterFocus(task: task)
+                        } label: {
+                            Label("Focus", systemImage: "scope")
+                        }
+                        .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
 
-                // Snooze (icon-only)
-                Button {
-                    snoozeSkipTarget = suggestion
-                    showSnoozeDialog = true
-                } label: {
-                    Image(systemName: "moon.fill")
-                        .font(.system(size: 14))
+                        Button {
+                            snoozeSkipTarget = suggestion
+                            showNotNowDialog = true
+                        } label: {
+                            Label("Not now\u{2026}", systemImage: "clock.arrow.circlepath")
+                        }
+                        .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                        .accessibilityLabel("Snooze or skip suggestion")
+                    }
+                    .transition(.opacity)
                 }
-                .buttonStyle(NextUpIconButtonStyle())
-                .accessibilityLabel("Snooze suggestion")
-                .accessibilityHint("Delays this suggestion")
-
-                // Skip (icon-only)
-                Button {
-                    snoozeSkipTarget = suggestion
-                    showSkipDialog = true
-                } label: {
-                    Image(systemName: "forward.fill")
-                        .font(.system(size: 14))
-                }
-                .buttonStyle(NextUpIconButtonStyle())
-                .accessibilityLabel("Skip suggestion")
-                .accessibilityHint("Shows a different suggestion")
             }
             .padding(.horizontal, DesignSystem.Spacing.lg)
             .padding(.vertical, DesignSystem.Spacing.md)
@@ -855,6 +1009,45 @@ struct TodayView: View {
         .shadow(color: .black.opacity(0.06), radius: 2, y: 1)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Next up: \(task.title)")
+        .onAppear {
+            if inProgress && !reduceMotion {
+                isNextUpPulsing = false
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isNextUpPulsing = true
+                }
+            } else if inProgress {
+                isNextUpPulsing = true
+            }
+        }
+        .onChange(of: optimisticInProgressID) { _, newID in
+            let active = newID == task.id
+            if active && !reduceMotion {
+                isNextUpPulsing = false
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isNextUpPulsing = true
+                }
+            } else if active {
+                isNextUpPulsing = true
+            } else {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isNextUpPulsing = false
+                }
+            }
+        }
+        .onChange(of: task.isInProgress) { _, persisted in
+            // Clear optimistic state once Core Data catches up
+            if optimisticInProgressID == task.id && persisted {
+                optimisticInProgressID = nil
+            }
+            if optimisticPausedID == task.id && !persisted {
+                optimisticPausedID = nil
+            }
+            if !persisted && optimisticInProgressID != task.id {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isNextUpPulsing = false
+                }
+            }
+        }
     }
 
     /// Optimistically complete a task from the Next Up card
@@ -1036,11 +1229,13 @@ struct TodayView: View {
 struct NextUpActionButtonStyle: ButtonStyle {
     let isPrimary: Bool
     var overrideBackground: Color? = nil
+    var overrideForeground: Color? = nil
 
     func makeBody(configuration: Configuration) -> some View {
         let bgColor = overrideBackground
             ?? (isPrimary ? Color.Lazyflow.accent : Color.Lazyflow.accent.opacity(0.1))
-        let fgColor: Color = (overrideBackground != nil || isPrimary) ? .white : Color.Lazyflow.accent
+        let fgColor: Color = overrideForeground
+            ?? ((overrideBackground != nil || isPrimary) ? .white : Color.Lazyflow.accent)
 
         configuration.label
             .font(.system(size: 14, weight: .semibold))
