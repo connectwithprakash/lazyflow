@@ -472,14 +472,17 @@ final class TaskService: ObservableObject {
             updateTask(stopped)
         }
 
-        // Then start working on the new task
-        let inProgressTask = task.inProgress()
+        // Read latest from cache to avoid stale data overwrites
+        let latest = tasks.first(where: { $0.id == task.id }) ?? task
+        let inProgressTask = latest.inProgress()
         updateTask(inProgressTask)
     }
 
     /// Stop working on a task
     func stopWorking(on task: Task) {
-        let stoppedTask = task.stopProgress()
+        // Read latest from cache to avoid stale data overwrites
+        let latest = tasks.first(where: { $0.id == task.id }) ?? task
+        let stoppedTask = latest.stopProgress()
         updateTask(stoppedTask)
     }
 

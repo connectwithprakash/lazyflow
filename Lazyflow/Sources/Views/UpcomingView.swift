@@ -136,7 +136,7 @@ struct UpcomingView: View {
                             onPriorityChange: { updateTaskPriority($0, priority: $1) },
                             onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
                             onDelete: { taskService.deleteTask($0) },
-                            onStartWorking: { taskService.startWorking(on: $0) },
+                            onStartWorking: { $0.accumulatedDuration > 0 ? taskService.resumeWorking(on: $0) : taskService.startWorking(on: $0) },
                             onStopWorking: { taskService.stopWorking(on: $0) },
                             showListIndicator: true,
                             listColorHex: listColorHex(for: task)
@@ -164,7 +164,7 @@ struct UpcomingView: View {
                             onPriorityChange: { updateTaskPriority($0, priority: $1) },
                             onDueDateChange: { updateTaskDueDate($0, dueDate: $1) },
                             onDelete: { taskService.deleteTask($0) },
-                            onStartWorking: { taskService.startWorking(on: $0) },
+                            onStartWorking: { $0.accumulatedDuration > 0 ? taskService.resumeWorking(on: $0) : taskService.startWorking(on: $0) },
                             onStopWorking: { taskService.stopWorking(on: $0) },
                             showListIndicator: true,
                             listColorHex: listColorHex(for: task)

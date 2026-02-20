@@ -130,6 +130,10 @@ final class TodayViewModel: ObservableObject {
         taskService.startWorking(on: task)
     }
 
+    func resumeWorking(on task: Task) {
+        taskService.resumeWorking(on: task)
+    }
+
     func stopWorking(on task: Task) {
         taskService.stopWorking(on: task)
     }
