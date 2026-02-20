@@ -325,3 +325,74 @@ extension View {
         }
     }
 }
+
+// MARK: - Action Toast (lightweight top-positioned feedback)
+
+struct ActionToastData: Equatable, Identifiable {
+    let id = UUID()
+    let message: String
+    let icon: String
+    let iconColor: Color
+
+    static func == (lhs: ActionToastData, rhs: ActionToastData) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+struct ActionToastView: View {
+    let data: ActionToastData
+    @State private var isVisible = false
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Image(systemName: data.icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(data.iconColor)
+            Text(data.message)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Color.Lazyflow.textPrimary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+        .padding(.vertical, DesignSystem.Spacing.md)
+        .background(
+            Capsule()
+                .fill(Color.adaptiveSurface)
+                .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
+        )
+        .offset(y: isVisible ? 0 : -20)
+        .opacity(isVisible ? 1 : 0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isVisible)
+        .onAppear { isVisible = true }
+    }
+}
+
+struct ActionToastModifier: ViewModifier {
+    @Binding var toast: ActionToastData?
+
+    func body(content: Content) -> some View {
+        ZStack(alignment: .top) {
+            content
+            if let toast {
+                ActionToastView(data: toast)
+                    .padding(.top, DesignSystem.Spacing.xl)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .id(toast.id)
+                    .onAppear {
+                        let currentID = toast.id
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            if self.toast?.id == currentID {
+                                withAnimation { self.toast = nil }
+                            }
+                        }
+                    }
+            }
+        }
+    }
+}
+
+extension View {
+    func actionToast(_ toast: Binding<ActionToastData?>) -> some View {
+        modifier(ActionToastModifier(toast: toast))
+    }
+}

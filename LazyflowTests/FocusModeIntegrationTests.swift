@@ -43,9 +43,9 @@ final class FocusModeIntegrationTests: XCTestCase {
         XCTAssertFalse(coordinator.isFocusPresented)
     }
 
-    // MARK: - Full Flow: Enter → Take Break → State Cleared
+    // MARK: - Full Flow: Enter → Take Break → Task Stopped, Session Retained
 
-    func testFullFlow_enterTakeBreak_stopsAndClears() {
+    func testFullFlow_enterTakeBreak_stopsWorkButRetainsSession() {
         let task = createTask(title: "Break task")
 
         coordinator.enterFocus(task: task)
@@ -53,7 +53,9 @@ final class FocusModeIntegrationTests: XCTestCase {
 
         coordinator.takeBreak()
 
-        XCTAssertNil(coordinator.focusTaskID)
+        // Break stops working but retains focusTaskID so pill shows
+        XCTAssertEqual(coordinator.focusTaskID, task.id)
+        XCTAssertTrue(coordinator.isOnBreak)
         XCTAssertFalse(coordinator.isFocusPresented)
         XCTAssertNil(taskService.getInProgressTask())
     }

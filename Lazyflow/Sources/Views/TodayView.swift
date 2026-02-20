@@ -1,33 +1,20 @@
 import SwiftUI
 import UIKit
 
-// MARK: - ConfidenceLevel View Helpers
-
-extension ConfidenceLevel {
-    var color: Color {
-        switch self {
-        case .recommended: return Color.Lazyflow.success
-        case .goodFit: return Color.Lazyflow.accent
-        case .consider: return Color.Lazyflow.textSecondary
-        }
-    }
-}
-
 /// Main Today view showing overdue and today's tasks
 struct TodayView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var viewModel = TodayViewModel()
     @StateObject private var prioritizationService = PrioritizationService.shared
     @StateObject private var conflictService = ConflictDetectionService.shared
     @StateObject private var rescheduleService = SmartRescheduleService.shared
     @State private var showAddTask = false
     @State private var taskToSchedule: Task?
-    @State private var taskSuggestion: TaskSuggestion?
     @State private var selectedConflict: TaskConflict?
     @State private var showBatchReschedule = false
-    @AppStorage("nextUpShowAlternatives") private var showAlternatives = false
-    @State private var showSnoozeDialog = false
-    @State private var showSkipDialog = false
+    @State private var optimisticallyCompletedIDs: Set<UUID> = []
+    @State private var showNotNowDialog = false
     @State private var snoozeSkipTarget: TaskSuggestion?
     @State private var undoAction: UndoAction?
     @State private var undoSnapshot: Task?
@@ -44,6 +31,11 @@ struct TodayView: View {
     @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
     @AppStorage("lastPlanYourDayDate") private var lastPlanYourDayDate: Double = 0
     @State private var showPlanYourDay = false
+    @State private var actionToast: ActionToastData?
+    @State private var highlightedTaskID: UUID?
+    @State private var isNextUpPulsing = false
+    @State private var optimisticInProgressID: UUID?
+    @State private var optimisticPausedID: UUID?
     @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
 
     var body: some View {
@@ -65,6 +57,15 @@ struct TodayView: View {
         .onAppear {
             scanForConflicts()
             viewModel.autoExpandTasksWithSubtasks()
+        }
+        .onChange(of: viewModel.taskData) {
+            // Prune stale optimistic IDs — remove IDs for tasks that are now persisted as completed
+            if !optimisticallyCompletedIDs.isEmpty {
+                let allTasks = viewModel.overdueTasks + viewModel.todayTasks
+                optimisticallyCompletedIDs = optimisticallyCompletedIDs.filter { id in
+                    allTasks.contains { $0.id == id && !$0.isCompleted }
+                }
+            }
         }
         .sheet(item: $selectedConflict) { conflict in
             ConflictResolutionSheet(
@@ -118,6 +119,7 @@ struct TodayView: View {
         } onDismissWithoutUndo: {
             onUndoToastDismissed()
         }
+        .actionToast($actionToast)
         .sheet(isPresented: $showDailySummary) {
             DailySummaryView()
         }
@@ -133,102 +135,45 @@ struct TodayView: View {
                 viewModel.refreshTasks()
             }
         }
-        .sheet(item: $taskSuggestion) { suggestion in
-            NextTaskSuggestionSheet(
-                suggestion: suggestion,
-                onViewDetails: {
-                    // Mild positive feedback (engagement signal only)
-                    prioritizationService.recordSuggestionFeedback(
-                        task: suggestion.task, action: .viewedDetails, score: suggestion.score
-                    )
-                    let task = suggestion.task
-                    taskSuggestion = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        guard taskSuggestion == nil else { return }
-                        viewModel.selectedTask = task
-                    }
-                },
-                onSchedule: {
-                    let task = suggestion.task
-                    taskSuggestion = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        guard taskSuggestion == nil else { return }
-                        taskToSchedule = task
-                    }
-                },
-                onStart: {
-                    prioritizationService.recordSuggestionFeedback(
-                        task: suggestion.task, action: .startedImmediately, score: suggestion.score
-                    )
-                    viewModel.startWorking(on: suggestion.task)
-                    taskSuggestion = nil
-                },
-                onEnterFocus: {
-                    prioritizationService.recordSuggestionFeedback(
-                        task: suggestion.task, action: .startedImmediately, score: suggestion.score
-                    )
-                    let task = suggestion.task
-                    taskSuggestion = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        guard taskSuggestion == nil else { return }
-                        focusCoordinator.enterFocus(task: task)
-                    }
-                },
-                onSnooze: {
-                    let target = suggestion
-                    snoozeSkipTarget = target
-                    taskSuggestion = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        guard snoozeSkipTarget?.task.id == target.task.id else { return }
-                        showSnoozeDialog = true
-                    }
-                },
-                onSkip: {
-                    let target = suggestion
-                    snoozeSkipTarget = target
-                    taskSuggestion = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        guard snoozeSkipTarget?.task.id == target.task.id else { return }
-                        showSkipDialog = true
-                    }
-                }
-            )
-        }
-        .confirmationDialog("Snooze suggestion", isPresented: $showSnoozeDialog, presenting: snoozeSkipTarget) { target in
-            Button("In 1 Hour") {
+        .confirmationDialog("Not now", isPresented: $showNotNowDialog, presenting: snoozeSkipTarget) { target in
+            // Snooze options
+            Button("Snooze 1 Hour") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozed1Hour, score: target.score
                 )
             }
-            Button("This Evening (6 PM)") {
+            Button("Snooze to Evening (6 PM)") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozedEvening, score: target.score
                 )
             }
-            Button("Tomorrow Morning (9 AM)") {
+            Button("Snooze to Tomorrow (9 AM)") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .snoozedTomorrow, score: target.score
                 )
             }
-            Button("Cancel", role: .cancel) {}
-        }
-        .confirmationDialog("Skip suggestion", isPresented: $showSkipDialog, presenting: snoozeSkipTarget) { target in
-            Button("Not relevant right now") {
+            // Skip options
+            Button("Skip — Not relevant") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNotRelevant, score: target.score
                 )
+                showSkipHighlight(for: target.task)
             }
-            Button("Wrong time of day") {
+            Button("Skip — Wrong time") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedWrongTime, score: target.score
                 )
+                showSkipHighlight(for: target.task)
             }
-            Button("Needs more focus time") {
+            Button("Skip — Needs more focus") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNeedsFocus, score: target.score
                 )
+                showSkipHighlight(for: target.task)
             }
             Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("Snooze for later or skip to see a different suggestion")
         }
         .autoCompleteCelebration(isPresented: $showAutoCompleteCelebration, parentTitle: autoCompletedParentTitle)
         .onReceive(NotificationCenter.default.publisher(for: .parentTaskAutoCompleted)) { notification in
@@ -304,6 +249,7 @@ struct TodayView: View {
             viewModel.discardPendingChanges()
         case .completed:
             // Restore to uncompleted state
+            optimisticallyCompletedIDs.remove(snapshot.id)
             var restoredTask = snapshot
             restoredTask.isCompleted = false
             restoredTask.completedAt = nil
@@ -474,92 +420,18 @@ struct TodayView: View {
 
     // MARK: - Subviews
 
-    /// IDs of all tasks visible in Next Up (used for deduplication from Today/Overdue)
-    /// Uses same count basis (allIncompleteTaskCount) as section rendering
-    private var nextUpVisibleTaskIDs: Set<UUID> {
-        let incompleteCount = viewModel.allIncompleteTaskCount
-        let suggestions = prioritizationService.cachedSuggestions
-        guard incompleteCount >= 3, !suggestions.isEmpty else { return [] }
-        if incompleteCount >= 5, showAlternatives {
-            // Primary + alternatives all visible
-            return Set(suggestions.map(\.task.id))
-        } else {
-            // Only primary visible
-            return suggestions.first.map { Set([$0.task.id]) } ?? []
-        }
-    }
-
-    /// Overdue tasks with visible Next Up tasks filtered out
-    private func overdueTasks(excluding ids: Set<UUID>) -> [Task] {
-        guard !ids.isEmpty else { return viewModel.overdueTasks }
-        return viewModel.overdueTasks.filter { !ids.contains($0.id) }
-    }
-
-    /// Today tasks with visible Next Up tasks filtered out
-    private func todayTasks(excluding ids: Set<UUID>) -> [Task] {
-        guard !ids.isEmpty else { return viewModel.todayTasks }
-        return viewModel.todayTasks.filter { !ids.contains($0.id) }
-    }
-
     private var taskListView: some View {
+        ScrollViewReader { scrollProxy in
         List {
             // Section 1: Progress header
             Section {
                 progressHeader
             }
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
-            // Section 2: Next Up - ALWAYS present (even when empty)
-            // Gating: 0-2 tasks = hidden, 3-4 = primary only, 5+ = primary + alternatives
-            Section {
-                let incompleteCount = viewModel.allIncompleteTaskCount
-                let suggestions = prioritizationService.cachedSuggestions
-                if incompleteCount >= 3, !suggestions.isEmpty {
-                    // Primary card: TaskRowView wrapped with suggestion chrome
-                    if let primary = suggestions.first {
-                        nextUpPrimaryCard(primary)
-                    }
-
-                    // Alternatives (5+ tasks, collapsible)
-                    let alternatives = incompleteCount >= 5 ? Array(suggestions.dropFirst()) : []
-                    if !alternatives.isEmpty {
-                        // Data-driven: empty array when collapsed, SwiftUI List diffs smoothly
-                        let visibleAlternatives = showAlternatives ? alternatives : []
-                        ForEach(visibleAlternatives) { alt in
-                            nextUpAlternativeRow(suggestion: alt)
-                        }
-
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                showAlternatives.toggle()
-                            }
-                        } label: {
-                            Text(showAlternatives
-                                ? "Hide alternatives"
-                                : "Show \(alternatives.count) more")
-                                .font(DesignSystem.Typography.caption1)
-                                .foregroundColor(Color.Lazyflow.accent)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .frame(minHeight: DesignSystem.TouchTarget.minimum)
-                        }
-                        .buttonStyle(.plain)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                        .accessibilityLabel(showAlternatives ? "Hide alternative suggestions" : "Show \(alternatives.count) more suggestions")
-                        .accessibilityValue(showAlternatives ? "Expanded" : "Collapsed")
-                        .accessibilityHint("Double tap to \(showAlternatives ? "hide" : "show") alternatives")
-                    }
-                }
-            } header: {
-                if viewModel.allIncompleteTaskCount >= 3, !prioritizationService.cachedSuggestions.isEmpty {
-                    nextUpSectionHeader
-                }
-            }
-            .listRowBackground(Color.adaptiveBackground)
-            .listRowSeparator(.hidden)
-
-            // Section 3: Prompt cards - ALWAYS present
+            // Section 2: Prompt cards - ALWAYS present (orient before action)
             Section {
                 if shouldShowPlanYourDayPrompt {
                     planYourDayPromptCard
@@ -578,17 +450,29 @@ struct TodayView: View {
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
+            // Section 3: Next Up - ALWAYS present (even when empty)
+            Section {
+                if let suggestion = effectiveNextUpSuggestion {
+                    nextUpCard(for: suggestion)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                }
+            } header: {
+                if effectiveNextUpSuggestion != nil {
+                    nextUpSectionHeader
+                }
+            }
+            .listRowBackground(Color.adaptiveBackground)
+            .listRowSeparator(.hidden)
+
             // Section 4: Overdue tasks - ALWAYS present (even when empty)
             Section {
-                let filteredOverdue = overdueTasks(excluding: nextUpVisibleTaskIDs)
-                ForEach(filteredOverdue) { task in
+                ForEach(viewModel.overdueTasks) { task in
                     flatTaskRows(task: task, isCompleted: false)
                         .id(task.id)
                 }
             } header: {
-                let filteredOverdue = overdueTasks(excluding: nextUpVisibleTaskIDs)
-                if !filteredOverdue.isEmpty {
-                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: filteredOverdue.count)
+                if !viewModel.overdueTasks.isEmpty {
+                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: viewModel.overdueTasks.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
@@ -596,15 +480,13 @@ struct TodayView: View {
 
             // Section 5: Today tasks - ALWAYS present (even when empty)
             Section {
-                let filteredToday = todayTasks(excluding: nextUpVisibleTaskIDs)
-                ForEach(filteredToday) { task in
+                ForEach(viewModel.todayTasks) { task in
                     flatTaskRows(task: task, isCompleted: false)
                         .id(task.id)
                 }
             } header: {
-                let filteredToday = todayTasks(excluding: nextUpVisibleTaskIDs)
-                if !filteredToday.isEmpty {
-                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: filteredToday.count)
+                if !viewModel.todayTasks.isEmpty {
+                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: viewModel.todayTasks.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
@@ -642,8 +524,15 @@ struct TodayView: View {
             .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
+        .listSectionSpacing(.compact)
         .scrollContentBackground(.hidden)
         .background(Color.adaptiveBackground)
+        .onChange(of: highlightedTaskID) { _, newValue in
+            if let id = newValue {
+                withAnimation { scrollProxy.scrollTo(id, anchor: .center) }
+            }
+        }
+        } // ScrollViewReader
     }
 
     private func taskSectionHeader(title: String, color: Color, count: Int) -> some View {
@@ -724,6 +613,12 @@ struct TodayView: View {
             listColorHex: listColorHex(for: task)
         )
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: task.hasSubtasks ? 0 : 4, trailing: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                .fill(Color.Lazyflow.accent.opacity(highlightedTaskID == task.id ? 0.15 : 0))
+                .animation(.easeInOut(duration: 0.3), value: highlightedTaskID)
+                .allowsHitTesting(false)
+        )
 
         // Subtasks section (if task has subtasks)
         if task.hasSubtasks {
@@ -802,68 +697,392 @@ struct TodayView: View {
         }
     }
 
-    @ViewBuilder
-    private func nextUpPrimaryCard(_ suggestion: TaskSuggestion) -> some View {
-        // Suggestion chrome: confidence badge + top reason
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            // Confidence badge
-            HStack(spacing: DesignSystem.Spacing.xs) {
-                Circle()
-                    .fill(suggestion.confidence.color)
-                    .frame(width: 6, height: 6)
-                Text(suggestion.confidence.rawValue)
-                    .font(DesignSystem.Typography.caption2)
-                    .foregroundColor(suggestion.confidence.color)
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, DesignSystem.Spacing.xs)
-            .background(suggestion.confidence.color.opacity(0.12))
-            .cornerRadius(DesignSystem.CornerRadius.small)
-            .fixedSize()
-
-            if let topReason = suggestion.reasons.first {
-                Text(topReason)
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(Color.Lazyflow.accent)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            Button {
-                fetchSuggestionDetails(for: suggestion.task)
-            } label: {
-                Image(systemName: "info.circle")
-                    .font(.system(size: 14))
-                    .foregroundColor(Color.Lazyflow.accent)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("View suggestion details")
-            .accessibleTouchTarget()
+    /// The effective Next Up suggestion, filtering out optimistically completed and already-completed tasks
+    private var effectiveNextUpSuggestion: TaskSuggestion? {
+        prioritizationService.cachedSuggestions.first {
+            !$0.task.isCompleted && !optimisticallyCompletedIDs.contains($0.task.id)
         }
-        .padding(.horizontal, DesignSystem.Spacing.lg)
-        .padding(.vertical, DesignSystem.Spacing.xs)
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Suggested: \(suggestion.confidence.rawValue) pick\(suggestion.reasons.first.map { ", \($0)" } ?? "")")
+    }
 
-        // Full TaskRowView for the task (reactive, with built-in swipe actions)
-        flatTaskRows(task: suggestion.task, isCompleted: false)
+    /// Resolve the live task from TaskService (Core Data) instead of stale suggestion snapshot
+    private func liveTask(for suggestion: TaskSuggestion) -> Task {
+        TaskService.shared.tasks.first { $0.id == suggestion.task.id } ?? suggestion.task
+    }
+
+    /// Whether the Next Up task is effectively in progress (optimistic or persisted)
+    private func isNextUpInProgress(_ task: Task) -> Bool {
+        if task.id == optimisticInProgressID { return true }
+        if task.id == optimisticPausedID { return false }
+        return task.isInProgress
     }
 
     @ViewBuilder
-    private func nextUpAlternativeRow(suggestion: TaskSuggestion) -> some View {
-        // Bare TaskRowView — no chrome for alternatives, keeps section compact
-        flatTaskRows(task: suggestion.task, isCompleted: false)
+    private func nextUpCard(for suggestion: TaskSuggestion) -> some View {
+        let task = liveTask(for: suggestion)
+        let inProgress = isNextUpInProgress(task)
+
+        VStack(spacing: 0) {
+            // Card body: checkbox + task info
+            HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
+                // Checkbox — with progress ring for subtasks
+                Button {
+                    optimisticallyComplete(task, suggestion: suggestion)
+                } label: {
+                    ZStack {
+                        // Subtask progress ring (outermost)
+                        if task.hasSubtasks {
+                            Circle()
+                                .stroke(Color.Lazyflow.accent.opacity(0.35), lineWidth: 3)
+                                .frame(width: 32, height: 32)
+
+                            if task.subtaskProgress > 0 {
+                                Circle()
+                                    .trim(from: 0, to: task.subtaskProgress)
+                                    .stroke(
+                                        task.allSubtasksCompleted ? Color.Lazyflow.success : Color.Lazyflow.accent,
+                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                    )
+                                    .frame(width: 32, height: 32)
+                                    .rotationEffect(.degrees(-90))
+                            }
+                        }
+
+                        // Inner checkbox circle
+                        Circle()
+                            .strokeBorder(
+                                inProgress ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary.opacity(0.5),
+                                lineWidth: 2.5
+                            )
+                            .frame(width: 26, height: 26)
+                            .animation(.easeInOut(duration: 0.3), value: inProgress)
+
+                        // Pulsing dot when in progress
+                        if inProgress {
+                            Circle()
+                                .fill(Color.Lazyflow.accent)
+                                .frame(width: 10, height: 10)
+                                .scaleEffect(isNextUpPulsing ? 1.0 : 0.85)
+                                .opacity(isNextUpPulsing ? 1.0 : 0.7)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
+                }
+                .frame(width: DesignSystem.TouchTarget.minimum, height: DesignSystem.TouchTarget.minimum)
+                .accessibilityLabel("Complete \(task.title)")
+                .accessibilityHint("Marks task as done")
+
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                    // Title
+                    Text(task.title)
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundColor(Color.Lazyflow.textPrimary)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // Meta badges
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        if let dueDate = task.dueDate {
+                            DueDateBadge(
+                                date: dueDate,
+                                isOverdue: task.isOverdue,
+                                isDueToday: Calendar.current.isDateInToday(dueDate)
+                            )
+                        }
+
+                        // Live timer when in progress, estimated duration otherwise
+                        if inProgress {
+                            TimelineView(.periodic(from: .now, by: 1)) { _ in
+                                HStack(spacing: DesignSystem.Spacing.xs) {
+                                    Image(systemName: "timer")
+                                        .font(.caption2)
+                                    Text(task.formattedElapsedTime ?? "0:00")
+                                        .font(DesignSystem.Typography.caption2)
+                                        .monospacedDigit()
+                                }
+                                .foregroundColor(Color.Lazyflow.success)
+                                .padding(.horizontal, DesignSystem.Spacing.sm)
+                                .padding(.vertical, DesignSystem.Spacing.xs)
+                                .background(Color.Lazyflow.success.opacity(0.1))
+                                .cornerRadius(DesignSystem.CornerRadius.small)
+                            }
+                            .transition(.opacity)
+                        } else if let duration = task.estimatedDuration, duration > 0 {
+                            let mins = Int(duration / 60)
+                            HStack(spacing: DesignSystem.Spacing.xs) {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                Text(mins >= 60 ? "\(mins / 60)h \(mins % 60)m" : "\(mins)m")
+                                    .font(DesignSystem.Typography.caption2)
+                            }
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                            .padding(.horizontal, DesignSystem.Spacing.sm)
+                            .padding(.vertical, DesignSystem.Spacing.xs)
+                            .background(Color.Lazyflow.textTertiary.opacity(0.1))
+                            .cornerRadius(DesignSystem.CornerRadius.small)
+                        }
+
+                        // Subtask progress badge
+                        if task.hasSubtasks {
+                            HStack(spacing: DesignSystem.Spacing.xs) {
+                                Image(systemName: "list.bullet")
+                                    .font(.caption2)
+                                Text("\(task.completedSubtaskCount)/\(task.subtasks.count)")
+                                    .font(DesignSystem.Typography.caption2)
+                            }
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                            .padding(.horizontal, DesignSystem.Spacing.sm)
+                            .padding(.vertical, DesignSystem.Spacing.xs)
+                            .background(Color.Lazyflow.textTertiary.opacity(0.1))
+                            .cornerRadius(DesignSystem.CornerRadius.small)
+                        }
+                    }
+
+                    // Reason line — always present, derived from live task state
+                    Group {
+                        if inProgress {
+                            Text("In progress")
+                                .foregroundColor(Color.Lazyflow.success)
+                        } else if task.isOverdue {
+                            Text("Overdue — consider finishing today")
+                                .foregroundColor(Color.Lazyflow.error)
+                        } else if let topReason = suggestion.reasons.first(where: {
+                            !$0.lowercased().contains("overdue")
+                        }) {
+                            Text(topReason)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        } else {
+                            Text("Suggested for you")
+                                .foregroundColor(Color.Lazyflow.textTertiary)
+                        }
+                    }
+                    .font(DesignSystem.Typography.caption1)
+                    .lineLimit(1)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    viewModel.selectedTask = task
+                }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Opens task details")
+            }
+            .padding(.top, DesignSystem.Spacing.lg)
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.bottom, DesignSystem.Spacing.md)
+
+            // Divider
+            Rectangle()
+                .fill(Color.Lazyflow.textTertiary.opacity(0.15))
+                .frame(height: 1)
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+
+            // Time progress bar when in progress and has estimated duration
+            if inProgress, let estimated = task.estimatedDuration, estimated > 0 {
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    let elapsed = task.elapsedTime ?? 0
+                    let progress = min(elapsed / estimated, 1.0)
+                    let overBudget = elapsed > estimated
+
+                    VStack(spacing: DesignSystem.Spacing.xs) {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Color.secondary.opacity(0.15))
+                                    .frame(height: 6)
+
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(overBudget ? Color.Lazyflow.warning : Color.Lazyflow.success)
+                                    .frame(width: geometry.size.width * progress, height: 6)
+                            }
+                        }
+                        .frame(height: 6)
+
+                        HStack {
+                            let elapsedMins = Int(elapsed / 60)
+                            let estimatedMins = Int(estimated / 60)
+                            Text("\(elapsedMins)m of \(estimatedMins)m")
+                                .font(DesignSystem.Typography.caption2)
+                                .foregroundColor(overBudget ? Color.Lazyflow.warning : Color.Lazyflow.textTertiary)
+                            Spacer()
+                            if overBudget {
+                                Text("Over estimate")
+                                    .font(DesignSystem.Typography.caption2)
+                                    .foregroundColor(Color.Lazyflow.warning)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.top, DesignSystem.Spacing.sm)
+                .transition(.opacity)
+            }
+
+            // Action row — single row, layout changes based on state
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if inProgress {
+                    // Pause + Focus
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            optimisticInProgressID = nil
+                            optimisticPausedID = task.id
+                        }
+                        viewModel.stopWorking(on: task)
+                        actionToast = ActionToastData(
+                            message: "Timer paused",
+                            icon: "pause.fill",
+                            iconColor: .orange
+                        )
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pause.fill")
+                            Text("Pause")
+                        }
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(
+                        isPrimary: true,
+                        overrideBackground: Color.Lazyflow.success.opacity(0.15),
+                        overrideForeground: Color.Lazyflow.success
+                    ))
+                    .accessibilityLabel("Pause timer")
+                    .transition(.opacity)
+
+                    Button {
+                        prioritizationService.recordSuggestionFeedback(
+                            task: task, action: .startedImmediately, score: suggestion.score
+                        )
+                        focusCoordinator.enterFocus(task: task)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "scope")
+                            Text("Focus")
+                        }
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                    .transition(.opacity)
+                } else {
+                    // Start/Resume + Focus + Later
+                    let hasWorkedBefore = task.accumulatedDuration > 0
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            optimisticPausedID = nil
+                            optimisticInProgressID = task.id
+                        }
+                        prioritizationService.recordSuggestionFeedback(
+                            task: task, action: .startedImmediately, score: suggestion.score
+                        )
+                        viewModel.startWorking(on: task)
+                        actionToast = ActionToastData(
+                            message: hasWorkedBefore ? "Timer resumed" : "Timer started",
+                            icon: "play.fill",
+                            iconColor: Color.Lazyflow.success
+                        )
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "play.fill")
+                            Text(hasWorkedBefore ? "Resume" : "Start")
+                        }
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: true))
+                    .accessibilityLabel(hasWorkedBefore ? "Resume working" : "Start working")
+                    .transition(.opacity)
+
+                    Button {
+                        prioritizationService.recordSuggestionFeedback(
+                            task: task, action: .startedImmediately, score: suggestion.score
+                        )
+                        focusCoordinator.enterFocus(task: task)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "scope")
+                            Text("Focus")
+                        }
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                    .transition(.opacity)
+
+                    Button {
+                        snoozeSkipTarget = suggestion
+                        showNotNowDialog = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text("Later")
+                        }
+                    }
+                    .buttonStyle(NextUpActionButtonStyle(isPrimary: false))
+                    .accessibilityLabel("Snooze or skip suggestion")
+                    .transition(.opacity)
+                }
+            }
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.vertical, DesignSystem.Spacing.md)
+        }
+        .background(Color.adaptiveSurface)
+        .cornerRadius(DesignSystem.CornerRadius.large)
+        .shadow(color: .black.opacity(0.06), radius: 2, y: 1)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Next up: \(task.title)")
+        .onAppear {
+            if inProgress && !reduceMotion {
+                isNextUpPulsing = false
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isNextUpPulsing = true
+                }
+            } else if inProgress {
+                isNextUpPulsing = true
+            }
+        }
+        .onChange(of: optimisticInProgressID) { _, newID in
+            let active = newID == task.id
+            if active && !reduceMotion {
+                isNextUpPulsing = false
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isNextUpPulsing = true
+                }
+            } else if active {
+                isNextUpPulsing = true
+            } else {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isNextUpPulsing = false
+                }
+            }
+        }
+        .onChange(of: task.isInProgress) { _, persisted in
+            // Clear optimistic state once Core Data catches up
+            if optimisticInProgressID == task.id && persisted {
+                optimisticInProgressID = nil
+            }
+            if optimisticPausedID == task.id && !persisted {
+                optimisticPausedID = nil
+            }
+            if !persisted && optimisticInProgressID != task.id {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isNextUpPulsing = false
+                }
+            }
+        }
     }
 
-    private func fetchSuggestionDetails(for task: Task) {
-        _Concurrency.Task {
-            let suggestion = await prioritizationService.getSuggestion(for: task)
-            await MainActor.run {
-                taskSuggestion = suggestion
-            }
+    /// Optimistically complete a task from the Next Up card
+    private func optimisticallyComplete(_ task: Task, suggestion: TaskSuggestion) {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+        _ = withAnimation(.spring(response: 0.26, dampingFraction: 0.85)) {
+            optimisticallyCompletedIDs.insert(task.id)
+        }
+
+        showUndoToast(.completed(task), snapshot: task)
+        viewModel.toggleTaskCompletion(task)
+    }
+
+    private func showSkipHighlight(for task: Task) {
+        actionToast = ActionToastData(
+            message: "Suggestion skipped",
+            icon: "forward.fill",
+            iconColor: Color.Lazyflow.textSecondary
+        )
+        highlightedTaskID = task.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            withAnimation { highlightedTaskID = nil }
         }
     }
 
@@ -1016,231 +1235,42 @@ struct TodayView: View {
 
 }
 
-// MARK: - Next Task Suggestion Sheet
+// MARK: - Next Up Button Styles
 
-struct NextTaskSuggestionSheet: View {
-    let suggestion: TaskSuggestion
-    let onViewDetails: () -> Void
-    let onSchedule: () -> Void
-    let onStart: () -> Void
-    var onEnterFocus: (() -> Void)?
-    var onSnooze: (() -> Void)?
-    var onSkip: (() -> Void)?
+/// Compact action button for the Next Up card (Start / Focus)
+struct NextUpActionButtonStyle: ButtonStyle {
+    let isPrimary: Bool
+    var overrideBackground: Color? = nil
+    var overrideForeground: Color? = nil
 
-    @Environment(\.dismiss) private var dismiss
+    func makeBody(configuration: Configuration) -> some View {
+        let bgColor = overrideBackground
+            ?? (isPrimary ? Color.Lazyflow.accent : Color.Lazyflow.accent.opacity(0.1))
+        let fgColor: Color = overrideForeground
+            ?? ((overrideBackground != nil || isPrimary) ? .white : Color.Lazyflow.accent)
 
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: DesignSystem.Spacing.xl) {
-                    // Task card (top of sheet)
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                        // Header: priority icon + title + confidence badge
-                        HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
-                            Image(systemName: suggestion.task.priority.iconName)
-                                .foregroundColor(suggestion.task.priority.color)
-                                .font(.system(size: 16))
-
-                            Text(suggestion.task.title)
-                                .font(DesignSystem.Typography.title3)
-                                .foregroundColor(Color.Lazyflow.textPrimary)
-
-                            Spacer()
-
-                            // Confidence badge
-                            HStack(spacing: DesignSystem.Spacing.xs) {
-                                Circle()
-                                    .fill(suggestion.confidence.color)
-                                    .frame(width: 6, height: 6)
-                                Text(suggestion.confidence.rawValue)
-                                    .font(DesignSystem.Typography.caption2)
-                                    .foregroundColor(suggestion.confidence.color)
-                            }
-                            .padding(.horizontal, DesignSystem.Spacing.sm)
-                            .padding(.vertical, DesignSystem.Spacing.xs)
-                            .background(suggestion.confidence.color.opacity(0.12))
-                            .cornerRadius(DesignSystem.CornerRadius.small)
-                        }
-
-                        // Metadata badges
-                        HStack(spacing: DesignSystem.Spacing.sm) {
-                            if let dueDate = suggestion.task.dueDate {
-                                DueDateBadge(
-                                    date: dueDate,
-                                    isOverdue: dueDate < Date(),
-                                    isDueToday: Calendar.current.isDateInToday(dueDate)
-                                )
-                            }
-
-                            if let duration = suggestion.task.estimatedDuration {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "clock")
-                                        .font(.caption2)
-                                    Text("\(Int(duration / 60)) min")
-                                        .font(DesignSystem.Typography.caption2)
-                                }
-                                .foregroundColor(Color.Lazyflow.textTertiary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.secondary.opacity(0.1))
-                                .cornerRadius(DesignSystem.CornerRadius.small)
-                                .fixedSize()
-                            }
-
-                            if suggestion.task.category != .uncategorized {
-                                CategoryBadge(category: suggestion.task.category)
-                            }
-                        }
-
-                        // Subtitle
-                        Text("Based on priority, deadlines, and your patterns")
-                            .font(DesignSystem.Typography.caption1)
-                            .foregroundColor(Color.Lazyflow.textTertiary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color.adaptiveSurface)
-                    .cornerRadius(DesignSystem.CornerRadius.large)
-                    .padding(.horizontal)
-                    .padding(.top, DesignSystem.Spacing.sm)
-
-                    // Reason chips (wrapped multi-line)
-                    if !suggestion.reasons.isEmpty {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                            Text("Why this task?")
-                                .font(DesignSystem.Typography.headline)
-                                .foregroundColor(Color.Lazyflow.textPrimary)
-
-                            ReasonChipsView(reasons: suggestion.reasons)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                    }
-
-                    // AI Insight
-                    if let insight = suggestion.aiInsight {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                            HStack {
-                                Image(systemName: "sparkles")
-                                    .foregroundColor(Color.Lazyflow.accent)
-                                Text("AI Insight")
-                                    .font(DesignSystem.Typography.headline)
-                                    .foregroundColor(Color.Lazyflow.textPrimary)
-                            }
-
-                            Text(insight)
-                                .font(DesignSystem.Typography.body)
-                                .foregroundColor(Color.Lazyflow.textSecondary)
-                                .italic()
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(Color.Lazyflow.accent.opacity(0.1))
-                        .cornerRadius(DesignSystem.CornerRadius.medium)
-                        .padding(.horizontal)
-                    }
-
-                    Spacer(minLength: 20)
-
-                    // Action buttons (consolidated to 2 rows)
-                    VStack(spacing: DesignSystem.Spacing.sm) {
-                        // Row 1: Start Now
-                        Button {
-                            onStart()
-                        } label: {
-                            Label("Start Now", systemImage: "play.fill")
-                        }
-                        .buttonStyle(PrimaryButtonStyle())
-
-                        // Row 2: Enter Focus
-                        if let onEnterFocus {
-                            Button {
-                                onEnterFocus()
-                            } label: {
-                                Label("Enter Focus", systemImage: "scope")
-                            }
-                            .buttonStyle(SecondaryButtonStyle())
-                        }
-
-                        // Row 3: Schedule + More menu
-                        HStack(spacing: DesignSystem.Spacing.sm) {
-                            Button {
-                                onSchedule()
-                            } label: {
-                                Label("Schedule", systemImage: "calendar.badge.plus")
-                            }
-                            .buttonStyle(SecondaryButtonStyle())
-
-                            Menu {
-                                Button {
-                                    onViewDetails()
-                                } label: {
-                                    Label("View Details", systemImage: "info.circle")
-                                }
-
-                                if onSnooze != nil {
-                                    Button {
-                                        onSnooze?()
-                                    } label: {
-                                        Label("Snooze...", systemImage: "moon.fill")
-                                    }
-                                }
-
-                                if onSkip != nil {
-                                    Button {
-                                        onSkip?()
-                                    } label: {
-                                        Label("Skip...", systemImage: "forward.fill")
-                                    }
-                                }
-                            } label: {
-                                Text("More")
-                                    .font(DesignSystem.Typography.headline)
-                                    .foregroundColor(Color.Lazyflow.accent)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: DesignSystem.TouchTarget.comfortable)
-                                    .background(Color.Lazyflow.accent.opacity(0.1))
-                                    .cornerRadius(DesignSystem.CornerRadius.large)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, DesignSystem.Spacing.lg)
-                }
-            }
-            .background(Color.adaptiveBackground)
-            .navigationTitle("Next Task")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
+        configuration.label
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundColor(fgColor)
+            .frame(maxWidth: .infinity)
+            .frame(height: DesignSystem.TouchTarget.minimum)
+            .background(bgColor)
+            .cornerRadius(DesignSystem.CornerRadius.medium)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(DesignSystem.Animation.quick, value: configuration.isPressed)
     }
 }
 
-// MARK: - Reason Chips View
-
-struct ReasonChipsView: View {
-    let reasons: [String]
-
-    var body: some View {
-        // Use LazyVGrid with flexible columns for wrapping chips
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: DesignSystem.Spacing.sm)], alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            ForEach(reasons, id: \.self) { reason in
-                Text(reason)
-                    .font(DesignSystem.Typography.caption2)
-                    .foregroundColor(Color.Lazyflow.accent)
-                    .padding(.horizontal, DesignSystem.Spacing.sm)
-                    .padding(.vertical, DesignSystem.Spacing.xs)
-                    .background(Color.Lazyflow.accent.opacity(0.15))
-                    .cornerRadius(DesignSystem.CornerRadius.full)
-            }
-        }
+/// Icon-only button for snooze/skip in the Next Up card
+struct NextUpIconButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(Color.Lazyflow.textSecondary)
+            .frame(width: DesignSystem.TouchTarget.minimum, height: DesignSystem.TouchTarget.minimum)
+            .background(Color.secondary.opacity(0.08))
+            .cornerRadius(DesignSystem.CornerRadius.medium)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(DesignSystem.Animation.quick, value: configuration.isPressed)
     }
 }
 
