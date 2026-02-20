@@ -231,6 +231,50 @@
   }
   .action-btn.icon-only:hover { background: var(--action-bg-hover); color: var(--text-primary); }
   .action-btn .icon-sm { font-size: 13px; }
+  .action-btn.later { background: var(--action-bg); color: var(--text-secondary); }
+  .action-btn.later:hover { background: var(--action-bg-hover); color: var(--text-primary); }
+  .action-btn.later:active { transform: scale(0.97); }
+  .action-btn.pause { background: rgba(34,200,118,0.15); color: var(--success); }
+  .action-btn.pause:hover { background: rgba(34,200,118,0.22); }
+  .action-btn.pause:active { transform: scale(0.97); }
+
+  /* Pulsing dot inside checkbox when in-progress */
+  .pulsing-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    animation: pulsingDot 1s ease-in-out infinite;
+    display: none;
+  }
+  .checkbox.in-progress .pulsing-dot { display: block; }
+  .checkbox.in-progress { border-color: var(--accent); }
+  @keyframes pulsingDot {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  }
+
+  /* Live timer badge */
+  .meta-badge.timer-live { color: var(--success); background: rgba(34,200,118,0.1); font-variant-numeric: tabular-nums; }
+
+  /* Progress bar */
+  .progress-bar-container {
+    padding: 0 var(--sp-lg) var(--sp-sm);
+    display: none;
+  }
+  .progress-bar-container.visible { display: block; }
+  .progress-bar-track {
+    height: 4px; background: rgba(128,128,128,0.15);
+    border-radius: 2px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 2px; transition: width 1s linear;
+    width: 0%;
+  }
+  .progress-bar-label {
+    font-size: 11px; color: var(--text-tertiary);
+    margin-top: 4px; font-variant-numeric: tabular-nums;
+  }
 
   /* ========================================
      UNDO TOAST
@@ -504,8 +548,7 @@
     <div class="badge">Lazyflow Design</div>
     <h1>Next Up Card</h1>
     <p>Single task suggestion with optimistic completion.<br>
-    All buttons are interactive — try every action.<br>
-    <span style="color: var(--accent); font-size: 12px; font-weight: 600;">Codex-reviewed, fully interactive</span></p>
+    All buttons are interactive — try every action.</p>
   </div>
 
   <div class="theme-toggle">
@@ -549,6 +592,7 @@
               <div class="card-body" onclick="openDetail(event)">
                 <div class="checkbox-wrapper" onclick="completeTask(event, 1)">
                   <div class="checkbox" id="checkbox-1">
+                    <span class="pulsing-dot"></span>
                     <span class="checkmark">
                       <svg viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="2.5 7.5 5.5 10.5 11.5 4"/>
@@ -561,24 +605,27 @@
                   <div class="task-meta">
                     <span class="meta-badge due today">&#128339; Due 4:00 PM</span>
                     <span class="meta-dot"></span>
-                    <span class="meta-badge duration">&#9201; 15m</span>
+                    <span class="meta-badge duration" id="timer-badge-1">&#9201; 15m</span>
                   </div>
-                  <div class="task-reason">Quick task before your 3 PM meeting</div>
+                  <div class="task-reason" id="reason-1">Quick task before your 3 PM meeting</div>
                 </div>
               </div>
+              <div class="progress-bar-container" id="progress-bar-1">
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" id="progress-fill-1"></div>
+                </div>
+                <div class="progress-bar-label" id="progress-label-1">0 min of 15 min</div>
+              </div>
               <div class="card-divider"></div>
-              <div class="action-row">
+              <div class="action-row" id="action-row-1">
                 <button class="action-btn start" id="start-btn-1" onclick="startWorking(event, 1)">
                   <span class="icon-sm">&#9654;</span> <span class="btn-label">Start</span>
                 </button>
                 <button class="action-btn focus" onclick="enterFocus(event, 1)">
                   <span class="icon-sm">&#9673;</span> Focus
                 </button>
-                <button class="action-btn icon-only" onclick="menuAction('snooze')" title="Snooze 1 hour">
-                  &#9790;
-                </button>
-                <button class="action-btn icon-only" onclick="skipSuggestion(1)" title="Skip suggestion">
-                  &#9193;
+                <button class="action-btn later" id="later-btn-1" onclick="laterAction(1)">
+                  <span class="icon-sm">&#8634;</span> Later
                 </button>
               </div>
             </div>
@@ -588,6 +635,7 @@
               <div class="card-body" onclick="openDetail(event)">
                 <div class="checkbox-wrapper" onclick="completeTask(event, 2)">
                   <div class="checkbox" id="checkbox-2">
+                    <span class="pulsing-dot"></span>
                     <span class="checkmark">
                       <svg viewBox="0 0 14 14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="2.5 7.5 5.5 10.5 11.5 4"/>
@@ -600,24 +648,27 @@
                   <div class="task-meta">
                     <span class="meta-badge due">&#128339; Due Tomorrow</span>
                     <span class="meta-dot"></span>
-                    <span class="meta-badge duration">&#9201; 30m</span>
+                    <span class="meta-badge duration" id="timer-badge-2">&#9201; 30m</span>
                   </div>
-                  <div class="task-reason">Highest priority task remaining</div>
+                  <div class="task-reason" id="reason-2">Highest priority task remaining</div>
                 </div>
               </div>
+              <div class="progress-bar-container" id="progress-bar-2">
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" id="progress-fill-2"></div>
+                </div>
+                <div class="progress-bar-label" id="progress-label-2">0 min of 30 min</div>
+              </div>
               <div class="card-divider"></div>
-              <div class="action-row">
+              <div class="action-row" id="action-row-2">
                 <button class="action-btn start" id="start-btn-2" onclick="startWorking(event, 2)">
                   <span class="icon-sm">&#9654;</span> <span class="btn-label">Start</span>
                 </button>
                 <button class="action-btn focus" onclick="enterFocus(event, 2)">
                   <span class="icon-sm">&#9673;</span> Focus
                 </button>
-                <button class="action-btn icon-only" onclick="menuAction('snooze')" title="Snooze 1 hour">
-                  &#9790;
-                </button>
-                <button class="action-btn icon-only" onclick="skipSuggestion(2)" title="Skip suggestion">
-                  &#9193;
+                <button class="action-btn later" id="later-btn-2" onclick="laterAction(2)">
+                  <span class="icon-sm">&#8634;</span> Later
                 </button>
               </div>
             </div>
@@ -819,11 +870,11 @@
     <div class="steps">
       <div class="step"><span class="step-num">1</span> Tap checkbox</div>
       <div class="step"><span class="step-num">2</span> Tap Undo</div>
-      <div class="step"><span class="step-num">3</span> Tap Start</div>
-      <div class="step"><span class="step-num">4</span> Tap Focus</div>
-      <div class="step"><span class="step-num">5</span> Tap ring to pause</div>
-      <div class="step"><span class="step-num">6</span> Tap Snooze &#9790;</div>
-      <div class="step"><span class="step-num">7</span> Tap Skip &#9193;</div>
+      <div class="step"><span class="step-num">3</span> Tap Start (watch timer)</div>
+      <div class="step"><span class="step-num">4</span> Tap Pause</div>
+      <div class="step"><span class="step-num">5</span> Tap Focus</div>
+      <div class="step"><span class="step-num">6</span> Tap ring to pause</div>
+      <div class="step"><span class="step-num">7</span> Tap Later</div>
       <div class="step"><span class="step-num">8</span> Toggle Light/Dark</div>
     </div>
   </div>
@@ -849,12 +900,19 @@
         </div>
       </div>
       <div class="annotation-card">
-        <div class="label">Action Row</div>
+        <div class="label">Action Row (Two States)</div>
         <div class="value">
-          <code>[Start]</code> — primary CTA, accent fill, starts timer<br>
-          <code>[Focus]</code> — secondary, tonal accent, enters Focus Mode<br>
-          <code>[&#9790;]</code> — icon-only, snooze 1 hour<br>
-          <code>[&#9193;]</code> — icon-only, skip (task returns to Today list)
+          <strong>Idle:</strong> <code>[Start/Resume]</code> primary + <code>[Focus]</code> secondary + <code>[Later]</code> tertiary<br>
+          <strong>In Progress:</strong> <code>[Pause]</code> success tint + <code>[Focus]</code> secondary<br>
+          Later combines snooze + skip into one action. Resume shows when <code>accumulatedDuration > 0</code>.
+        </div>
+      </div>
+      <div class="annotation-card">
+        <div class="label">Live Timer + Progress</div>
+        <div class="value">
+          Timer badge in meta: <code>font-variant-numeric: tabular-nums</code>, success color, updates every 1s via <code>TimelineView</code>.<br>
+          Progress bar: elapsed vs estimated, accent fill, 4px height.<br>
+          Pulsing dot: 10pt, accent, <code>1s ease-in-out infinite</code> inside checkbox when in-progress.
         </div>
       </div>
       <div class="annotation-card">
@@ -885,39 +943,6 @@
   </div>
 
 <script>
-  /*
-   * BUG FIXES APPLIED:
-   *
-   * 1. completeTask: Now cleans up startWorkingInterval for the completed card
-   *    before swapping. Previously, the interval kept running in the background
-   *    after a card with an active "Start Working" timer was completed.
-   *
-   * 2. skipSuggestion: Now cleans up startWorkingInterval for the skipped card.
-   *    Previously, skipping a card with an active "Start Working" timer left the
-   *    interval running and leaked into the next card's state.
-   *
-   * 3. focusTakeBreak: Now clears focusTimerInterval and sets it to null.
-   *    Previously, the interval kept running (in paused mode) after taking a break,
-   *    which was fragile and could lead to stale closures if the user changed cards.
-   *
-   * 4. focusSwitchTask: Now resets the OLD card's Start button and sets the NEW
-   *    card's Start button to "Working..." state. Previously, the old card's button
-   *    stayed green and the new card's button stayed in "Start" state after switching.
-   *
-   * 5. focusMarkComplete: Now sets focusTimerInterval = null after clearing, for
-   *    clean state. Previously, the stale interval ID was left in the variable.
-   *
-   * 6. completeTask: Now resets taskElapsed for the completed card so elapsed time
-   *    does not carry over if the card is brought back via undo and started fresh.
-   *
-   * 7. focusSwitchTask: Now sets focusTimerInterval = null before restarting, and
-   *    properly manages startWorkingCard to avoid orphaned interval references.
-   *
-   * 8. showActionToast: Now clears the previous timeout before setting a new one.
-   *    Previously, rapid successive calls could cause the toast to disappear
-   *    prematurely when an earlier setTimeout fired.
-   */
-
   let currentCard = 1;
   let isAnimating = false;
   let undoTimer = null;
@@ -954,10 +979,9 @@
     // Clear any existing undo timer
     if (undoTimer) clearTimeout(undoTimer);
 
-    // [FIX 1] Clean up startWorkingInterval for the card being completed
+    // Clean up state for the card being completed
+    taskState[cardNum] = 'idle';
     resetStartBtn(cardNum);
-
-    // [FIX 6] Reset elapsed time for the completed task
     taskElapsed[cardNum] = 0;
 
     // 1. Instant checkbox fill + strikethrough title
@@ -981,8 +1005,10 @@
       nextCard.classList.add('entering');
       currentCard = nextNum;
 
-      // Reset start button state on new card
+      // Reset state on new card
+      taskState[nextNum] = 'idle';
       resetStartBtn(nextNum);
+      updateCardUI(nextNum);
 
       setTimeout(() => {
         nextCard.classList.remove('entering');
@@ -1026,56 +1052,187 @@
     }, 300);
   }
 
-  // ===== START WORKING =====
+  // Task state: 'idle' or 'in-progress'
+  const taskState = { 1: 'idle', 2: 'idle' };
+  const taskEstimateMinutes = { 1: 15, 2: 30 };
+  const taskReasons = {
+    1: 'Quick task before your 3 PM meeting',
+    2: 'Highest priority task remaining'
+  };
+
+  // ===== START / PAUSE WORKING =====
   function startWorking(event, cardNum) {
     event.stopPropagation();
-    const btn = document.getElementById(`start-btn-${cardNum}`);
-    const label = btn.querySelector('.btn-label');
 
-    if (btn.classList.contains('working')) {
-      // Already working — stop
-      btn.classList.remove('working');
-      if (label) label.textContent = 'Start';
-      btn.querySelector('.icon-sm').innerHTML = '&#9654;';
-      if (startWorkingInterval) clearInterval(startWorkingInterval);
-      startWorkingInterval = null;
-      startWorkingCard = null;
-      showActionToast('Timer stopped');
+    if (taskState[cardNum] === 'in-progress') {
+      // Pause
+      pauseTask(cardNum);
     } else {
-      // Stop any existing start interval first (prevents leak across tasks)
-      if (startWorkingInterval) {
-        clearInterval(startWorkingInterval);
-        // Reset the old task's Start button if different
-        if (startWorkingCard && startWorkingCard !== cardNum) {
-          resetStartBtn(startWorkingCard);
-        }
+      // Start/Resume
+      // Stop any existing task first
+      if (startWorkingCard && startWorkingCard !== cardNum) {
+        pauseTask(startWorkingCard);
       }
-      // Start working — tick shared elapsed
-      btn.classList.add('working');
-      label.textContent = 'Working...';
-      btn.querySelector('.icon-sm').innerHTML = '&#9209;';
-      startWorkingCard = cardNum;
-      startWorkingInterval = setInterval(() => {
-        taskElapsed[cardNum]++;
-      }, 1000);
-      showActionToast('Timer started — task in progress');
+      startTask(cardNum);
+    }
+  }
+
+  function startTask(cardNum) {
+    taskState[cardNum] = 'in-progress';
+    startWorkingCard = cardNum;
+    startWorkingInterval = setInterval(() => {
+      taskElapsed[cardNum]++;
+      updateTimerUI(cardNum);
+    }, 1000);
+    updateCardUI(cardNum);
+    showActionToast('Timer started — task in progress');
+  }
+
+  function pauseTask(cardNum) {
+    taskState[cardNum] = 'idle';
+    if (startWorkingInterval) clearInterval(startWorkingInterval);
+    startWorkingInterval = null;
+    startWorkingCard = null;
+    updateCardUI(cardNum);
+    showActionToast('Timer paused');
+  }
+
+  function updateTimerUI(cardNum) {
+    const elapsed = taskElapsed[cardNum];
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const badge = document.getElementById(`timer-badge-${cardNum}`);
+    if (badge) {
+      badge.textContent = `\u23F1 ${mins}:${secs.toString().padStart(2, '0')}`;
+      badge.className = 'meta-badge timer-live';
+    }
+    // Progress bar
+    const estSecs = taskEstimateMinutes[cardNum] * 60;
+    const fill = document.getElementById(`progress-fill-${cardNum}`);
+    const label = document.getElementById(`progress-label-${cardNum}`);
+    if (fill) fill.style.width = Math.min((elapsed / estSecs) * 100, 100) + '%';
+    if (label) label.textContent = `${mins} min of ${taskEstimateMinutes[cardNum]} min`;
+  }
+
+  function updateCardUI(cardNum) {
+    const isWorking = taskState[cardNum] === 'in-progress';
+    const hasElapsed = taskElapsed[cardNum] > 0;
+    const checkbox = document.getElementById(`checkbox-${cardNum}`);
+    const actionRow = document.getElementById(`action-row-${cardNum}`);
+    const progressBar = document.getElementById(`progress-bar-${cardNum}`);
+    const timerBadge = document.getElementById(`timer-badge-${cardNum}`);
+    const reasonEl = document.getElementById(`reason-${cardNum}`);
+
+    // Checkbox pulsing dot
+    if (checkbox) {
+      if (isWorking) {
+        checkbox.classList.add('in-progress');
+      } else {
+        checkbox.classList.remove('in-progress');
+      }
+    }
+
+    // Progress bar
+    if (progressBar) {
+      if (isWorking) {
+        progressBar.classList.add('visible');
+      } else {
+        progressBar.classList.remove('visible');
+      }
+    }
+
+    // Timer badge
+    if (timerBadge) {
+      if (isWorking) {
+        updateTimerUI(cardNum);
+      } else if (hasElapsed) {
+        const mins = Math.floor(taskElapsed[cardNum] / 60);
+        const secs = taskElapsed[cardNum] % 60;
+        timerBadge.textContent = `\u23F1 ${mins}:${secs.toString().padStart(2, '0')}`;
+        timerBadge.className = 'meta-badge duration';
+      } else {
+        timerBadge.textContent = `\u23F1 ${taskEstimateMinutes[cardNum]}m`;
+        timerBadge.className = 'meta-badge duration';
+      }
+    }
+
+    // Reason line
+    if (reasonEl) {
+      if (isWorking) {
+        reasonEl.textContent = 'In progress';
+        reasonEl.style.color = 'var(--success)';
+      } else {
+        reasonEl.textContent = taskReasons[cardNum];
+        reasonEl.style.color = '';
+      }
+    }
+
+    // Action row: swap between idle and in-progress layouts
+    if (actionRow) {
+      if (isWorking) {
+        actionRow.innerHTML = `
+          <button class="action-btn pause" id="start-btn-${cardNum}" onclick="startWorking(event, ${cardNum})">
+            <span class="icon-sm">&#9208;</span> <span class="btn-label">Pause</span>
+          </button>
+          <button class="action-btn focus" onclick="enterFocus(event, ${cardNum})">
+            <span class="icon-sm">&#9673;</span> Focus
+          </button>
+        `;
+      } else {
+        const btnLabel = hasElapsed ? 'Resume' : 'Start';
+        const btnIcon = hasElapsed ? '&#8634;' : '&#9654;';
+        actionRow.innerHTML = `
+          <button class="action-btn start" id="start-btn-${cardNum}" onclick="startWorking(event, ${cardNum})">
+            <span class="icon-sm">${btnIcon}</span> <span class="btn-label">${btnLabel}</span>
+          </button>
+          <button class="action-btn focus" onclick="enterFocus(event, ${cardNum})">
+            <span class="icon-sm">&#9673;</span> Focus
+          </button>
+          <button class="action-btn later" id="later-btn-${cardNum}" onclick="laterAction(${cardNum})">
+            <span class="icon-sm">&#8634;</span> Later
+          </button>
+        `;
+      }
     }
   }
 
   function resetStartBtn(cardNum) {
-    const btn = document.getElementById(`start-btn-${cardNum}`);
-    if (btn) {
-      btn.classList.remove('working');
-      const label = btn.querySelector('.btn-label');
-      if (label) label.textContent = 'Start';
-      const icon = btn.querySelector('.icon-sm');
-      if (icon) icon.innerHTML = '&#9654;';
-    }
     if (startWorkingCard === cardNum && startWorkingInterval) {
       clearInterval(startWorkingInterval);
       startWorkingInterval = null;
       startWorkingCard = null;
     }
+    taskState[cardNum] = 'idle';
+    updateCardUI(cardNum);
+  }
+
+  // ===== LATER (replaces Snooze + Skip) =====
+  function laterAction(cardNum) {
+    if (isAnimating) return;
+    isAnimating = true;
+    resetStartBtn(cardNum);
+    showActionToast('Moved to later');
+
+    const card = document.getElementById(`card-${cardNum}`);
+    card.classList.add('completing');
+
+    setTimeout(() => {
+      card.style.display = 'none';
+      card.classList.remove('completing');
+
+      const nextNum = cardNum === 1 ? 2 : 1;
+      const nextCard = document.getElementById(`card-${nextNum}`);
+      nextCard.style.display = 'block';
+      nextCard.classList.add('entering');
+      currentCard = nextNum;
+      resetStartBtn(nextNum);
+      setTimeout(() => {
+        nextCard.classList.remove('entering');
+        isAnimating = false;
+      }, 250);
+
+      highlightExistingRow(cardNum);
+    }, 320);
   }
 
   // ===== FOCUS MODE =====
@@ -1103,15 +1260,9 @@
       startWorkingInterval = null;
       startWorkingCard = null;
     }
-    // Set Start button to Working state (Focus implies working)
-    const startBtn = document.getElementById(`start-btn-${cardNum}`);
-    if (startBtn) {
-      startBtn.classList.add('working');
-      const sl = startBtn.querySelector('.btn-label');
-      if (sl) sl.textContent = 'Working...';
-      const si = startBtn.querySelector('.icon-sm');
-      if (si) si.innerHTML = '&#9209;';
-    }
+    // Set task to in-progress state (Focus implies working)
+    taskState[cardNum] = 'in-progress';
+    updateCardUI(cardNum);
 
     const timerEl = document.getElementById('focus-timer');
     const ringEl = document.getElementById('focus-ring-progress');
@@ -1219,18 +1370,13 @@
     if (!startWorkingInterval) {
       startWorkingInterval = setInterval(() => {
         taskElapsed[cardNum]++;
+        updateTimerUI(cardNum);
       }, 1000);
       startWorkingCard = cardNum;
     }
-    // Sync Start button to show Working state
-    const startBtn = document.getElementById(`start-btn-${cardNum}`);
-    if (startBtn && !startBtn.classList.contains('working')) {
-      startBtn.classList.add('working');
-      const sl = startBtn.querySelector('.btn-label');
-      if (sl) sl.textContent = 'Working...';
-      const si = startBtn.querySelector('.icon-sm');
-      if (si) si.innerHTML = '&#9209;';
-    }
+    // Keep in-progress UI state
+    taskState[cardNum] = 'in-progress';
+    updateCardUI(cardNum);
     showActionToast('Minimized — tap Focus to return');
   }
 
@@ -1244,12 +1390,13 @@
       overlay.classList.remove('visible');
       document.getElementById('focus-ring-glow').classList.remove('visible');
       if (focusTimerInterval) clearInterval(focusTimerInterval);
-      // [FIX 5] Null out for clean state
+      // Clean state
       focusTimerInterval = null;
       focusPaused = false;
 
-      // Reset elapsed for completed task
+      // Reset elapsed and state for completed task
       taskElapsed[focusCardNum] = 0;
+      taskState[focusCardNum] = 'idle';
       resetStartBtn(focusCardNum);
 
       // Trigger card completion swap
@@ -1277,12 +1424,14 @@
     document.getElementById('focus-ring-container').classList.add('paused');
     document.getElementById('focus-label').textContent = 'Paused';
 
-    // [FIX 3] Clear focusTimerInterval so no stale closure keeps running
+    // Clear focus timer
     if (focusTimerInterval) clearInterval(focusTimerInterval);
     focusTimerInterval = null;
 
-    // Reset Start button so user can tap Start during break
+    // Reset to idle state so user can tap Start/Resume during break
+    taskState[focusCardNum] = 'idle';
     resetStartBtn(focusCardNum);
+    updateCardUI(focusCardNum);
 
     // Minimize the overlay (like dismissFocus — pill will show)
     const overlay = document.getElementById('focus-overlay');
@@ -1294,11 +1443,12 @@
   function focusSwitchTask() {
     // Stop old interval (its closure writes to the wrong task)
     if (focusTimerInterval) clearInterval(focusTimerInterval);
-    // [FIX 7] Null out for clean state
+    // Clean state
     focusTimerInterval = null;
 
-    // [FIX 4] Reset OLD card's Start button before switching
+    // Reset OLD card state before switching
     const oldCardNum = focusCardNum;
+    taskState[oldCardNum] = 'idle';
     resetStartBtn(oldCardNum);
 
     const nextNum = focusCardNum === 1 ? 2 : 1;
@@ -1339,60 +1489,14 @@
     document.getElementById(`card-${nextNum}`).style.display = 'block';
     currentCard = nextNum;
 
-    // [FIX 4] Set NEW card's Start button to Working state (Focus implies working)
-    const newStartBtn = document.getElementById(`start-btn-${nextNum}`);
-    if (newStartBtn) {
-      newStartBtn.classList.add('working');
-      const sl = newStartBtn.querySelector('.btn-label');
-      if (sl) sl.textContent = 'Working...';
-      const si = newStartBtn.querySelector('.icon-sm');
-      if (si) si.innerHTML = '&#9209;';
-    }
+    // Set NEW card to in-progress state (Focus implies working)
+    taskState[nextNum] = 'in-progress';
+    updateCardUI(nextNum);
 
     showActionToast('Switched to: ' + taskTitles[nextNum].substring(0, 30) + '...');
   }
 
-  function menuAction(action) {
-    if (action === 'snooze') {
-      showActionToast('Snoozed for 1 hour');
-    }
-  }
-
-  // ===== SKIP — card swaps, existing row highlights in Today list =====
-  function skipSuggestion(cardNum) {
-    if (isAnimating) return;
-    isAnimating = true;
-
-    const card = document.getElementById(`card-${cardNum}`);
-
-    // [FIX 2] Clean up startWorkingInterval for the card being skipped
-    resetStartBtn(cardNum);
-
-    showActionToast('Suggestion skipped');
-
-    // 1. Animate card out
-    card.classList.add('completing');
-
-    setTimeout(() => {
-      card.style.display = 'none';
-      card.classList.remove('completing');
-
-      // 2. Show next suggestion card
-      const nextNum = cardNum === 1 ? 2 : 1;
-      const nextCard = document.getElementById(`card-${nextNum}`);
-      nextCard.style.display = 'block';
-      nextCard.classList.add('entering');
-      currentCard = nextNum;
-      resetStartBtn(nextNum);
-      setTimeout(() => {
-        nextCard.classList.remove('entering');
-        isAnimating = false;
-      }, 250);
-
-      // 3. Highlight the existing row in Today list (task was always there)
-      highlightExistingRow(cardNum);
-    }, 320);
-  }
+  // (menuAction and skipSuggestion removed — replaced by laterAction above)
 
   function highlightExistingRow(cardNum) {
     const row = document.getElementById(`today-row-${cardNum}`);

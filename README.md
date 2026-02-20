@@ -1,6 +1,6 @@
 # Lazyflow
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
 [![App Store](https://img.shields.io/badge/App_Store-Available-0D96F6.svg?logo=apple)](https://apps.apple.com/us/app/lazyflow/id6757427688)
 [![iOS](https://img.shields.io/badge/iOS-17.0+-000000.svg?logo=apple)](https://developer.apple.com/ios/)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?logo=swift)](https://swift.org)
@@ -27,10 +27,11 @@ Most todo apps just store tasks. Lazyflow helps you **plan your day** by combini
 
 ## Features
 
-- **Morning Briefing** - Start your day with AI-generated planning based on your calendar and priorities
-- **AI Priority** - Ask "What should I do next?" and get recommendations with reasoning. Refine with Try Again
+- **Focus Mode** - Full-screen immersive single-task experience with live timer and progress ring
+- **Next Up** - Single focused task suggestion with state-dependent actions (Start/Pause, Focus, Later)
+- **Plan Your Day** - Morning Briefing and Daily Summary with AI-generated insights and carryover
 - **Calendar Integration** - View events alongside tasks, schedule tasks as time blocks
-- **Daily Summary** - Track completion streaks and get AI-generated productivity insights
+- **AI Priority** - Feedback-conditioned reranking learns from your task completion patterns
 - **Works Everywhere** - iPhone, iPad, Apple Watch, widgets, Siri, and Live Activities
 - **Privacy First** - Your data stays on your device. No tracking, no analytics
 - **100% Free** - No ads, no subscriptions, no premium tiers
@@ -98,7 +99,3 @@ If you find Lazyflow useful, consider supporting its development:
 ## License
 
 [MIT](LICENSE)
-
----
-
-Built with [Claude Code](https://claude.ai/code) | Peer-reviewed by [Codex](https://openai.com/codex)

@@ -525,6 +525,209 @@ Note: Read-only, no configuration needed
 
 ---
 
+## Next Up Card Components (v1.9.0)
+
+Single focused task suggestion card that appears in the Today view.
+
+### Card Structure
+
+```
++----------------------------------------------------+
+| [Checkbox]  Task Title (max 2 lines)               |
+|             [Due Badge] · [Timer/Duration Badge]    |
+|             [Subtask Badge: "2/5"]                  |
+|             AI reason line (1 line, ellipsis)       |
+|----------------------------------------------------|
+| [Start/Resume]  [Focus]  [Later]                   |  Idle state
+| [Pause]          [Focus]                            |  In-progress state
++----------------------------------------------------+
+
+Background: adaptiveSurface
+Radius: CornerRadius.large (12pt)
+Shadow: shadow-small
+Padding: 16pt body, 12pt action row
+```
+
+### Checkbox States
+
+| State | Visual | Details |
+|-------|--------|---------|
+| Idle | Circle with tertiary border | `textTertiary.opacity(0.5)`, 26pt, 2.5pt stroke |
+| In Progress | Accent border + pulsing dot | 10pt dot, accent color, 1s ease-in-out infinite |
+| Subtasks | Outer progress ring | 3pt stroke, accent/success color, around checkbox |
+| Completed | Filled green + checkmark | Spring pop animation (180ms, scale 1→1.18→1) |
+
+### Action Row — Idle State
+
+```
+HStack(spacing: DesignSystem.Spacing.sm)
++------------------+------------------+------------------+
+| ▶ Start          | ◉ Focus          | ↺ Later          |
+| (primary: accent | (secondary:      | (tertiary:       |
+|  fill, white txt)|  accent @ 10%)   |  accent @ 10%)   |
++------------------+------------------+------------------+
+                    min-height: 44pt (Apple HIG)
+                    flex: 1 each, maxWidth: .infinity
+```
+
+- **Start** becomes **Resume** when `accumulatedDuration > 0`
+- Icon: `play.fill` / `arrow.clockwise` for Resume
+
+### Action Row — In Progress State
+
+```
+HStack(spacing: DesignSystem.Spacing.sm)
++------------------+------------------+
+| ⏸ Pause          | ◉ Focus          |
+| (success tint:   | (secondary:      |
+|  success @ 15%)  |  accent @ 10%)   |
++------------------+------------------+
+```
+
+- **Pause** uses success color tint: `Color.Lazyflow.success.opacity(0.15)` bg, `Color.Lazyflow.success` text
+- Icon: `pause.fill`
+
+### Live Timer Badge
+
+```
++----------------------+
+| ⏱ 12:34             |  When in-progress
++----------------------+
+Font: caption, monospacedDigit
+Color: success
+Background: success @ 10%
+
++----------------------+
+| ⏱ 25m               |  When idle (estimated duration)
++----------------------+
+Color: text-tertiary
+Background: tertiary @ 10%
+```
+
+Updated via `TimelineView(.periodic(every: 1))`.
+
+### Subtask Progress Ring
+
+```
+     ╭───╮
+    │  ○  │    3pt stroke around checkbox
+     ╰───╯    Accent color, partial fill based on subtask completion
+               Turns success color when all subtasks complete
+```
+
+### Pulsing Dot
+
+```
+    ●          10pt circle, accent color
+               animation: scale(1.0→1.2→1.0) + opacity(0.5→1.0→0.5)
+               duration: 1.0s ease-in-out, repeat forever
+               Only visible when task isInProgress
+```
+
+### Card Animations
+
+| Animation | Duration | Easing | Trigger |
+|-----------|----------|--------|---------|
+| `cardComplete` | 260ms + 60ms delay | cubic-bezier(0.4, 0, 0.2, 1) | Task completed |
+| `cardEnter` | 250ms | spring(0.34, 1.3, 0.64, 1) | New suggestion appears |
+| `checkboxPop` | 180ms | spring(0.34, 1.56, 0.64, 1) | Checkbox checked |
+
+---
+
+## Focus Mode Components (v1.9.0)
+
+Full-screen immersive overlay for deep work on a single task.
+
+### Overlay Layout
+
+```
++--------------------------------------------+
+| [✕]                                  [···] |  Top bar (pinned)
+|                                            |
+|          Task Title (max 2 lines)          |  Centered
+|      Due 4:00 PM · Est. 15 min            |  Subtitle
+|                                            |
+|              ╭─────────╮                   |
+|             │           │                  |
+|             │   12:34   │                  |  Timer Ring (240px)
+|             │ Focusing  │                  |
+|              ╰─────────╯                   |
+|                                            |
+|        [ ✓ Mark Complete ]                 |  Primary (56pt)
+|     [ ☾ Break ]  [ ↻ Switch ]             |  Secondary row
+|                                            |
++--------------------------------------------+
+
+Background: #111313
+Ambient: radial-gradient, accent @ 6-8%, 12s drift animation
+Border-radius: 52px (matches phone frame in prototype)
+```
+
+### Timer Ring
+
+| Element | Specification |
+|---------|---------------|
+| **Diameter** | 240px (120pt radius) |
+| **Stroke** | 6pt, round cap |
+| **Track** | `white.opacity(0.06)` |
+| **Progress** | `Color.Lazyflow.accent` with glow shadow |
+| **Glow dot** | 8pt circle at progress tip, `accent` with box-shadow |
+| **Timer text** | 52pt, light weight (400), `monospacedDigit` |
+| **Label** | 13pt, accent color, breathe animation (4s) |
+| **Paused label** | 13pt, `white.opacity(0.4)`, no animation |
+| **Circumference** | `2 × π × 110 = 691.2` (for stroke-dashoffset calc) |
+
+### Action Bar
+
+| Button | Style | Height | Details |
+|--------|-------|--------|---------|
+| **Mark Complete** | Primary (accent fill, white text) | 56pt | Full-width, `checkmark` icon |
+| **Take a Break** | Secondary (white @ 8% bg, white @ 70% text) | 44pt | Half-width, `moon.fill` icon |
+| **Switch Task** | Secondary (white @ 8% bg, white @ 70% text) | 44pt | Half-width, `arrow.triangle.2.circlepath` icon |
+
+### Success Animation
+
+```
+Overlay: black @ 50%
+Circle: 88pt, success color (#22C876)
+Checkmark: white, centered
+Animation: spring scale (0.3 → 1.0), cubic-bezier(0.34, 1.56, 0.64, 1)
+Shadow: 0 0 40px success @ 30%
+Duration: 1.2s total, then auto-dismiss
+```
+
+### ReturnToFocusPill
+
+```
++--------------------------------------------+
+| ⏱ Review Q4 budget proposal...    Resume > |
++--------------------------------------------+
+Position: floating above tab bar
+Background: adaptiveSurface
+Shadow: shadow-medium
+Border: subtle 1pt border
+Corner radius: CornerRadius.large
+
+Icon states:
+  - In progress: timer icon, accent tint
+  - On break: moon.fill icon, orange tint
+Tap: reopens Focus Mode overlay
+```
+
+### Motion & Animation
+
+| Token | Duration | Easing | Usage |
+|-------|----------|--------|-------|
+| `breathing` | 1s | ease-in-out infinite | Pulsing dot on active task |
+| `breathe` | 4s | ease-in-out infinite | Focus label opacity (0.55→1→0.55) |
+| `cardComplete` | 260ms | cubic-bezier(0.4, 0, 0.2, 1) | Card exit on completion |
+| `cardEnter` | 250ms | spring(0.34, 1.3, 0.64, 1) | New card entrance |
+| `checkboxPop` | 180ms | spring(0.34, 1.56, 0.64, 1) | Checkbox fill |
+| `ambientDrift` | 12s | ease-in-out alternate | Focus background gradient |
+| `successScale` | 400ms | spring(0.34, 1.56, 0.64, 1) | Completion checkmark |
+
+---
+
 ## Widget Components (v0.6.0)
 
 ### Design Principles
