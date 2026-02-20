@@ -483,6 +483,20 @@ final class TaskService: ObservableObject {
         updateTask(stoppedTask)
     }
 
+    /// Resume working on a task after a pause.
+    /// Clears startedAt before calling inProgress() so a fresh session timestamp
+    /// is set, preventing double-counting in elapsedTime.
+    func resumeWorking(on task: Task) {
+        if let currentInProgress = getInProgressTask(), currentInProgress.id != task.id {
+            let stopped = currentInProgress.stopProgress()
+            updateTask(stopped)
+        }
+        guard var latest = tasks.first(where: { $0.id == task.id }) else { return }
+        latest.startedAt = nil
+        let resumed = latest.inProgress()
+        updateTask(resumed)
+    }
+
     // MARK: - Calendar Integration
 
     /// Link a task to a calendar event

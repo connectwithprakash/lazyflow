@@ -2098,14 +2098,35 @@ final class LazyflowUITests: XCTestCase {
             throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
         }
 
-        // Check that the task also appears as a regular row (via "Mark complete" button in Today list)
-        // The Next Up card checkbox uses "Complete Dual appearance task" while the list row uses "Mark complete"
-        // If both exist, the task appears in both places
-        let taskTitle = app.staticTexts.matching(NSPredicate(format: "label == %@", "Dual appearance task"))
-        let markComplete = app.buttons.matching(NSPredicate(format: "label == %@", "Mark complete"))
-        // At least 1 "Mark complete" button (from Today list row) + the Next Up card
-        XCTAssertTrue(nextUpLabel.exists && (taskTitle.count >= 1 || markComplete.count >= 1),
-                       "Task should appear in both Next Up card and Today list")
+        // The task should also appear as a regular row in the Today list.
+        // Task row checkboxes use "Mark complete" while the Next Up card uses "Complete <title>".
+        // The row may be below the fold, so scroll down to reveal it.
+        let markComplete = app.buttons["Mark complete"].firstMatch
+        if !markComplete.exists {
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 1.0)
+        }
+        if !markComplete.exists {
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 1.0)
+        }
+
+        // Check for the task title anywhere — the row label CONTAINS the title,
+        // the Next Up card has it as a static text child too
+        let taskTexts = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Dual appearance task")
+        )
+        // Also check for buttons matching "Complete" (both card and row have some variant)
+        let completeButtons = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "Dual appearance task")
+        )
+
+        // The task appears in Next Up (confirmed by guard above).
+        // It should also appear in the Today list — at least 2 elements reference the task
+        // (one in the card, one in the list row).
+        let totalReferences = taskTexts.count + completeButtons.count
+        XCTAssertGreaterThanOrEqual(totalReferences, 2,
+            "Task should appear in both Next Up card and Today list (found \(totalReferences) references)")
     }
 
 }

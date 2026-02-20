@@ -15,6 +15,13 @@ final class FocusSessionCoordinator: ObservableObject {
     /// should be suppressed (the task was just completed by us).
     @Published var isCompletionAnimating: Bool = false
 
+    /// When true, the focus ring timer is paused (user tapped ring).
+    @Published var isPaused: Bool = false
+
+    /// When true, user took a break — task stopped but focusTaskID retained
+    /// so the pill shows and Focus can be resumed.
+    @Published var isOnBreak: Bool = false
+
     /// Suppresses invalidation during task switch handoff.
     private var isSwitching: Bool = false
 
@@ -51,9 +58,11 @@ final class FocusSessionCoordinator: ObservableObject {
         return taskService.tasks.first { $0.id == id }
     }
 
-    /// Show the return-to-focus pill when dismissed but task still in progress.
+    /// Show the return-to-focus pill when dismissed but task still in progress,
+    /// when paused, or when on break.
     var shouldShowPill: Bool {
         guard let id = focusTaskID, !isFocusPresented else { return false }
+        if isOnBreak || isPaused { return true }
         return taskService.getInProgressTask()?.id == id
     }
 
@@ -70,6 +79,8 @@ final class FocusSessionCoordinator: ObservableObject {
 
     /// Enter Focus Mode for a task. Starts working if not already.
     func enterFocus(task: Task) {
+        isOnBreak = false
+        isPaused = false
         taskService.startWorking(on: task)
         focusTaskID = task.id
         isFocusPresented = true
@@ -82,15 +93,36 @@ final class FocusSessionCoordinator: ObservableObject {
 
     /// Reopen Focus Mode from the pill.
     func reopenFocus() {
+        if isOnBreak, let task = focusedTask {
+            taskService.resumeWorking(on: task)
+            isOnBreak = false
+        }
+        isPaused = false
         isFocusPresented = true
     }
 
-    /// Take a break — stop working and exit focus entirely.
+    /// Toggle pause/resume on the focus ring timer.
+    func togglePause() {
+        isPaused.toggle()
+        if isPaused {
+            if let task = focusedTask {
+                taskService.stopWorking(on: task)
+            }
+        } else {
+            if let task = focusedTask {
+                taskService.resumeWorking(on: task)
+            }
+        }
+    }
+
+    /// Take a break — stop working and dismiss overlay, but retain focus session.
+    /// The pill will show so the user can resume later.
     func takeBreak() {
         if let task = focusedTask {
             taskService.stopWorking(on: task)
         }
-        focusTaskID = nil
+        isOnBreak = true
+        isPaused = false
         isFocusPresented = false
     }
 
@@ -107,6 +139,8 @@ final class FocusSessionCoordinator: ObservableObject {
     /// Called after the 1.2s success animation completes.
     func finishCompletion() {
         isCompletionAnimating = false
+        isPaused = false
+        isOnBreak = false
         focusTaskID = nil
         isFocusPresented = false
     }
@@ -115,6 +149,7 @@ final class FocusSessionCoordinator: ObservableObject {
     /// Guards against invalidation during the handoff window.
     func switchTask(to newTask: Task) {
         isSwitching = true
+        isPaused = false
         focusTaskID = newTask.id
         taskService.startWorking(on: newTask)
         isSwitching = false
@@ -122,6 +157,8 @@ final class FocusSessionCoordinator: ObservableObject {
 
     /// Handle external invalidation (task deleted, completed, or stopped externally).
     func handleTaskInvalidated() {
+        isPaused = false
+        isOnBreak = false
         focusTaskID = nil
         isFocusPresented = false
     }
@@ -131,7 +168,14 @@ final class FocusSessionCoordinator: ObservableObject {
     private func checkForExternalInvalidation() {
         guard let id = focusTaskID, !isCompletionAnimating, !isSwitching else { return }
         let task = taskService.tasks.first { $0.id == id }
-        if task == nil || task?.isCompleted == true || task?.isInProgress != true {
+        // Always invalidate if task was deleted or completed externally
+        if task == nil || task?.isCompleted == true {
+            handleTaskInvalidated()
+            return
+        }
+        // During pause or break, task is intentionally stopped — don't check isInProgress
+        if isPaused || isOnBreak { return }
+        if task?.isInProgress != true {
             handleTaskInvalidated()
         }
     }

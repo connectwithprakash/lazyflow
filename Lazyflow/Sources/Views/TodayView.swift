@@ -31,6 +31,8 @@ struct TodayView: View {
     @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
     @AppStorage("lastPlanYourDayDate") private var lastPlanYourDayDate: Double = 0
     @State private var showPlanYourDay = false
+    @State private var actionToast: ActionToastData?
+    @State private var highlightedTaskID: UUID?
     @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
 
     var body: some View {
@@ -114,6 +116,7 @@ struct TodayView: View {
         } onDismissWithoutUndo: {
             onUndoToastDismissed()
         }
+        .actionToast($actionToast)
         .sheet(isPresented: $showDailySummary) {
             DailySummaryView()
         }
@@ -152,16 +155,19 @@ struct TodayView: View {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNotRelevant, score: target.score
                 )
+                showSkipHighlight(for: target.task)
             }
             Button("Wrong time of day") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedWrongTime, score: target.score
                 )
+                showSkipHighlight(for: target.task)
             }
             Button("Needs more focus time") {
                 prioritizationService.recordSuggestionFeedback(
                     task: target.task, action: .skippedNeedsFocus, score: target.score
                 )
+                showSkipHighlight(for: target.task)
             }
             Button("Cancel", role: .cancel) {}
         }
@@ -411,12 +417,13 @@ struct TodayView: View {
     // MARK: - Subviews
 
     private var taskListView: some View {
+        ScrollViewReader { scrollProxy in
         List {
             // Section 1: Progress header
             Section {
                 progressHeader
             }
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
@@ -513,8 +520,15 @@ struct TodayView: View {
             .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
+        .listSectionSpacing(.compact)
         .scrollContentBackground(.hidden)
         .background(Color.adaptiveBackground)
+        .onChange(of: highlightedTaskID) { _, newValue in
+            if let id = newValue {
+                withAnimation { scrollProxy.scrollTo(id, anchor: .center) }
+            }
+        }
+        } // ScrollViewReader
     }
 
     private func taskSectionHeader(title: String, color: Color, count: Int) -> some View {
@@ -595,6 +609,12 @@ struct TodayView: View {
             listColorHex: listColorHex(for: task)
         )
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: task.hasSubtasks ? 0 : 4, trailing: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                .fill(Color.Lazyflow.accent.opacity(highlightedTaskID == task.id ? 0.15 : 0))
+                .animation(.easeInOut(duration: 0.3), value: highlightedTaskID)
+                .allowsHitTesting(false)
+        )
 
         // Subtasks section (if task has subtasks)
         if task.hasSubtasks {
@@ -741,14 +761,16 @@ struct TodayView: View {
                             .lineLimit(1)
                     }
                 }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    viewModel.selectedTask = task
+                }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Opens task details")
             }
-            .padding(DesignSystem.Spacing.lg)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                viewModel.selectedTask = task
-            }
-            .accessibilityAddTraits(.isButton)
-            .accessibilityHint("Opens task details")
+            .padding(.top, DesignSystem.Spacing.lg)
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.bottom, DesignSystem.Spacing.md)
 
             // Divider
             Rectangle()
@@ -758,16 +780,37 @@ struct TodayView: View {
 
             // Action row: Start, Focus, Snooze, Skip
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Start Working
+                // Start / Working toggle
                 Button {
-                    prioritizationService.recordSuggestionFeedback(
-                        task: task, action: .startedImmediately, score: suggestion.score
-                    )
-                    viewModel.startWorking(on: task)
+                    if task.isInProgress {
+                        viewModel.stopWorking(on: task)
+                        actionToast = ActionToastData(
+                            message: "Timer paused",
+                            icon: "pause.fill",
+                            iconColor: .orange
+                        )
+                    } else {
+                        prioritizationService.recordSuggestionFeedback(
+                            task: task, action: .startedImmediately, score: suggestion.score
+                        )
+                        viewModel.startWorking(on: task)
+                        actionToast = ActionToastData(
+                            message: "Timer started",
+                            icon: "play.fill",
+                            iconColor: Color.Lazyflow.success
+                        )
+                    }
                 } label: {
-                    Label("Start", systemImage: "play.fill")
+                    Label(
+                        task.isInProgress ? "Working..." : "Start",
+                        systemImage: task.isInProgress ? "pause.fill" : "play.fill"
+                    )
                 }
-                .buttonStyle(NextUpActionButtonStyle(isPrimary: true))
+                .buttonStyle(NextUpActionButtonStyle(
+                    isPrimary: true,
+                    overrideBackground: task.isInProgress ? Color.Lazyflow.success : nil
+                ))
+                .accessibilityLabel(task.isInProgress ? "Pause timer" : "Start working")
 
                 // Enter Focus
                 Button {
@@ -824,6 +867,18 @@ struct TodayView: View {
 
         showUndoToast(.completed(task), snapshot: task)
         viewModel.toggleTaskCompletion(task)
+    }
+
+    private func showSkipHighlight(for task: Task) {
+        actionToast = ActionToastData(
+            message: "Suggestion skipped",
+            icon: "forward.fill",
+            iconColor: Color.Lazyflow.textSecondary
+        )
+        highlightedTaskID = task.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            withAnimation { highlightedTaskID = nil }
+        }
     }
 
     private var progressHeader: some View {
@@ -980,14 +1035,19 @@ struct TodayView: View {
 /// Compact action button for the Next Up card (Start / Focus)
 struct NextUpActionButtonStyle: ButtonStyle {
     let isPrimary: Bool
+    var overrideBackground: Color? = nil
 
     func makeBody(configuration: Configuration) -> some View {
+        let bgColor = overrideBackground
+            ?? (isPrimary ? Color.Lazyflow.accent : Color.Lazyflow.accent.opacity(0.1))
+        let fgColor: Color = (overrideBackground != nil || isPrimary) ? .white : Color.Lazyflow.accent
+
         configuration.label
             .font(.system(size: 14, weight: .semibold))
-            .foregroundColor(isPrimary ? .white : Color.Lazyflow.accent)
+            .foregroundColor(fgColor)
             .frame(maxWidth: .infinity)
             .frame(height: DesignSystem.TouchTarget.minimum)
-            .background(isPrimary ? Color.Lazyflow.accent : Color.Lazyflow.accent.opacity(0.1))
+            .background(bgColor)
             .cornerRadius(DesignSystem.CornerRadius.medium)
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(DesignSystem.Animation.quick, value: configuration.isPressed)

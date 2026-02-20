@@ -421,6 +421,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         if let started = copy.startedAt {
             copy.accumulatedDuration += Date().timeIntervalSince(started)
         }
+        copy.startedAt = nil
         copy.updatedAt = Date()
         return copy
     }

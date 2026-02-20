@@ -704,42 +704,46 @@ final class TaskServiceTests: XCTestCase {
         XCTAssertTrue(updatedTask?.isInProgress ?? false)
     }
 
-    func testStopWorking_PreservesStartedAt() throws {
+    func testStopWorking_ClearsStartedAt() throws {
         let task = taskService.createTask(title: "Task to stop")
         taskService.startWorking(on: task)
 
         let inProgressTask = taskService.tasks.first { $0.id == task.id }!
-        let originalStartedAt = inProgressTask.startedAt
+        XCTAssertNotNil(inProgressTask.startedAt)
 
         taskService.stopWorking(on: inProgressTask)
 
         let stoppedTask = taskService.tasks.first { $0.id == task.id }
         XCTAssertFalse(stoppedTask?.isInProgress ?? true)
-        XCTAssertEqual(stoppedTask?.startedAt, originalStartedAt)
+        // startedAt is cleared to prevent double-counting in elapsedTime
+        XCTAssertNil(stoppedTask?.startedAt)
+        XCTAssertGreaterThan(stoppedTask?.accumulatedDuration ?? 0, 0)
     }
 
-    func testResumeWorking_PreservesOriginalStartedAt() throws {
+    func testResumeWorking_GetsFreshStartedAt() throws {
         let task = taskService.createTask(title: "Task to resume")
 
         // Start working
         taskService.startWorking(on: task)
         let firstStart = taskService.tasks.first { $0.id == task.id }!
-        let originalStartedAt = firstStart.startedAt
+        XCTAssertNotNil(firstStart.startedAt)
 
-        // Stop working
+        // Stop working — clears startedAt, accumulates duration
         taskService.stopWorking(on: firstStart)
+        let stoppedTask = taskService.tasks.first { $0.id == task.id }!
+        XCTAssertNil(stoppedTask.startedAt)
 
         // Wait briefly to ensure time difference
         Thread.sleep(forTimeInterval: 0.1)
 
-        // Resume working
-        let stoppedTask = taskService.tasks.first { $0.id == task.id }!
-        taskService.startWorking(on: stoppedTask)
+        // Resume working — gets a fresh startedAt
+        taskService.resumeWorking(on: stoppedTask)
 
         let resumedTask = taskService.tasks.first { $0.id == task.id }
-        // Original startedAt should be preserved (not updated to new time)
-        XCTAssertEqual(resumedTask?.startedAt, originalStartedAt)
+        XCTAssertNotNil(resumedTask?.startedAt)
         XCTAssertTrue(resumedTask?.isInProgress ?? false)
+        // Accumulated duration should be preserved from the first session
+        XCTAssertGreaterThan(resumedTask?.accumulatedDuration ?? 0, 0)
     }
 
     func testCompleteTask_PreservesStartedAt() throws {
@@ -874,7 +878,7 @@ final class TaskServiceTests: XCTestCase {
 
         XCTAssertFalse(task1After?.isInProgress ?? true)
         XCTAssertTrue(task2After?.isInProgress ?? false)
-        // Task 1's startedAt should be preserved
-        XCTAssertNotNil(task1After?.startedAt)
+        // Task 1's startedAt is cleared when stopped
+        XCTAssertNil(task1After?.startedAt)
     }
 }
