@@ -605,7 +605,13 @@ struct TodayView: View {
                     viewModel.deleteTask(task, allowUndo: false)
                 }
             },
-            onStartWorking: isCompleted ? nil : { viewModel.startWorking(on: $0) },
+            onStartWorking: isCompleted ? nil : {
+                if $0.accumulatedDuration > 0 {
+                    viewModel.resumeWorking(on: $0)
+                } else {
+                    viewModel.startWorking(on: $0)
+                }
+            },
             onStopWorking: isCompleted ? nil : { viewModel.stopWorking(on: $0) },
             hideSubtaskBadge: true,
             showProgressRing: task.hasSubtasks,
@@ -716,6 +722,20 @@ struct TodayView: View {
         return task.isInProgress
     }
 
+    /// Effective elapsed time accounting for optimistic state.
+    /// When optimistic resume is active but Core Data hasn't set startedAt yet,
+    /// falls back to accumulatedDuration so the timer doesn't flicker to 0:00.
+    private func effectiveElapsedTime(for task: Task) -> TimeInterval {
+        if let elapsed = task.elapsedTime {
+            return elapsed
+        }
+        // Optimistic in-progress but startedAt not yet persisted — show accumulated time
+        if task.id == optimisticInProgressID {
+            return task.accumulatedDuration
+        }
+        return 0
+    }
+
     @ViewBuilder
     private func nextUpCard(for suggestion: TaskSuggestion) -> some View {
         let task = liveTask(for: suggestion)
@@ -792,10 +812,11 @@ struct TodayView: View {
                         // Live timer when in progress, estimated duration otherwise
                         if inProgress {
                             TimelineView(.periodic(from: .now, by: 1)) { _ in
+                                let elapsed = effectiveElapsedTime(for: task)
                                 HStack(spacing: DesignSystem.Spacing.xs) {
                                     Image(systemName: "timer")
                                         .font(.caption2)
-                                    Text(task.formattedElapsedTime ?? "0:00")
+                                    Text(Task.formatDurationAsTimer(elapsed))
                                         .font(DesignSystem.Typography.caption2)
                                         .monospacedDigit()
                                 }
@@ -878,7 +899,7 @@ struct TodayView: View {
             // Time progress bar when in progress and has estimated duration
             if inProgress, let estimated = task.estimatedDuration, estimated > 0 {
                 TimelineView(.periodic(from: .now, by: 1)) { _ in
-                    let elapsed = task.elapsedTime ?? 0
+                    let elapsed = effectiveElapsedTime(for: task)
                     let progress = min(elapsed / estimated, 1.0)
                     let overBudget = elapsed > estimated
 
@@ -921,11 +942,16 @@ struct TodayView: View {
                 if inProgress {
                     // Pause + Focus
                     Button {
+                        let taskID = task.id
                         withAnimation(.easeInOut(duration: 0.3)) {
                             optimisticInProgressID = nil
-                            optimisticPausedID = task.id
+                            optimisticPausedID = taskID
                         }
                         viewModel.stopWorking(on: task)
+                        // Safety: clear stuck optimistic state after 2s
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            if optimisticPausedID == taskID { optimisticPausedID = nil }
+                        }
                         actionToast = ActionToastData(
                             message: "Timer paused",
                             icon: "pause.fill",
@@ -962,14 +988,23 @@ struct TodayView: View {
                     // Start/Resume + Focus + Later
                     let hasWorkedBefore = task.accumulatedDuration > 0
                     Button {
+                        let taskID = task.id
                         withAnimation(.easeInOut(duration: 0.3)) {
                             optimisticPausedID = nil
-                            optimisticInProgressID = task.id
+                            optimisticInProgressID = taskID
                         }
                         prioritizationService.recordSuggestionFeedback(
                             task: task, action: .startedImmediately, score: suggestion.score
                         )
-                        viewModel.startWorking(on: task)
+                        if hasWorkedBefore {
+                            viewModel.resumeWorking(on: task)
+                        } else {
+                            viewModel.startWorking(on: task)
+                        }
+                        // Safety: clear stuck optimistic state after 2s
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            if optimisticInProgressID == taskID { optimisticInProgressID = nil }
+                        }
                         actionToast = ActionToastData(
                             message: hasWorkedBefore ? "Timer resumed" : "Timer started",
                             icon: "play.fill",
@@ -1054,7 +1089,15 @@ struct TodayView: View {
             if optimisticPausedID == task.id && !persisted {
                 optimisticPausedID = nil
             }
-            if !persisted && optimisticInProgressID != task.id {
+            // Update pulsing based on final persisted state
+            if persisted && !reduceMotion {
+                isNextUpPulsing = false
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isNextUpPulsing = true
+                }
+            } else if persisted {
+                isNextUpPulsing = true
+            } else if optimisticInProgressID != task.id {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     isNextUpPulsing = false
                 }
