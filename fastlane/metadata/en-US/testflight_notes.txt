@@ -1,8 +1,9 @@
-What's New in v1.4.0:
+What's New in v1.9.0:
 
-• Custom Categories - Go to More > Categories to create your own
-• Test creating a category with custom color and icon
-• Add a task and select your custom category
-• Verify AI suggests your custom categories in task analysis
+• Focus Mode — tap Focus on the Next Up card, test the immersive timer
+• Next Up — verify single task suggestion appears with Start/Focus/Later actions
+• AI learning — start, snooze, or skip suggestions and check if ranking improves
+• Daily Summary — verify carryover section shows yesterday's incomplete tasks
+• Timer — pause and resume multiple times, confirm no time loss
 
-Please report any issues with category sync across devices.
+Please report any issues with Focus Mode or Next Up suggestions.

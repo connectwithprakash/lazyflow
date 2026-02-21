@@ -285,6 +285,8 @@
         <ul>
             <li><a href="#app-icon">App Icon</a></li>
             <li><a href="#screens">Screens</a></li>
+            <li><a href="#next-up">Next Up</a></li>
+            <li><a href="#focus-mode">Focus Mode</a></li>
             <li><a href="#ai-features">AI Features</a></li>
             <li><a href="#subtasks">Subtasks</a></li>
             <li><a href="#history">History</a></li>
@@ -489,6 +491,60 @@
                     <div class="screenshot-info">
                         <h3>Morning Briefing</h3>
                         <p>AI-generated daily planning with calendar context and productivity tips</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="next-up">
+            <h2>Next Up Card (v1.9.0)</h2>
+            <p class="section-desc">
+                Single focused task suggestion with state-dependent actions. Replaces the multi-card top-3 design with a single AI-selected task and two action row states: idle (Start + Focus + Later) and in-progress (Pause + Focus + live timer).
+            </p>
+
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/26-next-up-idle.png"
+                         data-light="../assets/screenshots/light/26-next-up-idle.png"
+                         data-dark="../assets/screenshots/dark/26-next-up-idle.png"
+                         alt="Next Up - Idle State" class="theme-screenshot">
+                    <div class="screenshot-info">
+                        <h3>Idle State</h3>
+                        <p>Start/Resume + Focus + Later actions with AI reason and meta badges</p>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/27-next-up-progress.png"
+                         data-light="../assets/screenshots/light/27-next-up-progress.png"
+                         data-dark="../assets/screenshots/dark/27-next-up-progress.png"
+                         alt="Next Up - In Progress" class="theme-screenshot">
+                    <div class="screenshot-info">
+                        <h3>In Progress</h3>
+                        <p>Pause + Focus with live elapsed timer, pulsing dot, and progress bar</p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="section-desc" style="margin-top: 20px;">
+                <strong>Interactive prototype:</strong> <a href="../../design/next-up-card.html" style="color: var(--accent);">Try the fully interactive Next Up card demo</a> with completion animations, Focus Mode overlay, and theme toggle.
+            </p>
+        </section>
+
+        <section id="focus-mode">
+            <h2>Focus Mode (v1.9.0)</h2>
+            <p class="section-desc">
+                Full-screen immersive experience for deep work. Features a 240px timer ring with progress tracking, ambient gradient background, and a minimal action bar. Enter from the Next Up card's Focus button; return via the floating ReturnToFocusPill.
+            </p>
+
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="../assets/screenshots/light/25-focus-mode.png"
+                         data-light="../assets/screenshots/light/25-focus-mode.png"
+                         data-dark="../assets/screenshots/dark/25-focus-mode.png"
+                         alt="Focus Mode" class="theme-screenshot">
+                    <div class="screenshot-info">
+                        <h3>Focus Mode</h3>
+                        <p>Timer ring with elapsed time, Mark Complete + Break + Switch actions</p>
                     </div>
                 </div>
             </div>
@@ -916,7 +972,7 @@
     </main>
 
     <footer>
-        <p>Lazyflow Design System v1.8.0</p>
+        <p>Lazyflow Design System v1.9.0</p>
         <p style="margin-top: 10px;">
             <a href="https://github.com/connectwithprakash/lazyflow">GitHub</a>
         </p>

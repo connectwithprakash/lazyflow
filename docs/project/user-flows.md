@@ -22,10 +22,17 @@ Documentation of core user journeys, interaction patterns, and UX decisions.
 ### App Structure
 
 ```
-Lazyflow (v1.8.0+)
+Lazyflow (v1.9.0+)
 |-- Today (default landing) ★
 |   |-- Morning Briefing (optional prompt)
 |   |-- Overdue Tasks (red indicator)
+|   |-- Next Up Card (single AI suggestion)
+|   |   |-- Idle: Start/Resume + Focus + Later
+|   |   +-- In Progress: Pause + Focus + live timer
+|   |-- Focus Mode (full-screen overlay)
+|   |   |-- Timer ring with elapsed/estimated progress
+|   |   |-- Mark Complete + Take a Break + Switch Task
+|   |   +-- ReturnToFocusPill (minimized state)
 |   |-- Today's Tasks (by priority)
 |   |-- Completed Today (collapsible)
 |   +-- Daily Summary (optional prompt)
@@ -81,6 +88,17 @@ Edit Task --> List Picker
          --> Date Picker
          --> Reminder Settings
          --> Recurring Settings
+
+Next Up Card --> Focus Mode (full-screen overlay)
+     |              |
+     v              v
+Start/Pause    Timer Ring (tap to pause/resume)
+     |              |
+     v              v
+Later          Mark Complete / Take a Break / Switch Task
+                    |
+                    v
+               ReturnToFocusPill --> Reopen Focus Mode
 ```
 
 ---
@@ -631,6 +649,129 @@ Edit Task --> List Picker
 
 ---
 
+### 14. Next Up Card (v1.9.0)
+
+**Goal**: Surface the single most impactful task with state-dependent actions
+
+**Success Metric**: < 2 seconds from card appearance to user action
+
+```
+[Today View - Next Up Section]
+    |
+    +-> Single card with AI-selected task
+        |
+        +-- Checkbox (tap to complete)
+        +-- Task title (tap to open detail)
+        +-- Meta badges: due date, duration/elapsed timer, subtask progress
+        +-- AI reason line (e.g., "Quick task before your 3 PM meeting")
+        |
+        +-- [Action Row - Idle State]
+        |   +-- Start (primary) / Resume (if accumulatedDuration > 0)
+        |   +-- Focus (secondary, enters Focus Mode)
+        |   +-- Later (tertiary, snooze/skip combined)
+        |
+        +-- [Action Row - In Progress State]
+        |   +-- Pause (primary, success tint)
+        |   +-- Focus (secondary)
+        |   +-- Live elapsed timer via TimelineView (updates every 1s)
+        |   +-- Progress bar: elapsed vs estimated duration
+        |
+        +-- [Checkbox Visual States]
+            +-- Idle: tertiary border
+            +-- In Progress: accent border + pulsing dot (1s ease-in-out)
+            +-- Subtask ring: circular progress around checkbox
+```
+
+**Gating**: Shows with 1+ incomplete tasks (not 3+ like old multi-card design)
+
+**Empty State**: "All caught up!" with confetti icon and "View all tasks" link
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Single card (not top-3 carousel) | Reduces decision fatigue, clearer call to action |
+| Two-state action row | Context-appropriate actions based on task state |
+| Live timer in meta badges | Awareness of time spent without entering Focus Mode |
+| Combined Later button | Simplifies snooze + skip into one decision point |
+| Pulsing dot when in-progress | Visual attention to active task |
+| Optimistic UI with safety timeouts | Instant feedback, graceful fallback |
+
+---
+
+### 15. Focus Mode (v1.9.0)
+
+**Goal**: Full-screen immersive experience for deep work on a single task
+
+**Success Metric**: < 500ms transition to Focus Mode overlay
+
+```
+[Next Up Card - Focus Button]
+    |
+    +-> [Focus Mode Overlay - Full Screen]
+        |
+        +-- Background: #111313 with ambient gradient
+        +-- Top bar: Close (X) + More (...) menu
+        |
+        +-- Task title (centered, max 2 lines)
+        +-- Subtitle (due date + estimated duration)
+        |
+        +-- Timer Ring (240px diameter, 6pt stroke)
+        |   +-- Track: white @ 6% opacity
+        |   +-- Progress arc: accent color with glow
+        |   +-- Timer text: 52pt, monospacedDigit
+        |   +-- Label: "Focusing" (breathe animation) or "Paused"
+        |   +-- Tap ring to toggle pause/resume
+        |
+        +-- Action Bar
+        |   +-- Mark Complete (primary, full-width, 56pt)
+        |   +-- Take a Break (secondary, half-width)
+        |   +-- Switch Task (secondary, half-width)
+        |
+        +-- Success Animation (on complete)
+            +-- Green circle (88pt) with checkmark
+            +-- Spring scale animation, auto-dismiss 1.2s
+```
+
+**Entry Points**:
+- Next Up card "Focus" button
+- ReturnToFocusPill (after minimize or break)
+
+**ReturnToFocusPill**:
+```
+[Tab Bar Area - Floating Above]
+    |
+    +-> Pill with icon + task title + "Resume"
+        |
+        +-- In progress: timer icon (accent color)
+        +-- On break: moon icon (orange)
+        +-- Tap: reopens Focus Mode overlay
+```
+
+**FocusSessionCoordinator States**:
+```
+Idle --> enterFocus() --> Focusing
+  Focusing --> togglePause() --> Paused
+  Paused --> togglePause() --> Focusing
+  Focusing --> takeBreak() --> On Break (pill visible)
+  On Break --> reopenFocus() --> Focusing
+  Focusing --> markComplete() --> Success Animation --> Idle
+  Focusing --> dismissFocus() --> Minimized (pill visible, timer continues)
+```
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Full-screen dark overlay | Removes distractions, signals "deep work" |
+| Tap ring to pause | Large, discoverable target for quick pause |
+| Take a Break vs dismiss | Break stops timer; dismiss keeps it running |
+| ReturnToFocusPill | Non-intrusive reminder to resume focus |
+| Switch Task sheet | Limited to 2 alternatives to reduce decision fatigue |
+| 1.2s completion animation | Satisfying reward without being slow |
+
+---
+
 ## Empty States
 
 ### No Tasks Today
@@ -798,20 +939,20 @@ Available on: Today, Upcoming, Lists, Calendar
 |---------|------|
 | v0.1.0 | Today, Upcoming, Lists, Settings |
 | v0.2.0+ | Today, Calendar, Upcoming, Lists, Settings |
-| v1.8.0+ | Today, Calendar, Upcoming, Insights, Me |
+| v1.9.0+ | Today, Calendar, Upcoming, Insights, Me |
 
 - Selected tab: accent color icon + label
 - Unselected: secondary color icon only
 - Badge on Today tab: overdue count (red)
 
-**Tabs (v1.8.0+)**:
+**Tabs (v1.9.0+)**:
 - **Today**: Daily tasks and focus, Morning Briefing prompt, Daily Summary prompt
 - **Calendar**: Month/Week/Day views of calendar and scheduled tasks
 - **Upcoming**: Tomorrow, This Week, Later sections for upcoming tasks
 - **Insights**: Task analytics, completion trends, productivity metrics
 - **Me**: Account, preferences, Settings, and Links sections
 
-**iPad Structure (v1.8.0+)**:
+**iPad Structure (v1.9.0+)**:
 Lists, History, and Settings accessible from sidebar under their respective sections. The five main tabs remain as the core navigation on iPad.
 
 ### Sidebar (iPad - v0.9.0+)

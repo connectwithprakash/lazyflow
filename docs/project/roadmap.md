@@ -39,9 +39,14 @@ Anyone who:
 
 ## Version History
 
+### Shipped
+
+- **v1.8.0**: Navigation restructure — 5-tab layout (Today, Calendar, Upcoming, Insights, Me) with profile-centric organization; Analytics dashboard with category completion rates, work-life balance tracking, and productivity insights
+- **v1.9.0**: Focus Mode — full-screen immersive single-task experience with live timer and progress ring; Next Up — single focused task suggestion with state-dependent actions (Start/Pause, Focus, Later); Feedback-conditioned AI reranking that learns from task completion patterns; Daily Summary carryover; Timer fix preventing accumulated time loss on pause/resume (#221)
+
 ### Current & Upcoming
 
-- **v1.8.0** (in development): Navigation restructure - 5-tab layout (Today, Calendar, Upcoming, Insights, Me) with profile-centric organization; Analytics dashboard with category completion rates, work-life balance tracking, and productivity insights
+- **v1.10.0** (planned): Calendar & Capture — natural language task parsing, quick capture from anywhere, deeper calendar integration
 
 See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.
 

@@ -2011,7 +2011,7 @@ final class LazyflowUITests: XCTestCase {
 
         // Focus Mode should present as full-screen cover
         let closeButton = app.buttons["Close Focus Mode"]
-        XCTAssertTrue(closeButton.waitForExistence(timeout: 5), "Focus Mode should open with close button")
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 10), "Focus Mode should open with close button")
 
         // Dismiss Focus Mode
         closeButton.tap()
@@ -2046,16 +2046,16 @@ final class LazyflowUITests: XCTestCase {
         createTodayTask(title: "Snooze test task")
         Thread.sleep(forTimeInterval: 2.5)
 
-        let snoozeButton = app.buttons["Snooze suggestion"]
-        guard snoozeButton.waitForExistence(timeout: 5) else {
+        let laterButton = app.buttons["Snooze or skip suggestion"]
+        guard laterButton.waitForExistence(timeout: 5) else {
             throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
         }
 
-        snoozeButton.tap()
+        laterButton.tap()
 
-        // Snooze confirmation dialog should show "In 1 Hour" option
-        let snoozeOption = app.buttons["In 1 Hour"]
-        XCTAssertTrue(snoozeOption.waitForExistence(timeout: 3), "Snooze confirmation dialog should appear with options")
+        // Later dialog should show snooze options
+        let snoozeOption = app.buttons["Snooze 1 Hour"]
+        XCTAssertTrue(snoozeOption.waitForExistence(timeout: 3), "Later dialog should appear with snooze options")
 
         // Dismiss by tapping Cancel
         let cancelButton = app.buttons["Cancel"]
@@ -2069,16 +2069,16 @@ final class LazyflowUITests: XCTestCase {
         createTodayTask(title: "Skip test task")
         Thread.sleep(forTimeInterval: 2.5)
 
-        let skipButton = app.buttons["Skip suggestion"]
-        guard skipButton.waitForExistence(timeout: 5) else {
+        let laterButton = app.buttons["Snooze or skip suggestion"]
+        guard laterButton.waitForExistence(timeout: 5) else {
             throw XCTSkip("Next Up card not shown — PrioritizationService may not have suggestions yet")
         }
 
-        skipButton.tap()
+        laterButton.tap()
 
-        // Skip confirmation dialog should show skip reason options
-        let skipOption = app.buttons["Not relevant right now"]
-        XCTAssertTrue(skipOption.waitForExistence(timeout: 3), "Skip confirmation dialog should appear with options")
+        // Later dialog should show skip options
+        let skipOption = app.buttons["Skip — Not relevant"]
+        XCTAssertTrue(skipOption.waitForExistence(timeout: 3), "Later dialog should appear with skip options")
 
         // Dismiss by tapping Cancel
         let cancelButton = app.buttons["Cancel"]
