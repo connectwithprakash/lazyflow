@@ -1,10 +1,11 @@
-Plan Your Day
-• add personalization to Morning Briefing and Daily Summary
-• show AI correction/refinement rates in Insights
-• add category and list analytics dashboard
-• restructure navigation from 6 tabs to 5 tabs
-• add Plan Your Day morning planning flow
-• smart learning for event-to-task preferences
+Focus Mode & Smart Suggestions
+• Focus Mode: immersive full-screen timer with progress ring
+• Next Up: single focused task suggestion that learns your preferences
+• Feedback-driven AI reranking — start, snooze, or skip to teach the AI
+• Daily Summary now shows carryover tasks from yesterday
+• Redesigned task editing with unified layout
 
 Bug Fixes
-• update simulator destination and fix LiveActivity group warning
+• Fixed timer losing accumulated time on pause/resume
+• Polished history search bar with cancel button
+• Adaptive background on Calendar tab

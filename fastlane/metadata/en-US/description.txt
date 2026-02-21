@@ -20,9 +20,10 @@ Calendar Integration
 AI-Powered Productivity
 - Powered by Apple Intelligence
 - 100% on-device, private, and free
-- Smart task suggestions
+- Next Up: focused single-task suggestion that learns from your feedback
+- Focus Mode: immersive full-screen timer with progress ring
+- Daily Summary with carryover from yesterday
 - Automatic categorization
-- "What should I do next?" recommendations
 
 Siri Shortcuts
 - "Add a task in Lazyflow"
