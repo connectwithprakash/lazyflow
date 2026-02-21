@@ -5,6 +5,26 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0](https://github.com/connectwithprakash/lazyflow/compare/v1.8.0...v1.9.0) (2026-02-21)
+
+
+### Features
+
+* **addtask:** redesign AddTaskView and unify TaskDetailView layout ([#140](https://github.com/connectwithprakash/lazyflow/issues/140)) ([44819d7](https://github.com/connectwithprakash/lazyflow/commit/44819d747cf2759b62a434129807a27a57533bdc))
+* **ai:** feedback-conditioned LLM reranking for task suggestions ([#214](https://github.com/connectwithprakash/lazyflow/issues/214)) ([82d77f8](https://github.com/connectwithprakash/lazyflow/commit/82d77f8aaf1607e0341020d5fe51c6cda5260939))
+* **focus:** add Focus Mode v1 with immersive single-task experience ([#215](https://github.com/connectwithprakash/lazyflow/issues/215)) ([8b1658b](https://github.com/connectwithprakash/lazyflow/commit/8b1658b68d51e6ea72629455371889cc6a8b4010))
+* **history:** move search bar to bottom for better reachability ([#187](https://github.com/connectwithprakash/lazyflow/issues/187)) ([#201](https://github.com/connectwithprakash/lazyflow/issues/201)) ([bcfc2ed](https://github.com/connectwithprakash/lazyflow/commit/bcfc2ed5252d28289a7b6c7e96004e3de9801585))
+* **nextup:** replace multi-card suggestions with single focused Next Up card ([#220](https://github.com/connectwithprakash/lazyflow/issues/220)) ([417ad4c](https://github.com/connectwithprakash/lazyflow/commit/417ad4c1b4dfa56f0e702a5e93970b78c9438a18))
+* **nextup:** revamp Next Up suggestion with top 3, feedback, and snooze/skip ([#212](https://github.com/connectwithprakash/lazyflow/issues/212)) ([d974298](https://github.com/connectwithprakash/lazyflow/commit/d974298809a35fd8bcf621a5d3a3e66cbd5743b0))
+* **summary:** add carryover section to Daily Summary ([#171](https://github.com/connectwithprakash/lazyflow/issues/171)) ([#200](https://github.com/connectwithprakash/lazyflow/issues/200)) ([096ee11](https://github.com/connectwithprakash/lazyflow/commit/096ee11ed3f65dc54025d03cd96ca7a87353e2ec))
+
+
+### Bug Fixes
+
+* **history:** polish search bar design and add cancel button ([#203](https://github.com/connectwithprakash/lazyflow/issues/203)) ([cd95b83](https://github.com/connectwithprakash/lazyflow/commit/cd95b83427443d681f937e7b5d8e73ac1ad2a8d8))
+* **timer:** prevent accumulated time loss on pause→resume ([#221](https://github.com/connectwithprakash/lazyflow/issues/221)) ([0ef58c1](https://github.com/connectwithprakash/lazyflow/commit/0ef58c1574fefbd9914ef11af78bed9bd01b59ed))
+* **ui:** add adaptive background to Calendar tab ([#193](https://github.com/connectwithprakash/lazyflow/issues/193)) ([#199](https://github.com/connectwithprakash/lazyflow/issues/199)) ([9d35d92](https://github.com/connectwithprakash/lazyflow/commit/9d35d92768910e05263859cf409d8496234f76de))
+
 ## [1.8.0](https://github.com/connectwithprakash/lazyflow/compare/v1.7.0...v1.8.0) (2026-02-08)
 
 
