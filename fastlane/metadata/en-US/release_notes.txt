@@ -1,11 +1,11 @@
-Focus Mode & Smart Suggestions
-• Focus Mode: immersive full-screen timer with progress ring
-• Next Up: single focused task suggestion that learns your preferences
-• Feedback-driven AI reranking — start, snooze, or skip to teach the AI
-• Daily Summary now shows carryover tasks from yesterday
-• Redesigned task editing with unified layout
+Smarter AI
+• redesign AddTaskView and unify TaskDetailView layout
+• feedback-conditioned LLM reranking for task suggestions
+• add Focus Mode v1 with immersive single-task experience
+• move search bar to bottom for better reachability
+• replace multi-card suggestions with single focused Next Up card
+• revamp Next Up suggestion with top 3, feedback, and snooze/skip
+• add carryover section to Daily Summary
 
 Bug Fixes
-• Fixed timer losing accumulated time on pause/resume
-• Polished history search bar with cancel button
-• Adaptive background on Calendar tab
+• Various bug fixes and stability improvements
