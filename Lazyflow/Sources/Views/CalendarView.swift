@@ -16,11 +16,12 @@ struct CalendarView: View {
     @State private var undoAction: UndoAction?
 
     private var viewMode: CalendarViewMode {
-        CalendarViewMode(rawValue: viewModeRaw) ?? deviceDefault
-    }
-
-    private var deviceDefault: CalendarViewMode {
-        horizontalSizeClass == .regular ? .week : .day
+        if let mode = CalendarViewMode(rawValue: viewModeRaw) {
+            return mode
+        }
+        // No stored preference — use device-adaptive default
+        // nil size class (during init) treated as compact (iPhone)
+        return horizontalSizeClass == .regular ? .week : .day
     }
 
     private var viewModeBinding: Binding<CalendarViewMode> {
