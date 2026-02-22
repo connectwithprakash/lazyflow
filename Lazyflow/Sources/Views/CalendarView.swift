@@ -7,13 +7,29 @@ struct CalendarView: View {
     @StateObject private var taskService = TaskService.shared
     @State private var selectedDate = Date()
     @State private var currentWeekStart = Calendar.current.startOfWeek(for: Date())
-    @State private var viewMode: CalendarViewMode = .week
+    @AppStorage("calendarViewMode") private var viewModeRaw: String = ""
     @State private var showingTimeBlockSheet = false
     @State private var pendingTask: Task?
     @State private var pendingDropTime: Date?
     @State private var eventToConvert: CalendarEvent?
     @State private var showingDeniedAlert = false
     @State private var undoAction: UndoAction?
+
+    private var viewMode: CalendarViewMode {
+        if let mode = CalendarViewMode(rawValue: viewModeRaw) {
+            return mode
+        }
+        // No stored preference — use device-adaptive default
+        // nil size class (during init) treated as compact (iPhone)
+        return horizontalSizeClass == .regular ? .week : .day
+    }
+
+    private var viewModeBinding: Binding<CalendarViewMode> {
+        Binding(
+            get: { viewMode },
+            set: { viewModeRaw = $0.rawValue }
+        )
+    }
 
     var body: some View {
         if horizontalSizeClass == .regular {
@@ -103,7 +119,7 @@ struct CalendarView: View {
                 }
 
                 // View mode picker
-                Picker("View", selection: $viewMode) {
+                Picker("View", selection: viewModeBinding) {
                     Text("Day").tag(CalendarViewMode.day)
                     Text("Week").tag(CalendarViewMode.week)
                 }
@@ -361,7 +377,7 @@ struct CalendarView: View {
 
 // MARK: - View Mode
 
-enum CalendarViewMode {
+enum CalendarViewMode: String {
     case day
     case week
 }
