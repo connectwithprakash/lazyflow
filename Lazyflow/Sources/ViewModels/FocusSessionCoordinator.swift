@@ -391,9 +391,14 @@ final class FocusSessionCoordinator: ObservableObject {
         isPaused = defaults.bool(forKey: Self.focusIsPausedKey)
         isOnBreak = defaults.bool(forKey: Self.focusIsOnBreakKey)
 
-        // If the task was in progress before the app quit, resume working
-        // so the elapsed timer keeps ticking. If paused or on break, leave it.
-        if !isPaused && !isOnBreak && !task.isInProgress {
+        if isPaused || isOnBreak {
+            // Ensure the task is stopped — it may still have stale in-progress state
+            // from a previous session that wasn't fully flushed before the app quit.
+            if task.isInProgress {
+                taskService.stopWorking(on: task)
+            }
+        } else if !task.isInProgress {
+            // Active session (not paused/break): resume so elapsed timer keeps ticking.
             taskService.resumeWorking(on: task)
         }
 
