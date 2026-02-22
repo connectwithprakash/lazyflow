@@ -185,10 +185,28 @@ final class CalendarSyncService: ObservableObject {
             changed = true
         }
 
-        // Update times if task has scheduled times
+        // Update times — prefer scheduled times, fall back to dueDate/dueTime
         if let start = task.scheduledStartTime, event.startDate != start {
             event.startDate = start
             changed = true
+        } else if task.scheduledStartTime == nil,
+                  let dueDate = task.dueDate,
+                  let dueTime = task.dueTime {
+            let cal = Calendar.current
+            let dateComps = cal.dateComponents([.year, .month, .day], from: dueDate)
+            let timeComps = cal.dateComponents([.hour, .minute], from: dueTime)
+            var combined = DateComponents()
+            combined.year = dateComps.year
+            combined.month = dateComps.month
+            combined.day = dateComps.day
+            combined.hour = timeComps.hour
+            combined.minute = timeComps.minute
+            if let start = cal.date(from: combined), event.startDate != start {
+                event.startDate = start
+                let duration = task.estimatedDuration ?? event.endDate.timeIntervalSince(event.startDate)
+                event.endDate = start.addingTimeInterval(duration)
+                changed = true
+            }
         }
         if let end = task.scheduledEndTime, event.endDate != end {
             event.endDate = end
@@ -270,6 +288,15 @@ final class CalendarSyncService: ObservableObject {
             if let event = calendarService.event(withIdentifier: eventID) {
                 // Event exists — check for changes
                 syncEventChangesToTask(event: event, task: task)
+            } else if let extID = task.calendarItemExternalIdentifier,
+                      let event = calendarService.event(withExternalIdentifier: extID) {
+                // eventIdentifier changed (EK store churn) — update link and sync
+                var relinkTask = task
+                relinkTask.linkedEventID = event.eventIdentifier
+                relinkTask.calendarItemExternalIdentifier = event.calendarItemExternalIdentifier
+                relinkTask.lastSyncedAt = Date()
+                taskService.updateTask(relinkTask)
+                syncEventChangesToTask(event: event, task: relinkTask)
             } else {
                 // Event was deleted externally
                 handleExternallyDeletedEvent(for: task)
@@ -288,6 +315,7 @@ final class CalendarSyncService: ObservableObject {
         if let start = event.startDate, task.scheduledStartTime != start {
             updatedTask.scheduledStartTime = start
             updatedTask.dueDate = start
+            updatedTask.dueTime = start
             changed = true
         }
         if let end = event.endDate, task.scheduledEndTime != end {

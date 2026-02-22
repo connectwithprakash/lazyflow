@@ -346,8 +346,15 @@ final class TaskService: ObservableObject {
     }
 
     /// Sync task changes to linked calendar event
+    /// Skipped when CalendarSyncService is actively syncing to avoid loop/overwrite
     private func syncTaskToCalendar(_ task: Task) {
         guard task.linkedEventID != nil else { return }
+
+        // When CalendarSyncService is handling sync, skip legacy sync path
+        // to avoid overwriting busy-only titles and bypassing loop prevention
+        if CalendarSyncService.shared.isSyncing { return }
+        // When auto-sync is enabled, CalendarSyncService owns the sync lifecycle
+        if UserDefaults.standard.bool(forKey: "calendarAutoSync") { return }
 
         do {
             try calendarService.syncTaskToEvent(task)
@@ -515,9 +522,11 @@ final class TaskService: ObservableObject {
     // MARK: - Calendar Integration
 
     /// Link a task to a calendar event
-    func linkTaskToEvent(_ task: Task, eventID: String) {
+    func linkTaskToEvent(_ task: Task, eventID: String, calendarItemExternalIdentifier: String? = nil) {
         var updatedTask = task
         updatedTask.linkedEventID = eventID
+        updatedTask.calendarItemExternalIdentifier = calendarItemExternalIdentifier
+        updatedTask.lastSyncedAt = Date()
         updateTask(updatedTask)
     }
 
@@ -525,6 +534,8 @@ final class TaskService: ObservableObject {
     func unlinkTaskFromEvent(_ task: Task) {
         var updatedTask = task
         updatedTask.linkedEventID = nil
+        updatedTask.calendarItemExternalIdentifier = nil
+        updatedTask.lastSyncedAt = Date()
         updateTask(updatedTask)
     }
 
@@ -533,6 +544,8 @@ final class TaskService: ObservableObject {
         let event = try calendarService.createTimeBlock(for: task, startDate: startDate, duration: duration)
         var updatedTask = task
         updatedTask.linkedEventID = event.eventIdentifier
+        updatedTask.calendarItemExternalIdentifier = event.calendarItemExternalIdentifier
+        updatedTask.lastSyncedAt = Date()
         updatedTask.scheduledStartTime = startDate
         updatedTask.scheduledEndTime = startDate.addingTimeInterval(duration)
         updateTask(updatedTask)

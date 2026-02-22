@@ -20,6 +20,7 @@ final class CalendarService: ObservableObject {
         // Listen for calendar changes
         NotificationCenter.default.publisher(for: .EKEventStoreChanged)
             .sink { [weak self] _ in
+                self?.updateAuthorizationStatus()
                 self?.refreshCalendars()
             }
             .store(in: &cancellables)
@@ -236,6 +237,12 @@ final class CalendarService: ObservableObject {
     /// Find event by identifier
     func event(withIdentifier identifier: String) -> EKEvent? {
         eventStore.event(withIdentifier: identifier)
+    }
+
+    /// Find event by calendarItemExternalIdentifier
+    func event(withExternalIdentifier externalID: String) -> EKEvent? {
+        let items = eventStore.calendarItems(withExternalIdentifier: externalID)
+        return items.compactMap { $0 as? EKEvent }.first
     }
 
     // MARK: - Task-Event Linking
