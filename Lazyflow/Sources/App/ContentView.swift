@@ -95,7 +95,7 @@ struct ContentView: View {
 
             if focusCoordinator.shouldShowPill {
                 ReturnToFocusPill()
-                    .padding(.bottom, DesignSystem.Spacing.xxxl + DesignSystem.Spacing.xxxl)
+                    .padding(.bottom, 90)
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: focusCoordinator.shouldShowPill)
             }
         }
