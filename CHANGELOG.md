@@ -5,6 +5,20 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0](https://github.com/connectwithprakash/lazyflow/compare/v1.9.0...v1.10.0) (2026-02-22)
+
+
+### Features
+
+* **calendar:** add scheduled start/end time to tasks ([#224](https://github.com/connectwithprakash/lazyflow/issues/224)) ([257dee4](https://github.com/connectwithprakash/lazyflow/commit/257dee459358cc486911e6843228d0ad39db9577)), closes [#213](https://github.com/connectwithprakash/lazyflow/issues/213)
+* **calendar:** add two-way sync between tasks and calendar events ([#225](https://github.com/connectwithprakash/lazyflow/issues/225)) ([7a7c870](https://github.com/connectwithprakash/lazyflow/commit/7a7c870874ad2122c3bb5a42fe4f087d49e6c9ab))
+* **calendar:** sync recurring tasks as recurring calendar events ([#227](https://github.com/connectwithprakash/lazyflow/issues/227)) ([1f49136](https://github.com/connectwithprakash/lazyflow/commit/1f491368ff501f407382481416d23324adee60bd))
+
+
+### Bug Fixes
+
+* **calendar:** default to Day on iPhone and persist last-used view mode ([#223](https://github.com/connectwithprakash/lazyflow/issues/223)) ([d504f42](https://github.com/connectwithprakash/lazyflow/commit/d504f424013344808a16301b5d4d77bf08d46443)), closes [#206](https://github.com/connectwithprakash/lazyflow/issues/206)
+
 ## [1.9.0](https://github.com/connectwithprakash/lazyflow/compare/v1.8.0...v1.9.0) (2026-02-21)
 
 
