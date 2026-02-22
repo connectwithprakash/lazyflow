@@ -718,22 +718,16 @@ struct TodayView: View {
         }
     }
 
-    /// IDs already represented by Next Up card or the focus pill — exclude from list sections
-    private var excludedTaskIDs: Set<UUID> {
-        var ids = Set<UUID>()
-        if let nextUpID = effectiveNextUpSuggestion?.task.id { ids.insert(nextUpID) }
-        if let focusID = focusCoordinator.focusTaskID { ids.insert(focusID) }
-        return ids
-    }
-
-    /// Overdue tasks excluding Next Up and focused task to avoid duplicate display
+    /// Overdue tasks excluding the Next Up task to avoid duplicate display
     private var overdueTasksExcludingNextUp: [Task] {
-        viewModel.overdueTasks.filter { !excludedTaskIDs.contains($0.id) }
+        let nextUpID = effectiveNextUpSuggestion?.task.id
+        return viewModel.overdueTasks.filter { $0.id != nextUpID }
     }
 
-    /// Today tasks excluding Next Up and focused task to avoid duplicate display
+    /// Today tasks excluding the Next Up task to avoid duplicate display
     private var todayTasksExcludingNextUp: [Task] {
-        viewModel.todayTasks.filter { !excludedTaskIDs.contains($0.id) }
+        let nextUpID = effectiveNextUpSuggestion?.task.id
+        return viewModel.todayTasks.filter { $0.id != nextUpID }
     }
 
     /// Resolve the live task from TaskService (Core Data) instead of stale suggestion snapshot
