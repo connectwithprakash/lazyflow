@@ -406,6 +406,31 @@ final class TaskService: ObservableObject {
             // Handle recurring task completion
             if let rule = task.recurringRule, let dueDate = task.dueDate {
                 if let nextDate = rule.nextOccurrence(from: dueDate) {
+                    // For recurring tasks with mappable EventKit rules, inherit the calendar link
+                    // so the next occurrence maps to the next event in the recurring series
+                    let inheritLink = rule.canMapToEKRecurrenceRule
+                    let nextLinkedEventID = inheritLink ? task.linkedEventID : nil
+                    let nextExtID = inheritLink ? task.calendarItemExternalIdentifier : nil
+
+                    // Compute scheduled times for the next occurrence
+                    var nextScheduledStart: Date?
+                    var nextScheduledEnd: Date?
+                    if inheritLink, let dueTime = task.dueTime, let duration = task.estimatedDuration {
+                        let cal = Calendar.current
+                        let dateComps = cal.dateComponents([.year, .month, .day], from: nextDate)
+                        let timeComps = cal.dateComponents([.hour, .minute], from: dueTime)
+                        var combined = DateComponents()
+                        combined.year = dateComps.year
+                        combined.month = dateComps.month
+                        combined.day = dateComps.day
+                        combined.hour = timeComps.hour
+                        combined.minute = timeComps.minute
+                        if let start = cal.date(from: combined) {
+                            nextScheduledStart = start
+                            nextScheduledEnd = start.addingTimeInterval(duration)
+                        }
+                    }
+
                     // Create next occurrence
                     createTask(
                         title: task.title,
@@ -416,7 +441,11 @@ final class TaskService: ObservableObject {
                         priority: task.priority,
                         listID: task.listID,
                         estimatedDuration: task.estimatedDuration,
-                        recurringRule: task.recurringRule
+                        recurringRule: task.recurringRule,
+                        linkedEventID: nextLinkedEventID,
+                        calendarItemExternalIdentifier: nextExtID,
+                        scheduledStartTime: nextScheduledStart,
+                        scheduledEndTime: nextScheduledEnd
                     )
                 }
             }

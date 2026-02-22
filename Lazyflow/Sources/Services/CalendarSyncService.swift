@@ -142,13 +142,17 @@ final class CalendarSyncService: ObservableObject {
         let title = isBusyOnly ? "Focus Block" : task.title
         let notes = isBusyOnly ? nil : task.notes
 
+        // Generate recurrence rule for recurring tasks with mappable frequencies
+        let recurrenceRule = task.recurringRule?.toEKRecurrenceRule()
+
         do {
             let event = try calendarService.createEvent(
                 title: title,
                 startDate: startDate,
                 endDate: endDate,
                 notes: notes,
-                calendar: calendar
+                calendar: calendar,
+                recurrenceRule: recurrenceRule
             )
 
             // Update task with linked event info
@@ -215,8 +219,11 @@ final class CalendarSyncService: ObservableObject {
 
         guard changed else { return }
 
+        // For recurring tasks, only update this occurrence to avoid modifying the whole series
+        let span: EKSpan = event.hasRecurrenceRules ? .thisEvent : .thisEvent
+
         do {
-            try calendarService.updateEvent(event)
+            try calendarService.updateEvent(event, span: span)
 
             var updatedTask = task
             updatedTask.lastSyncedAt = Date()
@@ -231,6 +238,8 @@ final class CalendarSyncService: ObservableObject {
 
     /// Handle completed task based on completion policy
     private func handleCompletedTask(_ task: Task) {
+        let isRecurringWithSeries = task.recurringRule?.canMapToEKRecurrenceRule == true
+
         switch completionPolicy {
         case .keepEvent:
             // Prefix event title with checkmark
@@ -240,8 +249,19 @@ final class CalendarSyncService: ObservableObject {
             let checkPrefix = "\u{2713} "
             if let title = event.title, !title.hasPrefix(checkPrefix) {
                 event.title = checkPrefix + title
-                try? calendarService.updateEvent(event)
+                try? calendarService.updateEvent(event, span: .thisEvent)
                 recentlyPushedTaskIDs[task.id] = Date()
+            }
+
+            // For recurring tasks, clear the completed occurrence's link to prevent
+            // re-processing. The next occurrence already inherited the link via
+            // toggleTaskCompletion.
+            if isRecurringWithSeries {
+                var updatedTask = task
+                updatedTask.linkedEventID = nil
+                updatedTask.calendarItemExternalIdentifier = nil
+                updatedTask.lastSyncedAt = Date()
+                taskService.updateTask(updatedTask)
             }
 
         case .deleteEvent:
@@ -249,8 +269,11 @@ final class CalendarSyncService: ObservableObject {
                   let event = calendarService.event(withIdentifier: eventID) else { return }
 
             do {
-                try calendarService.deleteEvent(event)
+                // For recurring events, only delete this occurrence, not the whole series
+                try calendarService.deleteEvent(event, span: .thisEvent)
 
+                // Always clear the completed task's link. For recurring tasks,
+                // the next occurrence already inherited the link via toggleTaskCompletion.
                 var updatedTask = task
                 updatedTask.linkedEventID = nil
                 updatedTask.calendarItemExternalIdentifier = nil
@@ -337,6 +360,14 @@ final class CalendarSyncService: ObservableObject {
             changed = true
         }
 
+        // Reverse-populate recurring rule from event if task doesn't have one
+        if task.recurringRule == nil, event.hasRecurrenceRules,
+           let ekRule = event.recurrenceRules?.first,
+           let rule = RecurringRule.fromEKRecurrenceRule(ekRule) {
+            updatedTask.recurringRule = rule
+            changed = true
+        }
+
         guard changed else { return }
 
         updatedTask.lastSyncedAt = Date()
@@ -346,13 +377,29 @@ final class CalendarSyncService: ObservableObject {
 
     /// Handle an event that was deleted externally
     private func handleExternallyDeletedEvent(for task: Task) {
-        var updatedTask = task
-        updatedTask.linkedEventID = nil
-        updatedTask.calendarItemExternalIdentifier = nil
-        updatedTask.scheduledStartTime = nil
-        updatedTask.scheduledEndTime = nil
-        updatedTask.lastSyncedAt = Date()
-        taskService.updateTask(updatedTask)
+        // For recurring tasks, a series deletion may affect multiple task occurrences
+        // sharing the same linkedEventID. Clear all of them.
+        if task.recurringRule?.canMapToEKRecurrenceRule == true,
+           let eventID = task.linkedEventID {
+            let siblingTasks = taskService.tasks.filter { $0.linkedEventID == eventID }
+            for sibling in siblingTasks {
+                var updatedSibling = sibling
+                updatedSibling.linkedEventID = nil
+                updatedSibling.calendarItemExternalIdentifier = nil
+                updatedSibling.scheduledStartTime = nil
+                updatedSibling.scheduledEndTime = nil
+                updatedSibling.lastSyncedAt = Date()
+                taskService.updateTask(updatedSibling)
+            }
+        } else {
+            var updatedTask = task
+            updatedTask.linkedEventID = nil
+            updatedTask.calendarItemExternalIdentifier = nil
+            updatedTask.scheduledStartTime = nil
+            updatedTask.scheduledEndTime = nil
+            updatedTask.lastSyncedAt = Date()
+            taskService.updateTask(updatedTask)
+        }
 
         // Post notification for UI to show a notice
         NotificationCenter.default.post(
