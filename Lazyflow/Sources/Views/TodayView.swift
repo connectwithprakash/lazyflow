@@ -470,28 +470,30 @@ struct TodayView: View {
             .listRowSeparator(.hidden)
 
             // Section 4: Overdue tasks - ALWAYS present (even when empty)
+            // Exclude the Next Up task to avoid duplicate display
             Section {
-                ForEach(viewModel.overdueTasks) { task in
+                ForEach(overdueTasksExcludingNextUp) { task in
                     flatTaskRows(task: task, isCompleted: false)
                         .id(task.id)
                 }
             } header: {
-                if !viewModel.overdueTasks.isEmpty {
-                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: viewModel.overdueTasks.count)
+                if !overdueTasksExcludingNextUp.isEmpty {
+                    taskSectionHeader(title: "Overdue", color: Color.Lazyflow.error, count: overdueTasksExcludingNextUp.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
             .listRowSeparator(.hidden)
 
             // Section 5: Today tasks - ALWAYS present (even when empty)
+            // Exclude the Next Up task to avoid duplicate display
             Section {
-                ForEach(viewModel.todayTasks) { task in
+                ForEach(todayTasksExcludingNextUp) { task in
                     flatTaskRows(task: task, isCompleted: false)
                         .id(task.id)
                 }
             } header: {
-                if !viewModel.todayTasks.isEmpty {
-                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: viewModel.todayTasks.count)
+                if !todayTasksExcludingNextUp.isEmpty {
+                    taskSectionHeader(title: "Today", color: Color.Lazyflow.accent, count: todayTasksExcludingNextUp.count)
                 }
             }
             .listRowBackground(Color.adaptiveBackground)
@@ -618,6 +620,7 @@ struct TodayView: View {
                 }
             },
             onStopWorking: isCompleted ? nil : { viewModel.stopWorking(on: $0) },
+            onEnterFocus: isCompleted ? nil : { focusCoordinator.enterFocus(task: $0) },
             hideSubtaskBadge: true,
             showProgressRing: task.hasSubtasks,
             showListIndicator: true,
@@ -713,6 +716,18 @@ struct TodayView: View {
         prioritizationService.cachedSuggestions.first {
             !$0.task.isCompleted && !optimisticallyCompletedIDs.contains($0.task.id)
         }
+    }
+
+    /// Overdue tasks excluding the Next Up task to avoid duplicate display
+    private var overdueTasksExcludingNextUp: [Task] {
+        let nextUpID = effectiveNextUpSuggestion?.task.id
+        return viewModel.overdueTasks.filter { $0.id != nextUpID }
+    }
+
+    /// Today tasks excluding the Next Up task to avoid duplicate display
+    private var todayTasksExcludingNextUp: [Task] {
+        let nextUpID = effectiveNextUpSuggestion?.task.id
+        return viewModel.todayTasks.filter { $0.id != nextUpID }
     }
 
     /// Resolve the live task from TaskService (Core Data) instead of stale suggestion snapshot
