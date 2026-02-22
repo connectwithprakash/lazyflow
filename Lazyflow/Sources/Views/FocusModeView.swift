@@ -188,6 +188,7 @@ struct FocusModeView: View {
                     .foregroundColor(.white.opacity(0.5))
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.bottom, DesignSystem.Spacing.xl)
     }
