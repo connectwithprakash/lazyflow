@@ -881,4 +881,100 @@ final class TaskServiceTests: XCTestCase {
         // Task 1's startedAt is cleared when stopped
         XCTAssertNil(task1After?.startedAt)
     }
+
+    // MARK: - Scheduled Time Tests
+
+    func testCreateTaskWithScheduledTimes() throws {
+        let startTime = Date()
+        let endTime = startTime.addingTimeInterval(3600)
+
+        let task = taskService.createTask(
+            title: "Scheduled Task",
+            scheduledStartTime: startTime,
+            scheduledEndTime: endTime
+        )
+
+        XCTAssertNotNil(task.scheduledStartTime)
+        XCTAssertNotNil(task.scheduledEndTime)
+        XCTAssertEqual(task.scheduledStartTime?.timeIntervalSince1970 ?? 0, startTime.timeIntervalSince1970, accuracy: 1.0)
+        XCTAssertEqual(task.scheduledEndTime?.timeIntervalSince1970 ?? 0, endTime.timeIntervalSince1970, accuracy: 1.0)
+    }
+
+    func testUpdateTaskPreservesScheduledTimes() throws {
+        let startTime = Date()
+        let endTime = startTime.addingTimeInterval(3600)
+
+        var task = taskService.createTask(
+            title: "Scheduled Task",
+            scheduledStartTime: startTime,
+            scheduledEndTime: endTime
+        )
+
+        task.title = "Updated Title"
+        taskService.updateTask(task)
+
+        let fetched = taskService.tasks.first { $0.id == task.id }
+        XCTAssertEqual(fetched?.title, "Updated Title")
+        XCTAssertNotNil(fetched?.scheduledStartTime)
+        XCTAssertNotNil(fetched?.scheduledEndTime)
+    }
+
+    func testIsScheduledComputedProperty() throws {
+        let unscheduled = Task(title: "No schedule")
+        XCTAssertFalse(unscheduled.isScheduled)
+
+        let scheduled = Task(
+            title: "Has schedule",
+            scheduledStartTime: Date()
+        )
+        XCTAssertTrue(scheduled.isScheduled)
+    }
+
+    func testFormattedScheduledTime() throws {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month, .day], from: Date())
+        components.hour = 14
+        components.minute = 0
+        let start = calendar.date(from: components)!
+        let end = start.addingTimeInterval(5400) // 1.5 hours later (3:30 PM)
+
+        let taskWithRange = Task(
+            title: "Range task",
+            scheduledStartTime: start,
+            scheduledEndTime: end
+        )
+        XCTAssertNotNil(taskWithRange.formattedScheduledTime)
+        // Should contain an en-dash separator
+        XCTAssertTrue(taskWithRange.formattedScheduledTime?.contains("–") ?? false)
+
+        let taskStartOnly = Task(
+            title: "Start only",
+            scheduledStartTime: start
+        )
+        XCTAssertNotNil(taskStartOnly.formattedScheduledTime)
+        // No range separator when only start time
+        XCTAssertFalse(taskStartOnly.formattedScheduledTime?.contains("–") ?? true)
+
+        let taskNoSchedule = Task(title: "None")
+        XCTAssertNil(taskNoSchedule.formattedScheduledTime)
+    }
+
+    func testScheduledTimesPersistedThroughCoreData() throws {
+        let startTime = Date()
+        let endTime = startTime.addingTimeInterval(7200)
+
+        let task = taskService.createTask(
+            title: "Persist Test",
+            scheduledStartTime: startTime,
+            scheduledEndTime: endTime
+        )
+
+        // Re-fetch from Core Data
+        taskService.fetchAllTasks()
+
+        let fetched = taskService.tasks.first { $0.id == task.id }
+        XCTAssertNotNil(fetched)
+        XCTAssertEqual(fetched?.scheduledStartTime?.timeIntervalSince1970 ?? 0, startTime.timeIntervalSince1970, accuracy: 1.0)
+        XCTAssertEqual(fetched?.scheduledEndTime?.timeIntervalSince1970 ?? 0, endTime.timeIntervalSince1970, accuracy: 1.0)
+    }
 }

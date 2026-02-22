@@ -213,6 +213,8 @@ final class CalendarService: ObservableObject {
             notes: event.notes,
             dueDate: event.startDate,
             linkedEventID: event.eventIdentifier,
+            scheduledStartTime: event.startDate,
+            scheduledEndTime: event.endDate,
             estimatedDuration: event.endDate.timeIntervalSince(event.startDate)
         )
         return task
@@ -224,6 +226,8 @@ final class CalendarService: ObservableObject {
             title: calendarEvent.title,
             dueDate: calendarEvent.startDate,
             linkedEventID: calendarEvent.id,
+            scheduledStartTime: calendarEvent.startDate,
+            scheduledEndTime: calendarEvent.endDate,
             estimatedDuration: calendarEvent.duration
         )
         return task
@@ -242,8 +246,11 @@ final class CalendarService: ObservableObject {
         event.title = task.title
         event.notes = task.notes
 
-        // If task has a due date with time, update event time
-        if let dueDate = task.dueDate {
+        // Prefer scheduled times over due date for event timing
+        if let start = task.scheduledStartTime {
+            event.startDate = start
+            event.endDate = task.scheduledEndTime ?? start.addingTimeInterval(task.estimatedDuration ?? 3600)
+        } else if let dueDate = task.dueDate {
             let duration = task.estimatedDuration ?? event.endDate.timeIntervalSince(event.startDate)
             event.startDate = dueDate
             event.endDate = dueDate.addingTimeInterval(duration)

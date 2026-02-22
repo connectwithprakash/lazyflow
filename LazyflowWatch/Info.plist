@@ -15,12 +15,8 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
+	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>WKApplication</key>
-	<true/>
-	<key>WKCompanionAppBundleIdentifier</key>
-	<string>com.lazyflow.app</string>
+	<string>1</string>
 </dict>
 </plist>

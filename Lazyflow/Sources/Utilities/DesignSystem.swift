@@ -231,6 +231,43 @@ struct DueDateBadge: View {
     }
 }
 
+struct ScheduledTimeBadge: View {
+    let task: Task
+
+    private var isPast: Bool {
+        guard let start = task.scheduledStartTime else { return false }
+        let referenceDate = task.scheduledEndTime ?? start
+        return referenceDate < Date()
+    }
+
+    private var foregroundColor: Color {
+        isPast ? Color.Lazyflow.textTertiary : Color.Lazyflow.accent
+    }
+
+    private var backgroundColor: Color {
+        isPast ? Color.secondary.opacity(0.1) : Color.Lazyflow.accent.opacity(0.12)
+    }
+
+    var body: some View {
+        if let timeText = task.formattedScheduledTime {
+            HStack(spacing: 4) {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.caption2)
+                Text(timeText)
+                    .font(DesignSystem.Typography.caption2)
+                    .lineLimit(1)
+            }
+            .foregroundColor(foregroundColor)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(backgroundColor)
+            .cornerRadius(DesignSystem.CornerRadius.small)
+            .fixedSize()
+            .accessibilityHidden(true)
+        }
+    }
+}
+
 struct CategoryBadge: View {
     let category: TaskCategory
 
