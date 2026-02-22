@@ -73,28 +73,33 @@ struct FocusModeView: View {
         VStack(spacing: 0) {
             topBar(task)
 
-            ScrollView {
-                Spacer(minLength: DesignSystem.Spacing.xl)
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: DesignSystem.Spacing.xl)
 
-                // Center block: title + ring grouped
-                VStack(spacing: 0) {
-                    taskTitleArea(task)
-                    timerRing(task)
+                        // Center block: title + ring grouped
+                        VStack(spacing: 0) {
+                            taskTitleArea(task)
+                            timerRing(task)
+                        }
+
+                        // Subtasks panel (collapsed by default)
+                        if task.hasSubtasks {
+                            subtasksPanel(task)
+                        }
+
+                        // Notes panel (collapsed by default)
+                        if let notes = task.notes, !notes.isEmpty {
+                            notesPanel(notes)
+                        }
+
+                        Spacer(minLength: DesignSystem.Spacing.xl)
+                    }
+                    .frame(minHeight: geometry.size.height)
                 }
-
-                // Subtasks panel (collapsed by default)
-                if task.hasSubtasks {
-                    subtasksPanel(task)
-                }
-
-                // Notes panel (collapsed by default)
-                if let notes = task.notes, !notes.isEmpty {
-                    notesPanel(notes)
-                }
-
-                Spacer(minLength: DesignSystem.Spacing.xl)
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
 
             actionBar(task)
         }
