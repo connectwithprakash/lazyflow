@@ -43,6 +43,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var customCategoryID: UUID?  // When set, takes precedence over system category
     var listID: UUID?
     var linkedEventID: String?
+    var calendarItemExternalIdentifier: String?
+    var lastSyncedAt: Date?
     var scheduledStartTime: Date?
     var scheduledEndTime: Date?
     var estimatedDuration: TimeInterval?
@@ -166,6 +168,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         linkedEventID: String? = nil,
+        calendarItemExternalIdentifier: String? = nil,
+        lastSyncedAt: Date? = nil,
         scheduledStartTime: Date? = nil,
         scheduledEndTime: Date? = nil,
         estimatedDuration: TimeInterval? = nil,
@@ -194,6 +198,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.customCategoryID = customCategoryID
         self.listID = listID
         self.linkedEventID = linkedEventID
+        self.calendarItemExternalIdentifier = calendarItemExternalIdentifier
+        self.lastSyncedAt = lastSyncedAt
         self.scheduledStartTime = scheduledStartTime
         self.scheduledEndTime = scheduledEndTime
         self.estimatedDuration = estimatedDuration
@@ -225,6 +231,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         linkedEventID: String? = nil,
+        calendarItemExternalIdentifier: String? = nil,
+        lastSyncedAt: Date? = nil,
         scheduledStartTime: Date? = nil,
         scheduledEndTime: Date? = nil,
         estimatedDuration: TimeInterval? = nil,
@@ -254,6 +262,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
             customCategoryID: customCategoryID,
             listID: listID,
             linkedEventID: linkedEventID,
+            calendarItemExternalIdentifier: calendarItemExternalIdentifier,
+            lastSyncedAt: lastSyncedAt,
             scheduledStartTime: scheduledStartTime,
             scheduledEndTime: scheduledEndTime,
             estimatedDuration: estimatedDuration,
@@ -299,6 +309,11 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     /// Whether this task has a scheduled time block
     var isScheduled: Bool {
         scheduledStartTime != nil
+    }
+
+    /// Whether this task is eligible for automatic calendar sync
+    var isEligibleForAutoSync: Bool {
+        dueDate != nil && dueTime != nil && estimatedDuration != nil && (estimatedDuration ?? 0) > 0 && !isCompleted && !isArchived
     }
 
     /// Formatted scheduled time range (e.g., "2:00 – 3:30 PM" or "2:00 PM")

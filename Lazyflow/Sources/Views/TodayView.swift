@@ -175,6 +175,15 @@ struct TodayView: View {
         } message: { _ in
             Text("Snooze for later or skip to see a different suggestion")
         }
+        .onReceive(NotificationCenter.default.publisher(for: .linkedEventDeletedExternally)) { notification in
+            if let title = notification.userInfo?["taskTitle"] as? String {
+                actionToast = ActionToastData(
+                    message: "Calendar event removed for \"\(title)\"",
+                    icon: "calendar.badge.minus",
+                    iconColor: .orange
+                )
+            }
+        }
         .autoCompleteCelebration(isPresented: $showAutoCompleteCelebration, parentTitle: autoCompletedParentTitle)
         .onReceive(NotificationCenter.default.publisher(for: .parentTaskAutoCompleted)) { notification in
             if let title = notification.userInfo?["parentTitle"] as? String {

@@ -194,6 +194,8 @@ final class TaskService: ObservableObject {
         estimatedDuration: TimeInterval? = nil,
         recurringRule: RecurringRule? = nil,
         linkedEventID: String? = nil,
+        calendarItemExternalIdentifier: String? = nil,
+        lastSyncedAt: Date? = nil,
         scheduledStartTime: Date? = nil,
         scheduledEndTime: Date? = nil
     ) -> Task {
@@ -213,6 +215,8 @@ final class TaskService: ObservableObject {
         entity.isArchived = false
         entity.estimatedDuration = estimatedDuration ?? 0
         entity.linkedEventID = linkedEventID
+        entity.calendarItemExternalIdentifier = calendarItemExternalIdentifier
+        entity.lastSyncedAt = lastSyncedAt
         entity.scheduledStartTime = scheduledStartTime
         entity.scheduledEndTime = scheduledEndTime
         entity.createdAt = Date()
@@ -277,6 +281,8 @@ final class TaskService: ObservableObject {
             entity.accumulatedDuration = task.accumulatedDuration
             entity.estimatedDuration = task.estimatedDuration ?? 0
             entity.linkedEventID = task.linkedEventID
+            entity.calendarItemExternalIdentifier = task.calendarItemExternalIdentifier
+            entity.lastSyncedAt = task.lastSyncedAt
             entity.scheduledStartTime = task.scheduledStartTime
             entity.scheduledEndTime = task.scheduledEndTime
             entity.updatedAt = Date()
@@ -340,8 +346,15 @@ final class TaskService: ObservableObject {
     }
 
     /// Sync task changes to linked calendar event
+    /// Skipped when CalendarSyncService is actively syncing to avoid loop/overwrite
     private func syncTaskToCalendar(_ task: Task) {
         guard task.linkedEventID != nil else { return }
+
+        // When CalendarSyncService is handling sync, skip legacy sync path
+        // to avoid overwriting busy-only titles and bypassing loop prevention
+        if CalendarSyncService.shared.isSyncing { return }
+        // When auto-sync is enabled, CalendarSyncService owns the sync lifecycle
+        if UserDefaults.standard.bool(forKey: "calendarAutoSync") { return }
 
         do {
             try calendarService.syncTaskToEvent(task)
@@ -509,9 +522,11 @@ final class TaskService: ObservableObject {
     // MARK: - Calendar Integration
 
     /// Link a task to a calendar event
-    func linkTaskToEvent(_ task: Task, eventID: String) {
+    func linkTaskToEvent(_ task: Task, eventID: String, calendarItemExternalIdentifier: String? = nil) {
         var updatedTask = task
         updatedTask.linkedEventID = eventID
+        updatedTask.calendarItemExternalIdentifier = calendarItemExternalIdentifier
+        updatedTask.lastSyncedAt = Date()
         updateTask(updatedTask)
     }
 
@@ -519,6 +534,8 @@ final class TaskService: ObservableObject {
     func unlinkTaskFromEvent(_ task: Task) {
         var updatedTask = task
         updatedTask.linkedEventID = nil
+        updatedTask.calendarItemExternalIdentifier = nil
+        updatedTask.lastSyncedAt = Date()
         updateTask(updatedTask)
     }
 
@@ -527,6 +544,8 @@ final class TaskService: ObservableObject {
         let event = try calendarService.createTimeBlock(for: task, startDate: startDate, duration: duration)
         var updatedTask = task
         updatedTask.linkedEventID = event.eventIdentifier
+        updatedTask.calendarItemExternalIdentifier = event.calendarItemExternalIdentifier
+        updatedTask.lastSyncedAt = Date()
         updatedTask.scheduledStartTime = startDate
         updatedTask.scheduledEndTime = startDate.addingTimeInterval(duration)
         updateTask(updatedTask)
@@ -1140,7 +1159,9 @@ extension TaskEntity {
             category: TaskCategory(rawValue: categoryRaw) ?? .uncategorized,
             customCategoryID: customCategoryID,
             listID: list?.id,
-            linkedEventID: linkedEventID,
+            linkedEventID: linkedEventID?.isEmpty == true ? nil : linkedEventID,
+            calendarItemExternalIdentifier: calendarItemExternalIdentifier?.isEmpty == true ? nil : calendarItemExternalIdentifier,
+            lastSyncedAt: lastSyncedAt,
             scheduledStartTime: scheduledStartTime,
             scheduledEndTime: scheduledEndTime,
             estimatedDuration: estimatedDuration > 0 ? estimatedDuration : nil,
