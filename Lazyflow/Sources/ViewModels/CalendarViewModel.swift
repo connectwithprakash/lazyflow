@@ -119,26 +119,12 @@ final class CalendarViewModel: ObservableObject {
         let duration = task.estimatedDuration ?? 3600 // Default 1 hour
 
         do {
-            let event = try calendarService.createTimeBlock(for: task, startDate: startDate, duration: duration)
-
-            // Refresh events
+            try taskService.createCalendarEvent(for: task, startDate: startDate, duration: duration)
             loadEvents()
-
-            // Return the event ID for linking
-            if let eventID = event.eventIdentifier {
-                // Update task with linked event ID
-                await updateTaskWithEventLink(task: task, eventID: eventID)
-            }
         } catch {
             errorMessage = "Failed to create time block: \(error.localizedDescription)"
             throw error
         }
-    }
-
-    private func updateTaskWithEventLink(task: Task, eventID: String) async {
-        var updatedTask = task
-        updatedTask.linkedEventID = eventID
-        taskService.updateTask(updatedTask)
     }
 
     // MARK: - Suggestions

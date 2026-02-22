@@ -411,11 +411,7 @@ struct TodayView: View {
     }
 
     private func scheduleTask(_ task: Task, startTime: Date, duration: TimeInterval) {
-        do {
-            _ = try CalendarService.shared.createTimeBlock(for: task, startDate: startTime, duration: duration)
-        } catch {
-            print("Failed to create time block: \(error)")
-        }
+        try? TaskService.shared.createCalendarEvent(for: task, startDate: startTime, duration: duration)
     }
 
     // MARK: - Subviews

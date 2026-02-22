@@ -43,6 +43,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var customCategoryID: UUID?  // When set, takes precedence over system category
     var listID: UUID?
     var linkedEventID: String?
+    var scheduledStartTime: Date?
+    var scheduledEndTime: Date?
     var estimatedDuration: TimeInterval?
     var completedAt: Date?
     var startedAt: Date?
@@ -164,6 +166,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         linkedEventID: String? = nil,
+        scheduledStartTime: Date? = nil,
+        scheduledEndTime: Date? = nil,
         estimatedDuration: TimeInterval? = nil,
         completedAt: Date? = nil,
         startedAt: Date? = nil,
@@ -190,6 +194,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.customCategoryID = customCategoryID
         self.listID = listID
         self.linkedEventID = linkedEventID
+        self.scheduledStartTime = scheduledStartTime
+        self.scheduledEndTime = scheduledEndTime
         self.estimatedDuration = estimatedDuration
         self.completedAt = completedAt
         self.startedAt = startedAt
@@ -219,6 +225,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         customCategoryID: UUID? = nil,
         listID: UUID? = nil,
         linkedEventID: String? = nil,
+        scheduledStartTime: Date? = nil,
+        scheduledEndTime: Date? = nil,
         estimatedDuration: TimeInterval? = nil,
         completedAt: Date? = nil,
         startedAt: Date? = nil,
@@ -246,6 +254,8 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
             customCategoryID: customCategoryID,
             listID: listID,
             linkedEventID: linkedEventID,
+            scheduledStartTime: scheduledStartTime,
+            scheduledEndTime: scheduledEndTime,
             estimatedDuration: estimatedDuration,
             completedAt: completedAt,
             startedAt: startedAt,
@@ -284,6 +294,24 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     /// Check if task has a reminder set
     var hasReminder: Bool {
         reminderDate != nil
+    }
+
+    /// Whether this task has a scheduled time block
+    var isScheduled: Bool {
+        scheduledStartTime != nil
+    }
+
+    /// Formatted scheduled time range (e.g., "2:00 – 3:30 PM" or "2:00 PM")
+    var formattedScheduledTime: String? {
+        guard let start = scheduledStartTime else { return nil }
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        if let end = scheduledEndTime {
+            let startStr = formatter.string(from: start)
+            let endStr = formatter.string(from: end)
+            return "\(startStr) – \(endStr)"
+        }
+        return formatter.string(from: start)
     }
 
     /// Check if task is recurring

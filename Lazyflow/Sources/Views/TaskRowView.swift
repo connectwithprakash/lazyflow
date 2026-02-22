@@ -357,6 +357,7 @@ struct TaskRowView: View {
         task.dueDate != nil || hasCategory || hasNonEmptyNotes
             || task.estimatedDuration != nil || hasSubtaskBadge
             || hasTimeTracking || task.isRecurring || hasListDot
+            || task.isScheduled
     }
 
     private var metadataRow: some View {
@@ -404,6 +405,11 @@ struct TaskRowView: View {
             // Due date
             if let dueDate = task.dueDate {
                 DueDateBadge(date: dueDate, isOverdue: task.isOverdue, isDueToday: task.isDueToday)
+            }
+
+            // Scheduled time
+            if task.isScheduled {
+                ScheduledTimeBadge(task: task)
             }
 
             // Estimated Duration (only show if not tracking time)

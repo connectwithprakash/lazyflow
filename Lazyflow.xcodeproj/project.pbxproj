@@ -388,6 +388,7 @@
 		F1B80002E148BF3F059F003E /* CategoryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryServiceTests.swift; sourceTree = "<group>"; };
 		F2A8720AD9E15D86484861BD /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		F41C3B0383366E7103B4CF90 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
+		F5AFFDDD49FBA474AFF7B535 /* Lazyflow 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Lazyflow 2.xcdatamodel"; sourceTree = "<group>"; };
 		F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryServiceTests.swift; sourceTree = "<group>"; };
 		F729BB9BDF9430A95176FDD8 /* LazyflowUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LazyflowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8769C43782895FD84F8B04A /* LazyflowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowUITests.swift; sourceTree = "<group>"; };
@@ -1607,9 +1608,10 @@
 		8B2FA8AC80A06886EF5CEFF0 /* Lazyflow.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				F5AFFDDD49FBA474AFF7B535 /* Lazyflow 2.xcdatamodel */,
 				96B4790C4DFDF82098E35533 /* Lazyflow.xcdatamodel */,
 			);
-			currentVersion = 96B4790C4DFDF82098E35533 /* Lazyflow.xcdatamodel */;
+			currentVersion = F5AFFDDD49FBA474AFF7B535 /* Lazyflow 2.xcdatamodel */;
 			path = Lazyflow.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

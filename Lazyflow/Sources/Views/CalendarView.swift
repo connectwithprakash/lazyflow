@@ -220,7 +220,9 @@ struct CalendarView: View {
             listID: task.listID,
             estimatedDuration: task.estimatedDuration,
             recurringRule: task.recurringRule,
-            linkedEventID: task.linkedEventID
+            linkedEventID: task.linkedEventID,
+            scheduledStartTime: task.scheduledStartTime,
+            scheduledEndTime: task.scheduledEndTime
         )
     }
 
@@ -232,7 +234,9 @@ struct CalendarView: View {
             dueTime: event.startDate,
             priority: .medium,
             estimatedDuration: event.duration,
-            linkedEventID: event.id
+            linkedEventID: event.id,
+            scheduledStartTime: event.startDate,
+            scheduledEndTime: event.endDate
         )
 
         // Haptic feedback
@@ -243,12 +247,8 @@ struct CalendarView: View {
     }
 
     private func createTimeBlock(for task: Task, startTime: Date, duration: TimeInterval) {
-        do {
-            _ = try CalendarService.shared.createTimeBlock(for: task, startDate: startTime, duration: duration)
-            viewModel.loadEvents()
-        } catch {
-            print("Failed to create time block: \(error)")
-        }
+        try? TaskService.shared.createCalendarEvent(for: task, startDate: startTime, duration: duration)
+        viewModel.loadEvents()
     }
 
     private var calendarAccessBanner: some View {

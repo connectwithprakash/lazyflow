@@ -193,7 +193,9 @@ final class TaskService: ObservableObject {
         listID: UUID? = nil,
         estimatedDuration: TimeInterval? = nil,
         recurringRule: RecurringRule? = nil,
-        linkedEventID: String? = nil
+        linkedEventID: String? = nil,
+        scheduledStartTime: Date? = nil,
+        scheduledEndTime: Date? = nil
     ) -> Task {
         let context = persistenceController.viewContext
 
@@ -211,6 +213,8 @@ final class TaskService: ObservableObject {
         entity.isArchived = false
         entity.estimatedDuration = estimatedDuration ?? 0
         entity.linkedEventID = linkedEventID
+        entity.scheduledStartTime = scheduledStartTime
+        entity.scheduledEndTime = scheduledEndTime
         entity.createdAt = Date()
         entity.updatedAt = Date()
 
@@ -273,6 +277,8 @@ final class TaskService: ObservableObject {
             entity.accumulatedDuration = task.accumulatedDuration
             entity.estimatedDuration = task.estimatedDuration ?? 0
             entity.linkedEventID = task.linkedEventID
+            entity.scheduledStartTime = task.scheduledStartTime
+            entity.scheduledEndTime = task.scheduledEndTime
             entity.updatedAt = Date()
             entity.parentTaskID = task.parentTaskID
             entity.subtaskOrder = task.subtaskOrder
@@ -516,14 +522,14 @@ final class TaskService: ObservableObject {
         updateTask(updatedTask)
     }
 
-    /// Create a calendar event from a task
-    func createCalendarEvent(for task: Task, startDate: Date, duration: TimeInterval) {
-        do {
-            let event = try calendarService.createTimeBlock(for: task, startDate: startDate, duration: duration)
-            linkTaskToEvent(task, eventID: event.eventIdentifier)
-        } catch {
-            print("Failed to create calendar event: \(error)")
-        }
+    /// Create a calendar event from a task and set scheduled times
+    func createCalendarEvent(for task: Task, startDate: Date, duration: TimeInterval) throws {
+        let event = try calendarService.createTimeBlock(for: task, startDate: startDate, duration: duration)
+        var updatedTask = task
+        updatedTask.linkedEventID = event.eventIdentifier
+        updatedTask.scheduledStartTime = startDate
+        updatedTask.scheduledEndTime = startDate.addingTimeInterval(duration)
+        updateTask(updatedTask)
     }
 
     // MARK: - Delete Operations (Soft Delete Pattern)
@@ -1135,6 +1141,8 @@ extension TaskEntity {
             customCategoryID: customCategoryID,
             listID: list?.id,
             linkedEventID: linkedEventID,
+            scheduledStartTime: scheduledStartTime,
+            scheduledEndTime: scheduledEndTime,
             estimatedDuration: estimatedDuration > 0 ? estimatedDuration : nil,
             completedAt: completedAt,
             startedAt: startedAt,
