@@ -81,6 +81,62 @@ final class CalendarService: ObservableObject {
         eventStore.defaultCalendarForNewEvents
     }
 
+    // MARK: - Lazyflow Calendar
+
+    private static let lazyflowCalendarIDKey = "lazyflowCalendarID"
+    private static let lazyflowCalendarTitle = "Lazyflow"
+
+    /// Get or create the dedicated Lazyflow calendar for auto-synced events
+    func getOrCreateLazyflowCalendar() -> EKCalendar? {
+        guard hasCalendarAccess else { return nil }
+
+        // 1. Try saved calendar ID
+        if let savedID = UserDefaults.standard.string(forKey: Self.lazyflowCalendarIDKey),
+           let calendar = eventStore.calendar(withIdentifier: savedID) {
+            return calendar
+        }
+
+        // 2. Search by title
+        let existingCalendars = eventStore.calendars(for: .event)
+        if let existing = existingCalendars.first(where: { $0.title == Self.lazyflowCalendarTitle }) {
+            UserDefaults.standard.set(existing.calendarIdentifier, forKey: Self.lazyflowCalendarIDKey)
+            return existing
+        }
+
+        // 3. Create new calendar
+        let calendar = EKCalendar(for: .event, eventStore: eventStore)
+        calendar.title = Self.lazyflowCalendarTitle
+
+        // Prefer iCloud source, fall back to local
+        let sources = eventStore.sources
+        if let iCloudSource = sources.first(where: { $0.sourceType == .calDAV }) {
+            calendar.source = iCloudSource
+        } else if let localSource = sources.first(where: { $0.sourceType == .local }) {
+            calendar.source = localSource
+        } else if let defaultSource = eventStore.defaultCalendarForNewEvents?.source {
+            calendar.source = defaultSource
+        } else {
+            return nil
+        }
+
+        // Set accent color (#218A8D)
+        calendar.cgColor = CGColor(red: 0.129, green: 0.541, blue: 0.553, alpha: 1.0)
+
+        do {
+            try eventStore.saveCalendar(calendar, commit: true)
+            UserDefaults.standard.set(calendar.calendarIdentifier, forKey: Self.lazyflowCalendarIDKey)
+            return calendar
+        } catch {
+            print("Failed to create Lazyflow calendar: \(error)")
+            return nil
+        }
+    }
+
+    /// Returns the dedicated Lazyflow calendar, or the default calendar as fallback
+    func syncCalendar() -> EKCalendar? {
+        getOrCreateLazyflowCalendar() ?? defaultCalendar
+    }
+
     // MARK: - Events
 
     /// Fetch events for a date range

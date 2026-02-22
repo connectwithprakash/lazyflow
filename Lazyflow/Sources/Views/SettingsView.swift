@@ -85,6 +85,15 @@ struct SettingsView: View {
                     Text("Events you consistently skip will be hidden by default. You can always reveal them.")
                 }
 
+                // Calendar Sync
+                Section {
+                    CalendarSyncToggle()
+                } header: {
+                    Text("Calendar Sync")
+                } footer: {
+                    Text("Eligible tasks (with date, time, and duration) are auto-synced to a dedicated Lazyflow calendar. Changes made in Apple Calendar sync back to your tasks.")
+                }
+
                 // Daily Summary Notifications
                 Section {
                     DailySummaryNotificationToggle()
@@ -2058,6 +2067,67 @@ struct ModelDetailSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Calendar Sync Toggle
+
+struct CalendarSyncToggle: View {
+    @AppStorage("calendarAutoSync") private var calendarAutoSync = false
+    @AppStorage("calendarCompletionPolicy") private var completionPolicy = "keep"
+    @AppStorage("calendarBusyOnly") private var busyOnly = false
+    @State private var isRequestingAccess = false
+
+    var body: some View {
+        Toggle(isOn: $calendarAutoSync) {
+            HStack {
+                Image(systemName: "calendar.badge.clock")
+                    .foregroundColor(Color.Lazyflow.accent)
+                    .frame(width: 24)
+                Text("Auto-Sync to Calendar")
+            }
+        }
+        .onChange(of: calendarAutoSync) { _, enabled in
+            if enabled {
+                enableSync()
+            } else {
+                CalendarSyncService.shared.stopObserving()
+            }
+        }
+
+        if calendarAutoSync {
+            Picker("On Task Completion", selection: $completionPolicy) {
+                Text("Keep Event").tag("keep")
+                Text("Delete Event").tag("delete")
+            }
+
+            Toggle(isOn: $busyOnly) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Busy-Only Privacy Mode")
+                    Text("Events show \"Focus Block\" instead of task title")
+                        .font(DesignSystem.Typography.caption1)
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                }
+            }
+        }
+    }
+
+    private func enableSync() {
+        guard !isRequestingAccess else { return }
+        isRequestingAccess = true
+
+        _Concurrency.Task {
+            let granted = await CalendarService.shared.requestAccess()
+            await MainActor.run {
+                isRequestingAccess = false
+                if granted {
+                    _ = CalendarService.shared.getOrCreateLazyflowCalendar()
+                    CalendarSyncService.shared.startObserving()
+                } else {
+                    calendarAutoSync = false
                 }
             }
         }

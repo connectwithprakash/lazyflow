@@ -18,6 +18,11 @@ struct RootView: View {
                     .onAppear {
                         WatchConnectivityService.shared.configure(with: TaskService.shared)
                         PersistenceController.shared.createDefaultListsIfNeeded()
+
+                        // Start calendar sync if enabled
+                        if UserDefaults.standard.bool(forKey: "calendarAutoSync") {
+                            CalendarSyncService.shared.startObserving()
+                        }
                     }
             } else {
                 OnboardingView()

@@ -194,6 +194,8 @@ final class TaskService: ObservableObject {
         estimatedDuration: TimeInterval? = nil,
         recurringRule: RecurringRule? = nil,
         linkedEventID: String? = nil,
+        calendarItemExternalIdentifier: String? = nil,
+        lastSyncedAt: Date? = nil,
         scheduledStartTime: Date? = nil,
         scheduledEndTime: Date? = nil
     ) -> Task {
@@ -213,6 +215,8 @@ final class TaskService: ObservableObject {
         entity.isArchived = false
         entity.estimatedDuration = estimatedDuration ?? 0
         entity.linkedEventID = linkedEventID
+        entity.calendarItemExternalIdentifier = calendarItemExternalIdentifier
+        entity.lastSyncedAt = lastSyncedAt
         entity.scheduledStartTime = scheduledStartTime
         entity.scheduledEndTime = scheduledEndTime
         entity.createdAt = Date()
@@ -277,6 +281,8 @@ final class TaskService: ObservableObject {
             entity.accumulatedDuration = task.accumulatedDuration
             entity.estimatedDuration = task.estimatedDuration ?? 0
             entity.linkedEventID = task.linkedEventID
+            entity.calendarItemExternalIdentifier = task.calendarItemExternalIdentifier
+            entity.lastSyncedAt = task.lastSyncedAt
             entity.scheduledStartTime = task.scheduledStartTime
             entity.scheduledEndTime = task.scheduledEndTime
             entity.updatedAt = Date()
@@ -1141,6 +1147,8 @@ extension TaskEntity {
             customCategoryID: customCategoryID,
             listID: list?.id,
             linkedEventID: linkedEventID,
+            calendarItemExternalIdentifier: calendarItemExternalIdentifier,
+            lastSyncedAt: lastSyncedAt,
             scheduledStartTime: scheduledStartTime,
             scheduledEndTime: scheduledEndTime,
             estimatedDuration: estimatedDuration > 0 ? estimatedDuration : nil,
