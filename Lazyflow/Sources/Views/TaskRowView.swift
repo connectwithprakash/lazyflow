@@ -15,6 +15,7 @@ struct TaskRowView: View {
     var onDelete: ((Task) -> Void)?
     var onStartWorking: ((Task) -> Void)?
     var onStopWorking: ((Task) -> Void)?
+    var onEnterFocus: ((Task) -> Void)?
     var hideSubtaskBadge: Bool = false
     var expandableSubtaskBadge: AnyView? = nil
     var showProgressRing: Bool = false  // Show subtask progress on checkbox
@@ -486,7 +487,7 @@ struct TaskRowView: View {
             )
         }
 
-        // Start/Stop Working
+        // Start/Stop Working + Enter Focus
         if !task.isCompleted {
             if task.isInProgress {
                 Button {
@@ -499,6 +500,14 @@ struct TaskRowView: View {
                     onStartWorking?(task)
                 } label: {
                     Label("Start Working", systemImage: "play.fill")
+                }
+            }
+
+            if onEnterFocus != nil {
+                Button {
+                    onEnterFocus?(task)
+                } label: {
+                    Label("Enter Focus", systemImage: "scope")
                 }
             }
         }

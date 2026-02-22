@@ -3,6 +3,7 @@ import SwiftUI
 /// View showing upcoming tasks grouped by date
 struct UpcomingView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
     @StateObject private var taskService = TaskService.shared
     @StateObject private var listService = TaskListService.shared
     @State private var selectedTask: Task?
@@ -138,6 +139,7 @@ struct UpcomingView: View {
                             onDelete: { taskService.deleteTask($0) },
                             onStartWorking: { $0.accumulatedDuration > 0 ? taskService.resumeWorking(on: $0) : taskService.startWorking(on: $0) },
                             onStopWorking: { taskService.stopWorking(on: $0) },
+                            onEnterFocus: { focusCoordinator.enterFocus(task: $0) },
                             showListIndicator: true,
                             listColorHex: listColorHex(for: task)
                         )
@@ -166,6 +168,7 @@ struct UpcomingView: View {
                             onDelete: { taskService.deleteTask($0) },
                             onStartWorking: { $0.accumulatedDuration > 0 ? taskService.resumeWorking(on: $0) : taskService.startWorking(on: $0) },
                             onStopWorking: { taskService.stopWorking(on: $0) },
+                            onEnterFocus: { focusCoordinator.enterFocus(task: $0) },
                             showListIndicator: true,
                             listColorHex: listColorHex(for: task)
                         )
@@ -282,5 +285,6 @@ struct UpcomingView: View {
 
 #Preview {
     UpcomingView()
+        .environmentObject(FocusSessionCoordinator())
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

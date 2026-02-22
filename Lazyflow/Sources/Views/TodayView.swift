@@ -618,6 +618,7 @@ struct TodayView: View {
                 }
             },
             onStopWorking: isCompleted ? nil : { viewModel.stopWorking(on: $0) },
+            onEnterFocus: isCompleted ? nil : { focusCoordinator.enterFocus(task: $0) },
             hideSubtaskBadge: true,
             showProgressRing: task.hasSubtasks,
             showListIndicator: true,

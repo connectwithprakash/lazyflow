@@ -17,7 +17,7 @@ struct ContentView: View {
     @State private var insightsNavigationPath = NavigationPath()
     @State private var profileNavigationPath = NavigationPath()
 
-    // Focus Mode coordinator (in-memory, not persisted)
+    // Focus Mode coordinator (persists active session across restarts)
     @StateObject private var focusCoordinator = FocusSessionCoordinator(
         taskService: TaskService.shared,
         prioritizationService: PrioritizationService.shared
@@ -160,6 +160,10 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)) { _ in
             // Check if we should show iCloud prompt after first task is created
             checkICloudPrompt()
+        }
+        .task {
+            // Rehydrate any persisted focus session from a previous app launch
+            focusCoordinator.rehydrate()
         }
         .alert("Sync with iCloud?", isPresented: $showICloudPrompt) {
             Button("Enable iCloud Sync") {

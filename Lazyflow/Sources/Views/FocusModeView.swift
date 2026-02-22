@@ -2,14 +2,18 @@ import SwiftUI
 
 /// Full-screen immersive focus experience for a single task.
 /// "Calm Precision" design: dark background, centered title, progress ring.
+/// Includes collapsible subtasks/notes panels and Pomodoro timer mode.
 struct FocusModeView: View {
     @EnvironmentObject private var coordinator: FocusSessionCoordinator
+    @StateObject private var taskService = TaskService.shared
 
     @State private var showSuccess = false
     @State private var showSwitchSheet = false
     @State private var showTaskDetail = false
     @State private var breatheOpacity: Double = 0.55
     @State private var focusActionToast: ActionToastData?
+    @State private var showSubtasks = false
+    @State private var showNotes = false
 
     // Dark immersive background color
     private let immersiveBackground = Color(red: 0.067, green: 0.075, blue: 0.075) // #111313
@@ -78,6 +82,16 @@ struct FocusModeView: View {
                     timerRing(task)
                 }
 
+                // Subtasks panel (collapsed by default)
+                if task.hasSubtasks {
+                    subtasksPanel(task)
+                }
+
+                // Notes panel (collapsed by default)
+                if let notes = task.notes, !notes.isEmpty {
+                    notesPanel(notes)
+                }
+
                 Spacer(minLength: DesignSystem.Spacing.xl)
             }
             .scrollIndicators(.hidden)
@@ -106,6 +120,33 @@ struct FocusModeView: View {
             .accessibilityLabel("Close Focus Mode")
 
             Spacer()
+
+            // Timer mode picker
+            Menu {
+                ForEach(FocusSessionCoordinator.TimerMode.allCases) { mode in
+                    Button {
+                        coordinator.setTimerMode(mode)
+                    } label: {
+                        Label(
+                            mode.displayName,
+                            systemImage: mode == .stopwatch ? "stopwatch" : "timer"
+                        )
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: coordinator.timerMode == .stopwatch ? "stopwatch" : "timer")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text(coordinator.timerMode.displayName)
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .foregroundColor(.white.opacity(0.45))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.white.opacity(0.08))
+                .cornerRadius(DesignSystem.CornerRadius.small)
+            }
+            .accessibilityLabel("Timer mode: \(coordinator.timerMode.displayName)")
 
             Menu {
                 Button {
@@ -163,6 +204,9 @@ struct FocusModeView: View {
                 parts.append("Est. \(mins) min")
             }
         }
+        if coordinator.timerMode == .pomodoro {
+            parts.append("Pomodoro \(coordinator.pomodoroCompletedIntervals + 1)")
+        }
         return parts.joined(separator: " · ")
     }
 
@@ -175,6 +219,9 @@ struct FocusModeView: View {
         TimelineView(.periodic(from: .now, by: 1)) { _ in
             let progress = ringProgress(for: task)
             let paused = coordinator.isPaused
+            let isPomodoro = coordinator.timerMode == .pomodoro
+            let isPomBreak = coordinator.isPomodoroBreak
+            let ringColor = isPomBreak ? Color.orange : Color.Lazyflow.accent
 
             ZStack {
                 // Track circle
@@ -186,19 +233,19 @@ struct FocusModeView: View {
                 Circle()
                     .trim(from: 0, to: progress)
                     .stroke(
-                        Color.Lazyflow.accent,
+                        ringColor,
                         style: StrokeStyle(lineWidth: ringStrokeWidth, lineCap: .butt)
                     )
                     .frame(width: ringSize, height: ringSize)
                     .rotationEffect(.degrees(-90))
-                    .shadow(color: Color.Lazyflow.accent.opacity(0.25), radius: 4)
+                    .shadow(color: ringColor.opacity(0.25), radius: 4)
                     .opacity(paused ? 0.4 : 1.0)
 
                 // Start dot — fixed at 12 o'clock
                 Circle()
-                    .fill(Color.Lazyflow.accent)
+                    .fill(ringColor)
                     .frame(width: 8, height: 8)
-                    .shadow(color: Color.Lazyflow.accent.opacity(0.4), radius: 4)
+                    .shadow(color: ringColor.opacity(0.4), radius: 4)
                     .offset(y: -(ringSize / 2))
                     .opacity(paused ? 0 : 1)
 
@@ -207,9 +254,9 @@ struct FocusModeView: View {
                     let angle = Double(progress) * 2 * .pi - .pi / 2
                     let radius = Double(ringSize / 2)
                     Circle()
-                        .fill(Color.Lazyflow.accent)
+                        .fill(ringColor)
                         .frame(width: 8, height: 8)
-                        .shadow(color: Color.Lazyflow.accent.opacity(0.4), radius: 4)
+                        .shadow(color: ringColor.opacity(0.4), radius: 4)
                         .offset(
                             x: cos(angle) * radius,
                             y: sin(angle) * radius
@@ -219,16 +266,16 @@ struct FocusModeView: View {
 
                 // Timer text inside ring
                 VStack(spacing: 10) {
-                    Text(elapsedTimeString(for: task))
+                    Text(timerDisplayString(for: task))
                         .font(.system(size: 52, weight: .light))
                         .monospacedDigit()
                         .foregroundColor(.white.opacity(0.95))
                         .tracking(-2)
-                        .accessibilityLabel("Timer: \(elapsedTimeString(for: task))")
+                        .accessibilityLabel("Timer: \(timerDisplayString(for: task))")
 
-                    Text(paused ? "Paused" : "Focusing")
+                    Text(timerStatusLabel)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(paused ? .orange : Color.Lazyflow.accent)
+                        .foregroundColor(statusLabelColor)
                         .tracking(0.3)
                         .opacity(paused ? 1.0 : breatheOpacity)
                         .onAppear {
@@ -241,18 +288,74 @@ struct FocusModeView: View {
             .padding(.bottom, DesignSystem.Spacing.xxxl)
             .contentShape(Circle())
             .onTapGesture {
-                coordinator.togglePause()
-                focusActionToast = ActionToastData(
-                    message: coordinator.isPaused ? "Timer paused" : "Timer resumed",
-                    icon: coordinator.isPaused ? "pause.fill" : "play.fill",
-                    iconColor: coordinator.isPaused ? .orange : Color.Lazyflow.accent
-                )
+                if isPomodoro && coordinator.isPomodoroIntervalComplete {
+                    // Tapping when interval complete transitions to next phase
+                    if isPomBreak {
+                        coordinator.endPomodoroBreak()
+                        focusActionToast = ActionToastData(
+                            message: "Work interval started",
+                            icon: "flame.fill",
+                            iconColor: Color.Lazyflow.accent
+                        )
+                    } else {
+                        coordinator.startPomodoroBreak()
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        focusActionToast = ActionToastData(
+                            message: "Break time! \(Int(coordinator.pomodoroBreakInterval / 60)) min",
+                            icon: "cup.and.saucer.fill",
+                            iconColor: .orange
+                        )
+                    }
+                } else {
+                    coordinator.togglePause()
+                    focusActionToast = ActionToastData(
+                        message: coordinator.isPaused ? "Timer paused" : "Timer resumed",
+                        icon: coordinator.isPaused ? "pause.fill" : "play.fill",
+                        iconColor: coordinator.isPaused ? .orange : Color.Lazyflow.accent
+                    )
+                }
             }
-            .accessibilityHint("Tap to \(paused ? "resume" : "pause") timer")
+            .accessibilityHint(pomodoroTapHint)
         }
     }
 
+    private var timerStatusLabel: String {
+        if coordinator.isPaused { return "Paused" }
+        if coordinator.timerMode == .pomodoro {
+            if coordinator.isPomodoroIntervalComplete {
+                return coordinator.isPomodoroBreak ? "Tap to resume" : "Tap for break"
+            }
+            return coordinator.isPomodoroBreak ? "Break" : "Focusing"
+        }
+        return "Focusing"
+    }
+
+    private var statusLabelColor: Color {
+        if coordinator.isPaused { return .orange }
+        if coordinator.isPomodoroBreak { return .orange }
+        if coordinator.timerMode == .pomodoro && coordinator.isPomodoroIntervalComplete {
+            return Color.Lazyflow.success
+        }
+        return Color.Lazyflow.accent
+    }
+
+    private var pomodoroTapHint: String {
+        if coordinator.timerMode == .pomodoro && coordinator.isPomodoroIntervalComplete {
+            return coordinator.isPomodoroBreak ? "Tap to start next work interval" : "Tap to take a break"
+        }
+        return "Tap to \(coordinator.isPaused ? "resume" : "pause") timer"
+    }
+
     private func ringProgress(for task: Task) -> CGFloat {
+        if coordinator.timerMode == .pomodoro {
+            let interval = coordinator.isPomodoroBreak
+                ? coordinator.pomodoroBreakInterval
+                : coordinator.pomodoroWorkInterval
+            guard interval > 0 else { return 0 }
+            let remaining = coordinator.pomodoroRemainingSeconds
+            return min(CGFloat(1.0 - remaining / interval), 1.0)
+        }
+
         let elapsed = task.elapsedTime ?? (task.accumulatedDuration > 0 ? task.accumulatedDuration : 0)
         guard let estimate = task.estimatedDuration, estimate > 0, elapsed > 0 else {
             return 0
@@ -260,7 +363,12 @@ struct FocusModeView: View {
         return min(CGFloat(elapsed / estimate), 1.0)
     }
 
-    private func elapsedTimeString(for task: Task) -> String {
+    private func timerDisplayString(for task: Task) -> String {
+        if coordinator.timerMode == .pomodoro {
+            let remaining = max(0, coordinator.pomodoroRemainingSeconds)
+            return Task.formatDurationAsTimer(remaining)
+        }
+
         if let elapsed = task.elapsedTime {
             return Task.formatDurationAsTimer(elapsed)
         }
@@ -270,10 +378,158 @@ struct FocusModeView: View {
         return "0:00"
     }
 
+    // MARK: - Subtasks Panel
+
+    private func subtasksPanel(_ task: Task) -> some View {
+        VStack(spacing: 0) {
+            // Header button
+            Button {
+                withAnimation(DesignSystem.Animation.quick) {
+                    showSubtasks.toggle()
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "checklist")
+                        .font(.system(size: 14))
+                    Text("Subtasks")
+                        .font(.system(size: 14, weight: .medium))
+                    Text(task.subtaskProgressString ?? "")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.4))
+                    Spacer()
+                    Image(systemName: showSubtasks ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+            }
+            .buttonStyle(.plain)
+
+            if showSubtasks {
+                VStack(spacing: 0) {
+                    ForEach(task.subtasks) { subtask in
+                        focusSubtaskRow(subtask)
+                    }
+                }
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.bottom, DesignSystem.Spacing.sm)
+            }
+        }
+        .background(.white.opacity(0.04))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+        .padding(.horizontal, DesignSystem.Spacing.xl)
+        .padding(.top, DesignSystem.Spacing.md)
+    }
+
+    private func focusSubtaskRow(_ subtask: Task) -> some View {
+        Button {
+            taskService.toggleSubtaskCompletion(subtask)
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                // Checkbox
+                ZStack {
+                    Circle()
+                        .strokeBorder(
+                            subtask.isCompleted ? Color.Lazyflow.success : .white.opacity(0.3),
+                            lineWidth: 1.5
+                        )
+                        .frame(width: 18, height: 18)
+
+                    if subtask.isCompleted {
+                        Circle()
+                            .fill(Color.Lazyflow.success)
+                            .frame(width: 18, height: 18)
+
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
+
+                Text(subtask.title)
+                    .font(.system(size: 14))
+                    .foregroundColor(
+                        subtask.isCompleted
+                            ? .white.opacity(0.3)
+                            : .white.opacity(0.75)
+                    )
+                    .strikethrough(subtask.isCompleted, color: .white.opacity(0.3))
+                    .lineLimit(1)
+
+                Spacer()
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Notes Panel
+
+    private func notesPanel(_ notes: String) -> some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(DesignSystem.Animation.quick) {
+                    showNotes.toggle()
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "note.text")
+                        .font(.system(size: 14))
+                    Text("Notes")
+                        .font(.system(size: 14, weight: .medium))
+                    Spacer()
+                    Image(systemName: showNotes ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+            }
+            .buttonStyle(.plain)
+
+            if showNotes {
+                Text(notes)
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.6))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.bottom, DesignSystem.Spacing.sm)
+            }
+        }
+        .background(.white.opacity(0.04))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+        .padding(.horizontal, DesignSystem.Spacing.xl)
+        .padding(.top, DesignSystem.Spacing.sm)
+    }
+
     // MARK: - Action Bar
 
     private func actionBar(_ task: Task) -> some View {
         VStack(spacing: DesignSystem.Spacing.md) {
+            // Pomodoro break banner
+            if coordinator.timerMode == .pomodoro && coordinator.isPomodoroIntervalComplete && !coordinator.isPomodoroBreak {
+                Button {
+                    coordinator.startPomodoroBreak()
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    focusActionToast = ActionToastData(
+                        message: "Break time! \(Int(coordinator.pomodoroBreakInterval / 60)) min",
+                        icon: "cup.and.saucer.fill",
+                        iconColor: .orange
+                    )
+                } label: {
+                    Label("Take Pomodoro Break", systemImage: "cup.and.saucer.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: DesignSystem.TouchTarget.minimum)
+                        .background(Color.orange)
+                        .cornerRadius(DesignSystem.CornerRadius.large)
+                }
+                .buttonStyle(.plain)
+            }
+
             // Mark Complete — primary CTA
             Button {
                 performCompletion(task)
@@ -295,13 +551,14 @@ struct FocusModeView: View {
                 } label: {
                     Label("Take a Break", systemImage: "moon.fill")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.white.opacity(coordinator.isPomodoroBreak ? 0.3 : 0.7))
                         .frame(maxWidth: .infinity)
                         .frame(minHeight: DesignSystem.TouchTarget.minimum)
                         .background(.white.opacity(0.08))
                         .cornerRadius(DesignSystem.CornerRadius.large)
                 }
                 .buttonStyle(.plain)
+                .disabled(coordinator.isPomodoroBreak)
 
                 Button {
                     showSwitchSheet = true
