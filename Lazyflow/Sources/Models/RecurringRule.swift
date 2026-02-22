@@ -1,4 +1,5 @@
 import Foundation
+import EventKit
 
 /// Frequency options for recurring tasks
 enum RecurringFrequency: Int16, CaseIterable, Codable, Identifiable {
@@ -101,14 +102,19 @@ struct RecurringRule: Codable, Equatable, Hashable {
 
         case .weekly:
             if let daysOfWeek = daysOfWeek, !daysOfWeek.isEmpty {
-                // Find next matching day of week
-                nextDate = findNextWeekday(from: date, weekdays: daysOfWeek, calendar: calendar)
+                // Find next matching day of week, respecting the interval
+                nextDate = findNextWeekday(from: date, weekdays: daysOfWeek, weekInterval: interval, calendar: calendar)
             } else {
                 nextDate = calendar.date(byAdding: .weekOfYear, value: interval, to: date)
             }
 
         case .biweekly:
-            nextDate = calendar.date(byAdding: .weekOfYear, value: 2 * interval, to: date)
+            if let daysOfWeek = daysOfWeek, !daysOfWeek.isEmpty {
+                // Find next matching day of week within the biweekly cycle
+                nextDate = findNextWeekday(from: date, weekdays: daysOfWeek, weekInterval: 2 * interval, calendar: calendar)
+            } else {
+                nextDate = calendar.date(byAdding: .weekOfYear, value: 2 * interval, to: date)
+            }
 
         case .monthly:
             nextDate = calendar.date(byAdding: .month, value: interval, to: date)
@@ -313,15 +319,156 @@ struct RecurringRule: Codable, Equatable, Hashable {
         return times.sorted()
     }
 
-    private func findNextWeekday(from date: Date, weekdays: [Int], calendar: Calendar) -> Date? {
-        var currentDate = date
+    // MARK: - EventKit Recurrence Rule Mapping
 
-        for _ in 0..<14 { // Check up to 2 weeks ahead
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
-            let weekday = calendar.component(.weekday, from: currentDate)
+    /// Whether this recurring rule can be represented as an EKRecurrenceRule.
+    /// Intraday frequencies (hourly, timesPerDay) have no EventKit equivalent.
+    var canMapToEKRecurrenceRule: Bool {
+        switch frequency {
+        case .daily, .weekly, .biweekly, .monthly, .yearly, .custom:
+            return true
+        case .hourly, .timesPerDay:
+            return false
+        }
+    }
 
+    /// Convert to an EKRecurrenceRule for EventKit calendar events.
+    /// Returns nil for intraday frequencies that have no EventKit equivalent.
+    func toEKRecurrenceRule() -> EKRecurrenceRule? {
+        guard canMapToEKRecurrenceRule else { return nil }
+
+        let ekFrequency: EKRecurrenceFrequency
+        let ekInterval: Int
+
+        switch frequency {
+        case .daily:
+            ekFrequency = .daily
+            ekInterval = interval
+        case .weekly:
+            ekFrequency = .weekly
+            ekInterval = interval
+        case .biweekly:
+            ekFrequency = .weekly
+            ekInterval = 2 * interval
+        case .monthly:
+            ekFrequency = .monthly
+            ekInterval = interval
+        case .yearly:
+            ekFrequency = .yearly
+            ekInterval = interval
+        case .custom:
+            if let days = daysOfWeek, !days.isEmpty {
+                ekFrequency = .weekly
+                ekInterval = interval
+            } else {
+                ekFrequency = .daily
+                ekInterval = interval
+            }
+        case .hourly, .timesPerDay:
+            return nil
+        }
+
+        // Map daysOfWeek to EKRecurrenceDayOfWeek
+        var ekDaysOfWeek: [EKRecurrenceDayOfWeek]?
+        if let days = daysOfWeek, !days.isEmpty,
+           (frequency == .weekly || frequency == .biweekly || frequency == .custom) {
+            ekDaysOfWeek = days.compactMap { dayNumber in
+                guard let ekDay = EKWeekday(rawValue: dayNumber) else { return nil }
+                return EKRecurrenceDayOfWeek(ekDay)
+            }
+        }
+
+        // Map endDate
+        let ekEnd: EKRecurrenceEnd? = endDate.map { EKRecurrenceEnd(end: $0) }
+
+        return EKRecurrenceRule(
+            recurrenceWith: ekFrequency,
+            interval: ekInterval,
+            daysOfTheWeek: ekDaysOfWeek,
+            daysOfTheMonth: nil,
+            monthsOfTheYear: nil,
+            weeksOfTheYear: nil,
+            daysOfTheYear: nil,
+            setPositions: nil,
+            end: ekEnd
+        )
+    }
+
+    /// Create a RecurringRule from an EKRecurrenceRule.
+    static func fromEKRecurrenceRule(_ rule: EKRecurrenceRule) -> RecurringRule? {
+        let frequency: RecurringFrequency
+        let interval: Int
+
+        switch rule.frequency {
+        case .daily:
+            frequency = rule.interval > 1 ? .custom : .daily
+            interval = rule.interval
+        case .weekly:
+            if rule.interval == 2 {
+                frequency = .biweekly
+            } else {
+                frequency = .weekly
+            }
+            interval = rule.interval == 2 ? 1 : rule.interval
+        case .monthly:
+            frequency = .monthly
+            interval = rule.interval
+        case .yearly:
+            frequency = .yearly
+            interval = rule.interval
+        @unknown default:
+            return nil
+        }
+
+        // Map EKRecurrenceDayOfWeek to [Int]
+        var daysOfWeek: [Int]?
+        if let ekDays = rule.daysOfTheWeek, !ekDays.isEmpty {
+            daysOfWeek = ekDays.map { $0.dayOfTheWeek.rawValue }
+        }
+
+        // Map end date
+        let endDate = rule.recurrenceEnd?.endDate
+
+        return RecurringRule(
+            frequency: frequency,
+            interval: interval,
+            daysOfWeek: daysOfWeek,
+            endDate: endDate
+        )
+    }
+
+    private func findNextWeekday(from date: Date, weekdays: [Int], weekInterval: Int = 1, calendar: Calendar) -> Date? {
+        // Strategy: First check remaining weekdays in the current week.
+        // If none found, jump ahead by weekInterval weeks and find the first matching day.
+
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date))!
+
+        // 1. Check remaining days in the current week (up to 6 days ahead)
+        var candidate = date
+        for _ in 1...6 {
+            candidate = calendar.date(byAdding: .day, value: 1, to: candidate) ?? candidate
+            // Stop if we've crossed into the next week
+            let candidateWeekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: candidate))!
+            if candidateWeekStart != startOfWeek { break }
+
+            let weekday = calendar.component(.weekday, from: candidate)
             if weekdays.contains(weekday) {
-                return currentDate
+                return candidate
+            }
+        }
+
+        // 2. No remaining match this week — jump to the next cycle
+        guard let nextCycleWeekStart = calendar.date(byAdding: .weekOfYear, value: weekInterval, to: startOfWeek) else {
+            return nil
+        }
+
+        // Search through the next cycle week for the first matching weekday
+        candidate = calendar.date(byAdding: .day, value: -1, to: nextCycleWeekStart) ?? nextCycleWeekStart
+        for _ in 1...7 {
+            candidate = calendar.date(byAdding: .day, value: 1, to: candidate) ?? candidate
+            let weekday = calendar.component(.weekday, from: candidate)
+            if weekdays.contains(weekday) {
+                return candidate
             }
         }
 

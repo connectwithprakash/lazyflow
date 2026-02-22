@@ -184,7 +184,8 @@ final class CalendarService: ObservableObject {
         startDate: Date,
         endDate: Date,
         notes: String? = nil,
-        calendar: EKCalendar? = nil
+        calendar: EKCalendar? = nil,
+        recurrenceRule: EKRecurrenceRule? = nil
     ) throws -> EKEvent {
         guard hasCalendarAccess else {
             throw CalendarError.noAccess
@@ -196,6 +197,10 @@ final class CalendarService: ObservableObject {
         event.endDate = endDate
         event.notes = notes
         event.calendar = calendar ?? defaultCalendar
+
+        if let recurrenceRule = recurrenceRule {
+            event.addRecurrenceRule(recurrenceRule)
+        }
 
         try eventStore.save(event, span: .thisEvent)
 
@@ -217,21 +222,21 @@ final class CalendarService: ObservableObject {
     }
 
     /// Update an existing event
-    func updateEvent(_ event: EKEvent) throws {
+    func updateEvent(_ event: EKEvent, span: EKSpan = .thisEvent) throws {
         guard hasCalendarAccess else {
             throw CalendarError.noAccess
         }
 
-        try eventStore.save(event, span: .thisEvent)
+        try eventStore.save(event, span: span)
     }
 
     /// Delete an event
-    func deleteEvent(_ event: EKEvent) throws {
+    func deleteEvent(_ event: EKEvent, span: EKSpan = .thisEvent) throws {
         guard hasCalendarAccess else {
             throw CalendarError.noAccess
         }
 
-        try eventStore.remove(event, span: .thisEvent)
+        try eventStore.remove(event, span: span)
     }
 
     /// Find event by identifier
