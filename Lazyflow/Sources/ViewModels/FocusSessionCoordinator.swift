@@ -416,6 +416,11 @@ final class FocusSessionCoordinator: ObservableObject {
             handleTaskInvalidated()
             return
         }
+        // If another task became in-progress, the user has moved on — clear the stale session
+        if let inProgress = taskService.getInProgressTask(), inProgress.id != id {
+            handleTaskInvalidated()
+            return
+        }
         // During pause, break, or Pomodoro break, task is intentionally stopped — don't check isInProgress
         if isPaused || isOnBreak || isPomodoroBreak { return }
         if task?.isInProgress != true {
