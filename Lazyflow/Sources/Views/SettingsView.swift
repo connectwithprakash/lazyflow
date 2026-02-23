@@ -8,6 +8,8 @@ struct SettingsView: View {
     @AppStorage("showCompletedTasks") private var showCompletedTasks: Bool = true
     @AppStorage("hapticFeedback") private var hapticFeedback: Bool = true
     @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
+    @AppStorage("pomodoroWorkMinutes") private var pomodoroWorkMinutes: Double = 25
+    @AppStorage("pomodoroBreakMinutes") private var pomodoroBreakMinutes: Double = 5
 
     @State private var showAbout = false
     @State private var showNotificationSettings = false
@@ -121,6 +123,22 @@ struct SettingsView: View {
                 // Accessibility
                 Section("Accessibility") {
                     Toggle("Haptic Feedback", isOn: $hapticFeedback)
+                }
+
+                // Focus Mode
+                Section("Focus Mode") {
+                    Stepper(
+                        "Work Interval: \(Int(pomodoroWorkMinutes)) min",
+                        value: $pomodoroWorkMinutes,
+                        in: 5...60,
+                        step: 5
+                    )
+                    Stepper(
+                        "Break Interval: \(Int(pomodoroBreakMinutes)) min",
+                        value: $pomodoroBreakMinutes,
+                        in: 1...30,
+                        step: 1
+                    )
                 }
 
                 // AI Features
