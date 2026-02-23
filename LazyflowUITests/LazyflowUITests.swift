@@ -2742,4 +2742,130 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(noteInList.waitForExistence(timeout: 3), "Note should appear in the full notes list")
     }
 
+    // MARK: - Screenshot Walkthrough (All Plan Steps)
+
+    /// End-to-end walkthrough of Quick Capture with screenshots at every step.
+    /// Covers plan verification steps 5–10 in a single test for visual review.
+    func testManualWalkthrough_QuickCaptureEndToEnd() throws {
+        // Helper to save a named screenshot
+        func snap(_ name: String) {
+            let screenshot = app.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+
+        // ── Step 5: FAB visible on Today tab ──
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        snap("01-today-fab-visible")
+
+        // ── Step 5: Tap FAB → Quick Note sheet opens ──
+        fab.tap()
+        let noteNavBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(noteNavBar.waitForExistence(timeout: 3))
+        snap("02-quick-note-sheet-empty")
+
+        // ── Step 5: Type a note ──
+        let textEditor = app.textViews.firstMatch
+        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+        textEditor.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        textEditor.typeText("Buy groceries tomorrow and call dentist next week")
+        snap("03-quick-note-typed")
+
+        // ── Step 5: Save the note ──
+        noteNavBar.buttons["Save"].tap()
+        Thread.sleep(forTimeInterval: 0.5)
+        snap("04-after-save-today")
+
+        // ── Step 5: Navigate to Upcoming → note appears in Quick Notes section ──
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+        let savedNote = app.staticTexts["Buy groceries tomorrow and call dentist next week"]
+        XCTAssertTrue(savedNote.waitForExistence(timeout: 5), "Step 5: Note should appear in Upcoming")
+        snap("05-upcoming-quick-notes-section")
+
+        // ── Step 10: "See All" link visible ──
+        let seeAll = app.staticTexts["See All"]
+        XCTAssertTrue(seeAll.waitForExistence(timeout: 3), "Step 10: See All should be visible")
+
+        // ── Step 6: Tap note → Extract Tasks sheet opens ──
+        savedNote.tap()
+        let extractNavBar = app.navigationBars["Extract Tasks"]
+        XCTAssertTrue(extractNavBar.waitForExistence(timeout: 5))
+        snap("06-extract-tasks-loading")
+
+        // ── Step 6/8: Wait for extraction → review with draft cards ──
+        let createButton = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Create'")).firstMatch
+        XCTAssertTrue(createButton.waitForExistence(timeout: 10))
+        snap("07-extraction-review-drafts")
+
+        // ── Step 6: Tap Create to create tasks ──
+        createButton.tap()
+        let completedText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Created'")).firstMatch
+        XCTAssertTrue(completedText.waitForExistence(timeout: 5))
+        snap("08-tasks-created-completion")
+
+        // ── Step 7: Dismiss → verify note processed ──
+        extractNavBar.buttons["Done"].tap()
+        Thread.sleep(forTimeInterval: 1.0)
+        snap("09-upcoming-after-processing")
+
+        // ── Step 8: Create another note for deterministic fallback test ──
+        navigateToTab("Today")
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+        let noteNavBar2 = app.navigationBars["Quick Note"]
+        XCTAssertTrue(noteNavBar2.waitForExistence(timeout: 3))
+        let textEditor2 = app.textViews.firstMatch
+        textEditor2.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        textEditor2.typeText("Clean the house. Walk the dog. Read a book.")
+        noteNavBar2.buttons["Save"].tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+        let deterNote = app.staticTexts["Clean the house. Walk the dog. Read a book."]
+        XCTAssertTrue(deterNote.waitForExistence(timeout: 5))
+        deterNote.tap()
+
+        let extractNavBar2 = app.navigationBars["Extract Tasks"]
+        XCTAssertTrue(extractNavBar2.waitForExistence(timeout: 5))
+        let createButton2 = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Create'")).firstMatch
+        XCTAssertTrue(createButton2.waitForExistence(timeout: 10))
+        snap("10-deterministic-fallback-drafts")
+
+        // Verify Skip button exists
+        XCTAssertTrue(app.buttons["Skip"].exists, "Step 8: Skip button should exist")
+        extractNavBar2.buttons["Done"].tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // ── Step 10: Tap "See All" → navigate to Quick Notes list ──
+        let seeAllLink = app.staticTexts["See All"]
+        if seeAllLink.waitForExistence(timeout: 3) {
+            seeAllLink.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+            let quickNotesNav = app.navigationBars["Quick Notes"]
+            XCTAssertTrue(quickNotesNav.waitForExistence(timeout: 3))
+            snap("11-quick-notes-full-list")
+        }
+
+        // ── Step 9: Verify FAB visible on multiple tabs ──
+        app.navigationBars.buttons.element(boundBy: 0).tap() // Back button
+        Thread.sleep(forTimeInterval: 0.5)
+        navigateToTab("Calendar")
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(fab.waitForExistence(timeout: 3))
+        snap("12-fab-on-calendar-tab")
+
+        navigateToTab("Insights")
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(fab.waitForExistence(timeout: 3))
+        snap("13-fab-on-insights-tab")
+    }
+
 }
