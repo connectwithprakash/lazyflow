@@ -102,7 +102,7 @@ struct ContentView: View {
             }
 
             // Quick Capture FAB — only on task-focused tabs (Today, Upcoming)
-            if !focusCoordinator.isFocusPresented, selectedTab == .today || selectedTab == .upcoming {
+            if !focusCoordinator.isFocusPresented, (selectedTab == .today || selectedTab == .upcoming) {
                 QuickCaptureFAB { activeSheet = .quickCapture }
                     .padding(.trailing, DesignSystem.Spacing.lg)
                     .padding(.bottom, focusCoordinator.shouldShowPill ? 120 : 60)

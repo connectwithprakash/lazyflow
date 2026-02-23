@@ -46,6 +46,10 @@ struct QuickNote: Identifiable, Equatable {
 
     /// Relative time since creation
     var timeAgo: String {
+        let interval = Date().timeIntervalSince(createdAt)
+        if interval < 60 {
+            return "Just now"
+        }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: createdAt, relativeTo: Date())

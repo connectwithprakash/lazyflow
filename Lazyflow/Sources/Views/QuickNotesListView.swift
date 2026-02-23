@@ -103,16 +103,6 @@ struct QuickNoteRow: View {
             onExtract()
         } label: {
             HStack(spacing: DesignSystem.Spacing.md) {
-                // Icon
-                Circle()
-                    .fill(isProcessed ? Color.Lazyflow.success.opacity(0.15) : Color.Lazyflow.accent.opacity(0.15))
-                    .frame(width: 40, height: 40)
-                    .overlay {
-                        Image(systemName: isProcessed ? "checkmark.circle" : "note.text")
-                            .font(.body)
-                            .foregroundColor(isProcessed ? Color.Lazyflow.success : Color.Lazyflow.accent)
-                    }
-
                 // Content
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                     Text(note.previewText)
@@ -136,15 +126,15 @@ struct QuickNoteRow: View {
 
                 Spacer()
 
-                // Action indicator
-                VStack {
-                    Text(isProcessed ? "Extract Again" : "Extract")
-                        .font(DesignSystem.Typography.caption1)
-                        .foregroundColor(Color.Lazyflow.accent)
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                        .foregroundColor(Color.Lazyflow.textTertiary)
-                }
+                // Action pill
+                Text(isProcessed ? "Extract Again" : "Extract")
+                    .font(DesignSystem.Typography.caption1)
+                    .fontWeight(.medium)
+                    .foregroundColor(Color.Lazyflow.accent)
+                    .padding(.horizontal, DesignSystem.Spacing.sm)
+                    .padding(.vertical, DesignSystem.Spacing.xxs)
+                    .background(Color.Lazyflow.accent.opacity(0.12))
+                    .clipShape(Capsule())
             }
             .padding(.vertical, DesignSystem.Spacing.xs)
         }

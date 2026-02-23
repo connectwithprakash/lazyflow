@@ -143,22 +143,18 @@ struct UpcomingView: View {
                         .listRowSeparator(.hidden)
                     }
 
-                    NavigationLink {
-                        QuickNotesListView()
-                    } label: {
-                        HStack {
+                    if noteService.unprocessedNotes.count > 1 {
+                        NavigationLink {
+                            QuickNotesListView()
+                        } label: {
                             Text("See All")
                                 .font(DesignSystem.Typography.subheadline)
                                 .foregroundColor(Color.Lazyflow.accent)
-                            Spacer()
-                            Text("\(noteService.unprocessedNotes.count) notes")
-                                .font(DesignSystem.Typography.caption1)
-                                .foregroundColor(Color.Lazyflow.textTertiary)
                         }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.adaptiveBackground)
+                        .listRowSeparator(.hidden)
                     }
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                    .listRowBackground(Color.adaptiveBackground)
-                    .listRowSeparator(.hidden)
                 } header: {
                     HStack {
                         Image(systemName: "note.text")

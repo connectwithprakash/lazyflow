@@ -2586,9 +2586,9 @@ final class LazyflowUITests: XCTestCase {
         let noteText = app.staticTexts["Buy groceries tomorrow and call dentist next week"]
         XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Saved note should appear in Upcoming tab Quick Notes section")
 
-        // Verify "See All" link exists (always shown when notes exist)
+        // With only 1 note, "See All" should not appear (only shows for 2+ notes)
         let seeAll = app.staticTexts["See All"]
-        XCTAssertTrue(seeAll.waitForExistence(timeout: 3), "See All link should appear in Quick Notes section")
+        XCTAssertFalse(seeAll.waitForExistence(timeout: 2), "See All should not appear with only 1 note")
     }
 
     /// Plan step 6 & 7: Extract tasks from note → review → create → verify processed
@@ -2708,30 +2708,32 @@ final class LazyflowUITests: XCTestCase {
 
     /// Plan step 10: "See All" navigation to full notes list
     func testManualVerification_SeeAllNavigation() throws {
-        // Create a note
-        let fab = app.buttons["Quick Capture"]
-        XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        // Create 2 notes so "See All" appears (only shows for 2+ notes)
+        for noteText in ["Navigation test note", "Second test note"] {
+            let fab = app.buttons["Quick Capture"]
+            XCTAssertTrue(fab.waitForExistence(timeout: 5))
+            fab.tap()
 
-        let navBar = app.navigationBars["Quick Note"]
-        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+            let navBar = app.navigationBars["Quick Note"]
+            XCTAssertTrue(navBar.waitForExistence(timeout: 3))
 
-        let textEditor = app.textViews.firstMatch
-        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
-        textEditor.tap()
-        Thread.sleep(forTimeInterval: 0.3)
-        textEditor.typeText("Navigation test note")
+            let textEditor = app.textViews.firstMatch
+            XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+            textEditor.tap()
+            Thread.sleep(forTimeInterval: 0.3)
+            textEditor.typeText(noteText)
 
-        navBar.buttons["Save"].tap()
-        Thread.sleep(forTimeInterval: 0.5)
+            navBar.buttons["Save"].tap()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
 
         // Navigate to Upcoming
         navigateToTab("Upcoming")
         Thread.sleep(forTimeInterval: 1.0)
 
-        // "See All" should be visible (always shown when notes exist)
+        // "See All" should be visible with 2+ notes
         let seeAll = app.staticTexts["See All"]
-        XCTAssertTrue(seeAll.waitForExistence(timeout: 5), "See All should appear with any number of notes")
+        XCTAssertTrue(seeAll.waitForExistence(timeout: 5), "See All should appear with 2+ notes")
         seeAll.tap()
         Thread.sleep(forTimeInterval: 0.5)
 
@@ -2788,10 +2790,6 @@ final class LazyflowUITests: XCTestCase {
         let savedNote = app.staticTexts["Buy groceries tomorrow and call dentist next week"]
         XCTAssertTrue(savedNote.waitForExistence(timeout: 5), "Step 5: Note should appear in Upcoming")
         snap("05-upcoming-quick-notes-section")
-
-        // ── Step 10: "See All" link visible ──
-        let seeAll = app.staticTexts["See All"]
-        XCTAssertTrue(seeAll.waitForExistence(timeout: 3), "Step 10: See All should be visible")
 
         // ── Step 6: Tap note → Extract Tasks sheet opens ──
         savedNote.tap()
@@ -2856,18 +2854,8 @@ final class LazyflowUITests: XCTestCase {
             snap("11-quick-notes-full-list")
         }
 
-        // ── Step 9: Verify FAB hidden on non-task tabs ──
-        app.navigationBars.buttons.element(boundBy: 0).tap() // Back button
-        Thread.sleep(forTimeInterval: 0.5)
-        navigateToTab("Calendar")
-        Thread.sleep(forTimeInterval: 0.5)
-        XCTAssertFalse(fab.exists, "FAB should be hidden on Calendar tab")
-        snap("12-calendar-no-fab")
-
-        navigateToTab("Insights")
-        Thread.sleep(forTimeInterval: 0.5)
-        XCTAssertFalse(fab.exists, "FAB should be hidden on Insights tab")
-        snap("13-insights-no-fab")
+        // Step 9 (FAB tab restriction) is verified by testQuickCaptureFABOnMultipleTabs
+        snap("12-walkthrough-complete")
     }
 
 }
