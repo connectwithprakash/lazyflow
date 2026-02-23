@@ -2534,4 +2534,212 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should exist on Insights tab")
     }
 
+    // MARK: - Quick Capture Manual Verification (Plan Steps 5–11)
+
+    /// Plan step 11: Cmd+Shift+N opens Quick Capture sheet on iPad
+    func testManualVerification_KeyboardShortcutOnIPad() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("Keyboard shortcut test only runs on iPad")
+        }
+
+        // Send Cmd+Shift+N hardware keyboard shortcut
+        app.typeKey("n", modifierFlags: [.command, .shift])
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Verify Quick Note sheet appears
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 5), "Cmd+Shift+N should open Quick Note sheet on iPad")
+
+        // Verify Cancel and Save buttons exist
+        XCTAssertTrue(navBar.buttons["Cancel"].exists, "Cancel button should exist")
+        XCTAssertTrue(navBar.buttons["Save"].exists, "Save button should exist")
+    }
+
+    /// Plan step 5: FAB → type note → save → verify note appears in Upcoming tab
+    func testManualVerification_CaptureAndVerifyInUpcoming() throws {
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5), "FAB should be visible on launch")
+
+        // Tap FAB to open capture sheet
+        fab.tap()
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3), "Quick Note sheet should open")
+
+        // Type a note
+        let textEditor = app.textViews.firstMatch
+        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+        textEditor.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        textEditor.typeText("Buy groceries tomorrow and call dentist next week")
+
+        // Save
+        navBar.buttons["Save"].tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Navigate to Upcoming tab
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Verify the note appears in the Quick Notes section
+        let noteText = app.staticTexts["Buy groceries tomorrow and call dentist next week"]
+        XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Saved note should appear in Upcoming tab Quick Notes section")
+
+        // Verify "See All" link exists (always shown when notes exist)
+        let seeAll = app.staticTexts["See All"]
+        XCTAssertTrue(seeAll.waitForExistence(timeout: 3), "See All link should appear in Quick Notes section")
+    }
+
+    /// Plan step 6 & 7: Extract tasks from note → review → create → verify processed
+    func testManualVerification_ExtractReviewCreateAndProcessed() throws {
+        // Step 1: Create a quick note with extractable content
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        let textEditor = app.textViews.firstMatch
+        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+        textEditor.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        textEditor.typeText("Finish the report. Schedule meeting with team.")
+
+        navBar.buttons["Save"].tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Step 2: Navigate to Upcoming and find the note
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Step 3: Tap the note row to trigger extraction
+        // previewText shows full first line when under 80 chars
+        let noteText = app.staticTexts["Finish the report. Schedule meeting with team."]
+        XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Note should appear in Upcoming")
+        noteText.tap()
+
+        // Step 4: Verify Extract Tasks sheet appears
+        let extractNavBar = app.navigationBars["Extract Tasks"]
+        XCTAssertTrue(extractNavBar.waitForExistence(timeout: 5), "Extract Tasks review sheet should appear")
+
+        // Step 5: Wait for extraction to complete (deterministic fallback is fast)
+        // The "Create" button text should appear once extraction completes
+        let createButton = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Create'")).firstMatch
+        XCTAssertTrue(createButton.waitForExistence(timeout: 10), "Create Tasks button should appear after extraction")
+
+        // Step 6: Tap Create to create the extracted tasks
+        createButton.tap()
+
+        // Step 7: Verify completion state
+        let completedText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Created'")).firstMatch
+        XCTAssertTrue(completedText.waitForExistence(timeout: 5), "Completion message should show created task count")
+
+        // Step 8: Dismiss via the completion state's Done button (not the nav bar one)
+        // There are two Done buttons — one in nav bar toolbar, one in the completion state body.
+        // Use the nav bar one since it's always accessible.
+        let navBarDone = extractNavBar.buttons["Done"]
+        XCTAssertTrue(navBarDone.waitForExistence(timeout: 3))
+        navBarDone.tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Step 9 (Plan step 7): Verify note no longer appears as unprocessed
+        // After processing, the note should not appear in the Quick Notes section
+        // (since it's now processed). If no other unprocessed notes exist, section disappears.
+        let noteAgain = app.staticTexts["Finish the report. Schedule meeting with team."]
+        // Give time for UI to update
+        Thread.sleep(forTimeInterval: 1.0)
+        let noteStillVisible = noteAgain.waitForExistence(timeout: 2)
+        // The note should either be gone from Upcoming or show "Extract Again" instead of "Extract"
+        if noteStillVisible {
+            // If still visible, it should show "Extract Again" (processed state)
+            let extractAgain = app.staticTexts["Extract Again"]
+            XCTAssertTrue(extractAgain.exists, "Processed note should show 'Extract Again' instead of 'Extract'")
+        }
+        // Either way, processing was successful (completion screen was shown)
+    }
+
+    /// Plan step 8: Deterministic fallback — extraction works without AI
+    func testManualVerification_DeterministicFallback() throws {
+        // Create a note with multiple sentences (deterministic parser splits on ". ")
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        let textEditor = app.textViews.firstMatch
+        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+        textEditor.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        // Multiple sentences that deterministic parser can split
+        textEditor.typeText("Clean the house. Walk the dog. Read a book.")
+
+        navBar.buttons["Save"].tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Navigate to Upcoming and extract
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // previewText shows full first line (single-line note under 80 chars)
+        let noteText = app.staticTexts["Clean the house. Walk the dog. Read a book."]
+        XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Note should appear in Upcoming Quick Notes section")
+        noteText.tap()
+
+        // Wait for Extract Tasks sheet
+        let extractNavBar = app.navigationBars["Extract Tasks"]
+        XCTAssertTrue(extractNavBar.waitForExistence(timeout: 5))
+
+        // Deterministic fallback should produce draft cards quickly (no LLM timeout needed)
+        // Check that at least one task draft appears (the Create button should be enabled)
+        let createButton = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Create'")).firstMatch
+        XCTAssertTrue(createButton.waitForExistence(timeout: 10), "Deterministic extraction should produce draft cards")
+
+        // Verify Skip button exists (part of the review UI)
+        let skipButton = app.buttons["Skip"]
+        XCTAssertTrue(skipButton.exists, "Skip button should be available in review state")
+
+        // Dismiss
+        extractNavBar.buttons["Done"].tap()
+    }
+
+    /// Plan step 10: "See All" navigation to full notes list
+    func testManualVerification_SeeAllNavigation() throws {
+        // Create a note
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        let textEditor = app.textViews.firstMatch
+        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+        textEditor.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        textEditor.typeText("Navigation test note")
+
+        navBar.buttons["Save"].tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Navigate to Upcoming
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // "See All" should be visible (always shown when notes exist)
+        let seeAll = app.staticTexts["See All"]
+        XCTAssertTrue(seeAll.waitForExistence(timeout: 5), "See All should appear with any number of notes")
+        seeAll.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Verify Quick Notes list view appears
+        let quickNotesNavBar = app.navigationBars["Quick Notes"]
+        XCTAssertTrue(quickNotesNavBar.waitForExistence(timeout: 3), "Quick Notes list view should appear")
+
+        // Verify the note is listed
+        let noteInList = app.staticTexts["Navigation test note"]
+        XCTAssertTrue(noteInList.waitForExistence(timeout: 3), "Note should appear in the full notes list")
+    }
+
 }
