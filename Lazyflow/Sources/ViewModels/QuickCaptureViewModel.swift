@@ -128,6 +128,7 @@ final class QuickCaptureViewModel: ObservableObject {
 
     /// Skip extraction — mark note as processed with 0 tasks
     func skip() {
+        noteService.markProcessed(note, taskCount: 0)
         learningService.recordCorrection(
             field: .title,
             originalSuggestion: "session",

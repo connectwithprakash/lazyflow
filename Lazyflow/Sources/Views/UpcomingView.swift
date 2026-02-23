@@ -143,24 +143,22 @@ struct UpcomingView: View {
                         .listRowSeparator(.hidden)
                     }
 
-                    if noteService.unprocessedNotes.count > 2 {
-                        NavigationLink {
-                            QuickNotesListView()
-                        } label: {
-                            HStack {
-                                Text("See All")
-                                    .font(DesignSystem.Typography.subheadline)
-                                    .foregroundColor(Color.Lazyflow.accent)
-                                Spacer()
-                                Text("\(noteService.unprocessedNotes.count) notes")
-                                    .font(DesignSystem.Typography.caption1)
-                                    .foregroundColor(Color.Lazyflow.textTertiary)
-                            }
+                    NavigationLink {
+                        QuickNotesListView()
+                    } label: {
+                        HStack {
+                            Text("See All")
+                                .font(DesignSystem.Typography.subheadline)
+                                .foregroundColor(Color.Lazyflow.accent)
+                            Spacer()
+                            Text("\(noteService.unprocessedNotes.count) notes")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textTertiary)
                         }
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                        .listRowBackground(Color.adaptiveBackground)
-                        .listRowSeparator(.hidden)
                     }
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .listRowBackground(Color.adaptiveBackground)
+                    .listRowSeparator(.hidden)
                 } header: {
                     HStack {
                         Image(systemName: "note.text")

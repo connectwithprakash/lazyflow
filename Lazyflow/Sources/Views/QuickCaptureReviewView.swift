@@ -200,19 +200,17 @@ private struct DraftCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Main row
-            Button {
-                onExpand()
-            } label: {
-                HStack(spacing: DesignSystem.Spacing.md) {
-                    // Checkbox
-                    Button {
-                        onToggle()
-                    } label: {
-                        Image(systemName: draft.isSelected ? "checkmark.circle.fill" : "circle")
-                            .font(.title3)
-                            .foregroundColor(draft.isSelected ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary)
-                    }
-                    .buttonStyle(.plain)
+            HStack(spacing: DesignSystem.Spacing.md) {
+                // Checkbox — separate tap target
+                Button {
+                    onToggle()
+                } label: {
+                    Image(systemName: draft.isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.title3)
+                        .foregroundColor(draft.isSelected ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary)
+                        .frame(width: DesignSystem.TouchTarget.minimum, height: DesignSystem.TouchTarget.minimum)
+                }
+                .buttonStyle(.plain)
 
                     // Title and metadata
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
@@ -256,8 +254,8 @@ private struct DraftCardView: View {
                         .rotationEffect(.degrees(draft.isExpanded ? 180 : 0))
                 }
                 .padding(DesignSystem.Spacing.md)
-            }
-            .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .onTapGesture { onExpand() }
 
             // Expanded editing
             if draft.isExpanded {

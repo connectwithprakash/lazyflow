@@ -28,10 +28,11 @@ final class NoteParsingService: ObservableObject {
         // Try LLM extraction if available
         if llmService.isReady {
             do {
-                let drafts = try await withTimeout(seconds: llmTimeout) {
+                let (drafts, didParse) = try await withTimeout(seconds: llmTimeout) {
                     try await self.llmExtract(text: text, segments: segments)
                 }
-                if !drafts.isEmpty {
+                // If LLM successfully parsed (even to empty), trust its result
+                if didParse {
                     return drafts
                 }
             } catch {
@@ -123,7 +124,8 @@ final class NoteParsingService: ObservableObject {
 
     // MARK: - LLM Extraction (Stage 2)
 
-    private func llmExtract(text: String, segments: [RawSegment]) async throws -> [TaskDraft] {
+    /// Returns (drafts, didParse) — didParse is true when JSON was valid (even if empty array)
+    private func llmExtract(text: String, segments: [RawSegment]) async throws -> ([TaskDraft], Bool) {
         let truncatedText = String(text.prefix(maxLLMInputLength))
         let customCategories = categoryService.categories.map { $0.name }
         let lists = TaskListService.shared.lists
@@ -145,18 +147,21 @@ final class NoteParsingService: ObservableObject {
     }
 
     /// Parse LLM JSON array response into TaskDrafts
+    /// Returns (drafts, didParse) — didParse is true when JSON was valid (even if empty)
     private func parseExtractionResponse(
         _ response: String,
         segments: [RawSegment],
         lists: [TaskList]
-    ) -> [TaskDraft] {
+    ) -> ([TaskDraft], Bool) {
         guard let data = PromptTemplates.extractJSONArray(from: response),
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            return []
+            return ([], false)
         }
 
-        return jsonArray.compactMap { json -> TaskDraft? in
-            guard let title = json["title"] as? String, !title.isEmpty else { return nil }
+        let drafts = jsonArray.compactMap { json -> TaskDraft? in
+            guard let rawTitle = json["title"] as? String else { return nil }
+            let title = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !title.isEmpty else { return nil }
 
             // Parse priority
             let priorityStr = json["priority"] as? String ?? "none"
@@ -200,10 +205,14 @@ final class NoteParsingService: ObservableObject {
                 }
             }
 
-            // If LLM didn't find a date, check deterministic segments
+            // If LLM didn't find a date, fuzzy-match against deterministic segments
             if dueDate == nil {
+                let titleWords = Set(title.lowercased().split(separator: " ").map(String.init))
                 let matchingSegment = segments.first { segment in
-                    title.lowercased().contains(segment.text.lowercased().prefix(20))
+                    guard segment.parsedDate != nil else { return false }
+                    let segmentWords = Set(segment.text.lowercased().split(separator: " ").map(String.init))
+                    // Match if at least 2 significant words overlap
+                    return titleWords.intersection(segmentWords).count >= min(2, segmentWords.count)
                 }
                 if let segment = matchingSegment {
                     dueDate = segment.parsedDate
@@ -227,6 +236,7 @@ final class NoteParsingService: ObservableObject {
                 listID: listID
             )
         }
+        return (drafts, true)
     }
 
     // MARK: - Timeout Helper

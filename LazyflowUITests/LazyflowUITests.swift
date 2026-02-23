@@ -2434,18 +2434,18 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Upcoming")
         Thread.sleep(forTimeInterval: 1.0)
 
-        // Find the Extract button on the note row
+        // Find the Extract label on the note row
         let extractText = app.staticTexts["Extract"]
-        if extractText.waitForExistence(timeout: 5) {
-            // Tap the note row to open extraction
-            let noteRow = app.staticTexts["Buy groceries and call dentist"]
-            XCTAssertTrue(noteRow.waitForExistence(timeout: 3))
-            noteRow.tap()
+        XCTAssertTrue(extractText.waitForExistence(timeout: 5), "Extract label should appear on note row")
 
-            // Verify Extract Tasks sheet appears
-            let extractNavBar = app.navigationBars["Extract Tasks"]
-            XCTAssertTrue(extractNavBar.waitForExistence(timeout: 5), "Extract Tasks sheet should appear")
-        }
+        // Tap the note row to open extraction
+        let noteRow = app.staticTexts["Buy groceries and call dentist"]
+        XCTAssertTrue(noteRow.waitForExistence(timeout: 3), "Note text should be visible")
+        noteRow.tap()
+
+        // Verify Extract Tasks sheet appears
+        let extractNavBar = app.navigationBars["Extract Tasks"]
+        XCTAssertTrue(extractNavBar.waitForExistence(timeout: 5), "Extract Tasks sheet should appear")
     }
 
     func testQuickCaptureSheetPlaceholder() throws {
@@ -2499,16 +2499,15 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Upcoming")
         Thread.sleep(forTimeInterval: 1.0)
 
-        // With 3+ notes, "See All" should appear
+        // "See All" should appear in the Quick Notes section
         let seeAll = app.staticTexts["See All"]
-        if seeAll.waitForExistence(timeout: 5) {
-            seeAll.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(seeAll.waitForExistence(timeout: 5), "See All link should appear in Quick Notes section")
+        seeAll.tap()
+        Thread.sleep(forTimeInterval: 0.5)
 
-            // Should navigate to Quick Notes list view
-            let quickNotesNavBar = app.navigationBars["Quick Notes"]
-            XCTAssertTrue(quickNotesNavBar.waitForExistence(timeout: 3), "Quick Notes list view should appear")
-        }
+        // Should navigate to Quick Notes list view
+        let quickNotesNavBar = app.navigationBars["Quick Notes"]
+        XCTAssertTrue(quickNotesNavBar.waitForExistence(timeout: 3), "Quick Notes list view should appear")
     }
 
     func testQuickCaptureFABOnMultipleTabs() throws {

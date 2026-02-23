@@ -287,6 +287,7 @@
 		3C4824B59531F94012837CB8 /* AppIcon.svg */ = {isa = PBXFileReference; path = AppIcon.svg; sourceTree = "<group>"; };
 		3D8DDB4423AAB1E6EB7F61A0 /* RecurringRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRuleTests.swift; sourceTree = "<group>"; };
 		3E77CB39EE072B67364A60FE /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		41B660391E9F4F54B3BD0799 /* Lazyflow 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Lazyflow 3.xcdatamodel"; sourceTree = "<group>"; };
 		41C52EFEED3427A4E73A166D /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
 		446E889579D11D455A18E0E1 /* WatchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViewModel.swift; sourceTree = "<group>"; };
 		44C6D90A8553FB9A48B3DB10 /* AutoCompleteCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCompleteCelebrationView.swift; sourceTree = "<group>"; };
@@ -1657,9 +1658,10 @@
 			isa = XCVersionGroup;
 			children = (
 				F5AFFDDD49FBA474AFF7B535 /* Lazyflow 2.xcdatamodel */,
+				41B660391E9F4F54B3BD0799 /* Lazyflow 3.xcdatamodel */,
 				96B4790C4DFDF82098E35533 /* Lazyflow.xcdatamodel */,
 			);
-			currentVersion = F5AFFDDD49FBA474AFF7B535 /* Lazyflow 2.xcdatamodel */;
+			currentVersion = 41B660391E9F4F54B3BD0799 /* Lazyflow 3.xcdatamodel */;
 			path = Lazyflow.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
