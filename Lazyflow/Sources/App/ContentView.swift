@@ -29,6 +29,7 @@ struct ContentView: View {
         case addTask
         case dailySummary
         case morningBriefing
+        case quickCapture
 
         var id: String {
             switch self {
@@ -36,6 +37,7 @@ struct ContentView: View {
             case .addTask: return "addTask"
             case .dailySummary: return "dailySummary"
             case .morningBriefing: return "morningBriefing"
+            case .quickCapture: return "quickCapture"
             }
         }
     }
@@ -98,6 +100,15 @@ struct ContentView: View {
                     .padding(.bottom, 60)
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: focusCoordinator.shouldShowPill)
             }
+
+            // Quick Capture FAB
+            if !focusCoordinator.isFocusPresented {
+                QuickCaptureFAB { activeSheet = .quickCapture }
+                    .padding(.trailing, DesignSystem.Spacing.lg)
+                    .padding(.bottom, focusCoordinator.shouldShowPill ? 120 : 60)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .animation(.spring(response: 0.3), value: focusCoordinator.shouldShowPill)
+            }
         }
         .fullScreenCover(isPresented: $focusCoordinator.isFocusPresented) {
             FocusModeView()
@@ -135,6 +146,8 @@ struct ContentView: View {
                 DailySummaryView()
             case .morningBriefing:
                 MorningBriefingView()
+            case .quickCapture:
+                QuickCaptureSheet()
             }
         }
         .onOpenURL { url in
@@ -156,6 +169,9 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .showMorningBriefing)) { _ in
             activeSheet = .morningBriefing
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .quickCaptureShortcut)) { _ in
+            activeSheet = .quickCapture
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)) { _ in
             // Check if we should show iCloud prompt after first task is created
@@ -337,6 +353,8 @@ struct ContentView: View {
             activeSheet = .dailySummary
         case "morning-briefing":
             activeSheet = .morningBriefing
+        case "quick-capture":
+            activeSheet = .quickCapture
         default:
             break
         }

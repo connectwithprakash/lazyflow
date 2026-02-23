@@ -6,7 +6,9 @@ struct UpcomingView: View {
     @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
     @StateObject private var taskService = TaskService.shared
     @StateObject private var listService = TaskListService.shared
+    @StateObject private var noteService = QuickNoteService.shared
     @State private var selectedTask: Task?
+    @State private var noteToExtract: QuickNote?
     @State private var showAddTask = false
     @State private var taskToSchedule: Task?
 
@@ -47,6 +49,9 @@ struct UpcomingView: View {
                         }
                     )
                 }
+                .sheet(item: $noteToExtract) { note in
+                    QuickCaptureReviewView(note: note)
+                }
         } else {
             // iPhone: Full NavigationStack
             NavigationStack {
@@ -69,6 +74,9 @@ struct UpcomingView: View {
                                 scheduleTask(task, startTime: startTime, duration: duration)
                             }
                         )
+                    }
+                    .sheet(item: $noteToExtract) { note in
+                        QuickCaptureReviewView(note: note)
                     }
             }
         }
@@ -93,7 +101,7 @@ struct UpcomingView: View {
             Color.adaptiveBackground
                 .ignoresSafeArea()
 
-            if groupedTasks.isEmpty && tasksWithoutDate.isEmpty {
+            if groupedTasks.isEmpty && tasksWithoutDate.isEmpty && noteService.unprocessedNotes.isEmpty {
                 emptyStateView
             } else {
                 taskListView
@@ -123,6 +131,52 @@ struct UpcomingView: View {
 
     private var taskListView: some View {
         List {
+            // Quick Notes section (when unprocessed notes exist)
+            if !noteService.unprocessedNotes.isEmpty {
+                Section {
+                    ForEach(noteService.unprocessedNotes.prefix(2)) { note in
+                        QuickNoteRow(note: note) {
+                            noteToExtract = note
+                        }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.adaptiveBackground)
+                        .listRowSeparator(.hidden)
+                    }
+
+                    if noteService.unprocessedNotes.count > 2 {
+                        NavigationLink {
+                            QuickNotesListView()
+                        } label: {
+                            HStack {
+                                Text("See All")
+                                    .font(DesignSystem.Typography.subheadline)
+                                    .foregroundColor(Color.Lazyflow.accent)
+                                Spacer()
+                                Text("\(noteService.unprocessedNotes.count) notes")
+                                    .font(DesignSystem.Typography.caption1)
+                                    .foregroundColor(Color.Lazyflow.textTertiary)
+                            }
+                        }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.adaptiveBackground)
+                        .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    HStack {
+                        Image(systemName: "note.text")
+                            .foregroundColor(Color.Lazyflow.accent)
+                        Text("Quick Notes")
+                            .font(DesignSystem.Typography.headline)
+                            .foregroundColor(Color.Lazyflow.textPrimary)
+                        Text("(\(noteService.unprocessedNotes.count))")
+                            .font(DesignSystem.Typography.subheadline)
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                        Spacer()
+                    }
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                }
+            }
+
             // Date sections
             ForEach(groupedTasks, id: \.0) { date, tasks in
                 Section {

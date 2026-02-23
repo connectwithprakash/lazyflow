@@ -8,6 +8,14 @@
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="order" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
+    <entity name="QuickNoteEntity" representedClassName="QuickNoteEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="extractedTaskCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isProcessed" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="processedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="text" attributeType="String" defaultValueString=""/>
+    </entity>
     <entity name="TaskEntity" representedClassName="TaskEntity" syncable="YES" codeGenerationType="class">
         <attribute name="accumulatedDuration" attributeType="Double" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="calendarItemExternalIdentifier" optional="YES" attributeType="String"/>

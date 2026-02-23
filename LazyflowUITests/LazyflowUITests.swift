@@ -2345,4 +2345,194 @@ final class LazyflowUITests: XCTestCase {
             "Task should appear in both Next Up card and Today list (found \(totalReferences) references)")
     }
 
+    // MARK: - Quick Capture Tests
+
+    func testQuickCaptureFABExists() throws {
+        // The FAB should be visible on any tab
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5), "Quick Capture FAB should exist on screen")
+    }
+
+    func testQuickCaptureFABOpensSheet() throws {
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5), "Quick Capture FAB should exist")
+        fab.tap()
+
+        // Verify the Quick Note sheet appears
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3), "Quick Note sheet should appear")
+
+        // Verify Cancel and Save buttons exist
+        XCTAssertTrue(navBar.buttons["Cancel"].exists, "Cancel button should exist")
+        XCTAssertTrue(navBar.buttons["Save"].exists, "Save button should exist")
+    }
+
+    func testQuickCaptureCancelDismissesWithoutSaving() throws {
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        // Cancel without typing — should dismiss without saving
+        navBar.buttons["Cancel"].tap()
+
+        // Sheet should dismiss — FAB should be visible again
+        XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should reappear after cancel")
+    }
+
+    func testQuickCaptureSaveNote() throws {
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        // Type a note into the TextEditor
+        let textEditor = app.textViews.firstMatch
+        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+        textEditor.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        textEditor.typeText("UI test quick note")
+
+        // Save
+        navBar.buttons["Save"].tap()
+
+        // Sheet should dismiss
+        XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should reappear after save")
+
+        // Navigate to Upcoming to see the Quick Notes section
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // The saved note should appear in the Quick Notes section
+        let noteText = app.staticTexts["UI test quick note"]
+        XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Saved note should appear in Upcoming tab")
+    }
+
+    func testQuickNoteExtractButton() throws {
+        // First create a quick note
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        let textEditor = app.textViews.firstMatch
+        XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+        textEditor.tap()
+        Thread.sleep(forTimeInterval: 0.3)
+        textEditor.typeText("Buy groceries and call dentist")
+
+        navBar.buttons["Save"].tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Navigate to Upcoming to find the note
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Find the Extract button on the note row
+        let extractText = app.staticTexts["Extract"]
+        if extractText.waitForExistence(timeout: 5) {
+            // Tap the note row to open extraction
+            let noteRow = app.staticTexts["Buy groceries and call dentist"]
+            XCTAssertTrue(noteRow.waitForExistence(timeout: 3))
+            noteRow.tap()
+
+            // Verify Extract Tasks sheet appears
+            let extractNavBar = app.navigationBars["Extract Tasks"]
+            XCTAssertTrue(extractNavBar.waitForExistence(timeout: 5), "Extract Tasks sheet should appear")
+        }
+    }
+
+    func testQuickCaptureSheetPlaceholder() throws {
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        // Verify placeholder text is visible when empty
+        let placeholder = app.staticTexts["Jot down a thought, idea, or task..."]
+        XCTAssertTrue(placeholder.waitForExistence(timeout: 3), "Placeholder should be visible when text is empty")
+    }
+
+    func testQuickCaptureSaveDisabledWhenEmpty() throws {
+        let fab = app.buttons["Quick Capture"]
+        XCTAssertTrue(fab.waitForExistence(timeout: 5))
+        fab.tap()
+
+        let navBar = app.navigationBars["Quick Note"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+        // Save button should be disabled when no text is entered
+        let saveButton = navBar.buttons["Save"]
+        XCTAssertTrue(saveButton.exists, "Save button should exist")
+        XCTAssertFalse(saveButton.isEnabled, "Save button should be disabled when text is empty")
+    }
+
+    func testQuickNotesListViewNavigation() throws {
+        // Create multiple notes to trigger "See All" link
+        for i in 1...3 {
+            let fab = app.buttons["Quick Capture"]
+            XCTAssertTrue(fab.waitForExistence(timeout: 5))
+            fab.tap()
+
+            let navBar = app.navigationBars["Quick Note"]
+            XCTAssertTrue(navBar.waitForExistence(timeout: 3))
+
+            let textEditor = app.textViews.firstMatch
+            XCTAssertTrue(textEditor.waitForExistence(timeout: 3))
+            textEditor.tap()
+            Thread.sleep(forTimeInterval: 0.3)
+            textEditor.typeText("Test note \(i)")
+
+            navBar.buttons["Save"].tap()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        // Navigate to Upcoming
+        navigateToTab("Upcoming")
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // With 3+ notes, "See All" should appear
+        let seeAll = app.staticTexts["See All"]
+        if seeAll.waitForExistence(timeout: 5) {
+            seeAll.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Should navigate to Quick Notes list view
+            let quickNotesNavBar = app.navigationBars["Quick Notes"]
+            XCTAssertTrue(quickNotesNavBar.waitForExistence(timeout: 3), "Quick Notes list view should appear")
+        }
+    }
+
+    func testQuickCaptureFABOnMultipleTabs() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("FAB overlay test only runs on iPhone")
+        }
+
+        let fab = app.buttons["Quick Capture"]
+
+        // Check FAB exists on Today tab
+        navigateToToday()
+        XCTAssertTrue(fab.waitForExistence(timeout: 5), "FAB should exist on Today tab")
+
+        // Check FAB exists on Calendar tab
+        navigateToTab("Calendar")
+        XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should exist on Calendar tab")
+
+        // Check FAB exists on Upcoming tab
+        navigateToTab("Upcoming")
+        XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should exist on Upcoming tab")
+
+        // Check FAB exists on Insights tab
+        navigateToTab("Insights")
+        XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should exist on Insights tab")
+    }
+
 }

@@ -677,9 +677,114 @@ enum PromptTemplates {
         return (summary: summary, todayFocus: todayFocus, motivation: motivation)
     }
 
+    // MARK: - Note Extraction
+
+    /// System prompt for note-to-task extraction
+    static let noteExtractionSystemPrompt = """
+    You are a task extraction assistant. Given a quick note, extract actionable tasks.
+
+    Guidelines:
+    - Extract ONLY actionable items (things the user needs to do)
+    - Ignore greetings, opinions, or non-actionable observations
+    - Keep task titles concise and action-oriented (start with a verb when possible)
+    - Assign categories and priorities based on content
+    - Parse any mentioned dates or deadlines
+
+    DO NOT include personal opinions or unnecessary elaboration.
+    Respond ONLY in the specified JSON format.
+    """
+
+    /// Build prompt for extracting tasks from a quick note
+    static func buildNoteExtractionPrompt(
+        noteText: String,
+        customCategories: [String],
+        listNames: [String],
+        learningContext: String
+    ) -> String {
+        let systemCategories = "work, personal, health, finance, shopping, errands, learning, home"
+        let allCategories = customCategories.isEmpty
+            ? systemCategories
+            : systemCategories + ", " + customCategories.joined(separator: ", ")
+
+        let listSection = listNames.isEmpty
+            ? ""
+            : "\nAvailable lists: \(listNames.joined(separator: ", "))"
+
+        let contextSection = learningContext.isEmpty ? "" : """
+
+        User Preferences:
+        \(learningContext)
+
+        """
+
+        return """
+        Extract actionable tasks from this quick note.
+
+        Note:
+        \(noteText)
+
+        Available categories: \(allCategories)\(listSection)
+        \(contextSection)
+        Example:
+        Note: "Buy groceries tomorrow and call dentist to schedule appointment next week"
+        Response: [{"title": "Buy groceries", "priority": "low", "category": "shopping", "due_date": "tomorrow", "list": null}, {"title": "Call dentist to schedule appointment", "priority": "medium", "category": "health", "due_date": "next week", "list": null}]
+
+        Extract tasks as a JSON array. Each task object:
+        {
+            "title": "<concise action-oriented title>",
+            "priority": "<none|low|medium|high|urgent>",
+            "category": "<one of the available categories>",
+            "due_date": "<natural language date or null>",
+            "list": "<list name or null>"
+        }
+
+        If no actionable tasks can be extracted, return an empty array: []
+
+        Respond with ONLY the JSON array:
+        """
+    }
+
+    /// Parse note extraction response
+    static func parseNoteExtractionResponse(_ response: String) -> [[String: Any]] {
+        guard let data = extractJSONArray(from: response),
+              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            return []
+        }
+        return jsonArray
+    }
+
     // MARK: - Helpers
 
-    /// Extract JSON from response that might contain extra text
+    /// Extract a JSON array from response that might contain extra text
+    static func extractJSONArray(from response: String) -> Data? {
+        // Try direct parsing first
+        if let data = response.data(using: .utf8),
+           let obj = try? JSONSerialization.jsonObject(with: data),
+           obj is [Any] {
+            return data
+        }
+
+        // Try to find JSON array in the response
+        let pattern = "\\[\\s*\\{.*\\}\\s*\\]"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]),
+           let match = regex.firstMatch(in: response, options: [], range: NSRange(response.startIndex..., in: response)),
+           let range = Range(match.range, in: response) {
+            let jsonString = String(response[range])
+            if let data = jsonString.data(using: .utf8),
+               (try? JSONSerialization.jsonObject(with: data)) != nil {
+                return data
+            }
+        }
+
+        // Try to find empty array
+        if response.trimmingCharacters(in: .whitespacesAndNewlines) == "[]" {
+            return "[]".data(using: .utf8)
+        }
+
+        return nil
+    }
+
+    /// Extract JSON object from response that might contain extra text
     private static func extractJSON(from response: String) -> Data? {
         // Try direct parsing first
         if let data = response.data(using: .utf8),
