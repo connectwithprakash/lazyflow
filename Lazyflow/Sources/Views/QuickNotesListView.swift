@@ -3,6 +3,7 @@ import SwiftUI
 /// Full list of all quick notes (both unprocessed and processed)
 struct QuickNotesListView: View {
     @StateObject private var noteService = QuickNoteService.shared
+    @State private var noteToEdit: QuickNote?
     @State private var noteToExtract: QuickNote?
     @State private var noteToDelete: QuickNote?
     @State private var showDeleteConfirmation = false
@@ -12,9 +13,11 @@ struct QuickNotesListView: View {
             if !noteService.unprocessedNotes.isEmpty {
                 Section {
                     ForEach(noteService.unprocessedNotes) { note in
-                        QuickNoteRow(note: note) {
+                        QuickNoteRow(note: note, onTap: {
+                            noteToEdit = note
+                        }, onExtract: {
                             noteToExtract = note
-                        }
+                        })
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 noteToDelete = note
@@ -32,9 +35,11 @@ struct QuickNotesListView: View {
             if !noteService.processedNotes.isEmpty {
                 Section {
                     ForEach(noteService.processedNotes) { note in
-                        QuickNoteRow(note: note, isProcessed: true) {
+                        QuickNoteRow(note: note, isProcessed: true, onTap: {
+                            noteToEdit = note
+                        }, onExtract: {
                             noteToExtract = note
-                        }
+                        })
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 noteToDelete = note
@@ -72,6 +77,11 @@ struct QuickNotesListView: View {
         .scrollContentBackground(.hidden)
         .background(Color.adaptiveBackground)
         .navigationTitle("Quick Notes")
+        .sheet(item: $noteToEdit) { note in
+            QuickCaptureSheet(note: note) { updatedNote in
+                noteToExtract = updatedNote
+            }
+        }
         .sheet(item: $noteToExtract) { note in
             QuickCaptureReviewView(note: note)
         }
@@ -96,14 +106,15 @@ struct QuickNotesListView: View {
 struct QuickNoteRow: View {
     let note: QuickNote
     var isProcessed: Bool = false
-    let onExtract: () -> Void
+    let onTap: () -> Void
+    var onExtract: (() -> Void)?
 
     var body: some View {
-        Button {
-            onExtract()
-        } label: {
-            HStack(spacing: DesignSystem.Spacing.md) {
-                // Content
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Content — tappable for editing
+            Button {
+                onTap()
+            } label: {
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                     Text(note.previewText)
                         .font(DesignSystem.Typography.body)
@@ -123,22 +134,28 @@ struct QuickNoteRow: View {
                         }
                     }
                 }
-
-                Spacer()
-
-                // Action pill
-                Text(isProcessed ? "Extract Again" : "Extract")
-                    .font(DesignSystem.Typography.caption1)
-                    .fontWeight(.medium)
-                    .foregroundColor(Color.Lazyflow.accent)
-                    .padding(.horizontal, DesignSystem.Spacing.sm)
-                    .padding(.vertical, DesignSystem.Spacing.xxs)
-                    .background(Color.Lazyflow.accent.opacity(0.12))
-                    .clipShape(Capsule())
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.vertical, DesignSystem.Spacing.xs)
+            .buttonStyle(.plain)
+
+            // Extract pill — separate tap target
+            if let onExtract {
+                Button {
+                    onExtract()
+                } label: {
+                    Text(isProcessed ? "Extract Again" : "Extract")
+                        .font(DesignSystem.Typography.caption1)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color.Lazyflow.accent)
+                        .padding(.horizontal, DesignSystem.Spacing.sm)
+                        .padding(.vertical, DesignSystem.Spacing.xxs)
+                        .background(Color.Lazyflow.accent.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 }
 

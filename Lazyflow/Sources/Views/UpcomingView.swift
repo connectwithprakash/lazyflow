@@ -8,6 +8,7 @@ struct UpcomingView: View {
     @StateObject private var listService = TaskListService.shared
     @StateObject private var noteService = QuickNoteService.shared
     @State private var selectedTask: Task?
+    @State private var noteToEdit: QuickNote?
     @State private var noteToExtract: QuickNote?
     @State private var showAddTask = false
     @State private var taskToSchedule: Task?
@@ -49,6 +50,11 @@ struct UpcomingView: View {
                         }
                     )
                 }
+                .sheet(item: $noteToEdit) { note in
+                    QuickCaptureSheet(note: note) { updatedNote in
+                        noteToExtract = updatedNote
+                    }
+                }
                 .sheet(item: $noteToExtract) { note in
                     QuickCaptureReviewView(note: note)
                 }
@@ -74,6 +80,11 @@ struct UpcomingView: View {
                                 scheduleTask(task, startTime: startTime, duration: duration)
                             }
                         )
+                    }
+                    .sheet(item: $noteToEdit) { note in
+                        QuickCaptureSheet(note: note) { updatedNote in
+                            noteToExtract = updatedNote
+                        }
                     }
                     .sheet(item: $noteToExtract) { note in
                         QuickCaptureReviewView(note: note)
@@ -135,9 +146,11 @@ struct UpcomingView: View {
             if !noteService.unprocessedNotes.isEmpty {
                 Section {
                     ForEach(noteService.unprocessedNotes.prefix(2)) { note in
-                        QuickNoteRow(note: note) {
+                        QuickNoteRow(note: note, onTap: {
+                            noteToEdit = note
+                        }, onExtract: {
                             noteToExtract = note
-                        }
+                        })
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .listRowBackground(Color.adaptiveBackground)
                         .listRowSeparator(.hidden)

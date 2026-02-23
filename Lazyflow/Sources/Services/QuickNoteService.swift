@@ -92,6 +92,27 @@ final class QuickNoteService: ObservableObject {
 
     // MARK: - Update
 
+    func updateNoteText(_ note: QuickNote, text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let context = persistenceController.viewContext
+        let request: NSFetchRequest<QuickNoteEntity> = QuickNoteEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", note.id as CVarArg)
+
+        guard let entity = try? context.fetch(request).first else { return }
+
+        entity.text = trimmed
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to update quick note: \(error)")
+        }
+
+        fetchAllNotes()
+    }
+
     func markProcessed(_ note: QuickNote, taskCount: Int) {
         let context = persistenceController.viewContext
         let request: NSFetchRequest<QuickNoteEntity> = QuickNoteEntity.fetchRequest()

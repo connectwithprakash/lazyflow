@@ -1,11 +1,27 @@
 import SwiftUI
 
-/// Minimal capture sheet for quick notes — auto-saves on dismiss
+/// Minimal capture sheet for quick notes — supports both creating new notes and editing existing ones
 struct QuickCaptureSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var noteService = QuickNoteService.shared
     @State private var noteText = ""
     @FocusState private var isTextFieldFocused: Bool
+
+    /// When set, the sheet is in edit mode for an existing note
+    private let existingNote: QuickNote?
+    /// Callback to open extraction review for this note
+    var onExtract: ((QuickNote) -> Void)?
+
+    init() {
+        self.existingNote = nil
+    }
+
+    init(note: QuickNote, onExtract: ((QuickNote) -> Void)? = nil) {
+        self.existingNote = note
+        self.onExtract = onExtract
+    }
+
+    private var isEditing: Bool { existingNote != nil }
 
     var body: some View {
         NavigationStack {
@@ -27,15 +43,19 @@ struct QuickCaptureSheet: View {
                                 .allowsHitTesting(false)
                         }
                     }
+
+                // Extract button when editing an existing note
+                if isEditing {
+                    extractButton
+                }
             }
             .background(Color.adaptiveBackground)
-            .navigationTitle("Quick Note")
+            .navigationTitle(isEditing ? "Edit Note" : "Quick Note")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        // Don't save on cancel
-                        noteText = ""
+                        noteText = "" // Prevent onDisappear save
                         dismiss()
                     }
                     .foregroundColor(Color.Lazyflow.textSecondary)
@@ -51,28 +71,79 @@ struct QuickCaptureSheet: View {
             }
         }
         .onAppear {
+            if let note = existingNote {
+                noteText = note.text
+            }
             isTextFieldFocused = true
         }
         .onDisappear {
             // Auto-save non-empty notes when swiped down
             let trimmed = noteText.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty {
-                noteService.createNote(text: trimmed)
+                if let note = existingNote {
+                    noteService.updateNoteText(note, text: trimmed)
+                } else {
+                    noteService.createNote(text: trimmed)
+                }
             }
         }
         .interactiveDismissDisabled(false)
     }
 
+    private var extractButton: some View {
+        Button {
+            // Save any edits first, then trigger extraction
+            let trimmed = noteText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let note = existingNote, !trimmed.isEmpty {
+                noteService.updateNoteText(note, text: trimmed)
+                var updatedNote = note
+                updatedNote.text = trimmed
+                noteText = "" // Prevent onDisappear double-save
+                dismiss()
+                // Small delay to let dismiss animation complete before presenting extraction
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    onExtract?(updatedNote)
+                }
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: "sparkles")
+                    .font(.body)
+                Text("Extract Tasks")
+                    .font(DesignSystem.Typography.body)
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DesignSystem.Spacing.md)
+            .background(Color.Lazyflow.accent.opacity(0.12))
+            .foregroundColor(Color.Lazyflow.accent)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+        .padding(.bottom, DesignSystem.Spacing.md)
+    }
+
     private func saveAndDismiss() {
         let trimmed = noteText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
-            noteService.createNote(text: trimmed)
+            if let note = existingNote {
+                noteService.updateNoteText(note, text: trimmed)
+            } else {
+                noteService.createNote(text: trimmed)
+            }
         }
         noteText = "" // Clear so onDisappear doesn't double-save
         dismiss()
     }
 }
 
-#Preview {
+#Preview("New Note") {
     QuickCaptureSheet()
+}
+
+#Preview("Edit Note") {
+    QuickCaptureSheet(
+        note: QuickNote(text: "Buy groceries tomorrow"),
+        onExtract: { _ in }
+    )
 }

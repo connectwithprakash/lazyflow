@@ -2614,11 +2614,13 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Upcoming")
         Thread.sleep(forTimeInterval: 1.0)
 
-        // Step 3: Tap the note row to trigger extraction
+        // Step 3: Tap the Extract pill to trigger extraction
         // previewText shows full first line when under 80 chars
         let noteText = app.staticTexts["Finish the report. Schedule meeting with team."]
         XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Note should appear in Upcoming")
-        noteText.tap()
+        let extractPill = app.buttons["Extract"]
+        XCTAssertTrue(extractPill.waitForExistence(timeout: 3))
+        extractPill.tap()
 
         // Step 4: Verify Extract Tasks sheet appears
         let extractNavBar = app.navigationBars["Extract Tasks"]
@@ -2687,7 +2689,9 @@ final class LazyflowUITests: XCTestCase {
         // previewText shows full first line (single-line note under 80 chars)
         let noteText = app.staticTexts["Clean the house. Walk the dog. Read a book."]
         XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Note should appear in Upcoming Quick Notes section")
-        noteText.tap()
+        let extractPill = app.buttons.matching(NSPredicate(format: "label == 'Extract'")).firstMatch
+        XCTAssertTrue(extractPill.waitForExistence(timeout: 3))
+        extractPill.tap()
 
         // Wait for Extract Tasks sheet
         let extractNavBar = app.navigationBars["Extract Tasks"]
@@ -2791,8 +2795,10 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(savedNote.waitForExistence(timeout: 5), "Step 5: Note should appear in Upcoming")
         snap("05-upcoming-quick-notes-section")
 
-        // ── Step 6: Tap note → Extract Tasks sheet opens ──
-        savedNote.tap()
+        // ── Step 6: Tap "Extract" pill → Extract Tasks sheet opens ──
+        let extractPill = app.buttons["Extract"]
+        XCTAssertTrue(extractPill.waitForExistence(timeout: 3))
+        extractPill.tap()
         let extractNavBar = app.navigationBars["Extract Tasks"]
         XCTAssertTrue(extractNavBar.waitForExistence(timeout: 5))
         snap("06-extract-tasks-loading")
@@ -2831,7 +2837,11 @@ final class LazyflowUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.0)
         let deterNote = app.staticTexts["Clean the house. Walk the dog. Read a book."]
         XCTAssertTrue(deterNote.waitForExistence(timeout: 5))
-        deterNote.tap()
+
+        // Tap "Extract" pill for the deterministic fallback note
+        let extractPill2 = app.buttons.matching(NSPredicate(format: "label == 'Extract'")).firstMatch
+        XCTAssertTrue(extractPill2.waitForExistence(timeout: 3))
+        extractPill2.tap()
 
         let extractNavBar2 = app.navigationBars["Extract Tasks"]
         XCTAssertTrue(extractNavBar2.waitForExistence(timeout: 5))
