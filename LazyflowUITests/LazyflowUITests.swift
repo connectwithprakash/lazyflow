@@ -2521,17 +2521,19 @@ final class LazyflowUITests: XCTestCase {
         navigateToToday()
         XCTAssertTrue(fab.waitForExistence(timeout: 5), "FAB should exist on Today tab")
 
-        // Check FAB exists on Calendar tab
-        navigateToTab("Calendar")
-        XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should exist on Calendar tab")
-
         // Check FAB exists on Upcoming tab
         navigateToTab("Upcoming")
         XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should exist on Upcoming tab")
 
-        // Check FAB exists on Insights tab
+        // Check FAB is hidden on Calendar tab
+        navigateToTab("Calendar")
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertFalse(fab.exists, "FAB should be hidden on Calendar tab")
+
+        // Check FAB is hidden on Insights tab
         navigateToTab("Insights")
-        XCTAssertTrue(fab.waitForExistence(timeout: 3), "FAB should exist on Insights tab")
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertFalse(fab.exists, "FAB should be hidden on Insights tab")
     }
 
     // MARK: - Quick Capture Manual Verification (Plan Steps 5–11)
@@ -2854,18 +2856,18 @@ final class LazyflowUITests: XCTestCase {
             snap("11-quick-notes-full-list")
         }
 
-        // ── Step 9: Verify FAB visible on multiple tabs ──
+        // ── Step 9: Verify FAB hidden on non-task tabs ──
         app.navigationBars.buttons.element(boundBy: 0).tap() // Back button
         Thread.sleep(forTimeInterval: 0.5)
         navigateToTab("Calendar")
         Thread.sleep(forTimeInterval: 0.5)
-        XCTAssertTrue(fab.waitForExistence(timeout: 3))
-        snap("12-fab-on-calendar-tab")
+        XCTAssertFalse(fab.exists, "FAB should be hidden on Calendar tab")
+        snap("12-calendar-no-fab")
 
         navigateToTab("Insights")
         Thread.sleep(forTimeInterval: 0.5)
-        XCTAssertTrue(fab.waitForExistence(timeout: 3))
-        snap("13-fab-on-insights-tab")
+        XCTAssertFalse(fab.exists, "FAB should be hidden on Insights tab")
+        snap("13-insights-no-fab")
     }
 
 }
