@@ -137,6 +137,10 @@ final class PersistenceController: @unchecked Sendable {
         let newDescription = NSPersistentStoreDescription(url: storeURL)
         newDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         newDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        newDescription.setOption(
+            FileProtectionType.complete as NSObject,
+            forKey: NSPersistentStoreFileProtectionKey
+        )
 
         // Configure CloudKit based on current preference
         if Self.isICloudSyncEnabled && Self.isICloudAvailable {
@@ -334,6 +338,12 @@ final class PersistenceController: @unchecked Sendable {
             // Enable persistent history tracking for CloudKit sync
             description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+            // Encrypt Core Data store when device is locked
+            description.setOption(
+                FileProtectionType.complete as NSObject,
+                forKey: NSPersistentStoreFileProtectionKey
+            )
 
             // Configure CloudKit sync only if enabled and iCloud is available
             // Check both the parameter and user preference

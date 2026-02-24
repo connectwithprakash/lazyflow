@@ -371,20 +371,27 @@ extension OpenResponsesConfig {
 // MARK: - Keychain Helper
 
 private enum KeychainHelper {
+    /// Accessibility level: only available when device is unlocked, not backed up to iCloud
+    private static let accessibility = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+
     static func save(_ value: String, forKey key: String) {
         guard let data = value.data(using: .utf8) else { return }
 
-        let query: [String: Any] = [
+        // Delete existing item first (query without accessibility for deletion)
+        let deleteQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key
+        ]
+        SecItemDelete(deleteQuery as CFDictionary)
+
+        // Add new item with accessibility restriction
+        let addQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,
-            kSecValueData as String: data
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: accessibility
         ]
-
-        // Delete existing item first
-        SecItemDelete(query as CFDictionary)
-
-        // Add new item
-        SecItemAdd(query as CFDictionary, nil)
+        SecItemAdd(addQuery as CFDictionary, nil)
     }
 
     static func load(forKey key: String) -> String? {
