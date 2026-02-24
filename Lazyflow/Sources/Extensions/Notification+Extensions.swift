@@ -16,4 +16,7 @@ extension Notification.Name {
 
     /// Triggered when user taps "Start My Day" notification action
     static let showMorningBriefing = Notification.Name("showMorningBriefing")
+
+    /// Triggered when user presses Cmd+Shift+N keyboard shortcut
+    static let quickCaptureShortcut = Notification.Name("quickCaptureShortcut")
 }

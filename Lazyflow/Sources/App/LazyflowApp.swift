@@ -61,6 +61,13 @@ struct LazyflowApp: App {
                     NotificationCenter.default.post(name: .searchShortcut, object: nil)
                 }
                 .keyboardShortcut("f", modifiers: .command)
+
+                Divider()
+
+                Button("Quick Capture") {
+                    NotificationCenter.default.post(name: .quickCaptureShortcut, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
             }
         }
     }

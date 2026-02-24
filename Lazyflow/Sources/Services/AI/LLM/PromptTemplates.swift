@@ -677,9 +677,102 @@ enum PromptTemplates {
         return (summary: summary, todayFocus: todayFocus, motivation: motivation)
     }
 
+    // MARK: - Note Extraction
+
+    /// System prompt for note-to-task extraction
+    static let noteExtractionSystemPrompt = """
+    You extract tasks from notes as JSON. Rules:
+    1. Only extract what is explicitly in the note. Never invent tasks.
+    2. If a line has bullet items (- or *) or numbered items below it, that line is the PARENT and those items are its SUBTASKS.
+    3. If all items are independent (no bullets under a heading), return flat tasks with empty subtasks arrays.
+    4. Respond with ONLY a JSON array. No other text.
+    """
+
+    /// Build prompt for extracting tasks from a quick note
+    static func buildNoteExtractionPrompt(
+        noteText: String,
+        customCategories: [String],
+        listNames: [String],
+        learningContext: String
+    ) -> String {
+        let systemCategories = "work, personal, health, finance, shopping, errands, learning, home"
+        let allCategories = customCategories.isEmpty
+            ? systemCategories
+            : systemCategories + ", " + customCategories.joined(separator: ", ")
+
+        let listSection = listNames.isEmpty
+            ? ""
+            : "\nAvailable lists: \(listNames.joined(separator: ", "))"
+
+        let contextSection = learningContext.isEmpty ? "" : """
+
+        User Preferences:
+        \(learningContext)
+
+        """
+
+        return """
+        Categories: \(allCategories)\(listSection)
+        \(contextSection)
+        JSON format per task: {"title": "...", "priority": "none|low|medium|high|urgent", "category": "...", "due_date": "... or null", "list": "... or null", "subtasks": [{"title": "...", "due_date": "... or null", "priority": "... or null"}]}
+
+        EXAMPLE — flat note (no bullets):
+        Note: "Water plants and return library books by friday"
+        Output: [{"title": "Water plants", "priority": "none", "category": "home", "due_date": null, "list": null, "subtasks": []}, {"title": "Return library books", "priority": "none", "category": "errands", "due_date": "friday", "list": null, "subtasks": []}]
+
+        EXAMPLE — note with bullets under a heading:
+        Note: "Garage cleanup
+        - Donate old furniture
+        - Organize tool shelf
+        - Fix broken shelf by Sunday"
+        Output: [{"title": "Garage cleanup", "priority": "none", "category": "home", "due_date": null, "list": null, "subtasks": [{"title": "Donate old furniture", "due_date": null, "priority": null}, {"title": "Organize tool shelf", "due_date": null, "priority": null}, {"title": "Fix broken shelf", "due_date": "sunday", "priority": null}]}]
+
+        Now extract from this note:
+        \(noteText)
+        """
+    }
+
+    /// Parse note extraction response
+    static func parseNoteExtractionResponse(_ response: String) -> [[String: Any]] {
+        guard let data = extractJSONArray(from: response),
+              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            return []
+        }
+        return jsonArray
+    }
+
     // MARK: - Helpers
 
-    /// Extract JSON from response that might contain extra text
+    /// Extract a JSON array from response that might contain extra text
+    static func extractJSONArray(from response: String) -> Data? {
+        // Try direct parsing first
+        if let data = response.data(using: .utf8),
+           let obj = try? JSONSerialization.jsonObject(with: data),
+           obj is [Any] {
+            return data
+        }
+
+        // Try to find JSON array in the response
+        let pattern = "\\[\\s*\\{.*\\}\\s*\\]"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]),
+           let match = regex.firstMatch(in: response, options: [], range: NSRange(response.startIndex..., in: response)),
+           let range = Range(match.range, in: response) {
+            let jsonString = String(response[range])
+            if let data = jsonString.data(using: .utf8),
+               (try? JSONSerialization.jsonObject(with: data)) != nil {
+                return data
+            }
+        }
+
+        // Try to find empty array
+        if response.trimmingCharacters(in: .whitespacesAndNewlines) == "[]" {
+            return "[]".data(using: .utf8)
+        }
+
+        return nil
+    }
+
+    /// Extract JSON object from response that might contain extra text
     private static func extractJSON(from response: String) -> Data? {
         // Try direct parsing first
         if let data = response.data(using: .utf8),
