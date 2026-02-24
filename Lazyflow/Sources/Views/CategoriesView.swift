@@ -118,6 +118,7 @@ struct CategoriesView: View {
                     Image(systemName: "plus.circle.fill")
                         .foregroundColor(Color.Lazyflow.accent)
                 }
+                .accessibilityLabel("Add custom category")
             }
             .padding(.horizontal)
 
@@ -203,6 +204,8 @@ private struct CategoryListRow: View {
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.vertical, DesignSystem.Spacing.md)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(count) task\(count == 1 ? "" : "s")")
     }
 }
 

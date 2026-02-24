@@ -42,6 +42,7 @@ struct OnboardingView: View {
                     .font(.subheadline)
                     .foregroundColor(Color.Lazyflow.textSecondary)
                     .padding()
+                    .accessibilityHint("Skip onboarding and start using the app")
                 }
             }
 
@@ -74,6 +75,8 @@ struct OnboardingView: View {
                 }
             }
             .padding(.bottom, 24)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Page \(currentPage + 1) of \(pages.count + 1)")
 
             // Action button
             Button {
@@ -291,6 +294,9 @@ private struct PermissionRow: View {
         .padding()
         .background(Color.adaptiveSurface)
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(description). \(isGranted ? "Granted" : "Not set up")")
+        .accessibilityHint(isGranted ? "" : "Double-tap to grant permission")
     }
 }
 

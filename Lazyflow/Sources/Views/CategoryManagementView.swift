@@ -72,6 +72,7 @@ struct CategoryManagementView: View {
                         Image(systemName: "plus.circle.fill")
                             .foregroundColor(Color.Lazyflow.accent)
                     }
+                    .accessibilityLabel("Add custom category")
                 }
             } footer: {
                 if !categoryService.categories.isEmpty {
@@ -152,6 +153,9 @@ struct CategoryRow: View {
                     .foregroundColor(Color.Lazyflow.textTertiary)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Category: \(category.displayName)")
+        .accessibilityHint("Double-tap to edit")
     }
 }
 
@@ -244,6 +248,8 @@ struct CategoryEditSheet: View {
                                     )
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Color \(colorHex)")
+                            .accessibilityAddTraits(selectedColorHex == colorHex ? .isSelected : [])
                         }
                     }
                     .padding(.vertical, DesignSystem.Spacing.sm)
@@ -266,6 +272,8 @@ struct CategoryEditSheet: View {
                                     )
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Icon \(iconName)")
+                            .accessibilityAddTraits(selectedIconName == iconName ? .isSelected : [])
                         }
                     }
                     .padding(.vertical, DesignSystem.Spacing.sm)

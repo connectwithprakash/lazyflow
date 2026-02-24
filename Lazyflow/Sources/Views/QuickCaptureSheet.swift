@@ -32,6 +32,8 @@ struct QuickCaptureSheet: View {
                     .padding(.horizontal, DesignSystem.Spacing.lg)
                     .padding(.top, DesignSystem.Spacing.sm)
                     .scrollContentBackground(.hidden)
+                    .accessibilityLabel(isEditing ? "Edit note" : "New note")
+                    .accessibilityHint("Enter your thought, idea, or task")
                     .overlay(alignment: .topLeading) {
                         if noteText.isEmpty {
                             Text("Jot down a thought, idea, or task...")
@@ -121,6 +123,8 @@ struct QuickCaptureSheet: View {
         }
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.bottom, DesignSystem.Spacing.md)
+        .accessibilityLabel("Extract Tasks")
+        .accessibilityHint("Use AI to extract tasks from this note")
     }
 
     private func saveAndDismiss() {

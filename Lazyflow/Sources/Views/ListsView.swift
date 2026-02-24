@@ -224,6 +224,8 @@ struct SmartListRow: View {
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.vertical, DesignSystem.Spacing.md)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(count) task\(count == 1 ? "" : "s")")
     }
 }
 
@@ -259,6 +261,8 @@ struct CustomListRow: View {
         .padding(.horizontal, DesignSystem.Spacing.lg)
         .padding(.vertical, DesignSystem.Spacing.md)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(list.name), \(taskCount) task\(taskCount == 1 ? "" : "s")")
     }
 }
 
@@ -289,6 +293,8 @@ struct AddListSheet: View {
                                 .onTapGesture {
                                     viewModel.newListColor = colorHex
                                 }
+                                .accessibilityLabel(viewModel.newListColor == colorHex ? "Selected color" : "Color option")
+                                .accessibilityAddTraits(viewModel.newListColor == colorHex ? .isSelected : [])
                         }
                     }
                     .padding(.vertical, 8)
@@ -316,6 +322,8 @@ struct AddListSheet: View {
                                 .onTapGesture {
                                     viewModel.newListIcon = iconName
                                 }
+                                .accessibilityLabel(iconName)
+                                .accessibilityAddTraits(viewModel.newListIcon == iconName ? .isSelected : [])
                         }
                     }
                     .padding(.vertical, 8)
