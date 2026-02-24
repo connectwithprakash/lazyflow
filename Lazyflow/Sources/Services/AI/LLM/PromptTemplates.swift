@@ -737,12 +737,12 @@ enum PromptTemplates {
         Use "subtasks" only when items are clearly subordinate to a parent task. Independent tasks should have an empty subtasks array.
 
         Example 1 (flat):
-        Note: "Renew passport next month and schedule oil change"
-        Response: [{"title": "Renew passport", "priority": "medium", "category": "errands", "due_date": "next month", "list": null, "subtasks": []}, {"title": "Schedule oil change", "priority": "low", "category": "errands", "due_date": null, "list": null, "subtasks": []}]
+        Note: "Task_A by next friday and Task_B"
+        Response: [{"title": "Task_A", "priority": "none", "category": "uncategorized", "due_date": "next friday", "list": null, "subtasks": []}, {"title": "Task_B", "priority": "none", "category": "uncategorized", "due_date": null, "list": null, "subtasks": []}]
 
         Example 2 (hierarchical):
-        Note: "Prepare presentation\\n- Create slides\\n- Write speaker notes\\n- Practice delivery by Thursday"
-        Response: [{"title": "Prepare presentation", "priority": "medium", "category": "work", "due_date": null, "list": null, "subtasks": [{"title": "Create slides", "due_date": null, "priority": null}, {"title": "Write speaker notes", "due_date": null, "priority": null}, {"title": "Practice delivery", "due_date": "thursday", "priority": null}]}]
+        Note: "Task_C\\n- Sub_1\\n- Sub_2\\n- Sub_3 by Thursday"
+        Response: [{"title": "Task_C", "priority": "none", "category": "uncategorized", "due_date": null, "list": null, "subtasks": [{"title": "Sub_1", "due_date": null, "priority": null}, {"title": "Sub_2", "due_date": null, "priority": null}, {"title": "Sub_3", "due_date": "thursday", "priority": null}]}]
 
         If no actionable tasks can be extracted, return an empty array: []
 
