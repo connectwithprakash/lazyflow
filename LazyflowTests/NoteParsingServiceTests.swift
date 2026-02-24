@@ -470,6 +470,125 @@ final class NoteParsingServiceTests: XCTestCase {
         XCTAssertTrue(draft.subtasks.isEmpty)
     }
 
+    // MARK: - Real-World Note Tests (End-to-End Deterministic)
+
+    @MainActor
+    func testRealNote_ImageNormalization_DetectsHierarchy() {
+        let text = "Image normalization\n- migrate normalized images to s3 bucket with CDN setup\n- deploy to stage environment with testing"
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1, "Should detect 1 parent-child group")
+        XCTAssertEqual(groups[0].parent, "Image normalization")
+        XCTAssertEqual(groups[0].children.count, 2)
+        XCTAssertEqual(groups[0].children[0], "migrate normalized images to s3 bucket with CDN setup")
+        XCTAssertEqual(groups[0].children[1], "deploy to stage environment with testing")
+    }
+
+    @MainActor
+    func testRealNote_ImageNormalization_HierarchicalParse() {
+        let text = "Image normalization\n- migrate normalized images to s3 bucket with CDN setup\n- deploy to stage environment with testing"
+        let service = NoteParsingService.shared
+        let groups = service.deterministicParseHierarchical(text)
+
+        XCTAssertEqual(groups.count, 1, "Should produce 1 hierarchical group")
+        XCTAssertEqual(groups[0].parent.text, "Image normalization")
+        XCTAssertEqual(groups[0].children.count, 2)
+        XCTAssertEqual(groups[0].children[0].text, "migrate normalized images to s3 bucket with CDN setup")
+        XCTAssertEqual(groups[0].children[1].text, "deploy to stage environment with testing")
+    }
+
+    @MainActor
+    func testRealNote_CreateApp_WithSubtasksAndFlat() {
+        let text = "Create app\n- implement home page\n- implement calendar page\n\nBuy groceries"
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 2, "Should detect 2 groups: 1 hierarchical + 1 standalone")
+        XCTAssertEqual(groups[0].parent, "Create app")
+        XCTAssertEqual(groups[0].children.count, 2)
+        XCTAssertEqual(groups[1].parent, "Buy groceries")
+        XCTAssertTrue(groups[1].children.isEmpty)
+    }
+
+    @MainActor
+    func testRealNote_CreateApp_HierarchicalParseToDrafts() {
+        let text = "Create app\n- implement home page\n- implement calendar page\n\nBuy groceries"
+        let service = NoteParsingService.shared
+        let groups = service.deterministicParseHierarchical(text)
+
+        XCTAssertEqual(groups.count, 2)
+        // First group: parent with subtasks
+        XCTAssertEqual(groups[0].parent.text, "Create app")
+        XCTAssertEqual(groups[0].children.count, 2)
+        XCTAssertEqual(groups[0].children[0].text, "implement home page")
+        XCTAssertEqual(groups[0].children[1].text, "implement calendar page")
+        // Second group: standalone
+        XCTAssertEqual(groups[1].parent.text, "Buy groceries")
+        XCTAssertTrue(groups[1].children.isEmpty)
+    }
+
+    // MARK: - LLM Response Parsing Tests (Subtasks)
+
+    @MainActor
+    func testLLMResponse_WithSubtasks_Parsed() {
+        let response = """
+        [{"title": "Image normalization", "priority": "high", "category": "work", "due_date": null, "list": null, "subtasks": [{"title": "Migrate images to S3", "due_date": null, "priority": null}, {"title": "Deploy to stage", "due_date": "next week", "priority": "high"}]}]
+        """
+        let data = PromptTemplates.extractJSONArray(from: response)
+        XCTAssertNotNil(data)
+
+        if let data = data,
+           let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+            XCTAssertEqual(array.count, 1)
+            let subtasks = array[0]["subtasks"] as? [[String: Any]]
+            XCTAssertNotNil(subtasks)
+            XCTAssertEqual(subtasks?.count, 2)
+            XCTAssertEqual(subtasks?[0]["title"] as? String, "Migrate images to S3")
+            XCTAssertEqual(subtasks?[1]["priority"] as? String, "high")
+        }
+    }
+
+    @MainActor
+    func testLLMResponse_FlatNoSubtasks_Parsed() {
+        let response = """
+        [{"title": "Migrate Images to S3", "priority": "high", "category": "work", "due_date": "Mar 6, 2026", "list": null, "subtasks": []}, {"title": "Deploy to Stage Environment", "priority": "high", "category": "work", "due_date": "Mar 6, 2026", "list": null, "subtasks": []}]
+        """
+        let data = PromptTemplates.extractJSONArray(from: response)
+        XCTAssertNotNil(data)
+
+        if let data = data,
+           let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+            XCTAssertEqual(array.count, 2, "LLM returned 2 flat tasks")
+            let sub1 = array[0]["subtasks"] as? [[String: Any]]
+            XCTAssertEqual(sub1?.count, 0, "No subtasks on flat task")
+        }
+    }
+
+    // MARK: - En-dash / Em-dash Bullet Tests
+
+    @MainActor
+    func testHierarchy_EnDashBullets() {
+        let text = "Project plan\n\u{2013} Design mockups\n\u{2013} Write specs"  // en-dash
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1, "En-dash bullets should be detected as children")
+        XCTAssertEqual(groups[0].parent, "Project plan")
+        XCTAssertEqual(groups[0].children.count, 2)
+    }
+
+    @MainActor
+    func testHierarchy_EmDashBullets() {
+        let text = "Project plan\n\u{2014} Design mockups\n\u{2014} Write specs"  // em-dash
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1, "Em-dash bullets should be detected as children")
+        XCTAssertEqual(groups[0].parent, "Project plan")
+        XCTAssertEqual(groups[0].children.count, 2)
+    }
+
     // MARK: - Prompt Template Subtasks Tests
 
     func testBuildNoteExtractionPrompt_IncludesSubtasksSchema() {

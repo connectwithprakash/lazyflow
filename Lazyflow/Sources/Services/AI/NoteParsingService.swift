@@ -200,7 +200,8 @@ final class NoteParsingService: ObservableObject {
 
     /// Regex pattern for child line prefixes: checkboxes, bullets, numbered lists
     /// Checkboxes must come first since `- [ ]` would otherwise match `- ` prefix
-    private static let childPrefixPattern = #"^(\s*[-*•]\s\[[ x]\]\s+|\s*[-*•]\s+|\s*\d+\.\s+)"#
+    /// Includes en-dash (–) and em-dash (—) since iOS may auto-substitute these
+    private static let childPrefixPattern = #"^(\s*[-–—*•]\s\[[ x]\]\s+|\s*[-–—*•]\s+|\s*\d+\.\s+)"#
 
     /// Detect if a line is a "child" line (bullet, number, checkbox, or indented)
     private func isChildLine(_ line: String) -> Bool {
