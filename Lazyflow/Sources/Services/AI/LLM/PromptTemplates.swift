@@ -720,21 +720,10 @@ enum PromptTemplates {
         """
 
         return """
-        Extract actionable tasks from this quick note.
-
-        Note:
-        \(noteText)
+        Extract actionable tasks from this quick note. Only extract tasks that are explicitly stated in the note. Never invent tasks that are not in the note.
 
         Available categories: \(allCategories)\(listSection)
         \(contextSection)
-        Example 1 (flat tasks):
-        Note: "Buy groceries tomorrow and call dentist to schedule appointment next week"
-        Response: [{"title": "Buy groceries", "priority": "low", "category": "shopping", "due_date": "tomorrow", "list": null, "subtasks": []}, {"title": "Call dentist to schedule appointment", "priority": "medium", "category": "health", "due_date": "next week", "list": null, "subtasks": []}]
-
-        Example 2 (hierarchical tasks):
-        Note: "Plan birthday party\\n- Send invitations\\n- Order cake\\n- Book venue by Friday"
-        Response: [{"title": "Plan birthday party", "priority": "medium", "category": "personal", "due_date": null, "list": null, "subtasks": [{"title": "Send invitations", "due_date": null, "priority": null}, {"title": "Order cake", "due_date": null, "priority": null}, {"title": "Book venue", "due_date": "friday", "priority": null}]}]
-
         Extract tasks as a JSON array. Each task object:
         {
             "title": "<concise action-oriented title>",
@@ -747,7 +736,18 @@ enum PromptTemplates {
 
         Use "subtasks" only when items are clearly subordinate to a parent task. Independent tasks should have an empty subtasks array.
 
+        Example 1 (flat):
+        Note: "Renew passport next month and schedule oil change"
+        Response: [{"title": "Renew passport", "priority": "medium", "category": "errands", "due_date": "next month", "list": null, "subtasks": []}, {"title": "Schedule oil change", "priority": "low", "category": "errands", "due_date": null, "list": null, "subtasks": []}]
+
+        Example 2 (hierarchical):
+        Note: "Prepare presentation\\n- Create slides\\n- Write speaker notes\\n- Practice delivery by Thursday"
+        Response: [{"title": "Prepare presentation", "priority": "medium", "category": "work", "due_date": null, "list": null, "subtasks": [{"title": "Create slides", "due_date": null, "priority": null}, {"title": "Write speaker notes", "due_date": null, "priority": null}, {"title": "Practice delivery", "due_date": "thursday", "priority": null}]}]
+
         If no actionable tasks can be extracted, return an empty array: []
+
+        Note:
+        \(noteText)
 
         Respond with ONLY the JSON array:
         """
