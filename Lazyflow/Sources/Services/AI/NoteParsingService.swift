@@ -24,6 +24,7 @@ final class NoteParsingService: ObservableObject {
     /// Uses LLM when available, falls back to deterministic parsing
     func extractTasks(from text: String) async -> [TaskDraft] {
         let hierarchical = deterministicParseHierarchical(text)
+        let deterministicHasHierarchy = hierarchical.contains { !$0.children.isEmpty }
 
         // Flatten for LLM segment matching
         let flatSegments = hierarchical.flatMap { group -> [RawSegment] in
@@ -36,8 +37,17 @@ final class NoteParsingService: ObservableObject {
                 let (drafts, didParse) = try await withTimeout(seconds: llmTimeout) {
                     try await self.llmExtract(text: text, segments: flatSegments)
                 }
-                // If LLM successfully parsed (even to empty), trust its result
                 if didParse {
+                    let llmHasHierarchy = drafts.contains { !$0.subtasks.isEmpty }
+
+                    // If deterministic detected hierarchy but LLM flattened it,
+                    // merge LLM metadata into the deterministic structure
+                    if deterministicHasHierarchy && !llmHasHierarchy {
+                        return mergeHierarchy(
+                            deterministicGroups: hierarchical,
+                            llmDrafts: drafts
+                        )
+                    }
                     return drafts
                 }
             } catch {
@@ -60,6 +70,63 @@ final class NoteParsingService: ObservableObject {
                 dueTime: group.parent.parsedTime,
                 subtasks: subtaskDrafts
             )
+        }
+    }
+
+    /// Merge deterministic hierarchy structure with LLM-enriched metadata.
+    /// Uses deterministic parent/child grouping but takes LLM's categories, priorities, etc.
+    private func mergeHierarchy(
+        deterministicGroups: [HierarchicalSegment],
+        llmDrafts: [TaskDraft]
+    ) -> [TaskDraft] {
+        // Index LLM drafts by lowercase title for fuzzy matching
+        let llmIndex = Dictionary(
+            llmDrafts.map { (normalizeTitle($0.title), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        return deterministicGroups.map { group in
+            let parentTitle = group.parent.text
+            let parentMatch = findMatch(for: parentTitle, in: llmIndex)
+
+            let subtaskDrafts = group.children.map { child -> TaskDraft in
+                let childMatch = findMatch(for: child.text, in: llmIndex)
+                return TaskDraft(
+                    title: childMatch?.title ?? child.text,
+                    dueDate: childMatch?.dueDate ?? child.parsedDate,
+                    dueTime: childMatch?.dueTime ?? child.parsedTime,
+                    priority: childMatch?.priority ?? .none
+                )
+            }
+
+            return TaskDraft(
+                title: parentMatch?.title ?? parentTitle,
+                dueDate: parentMatch?.dueDate ?? group.parent.parsedDate,
+                dueTime: parentMatch?.dueTime ?? group.parent.parsedTime,
+                priority: parentMatch?.priority ?? .none,
+                category: parentMatch?.category ?? .uncategorized,
+                customCategoryID: parentMatch?.customCategoryID,
+                listID: parentMatch?.listID,
+                subtasks: subtaskDrafts
+            )
+        }
+    }
+
+    private func normalizeTitle(_ title: String) -> String {
+        title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Find best matching LLM draft for a deterministic segment title
+    private func findMatch(for title: String, in index: [String: TaskDraft]) -> TaskDraft? {
+        let normalized = normalizeTitle(title)
+        // Exact match
+        if let match = index[normalized] { return match }
+        // Substring match — find LLM draft whose title contains (or is contained by) the segment
+        let titleWords = Set(normalized.split(separator: " ").map(String.init))
+        return index.values.first { draft in
+            let draftWords = Set(normalizeTitle(draft.title).split(separator: " ").map(String.init))
+            let overlap = titleWords.intersection(draftWords).count
+            return overlap >= min(2, min(titleWords.count, draftWords.count))
         }
     }
 
