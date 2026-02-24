@@ -51,6 +51,8 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: Lazyflow/Lazyflow.entitlements
         ENABLE_PREVIEWS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         INFOPLIST_KEY_NSSiriUsageDescription: "Lazyflow uses Siri to create tasks and check your agenda"
     dependencies:
       - target: LazyflowWidget
