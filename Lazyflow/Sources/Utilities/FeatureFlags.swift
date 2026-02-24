@@ -1,0 +1,162 @@
+import Foundation
+import os
+
+/// Lightweight feature flag system with local defaults and debug overrides.
+///
+/// Usage:
+/// ```
+/// if FeatureFlags.shared.isEnabled(.quickCapture) { ... }
+/// ```
+///
+/// Debug overrides persist in UserDefaults and take precedence over defaults.
+/// Clear overrides with `removeOverride(_:)` or `removeAllOverrides()`.
+final class FeatureFlags: ObservableObject {
+    static let shared = FeatureFlags()
+
+    private let logger = Logger(subsystem: "com.lazyflow.app", category: "FeatureFlags")
+    private let overridePrefix = "featureFlag_override_"
+
+    /// All available feature flags with their compile-time defaults
+    enum Flag: String, CaseIterable, Identifiable {
+        // AI Features
+        case aiAutoSuggest = "ai_auto_suggest"
+        case aiEstimateDuration = "ai_estimate_duration"
+        case aiSuggestPriority = "ai_suggest_priority"
+        case aiTaskExtraction = "ai_task_extraction"
+
+        // Productivity Features
+        case quickCapture = "quick_capture"
+        case focusMode = "focus_mode"
+        case morningBriefing = "morning_briefing"
+        case dailySummary = "daily_summary"
+
+        // Sync & Calendar
+        case calendarSync = "calendar_sync"
+        case calendarAutoSync = "calendar_auto_sync"
+
+        var id: String { rawValue }
+
+        var displayName: String {
+            switch self {
+            case .aiAutoSuggest: return "AI Auto-Suggest"
+            case .aiEstimateDuration: return "AI Duration Estimation"
+            case .aiSuggestPriority: return "AI Priority Suggestion"
+            case .aiTaskExtraction: return "AI Task Extraction"
+            case .quickCapture: return "Quick Capture"
+            case .focusMode: return "Focus Mode"
+            case .morningBriefing: return "Morning Briefing"
+            case .dailySummary: return "Daily Summary"
+            case .calendarSync: return "Calendar Sync"
+            case .calendarAutoSync: return "Calendar Auto-Sync"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .aiAutoSuggest: return "AI suggestions when creating tasks"
+            case .aiEstimateDuration: return "AI-powered duration estimates"
+            case .aiSuggestPriority: return "AI-powered priority suggestions"
+            case .aiTaskExtraction: return "Extract tasks from quick capture notes"
+            case .quickCapture: return "Quick note capture from anywhere"
+            case .focusMode: return "Focus timer and distraction blocking"
+            case .morningBriefing: return "Morning task briefing card"
+            case .dailySummary: return "End-of-day productivity summary"
+            case .calendarSync: return "Two-way calendar synchronization"
+            case .calendarAutoSync: return "Automatic calendar sync on changes"
+            }
+        }
+
+        /// Compile-time default value
+        var defaultValue: Bool {
+            switch self {
+            case .aiAutoSuggest: return true
+            case .aiEstimateDuration: return true
+            case .aiSuggestPriority: return true
+            case .aiTaskExtraction: return true
+            case .quickCapture: return true
+            case .focusMode: return true
+            case .morningBriefing: return true
+            case .dailySummary: return true
+            case .calendarSync: return true
+            case .calendarAutoSync: return false
+            }
+        }
+
+        /// Group for display purposes
+        var group: Group {
+            switch self {
+            case .aiAutoSuggest, .aiEstimateDuration, .aiSuggestPriority, .aiTaskExtraction:
+                return .ai
+            case .quickCapture, .focusMode, .morningBriefing, .dailySummary:
+                return .productivity
+            case .calendarSync, .calendarAutoSync:
+                return .sync
+            }
+        }
+
+        enum Group: String, CaseIterable {
+            case ai = "AI Features"
+            case productivity = "Productivity"
+            case sync = "Sync & Calendar"
+        }
+    }
+
+    private init() {}
+
+    // MARK: - Public API
+
+    /// Check if a feature flag is enabled
+    func isEnabled(_ flag: Flag) -> Bool {
+        // Debug override takes priority
+        if let override = getOverride(flag) {
+            return override
+        }
+        return flag.defaultValue
+    }
+
+    /// Set a debug override for a flag
+    func setOverride(_ flag: Flag, enabled: Bool) {
+        let key = overridePrefix + flag.rawValue
+        UserDefaults.standard.set(enabled, forKey: key)
+        logger.info("Flag '\(flag.rawValue, privacy: .public)' overridden to \(enabled, privacy: .public)")
+        objectWillChange.send()
+    }
+
+    /// Remove a debug override (revert to default)
+    func removeOverride(_ flag: Flag) {
+        let key = overridePrefix + flag.rawValue
+        UserDefaults.standard.removeObject(forKey: key)
+        logger.info("Flag '\(flag.rawValue, privacy: .public)' override removed")
+        objectWillChange.send()
+    }
+
+    /// Remove all debug overrides
+    func removeAllOverrides() {
+        for flag in Flag.allCases {
+            let key = overridePrefix + flag.rawValue
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        logger.info("All feature flag overrides removed")
+        objectWillChange.send()
+    }
+
+    /// Check if a flag has a debug override
+    func hasOverride(_ flag: Flag) -> Bool {
+        let key = overridePrefix + flag.rawValue
+        return UserDefaults.standard.object(forKey: key) != nil
+    }
+
+    /// Get the override value (nil if no override)
+    func getOverride(_ flag: Flag) -> Bool? {
+        let key = overridePrefix + flag.rawValue
+        guard UserDefaults.standard.object(forKey: key) != nil else { return nil }
+        return UserDefaults.standard.bool(forKey: key)
+    }
+
+    /// Get flags grouped by category
+    static var groupedFlags: [(group: Flag.Group, flags: [Flag])] {
+        Flag.Group.allCases.map { group in
+            (group: group, flags: Flag.allCases.filter { $0.group == group })
+        }
+    }
+}

@@ -177,6 +177,17 @@ struct SettingsView: View {
                     }
                 }
 
+                // Developer (debug builds only)
+                #if DEBUG
+                Section("Developer") {
+                    NavigationLink {
+                        FeatureFlagsDebugView()
+                    } label: {
+                        Label("Feature Flags", systemImage: "flag")
+                    }
+                }
+                #endif
+
                 // About
                 Section("About") {
                     HStack {
