@@ -1,6 +1,7 @@
 import Foundation
 import EventKit
 import Combine
+import os
 
 /// Service for managing calendar integration using EventKit
 final class CalendarService: ObservableObject {
@@ -56,7 +57,7 @@ final class CalendarService: ObservableObject {
                 return granted
             }
         } catch {
-            print("Failed to request calendar access: \(error)")
+            Logger.calendar.error("Failed to request calendar access: \(error)")
             return false
         }
     }
@@ -128,7 +129,7 @@ final class CalendarService: ObservableObject {
             UserDefaults.standard.set(calendar.calendarIdentifier, forKey: Self.lazyflowCalendarIDKey)
             return calendar
         } catch {
-            print("Failed to create Lazyflow calendar: \(error)")
+            Logger.calendar.error("Failed to create Lazyflow calendar: \(error)")
             return nil
         }
     }

@@ -1,6 +1,7 @@
 import Foundation
 import EventKit
 import Combine
+import os
 
 /// Orchestrates two-way sync between tasks and calendar events.
 /// Forward: eligible tasks → Lazyflow calendar events.
@@ -166,7 +167,7 @@ final class CalendarSyncService: ObservableObject {
 
             recentlyPushedTaskIDs[task.id] = Date()
         } catch {
-            print("CalendarSyncService: Failed to create event for task '\(task.title)': \(error)")
+            Logger.calendar.error("CalendarSyncService: Failed to create event for task '\(task.title)': \(error)")
         }
     }
 
@@ -232,7 +233,7 @@ final class CalendarSyncService: ObservableObject {
 
             recentlyPushedTaskIDs[task.id] = Date()
         } catch {
-            print("CalendarSyncService: Failed to push updates for task '\(task.title)': \(error)")
+            Logger.calendar.error("CalendarSyncService: Failed to push updates for task '\(task.title)': \(error)")
         }
     }
 
@@ -284,7 +285,7 @@ final class CalendarSyncService: ObservableObject {
 
                 recentlyPushedTaskIDs[task.id] = Date()
             } catch {
-                print("CalendarSyncService: Failed to delete event for completed task '\(task.title)': \(error)")
+                Logger.calendar.error("CalendarSyncService: Failed to delete event for completed task '\(task.title)': \(error)")
             }
         }
     }

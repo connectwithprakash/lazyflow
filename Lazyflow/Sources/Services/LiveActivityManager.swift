@@ -1,5 +1,6 @@
 import ActivityKit
 import Foundation
+import os
 
 /// Manages Live Activity lifecycle for task tracking
 @MainActor
@@ -49,7 +50,7 @@ final class LiveActivityManager: ObservableObject {
     ) async {
         // Don't start if not supported or already tracking
         guard areActivitiesSupported else {
-            print("Live Activities not supported on this device")
+            Logger.ui.warning("Live Activities not supported on this device")
             return
         }
 
@@ -84,9 +85,9 @@ final class LiveActivityManager: ObservableObject {
                 pushType: nil
             )
             currentActivity = activity
-            print("Live Activity started: \(activity.id)")
+            Logger.ui.info("Live Activity started: \(activity.id)")
         } catch {
-            print("Failed to start Live Activity: \(error.localizedDescription)")
+            Logger.ui.error("Failed to start Live Activity: \(error.localizedDescription)")
         }
     }
 
@@ -135,7 +136,7 @@ final class LiveActivityManager: ObservableObject {
         )
 
         await activity.update(content)
-        print("Live Activity updated: \(completedCount)/\(totalCount)\(inProgressTask != nil ? " [In Progress: \(inProgressTask!)]" : "")")
+        Logger.ui.debug("Live Activity updated: \(completedCount)/\(totalCount)")
     }
 
     /// Stop the current Live Activity
@@ -159,7 +160,7 @@ final class LiveActivityManager: ObservableObject {
         }
 
         currentActivity = nil
-        print("Live Activity stopped")
+        Logger.ui.info("Live Activity stopped")
     }
 
     /// Convenience method to update from task arrays

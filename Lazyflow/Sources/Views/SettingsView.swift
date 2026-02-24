@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 
 /// Settings view for app configuration
 struct SettingsView: View {
@@ -828,7 +829,7 @@ struct DataManagementView: View {
             do {
                 try await PersistenceController.shared.deleteCloudKitData()
             } catch {
-                print("Failed to delete CloudKit data: \(error)")
+                Logger.sync.error("Failed to delete CloudKit data: \(error, privacy: .public)")
             }
             await MainActor.run {
                 isDeletingCloud = false

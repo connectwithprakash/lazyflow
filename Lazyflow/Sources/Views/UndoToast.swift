@@ -299,8 +299,8 @@ extension View {
             Spacer()
             UndoToastView(
                 action: .completed(Task(title: "Buy groceries")),
-                onUndo: { print("Undo tapped") },
-                onDismiss: { print("Dismissed") }
+                onUndo: { },
+                onDismiss: { }
             )
         }
     }
@@ -320,7 +320,7 @@ extension View {
             Spacer()
             ErrorToastView(
                 message: "Failed to sync task to calendar",
-                onDismiss: { print("Dismissed") }
+                onDismiss: { }
             )
         }
     }

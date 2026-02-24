@@ -64,8 +64,6 @@ struct AddSubtaskSheet: View {
 #Preview {
     AddSubtaskSheet(
         parentTaskID: UUID(),
-        onAdd: { title in
-            print("Added subtask: \(title)")
-        }
+        onAdd: { _ in }
     )
 }

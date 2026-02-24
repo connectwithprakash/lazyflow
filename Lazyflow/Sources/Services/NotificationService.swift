@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import os
 
 /// Service responsible for managing local notifications for task reminders
 final class NotificationService: @unchecked Sendable {
@@ -17,7 +18,7 @@ final class NotificationService: @unchecked Sendable {
             let granted = try await notificationCenter.requestAuthorization(options: [.alert, .sound, .badge])
             return granted
         } catch {
-            print("Failed to request notification permission: \(error)")
+            Logger.notifications.error("Failed to request notification permission: \(error, privacy: .public)")
             return false
         }
     }
@@ -47,12 +48,12 @@ final class NotificationService: @unchecked Sendable {
                 if granted {
                     await scheduleNotification(taskID: taskID, title: title, reminderDate: reminderDate)
                 } else {
-                    print("Notification permission denied by user")
+                    Logger.notifications.warning("Notification permission denied by user")
                 }
             case .authorized, .provisional, .ephemeral:
                 await scheduleNotification(taskID: taskID, title: title, reminderDate: reminderDate)
             case .denied:
-                print("Notification permission denied. User needs to enable in Settings.")
+                Logger.notifications.warning("Notification permission denied. User needs to enable in Settings.")
             @unknown default:
                 break
             }
@@ -84,7 +85,7 @@ final class NotificationService: @unchecked Sendable {
         do {
             try await notificationCenter.add(request)
         } catch {
-            print("Failed to schedule notification: \(error)")
+            Logger.notifications.error("Failed to schedule notification: \(error, privacy: .public)")
         }
     }
 
@@ -132,7 +133,7 @@ final class NotificationService: @unchecked Sendable {
                     reminderDate: reminderDate
                 )
             case .denied:
-                print("Notification permission denied. User needs to enable in Settings.")
+                Logger.notifications.warning("Notification permission denied. User needs to enable in Settings.")
             @unknown default:
                 break
             }
@@ -163,7 +164,7 @@ final class NotificationService: @unchecked Sendable {
         do {
             try await notificationCenter.add(request)
         } catch {
-            print("Failed to schedule before notification: \(error)")
+            Logger.notifications.error("Failed to schedule before notification: \(error, privacy: .public)")
         }
     }
 
@@ -192,7 +193,7 @@ final class NotificationService: @unchecked Sendable {
             case .authorized, .provisional, .ephemeral:
                 await scheduleIntradayNotifications(for: task, rule: rule)
             case .denied:
-                print("Notification permission denied for intraday reminders")
+                Logger.notifications.warning("Notification permission denied for intraday reminders")
             @unknown default:
                 break
             }
@@ -226,7 +227,7 @@ final class NotificationService: @unchecked Sendable {
         }
 
         if !timesToSchedule.isEmpty {
-            print("Scheduled \(timesToSchedule.count) intraday notifications for task: \(task.title)")
+            Logger.notifications.info("Scheduled \(timesToSchedule.count, privacy: .public) intraday notifications for task: \(task.title)")
         }
     }
 
@@ -265,7 +266,7 @@ final class NotificationService: @unchecked Sendable {
         do {
             try await notificationCenter.add(request)
         } catch {
-            print("Failed to schedule intraday notification: \(error)")
+            Logger.notifications.error("Failed to schedule intraday notification: \(error, privacy: .public)")
         }
     }
 
@@ -319,7 +320,7 @@ final class NotificationService: @unchecked Sendable {
             // Cancel the next (earliest) one
             if let nextRequest = sortedRequests.first {
                 self?.notificationCenter.removePendingNotificationRequests(withIdentifiers: [nextRequest.identifier])
-                print("Cancelled next intraday notification for task: \(taskIDString)")
+                Logger.notifications.info("Cancelled next intraday notification for task: \(taskIDString, privacy: .public)")
             }
         }
     }
@@ -371,7 +372,7 @@ final class NotificationService: @unchecked Sendable {
                     await scheduleDailySummaryNotification(hour: hour, minute: minute)
                 }
             case .denied:
-                print("Notification permission denied for daily summary")
+                Logger.notifications.warning("Notification permission denied for daily summary")
             @unknown default:
                 break
             }
@@ -399,9 +400,9 @@ final class NotificationService: @unchecked Sendable {
 
         do {
             try await notificationCenter.add(request)
-            print("Scheduled daily summary reminder at \(hour):\(minute)")
+            Logger.notifications.info("Scheduled daily summary reminder at \(hour, privacy: .public):\(minute, privacy: .public)")
         } catch {
-            print("Failed to schedule daily summary reminder: \(error)")
+            Logger.notifications.error("Failed to schedule daily summary reminder: \(error, privacy: .public)")
         }
     }
 
@@ -431,7 +432,7 @@ final class NotificationService: @unchecked Sendable {
                     await scheduleMorningBriefingNotification(hour: hour, minute: minute)
                 }
             case .denied:
-                print("Notification permission denied for morning briefing")
+                Logger.notifications.warning("Notification permission denied for morning briefing")
             @unknown default:
                 break
             }
@@ -459,9 +460,9 @@ final class NotificationService: @unchecked Sendable {
 
         do {
             try await notificationCenter.add(request)
-            print("Scheduled morning briefing at \(hour):\(String(format: "%02d", minute))")
+            Logger.notifications.info("Scheduled morning briefing at \(hour, privacy: .public):\(String(format: "%02d", minute), privacy: .public)")
         } catch {
-            print("Failed to schedule morning briefing: \(error)")
+            Logger.notifications.error("Failed to schedule morning briefing: \(error, privacy: .public)")
         }
     }
 

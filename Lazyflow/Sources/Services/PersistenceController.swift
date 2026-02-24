@@ -112,13 +112,13 @@ final class PersistenceController: @unchecked Sendable {
     /// Call this after changing iCloud sync preference to apply immediately
     func reloadStoreWithCurrentSyncSettings() {
         guard isLoaded else {
-            print("Warning: Store not loaded yet")
+            Logger.persistence.warning("Warning: Store not loaded yet")
             return
         }
 
         guard let storeDescription = container.persistentStoreDescriptions.first,
               let storeURL = storeDescription.url else {
-            print("Could not find store description")
+            Logger.persistence.error("Could not find store description")
             return
         }
 
@@ -129,7 +129,7 @@ final class PersistenceController: @unchecked Sendable {
             do {
                 try coordinator.remove(store)
             } catch {
-                print("Failed to remove store: \(error)")
+                Logger.persistence.error("Failed to remove store: \(error)")
                 return
             }
         }
@@ -151,10 +151,10 @@ final class PersistenceController: @unchecked Sendable {
                 containerIdentifier: Self.cloudKitContainerIdentifier
             )
             newDescription.cloudKitContainerOptions = cloudKitOptions
-            print("Reloading store with CloudKit sync ENABLED")
+            Logger.sync.info("Reloading store with CloudKit sync ENABLED")
         } else {
             newDescription.cloudKitContainerOptions = nil
-            print("Reloading store with CloudKit sync DISABLED")
+            Logger.sync.info("Reloading store with CloudKit sync DISABLED")
         }
 
         // Re-add the store with new settings
@@ -172,7 +172,7 @@ final class PersistenceController: @unchecked Sendable {
         _ = semaphore.wait(timeout: .now() + 10)
 
         if let error = loadError {
-            print("Failed to reload store: \(error)")
+            Logger.persistence.error("Failed to reload store: \(error)")
         } else {
             // Reset history token — old history is no longer valid after store reload
             lastHistoryToken = nil
@@ -184,7 +184,7 @@ final class PersistenceController: @unchecked Sendable {
 
             // Post notification for UI to refresh
             NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
-            print("Store reloaded successfully")
+            Logger.persistence.info("Store reloaded successfully")
         }
     }
 
@@ -355,13 +355,13 @@ final class PersistenceController: @unchecked Sendable {
                 .containerURL(forSecurityApplicationGroupIdentifier: Self.appGroupIdentifier)?
                 .appendingPathComponent("Lazyflow.sqlite") {
                 storeURL = appGroupURL
-                print("Using App Groups container: \(appGroupURL.path)")
+                Logger.persistence.debug("Using App Groups container: \(appGroupURL.path)")
             } else {
                 // Fallback to default Core Data location
                 let defaultURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
                     .appendingPathComponent("Lazyflow.sqlite")
                 storeURL = defaultURL
-                print("App Groups not available, using default location: \(defaultURL.path)")
+                Logger.persistence.warning("App Groups not available, using default location: \(defaultURL.path)")
             }
 
             let description = NSPersistentStoreDescription(url: storeURL)
@@ -388,9 +388,9 @@ final class PersistenceController: @unchecked Sendable {
                     containerIdentifier: Self.cloudKitContainerIdentifier
                 )
                 description.cloudKitContainerOptions = cloudKitOptions
-                print("CloudKit sync enabled - user preference: enabled, iCloud: available")
+                Logger.sync.info("CloudKit sync enabled - user preference: enabled, iCloud: available")
             } else {
-                print("CloudKit sync disabled - user preference: \(Self.isICloudSyncEnabled), iCloud available: \(Self.isICloudAvailable)")
+                Logger.sync.info("CloudKit sync disabled - user preference: \(Self.isICloudSyncEnabled, privacy: .public), iCloud available: \(Self.isICloudAvailable, privacy: .public)")
             }
 
             container.persistentStoreDescriptions = [description]
@@ -404,9 +404,9 @@ final class PersistenceController: @unchecked Sendable {
             if let error = error as NSError? {
                 self?.initializationError = error
                 loadError = error
-                print("Critical: Failed to load Core Data store: \(error), \(error.userInfo)")
+                Logger.persistence.error("Critical: Failed to load Core Data store: \(error), \(error.userInfo)")
             } else {
-                print("Successfully loaded persistent store: \(storeDescription.url?.path ?? "unknown")")
+                Logger.persistence.info("Successfully loaded persistent store: \(storeDescription.url?.path ?? "unknown")")
             }
             semaphore.signal()
         }
@@ -414,7 +414,7 @@ final class PersistenceController: @unchecked Sendable {
         // Wait for store to load (with timeout)
         let timeout = DispatchTime.now() + .seconds(Int(AppConstants.Timing.cloudKitTimeout))
         if semaphore.wait(timeout: timeout) == .timedOut {
-            print("Warning: Persistent store loading timed out")
+            Logger.persistence.warning("Warning: Persistent store loading timed out")
         }
 
         // Configure viewContext only if requested (must be on main thread) and no error
@@ -679,7 +679,7 @@ final class PersistenceController: @unchecked Sendable {
             let listRequest: NSFetchRequest<TaskListEntity> = TaskListEntity.fetchRequest()
             listCount = try context.count(for: listRequest)
         } catch {
-            print("Failed to count entities: \(error)")
+            Logger.persistence.error("Failed to count entities: \(error)")
         }
 
         return DataCounts(tasks: taskCount, lists: listCount)
@@ -720,7 +720,7 @@ final class PersistenceController: @unchecked Sendable {
         do {
             // First verify the zone exists
             let zone = try await privateDatabase.recordZone(for: coreDataZoneID)
-            print("Found Core Data CloudKit zone: \(zone.zoneID.zoneName)")
+            Logger.sync.debug("Found Core Data CloudKit zone: \(zone.zoneID.zoneName, privacy: .public)")
 
             // Fetch all records from the zone to count them
             // Using recordZoneChanges to get all records without needing queryable fields
@@ -794,10 +794,10 @@ final class PersistenceController: @unchecked Sendable {
             default:
                 errorMessage = "CloudKit error: \(ckError.localizedDescription)"
             }
-            print("CloudKit error fetching counts: \(ckError)")
+            Logger.sync.error("CloudKit error fetching counts: \(ckError)")
             return .error(errorMessage)
         } catch {
-            print("Failed to fetch CloudKit counts: \(error)")
+            Logger.sync.error("Failed to fetch CloudKit counts: \(error)")
             return .error("Unable to check iCloud")
         }
     }
@@ -842,13 +842,13 @@ final class PersistenceController: @unchecked Sendable {
     /// Note: This removes the local SQLite store and lets CloudKit re-download data
     func deleteLocalDataOnly() {
         guard isLoaded else {
-            print("Warning: Attempted to delete before store was loaded")
+            Logger.persistence.warning("Warning: Attempted to delete before store was loaded")
             return
         }
 
         guard let storeDescription = container.persistentStoreDescriptions.first,
               let storeURL = storeDescription.url else {
-            print("Could not find store URL")
+            Logger.persistence.error("Could not find store URL")
             return
         }
 
@@ -860,7 +860,7 @@ final class PersistenceController: @unchecked Sendable {
             do {
                 try coordinator.remove(store)
             } catch {
-                print("Failed to remove store: \(error)")
+                Logger.persistence.error("Failed to remove store: \(error)")
             }
         }
 
@@ -893,11 +893,11 @@ final class PersistenceController: @unchecked Sendable {
         // Wait for store to load
         let result = semaphore.wait(timeout: .now() + 10)
         if result == .timedOut {
-            print("Store reload timed out")
+            Logger.persistence.error("Store reload timed out")
         } else if let error = loadError {
-            print("Failed to re-add store: \(error)")
+            Logger.persistence.error("Failed to re-add store: \(error)")
         } else {
-            print("Local cache cleared - CloudKit will re-sync data")
+            Logger.sync.info("Local cache cleared - CloudKit will re-sync data")
         }
 
         // Reset history token — old history is no longer valid after local wipe
@@ -913,7 +913,7 @@ final class PersistenceController: @unchecked Sendable {
     /// Note: Only works properly when iCloud sync is enabled
     func deleteAllDataEverywhere() {
         guard isLoaded else {
-            print("Warning: Attempted to delete before store was loaded")
+            Logger.persistence.warning("Warning: Attempted to delete before store was loaded")
             return
         }
 
@@ -931,12 +931,12 @@ final class PersistenceController: @unchecked Sendable {
                     container.viewContext.delete(object)
                 }
             } catch {
-                print("Failed to fetch \(entityName) for deletion: \(error)")
+                Logger.persistence.error("Failed to fetch \(entityName, privacy: .public) for deletion: \(error)")
             }
         }
 
         save()
-        print("All data deleted (will sync to iCloud if enabled)")
+        Logger.sync.info("All data deleted (will sync to iCloud if enabled)")
     }
 
     /// Delete CloudKit data directly using CloudKit API
@@ -989,7 +989,7 @@ final class PersistenceController: @unchecked Sendable {
         }
 
         if recordIDs.isEmpty {
-            print("No CloudKit records to delete")
+            Logger.sync.info("No CloudKit records to delete")
             return
         }
 
@@ -1010,22 +1010,22 @@ final class PersistenceController: @unchecked Sendable {
             }
 
             if !failures.isEmpty {
-                print("Some CloudKit records failed to delete: \(failures.count) failures")
+                Logger.sync.error("Some CloudKit records failed to delete: \(failures.count, privacy: .public) failures")
             } else {
-                print("Deleted \(batch.count) records from CloudKit")
+                Logger.sync.info("Deleted \(batch.count, privacy: .public) records from CloudKit")
             }
         }
 
         // Clear last sync date since we've wiped CloudKit
         UserDefaults.standard.removeObject(forKey: Self.lastSyncDateKey)
-        print("CloudKit data deleted - total \(recordIDs.count) records")
+        Logger.sync.info("CloudKit data deleted - total \(recordIDs.count, privacy: .public) records")
     }
 
     /// Re-sync from iCloud (clear local, pull fresh from cloud)
     /// Use when: Local data is corrupted or out of sync
     func resyncFromCloud() {
         guard isLoaded else {
-            print("Warning: Attempted to resync before store was loaded")
+            Logger.persistence.warning("Warning: Attempted to resync before store was loaded")
             return
         }
 
@@ -1036,7 +1036,7 @@ final class PersistenceController: @unchecked Sendable {
         container.viewContext.refreshAllObjects()
 
         // Clear and reload will happen automatically via CloudKit sync
-        print("Local data cleared, waiting for CloudKit resync...")
+        Logger.sync.info("Local data cleared, waiting for CloudKit resync...")
     }
 
     /// Legacy method - now calls deleteAllDataEverywhere for backwards compatibility
@@ -1048,7 +1048,7 @@ final class PersistenceController: @unchecked Sendable {
     /// Create default lists if they don't exist
     func createDefaultListsIfNeeded() {
         guard isLoaded else {
-            print("Warning: Attempted to create default lists before store was loaded")
+            Logger.persistence.warning("Warning: Attempted to create default lists before store was loaded")
             return
         }
 
@@ -1078,7 +1078,7 @@ final class PersistenceController: @unchecked Sendable {
             // Clean up any duplicate Inbox lists (from previous race conditions)
             removeDuplicateInboxLists()
         } catch {
-            print("Failed to check for default lists: \(error)")
+            Logger.persistence.error("Failed to check for default lists: \(error)")
         }
     }
 
@@ -1103,22 +1103,22 @@ final class PersistenceController: @unchecked Sendable {
             // Only log and process if there are actual duplicates
             guard !duplicates.isEmpty else { return }
 
-            print("[InboxCleanup] Found \(duplicates.count) duplicate Inbox list(s) to remove")
+            Logger.persistence.info("[InboxCleanup] Found \(duplicates.count, privacy: .public) duplicate Inbox list(s) to remove")
 
             // Keep the first inbox as the canonical one
             let canonicalInbox = inboxLists.first!
 
             // Ensure it has the correct canonical ID
             if canonicalInbox.id != inboxID {
-                print("[InboxCleanup] Updating canonical Inbox ID to \(inboxID)")
+                Logger.persistence.info("[InboxCleanup] Updating canonical Inbox ID to \(inboxID)")
                 canonicalInbox.id = inboxID
             }
 
             for duplicate in duplicates {
-                print("[InboxCleanup] Removing duplicate: \(duplicate.name ?? "nil")")
+                Logger.persistence.info("[InboxCleanup] Removing duplicate: \(duplicate.name ?? "nil")")
                 // Move tasks from duplicate to canonical inbox
                 if let tasks = duplicate.tasks as? Set<TaskEntity>, !tasks.isEmpty {
-                    print("[InboxCleanup]   Moving \(tasks.count) tasks to canonical Inbox")
+                    Logger.persistence.info("[InboxCleanup]   Moving \(tasks.count, privacy: .public) tasks to canonical Inbox")
                     for task in tasks {
                         task.list = canonicalInbox
                     }
@@ -1126,9 +1126,9 @@ final class PersistenceController: @unchecked Sendable {
                 context.delete(duplicate)
             }
             save()
-            print("[InboxCleanup] Cleanup complete")
+            Logger.persistence.info("[InboxCleanup] Cleanup complete")
         } catch {
-            print("[InboxCleanup] Failed: \(error)")
+            Logger.persistence.error("[InboxCleanup] Failed: \(error)")
         }
     }
 }
