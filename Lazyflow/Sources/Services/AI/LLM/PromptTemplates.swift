@@ -689,6 +689,8 @@ enum PromptTemplates {
     - Keep task titles concise and action-oriented (start with a verb when possible)
     - Assign categories and priorities based on content
     - Parse any mentioned dates or deadlines
+    - When the note contains a main task with sub-items (bullets, numbered lists, indented items, or items clearly subordinate to a heading), represent them as subtasks
+    - Only use subtasks when the note clearly implies a parent-child relationship. Simple lists of independent tasks should remain flat.
 
     DO NOT include personal opinions or unnecessary elaboration.
     Respond ONLY in the specified JSON format.
@@ -725,9 +727,13 @@ enum PromptTemplates {
 
         Available categories: \(allCategories)\(listSection)
         \(contextSection)
-        Example:
+        Example 1 (flat tasks):
         Note: "Buy groceries tomorrow and call dentist to schedule appointment next week"
-        Response: [{"title": "Buy groceries", "priority": "low", "category": "shopping", "due_date": "tomorrow", "list": null}, {"title": "Call dentist to schedule appointment", "priority": "medium", "category": "health", "due_date": "next week", "list": null}]
+        Response: [{"title": "Buy groceries", "priority": "low", "category": "shopping", "due_date": "tomorrow", "list": null, "subtasks": []}, {"title": "Call dentist to schedule appointment", "priority": "medium", "category": "health", "due_date": "next week", "list": null, "subtasks": []}]
+
+        Example 2 (hierarchical tasks):
+        Note: "Plan birthday party\\n- Send invitations\\n- Order cake\\n- Book venue by Friday"
+        Response: [{"title": "Plan birthday party", "priority": "medium", "category": "personal", "due_date": null, "list": null, "subtasks": [{"title": "Send invitations", "due_date": null, "priority": null}, {"title": "Order cake", "due_date": null, "priority": null}, {"title": "Book venue", "due_date": "friday", "priority": null}]}]
 
         Extract tasks as a JSON array. Each task object:
         {
@@ -735,8 +741,11 @@ enum PromptTemplates {
             "priority": "<none|low|medium|high|urgent>",
             "category": "<one of the available categories>",
             "due_date": "<natural language date or null>",
-            "list": "<list name or null>"
+            "list": "<list name or null>",
+            "subtasks": [{"title": "<subtask title>", "due_date": "<date or null>", "priority": "<priority or null>"}]
         }
+
+        Use "subtasks" only when items are clearly subordinate to a parent task. Independent tasks should have an empty subtasks array.
 
         If no actionable tasks can be extracted, return an empty array: []
 

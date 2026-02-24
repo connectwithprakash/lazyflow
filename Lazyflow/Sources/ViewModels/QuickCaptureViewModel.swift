@@ -43,7 +43,7 @@ final class QuickCaptureViewModel: ObservableObject {
     // MARK: - Computed Properties
 
     var selectedCount: Int {
-        drafts.filter(\.isSelected).count
+        drafts.filter(\.isSelected).reduce(0) { $0 + $1.totalSelectedCount }
     }
 
     var hasSelectedDrafts: Bool {
@@ -75,10 +75,17 @@ final class QuickCaptureViewModel: ObservableObject {
         viewState = .review
     }
 
-    /// Toggle selection of a draft
+    /// Toggle selection of a draft. When deselecting parent, auto-deselect all subtasks.
     func toggleDraft(at index: Int) {
         guard drafts.indices.contains(index) else { return }
         drafts[index].isSelected.toggle()
+
+        // Parent deselected → auto-deselect all subtasks
+        if !drafts[index].isSelected {
+            for i in drafts[index].subtasks.indices {
+                drafts[index].subtasks[i].isSelected = false
+            }
+        }
     }
 
     /// Toggle expansion of a draft for inline editing
@@ -87,7 +94,14 @@ final class QuickCaptureViewModel: ObservableObject {
         drafts[index].isExpanded.toggle()
     }
 
-    /// Create all selected tasks
+    /// Toggle selection of a subtask within a parent draft
+    func toggleSubtask(parentIndex: Int, subtaskIndex: Int) {
+        guard drafts.indices.contains(parentIndex),
+              drafts[parentIndex].subtasks.indices.contains(subtaskIndex) else { return }
+        drafts[parentIndex].subtasks[subtaskIndex].isSelected.toggle()
+    }
+
+    /// Create all selected tasks (parents + subtasks)
     func createTasks() {
         viewState = .creating
 
@@ -95,7 +109,7 @@ final class QuickCaptureViewModel: ObservableObject {
         var createdCount = 0
 
         for draft in selectedDrafts {
-            taskService.createTask(
+            let parentTask = taskService.createTask(
                 title: draft.title,
                 dueDate: draft.dueDate,
                 dueTime: draft.dueTime,
@@ -105,6 +119,21 @@ final class QuickCaptureViewModel: ObservableObject {
                 listID: draft.listID
             )
             createdCount += 1
+
+            // Create selected subtasks
+            let selectedSubtasks = draft.subtasks.filter(\.isSelected)
+            if !selectedSubtasks.isEmpty {
+                for subtask in selectedSubtasks {
+                    taskService.createSubtask(
+                        title: subtask.title,
+                        parentTaskID: parentTask.id,
+                        dueDate: subtask.dueDate,
+                        dueTime: subtask.dueTime,
+                        priority: subtask.priority != .none ? subtask.priority : nil
+                    )
+                    createdCount += 1
+                }
+            }
 
             // Record learning data
             recordLearning(for: draft)

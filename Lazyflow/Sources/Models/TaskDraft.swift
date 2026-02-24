@@ -12,6 +12,7 @@ struct TaskDraft: Identifiable {
     var listID: UUID?
     var isSelected: Bool = true
     var isExpanded: Bool = false
+    var subtasks: [TaskDraft] = []
 
     // Track AI's original suggestions for learning
     let originalTitle: String
@@ -26,7 +27,8 @@ struct TaskDraft: Identifiable {
         priority: Priority = .none,
         category: TaskCategory = .uncategorized,
         customCategoryID: UUID? = nil,
-        listID: UUID? = nil
+        listID: UUID? = nil,
+        subtasks: [TaskDraft] = []
     ) {
         self.title = title
         self.dueDate = dueDate
@@ -35,6 +37,7 @@ struct TaskDraft: Identifiable {
         self.category = category
         self.customCategoryID = customCategoryID
         self.listID = listID
+        self.subtasks = subtasks
 
         self.originalTitle = title
         self.originalPriority = priority
@@ -47,6 +50,14 @@ struct TaskDraft: Identifiable {
         title != originalTitle ||
         priority != originalPriority ||
         category != originalCategory ||
-        dueDate != originalDueDate
+        dueDate != originalDueDate ||
+        subtasks.contains(where: \.isModified)
+    }
+
+    /// Total selected count including subtasks (parent deselected = 0)
+    var totalSelectedCount: Int {
+        guard isSelected else { return 0 }
+        let subtaskCount = subtasks.filter(\.isSelected).count
+        return 1 + subtaskCount
     }
 }

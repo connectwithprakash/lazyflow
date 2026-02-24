@@ -23,13 +23,18 @@ final class NoteParsingService: ObservableObject {
     /// Extract task drafts from a note's text
     /// Uses LLM when available, falls back to deterministic parsing
     func extractTasks(from text: String) async -> [TaskDraft] {
-        let segments = deterministicParse(text)
+        let hierarchical = deterministicParseHierarchical(text)
+
+        // Flatten for LLM segment matching
+        let flatSegments = hierarchical.flatMap { group -> [RawSegment] in
+            [group.parent] + group.children
+        }
 
         // Try LLM extraction if available
         if llmService.isReady {
             do {
                 let (drafts, didParse) = try await withTimeout(seconds: llmTimeout) {
-                    try await self.llmExtract(text: text, segments: segments)
+                    try await self.llmExtract(text: text, segments: flatSegments)
                 }
                 // If LLM successfully parsed (even to empty), trust its result
                 if didParse {
@@ -40,12 +45,20 @@ final class NoteParsingService: ObservableObject {
             }
         }
 
-        // Deterministic fallback: convert segments to drafts
-        return segments.map { segment in
-            TaskDraft(
-                title: segment.text,
-                dueDate: segment.parsedDate,
-                dueTime: segment.parsedTime
+        // Deterministic fallback: convert hierarchical segments to drafts with subtasks
+        return hierarchical.map { group in
+            let subtaskDrafts = group.children.map { child in
+                TaskDraft(
+                    title: child.text,
+                    dueDate: child.parsedDate,
+                    dueTime: child.parsedTime
+                )
+            }
+            return TaskDraft(
+                title: group.parent.text,
+                dueDate: group.parent.parsedDate,
+                dueTime: group.parent.parsedTime,
+                subtasks: subtaskDrafts
             )
         }
     }
@@ -59,7 +72,13 @@ final class NoteParsingService: ObservableObject {
         let parsedTime: Date?
     }
 
-    /// Split text into segments on sentence/clause boundaries and parse dates
+    /// A parent segment with optional child segments (one level deep)
+    struct HierarchicalSegment {
+        let parent: RawSegment
+        let children: [RawSegment]
+    }
+
+    /// Split text into segments on sentence/clause boundaries and parse dates (flat — no hierarchy)
     func deterministicParse(_ text: String) -> [RawSegment] {
         let lines = splitIntoSegments(text)
 
@@ -80,6 +99,181 @@ final class NoteParsingService: ObservableObject {
 
             return RawSegment(text: trimmed, parsedDate: nil, parsedTime: nil)
         }
+    }
+
+    /// Parse text into hierarchical segments, detecting parent-child relationships
+    func deterministicParseHierarchical(_ text: String) -> [HierarchicalSegment] {
+        let hierarchy = detectHierarchy(text)
+
+        // If hierarchy was detected, use it
+        if !hierarchy.isEmpty {
+            return hierarchy.map { group in
+                let parentSegment = makeSegment(from: group.parent)
+                let childSegments = group.children.compactMap { child -> RawSegment? in
+                    let seg = makeSegment(from: child)
+                    guard seg.text.count > 1 else { return nil }
+                    return seg
+                }
+                return HierarchicalSegment(parent: parentSegment, children: childSegments)
+            }.filter { $0.parent.text.count > 1 }
+        }
+
+        // No hierarchy detected — fall through to flat parsing
+        let flatSegments = deterministicParse(text)
+        return flatSegments.map { HierarchicalSegment(parent: $0, children: []) }
+    }
+
+    // MARK: - Hierarchy Detection
+
+    /// Intermediate structure for raw line grouping before date parsing
+    struct RawLineGroup {
+        let parent: String
+        let children: [String]
+    }
+
+    /// Regex pattern for child line prefixes: checkboxes, bullets, numbered lists
+    /// Checkboxes must come first since `- [ ]` would otherwise match `- ` prefix
+    private static let childPrefixPattern = #"^(\s*[-*•]\s\[[ x]\]\s+|\s*[-*•]\s+|\s*\d+\.\s+)"#
+
+    /// Detect if a line is a "child" line (bullet, number, checkbox, or indented)
+    private func isChildLine(_ line: String) -> Bool {
+        // Check for bullet/number/checkbox prefix
+        if let regex = try? NSRegularExpression(pattern: Self.childPrefixPattern),
+           regex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) != nil {
+            return true
+        }
+        // Check for indentation (2+ spaces or tab) without being a bullet
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty && (line.hasPrefix("  ") || line.hasPrefix("\t")) {
+            return true
+        }
+        return false
+    }
+
+    /// Strip child prefix (bullet, number, checkbox) from a line
+    private func stripChildPrefix(_ line: String) -> String {
+        // Match against original line (preserving leading spaces) to ensure prefix regex works
+        if let regex = try? NSRegularExpression(pattern: Self.childPrefixPattern) {
+            let range = NSRange(line.startIndex..., in: line)
+            if let match = regex.firstMatch(in: line, range: range) {
+                let matchEnd = line.index(line.startIndex, offsetBy: match.range.length)
+                return String(line[matchEnd...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return line.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Check if a line is a colon header (e.g., "Groceries:")
+    private func isColonHeader(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasSuffix(":") && trimmed.count > 1 && !isChildLine(line)
+    }
+
+    /// Strip trailing colon from a header line
+    private func stripColonSuffix(_ line: String) -> String {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasSuffix(":") {
+            return String(trimmed.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return trimmed
+    }
+
+    /// Detect parent-child hierarchy patterns in text.
+    /// Returns empty array if no hierarchy is found (caller should fall back to flat parsing).
+    func detectHierarchy(_ text: String) -> [RawLineGroup] {
+        let lines = text.components(separatedBy: .newlines)
+
+        // Quick check: does this text have any child-like lines at all?
+        let hasChildLines = lines.contains { isChildLine($0) }
+        guard hasChildLines else { return [] }
+
+        // Check if ALL non-empty lines are child lines (no parent header)
+        let nonEmptyLines = lines.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let allAreChildren = nonEmptyLines.allSatisfy { isChildLine($0) }
+        if allAreChildren {
+            // No parent header — treat as flat independent tasks
+            return []
+        }
+
+        var groups: [RawLineGroup] = []
+        var currentParent: String?
+        var currentChildren: [String] = []
+        var pendingNonChildLines: [String] = []
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+
+            if isChildLine(line) {
+                let childText = stripChildPrefix(line)
+                guard !childText.isEmpty else { continue }
+
+                if currentParent == nil {
+                    // Children before any parent — flush pending non-child lines as standalone
+                    for pending in pendingNonChildLines {
+                        groups.append(RawLineGroup(parent: pending, children: []))
+                    }
+                    pendingNonChildLines.removeAll()
+                    // Skip orphaned child (shouldn't happen given allAreChildren check)
+                    continue
+                }
+                currentChildren.append(childText)
+            } else {
+                // Non-child line — potential parent
+                // First, flush any in-progress group
+                if let parent = currentParent {
+                    if currentChildren.isEmpty {
+                        // Previous "parent" had no children — it's a standalone task
+                        pendingNonChildLines.append(parent)
+                    } else {
+                        // Flush pending standalone lines first
+                        for pending in pendingNonChildLines {
+                            groups.append(RawLineGroup(parent: pending, children: []))
+                        }
+                        pendingNonChildLines.removeAll()
+                        groups.append(RawLineGroup(parent: parent, children: currentChildren))
+                    }
+                }
+
+                // Start new potential parent
+                let parentText = isColonHeader(line) ? stripColonSuffix(line) : trimmed
+                currentParent = parentText
+                currentChildren = []
+            }
+        }
+
+        // Flush final group
+        if let parent = currentParent {
+            if currentChildren.isEmpty {
+                pendingNonChildLines.append(parent)
+            } else {
+                for pending in pendingNonChildLines {
+                    groups.append(RawLineGroup(parent: pending, children: []))
+                }
+                pendingNonChildLines.removeAll()
+                groups.append(RawLineGroup(parent: parent, children: currentChildren))
+            }
+        }
+
+        // Flush remaining standalone lines
+        for pending in pendingNonChildLines {
+            groups.append(RawLineGroup(parent: pending, children: []))
+        }
+
+        // Only return hierarchy if at least one group has children
+        let hasHierarchy = groups.contains { !$0.children.isEmpty }
+        return hasHierarchy ? groups : []
+    }
+
+    /// Convert a raw text line into a RawSegment with date parsing
+    private func makeSegment(from text: String) -> RawSegment {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let parsed = Date.parse(from: trimmed) {
+            let cleanTitle = parsed.cleanedTitle(from: trimmed)
+            let title = cleanTitle.isEmpty ? trimmed : cleanTitle
+            return RawSegment(text: title, parsedDate: parsed.date, parsedTime: parsed.time)
+        }
+        return RawSegment(text: trimmed, parsedDate: nil, parsedTime: nil)
     }
 
     /// Split text on sentence boundaries, newlines, and conjunctions
@@ -159,84 +353,131 @@ final class NoteParsingService: ObservableObject {
         }
 
         let drafts = jsonArray.compactMap { json -> TaskDraft? in
-            guard let rawTitle = json["title"] as? String else { return nil }
-            let title = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !title.isEmpty else { return nil }
-
-            // Parse priority
-            let priorityStr = json["priority"] as? String ?? "none"
-            let priority: Priority
-            switch priorityStr.lowercased() {
-            case "urgent": priority = .urgent
-            case "high": priority = .high
-            case "medium": priority = .medium
-            case "low": priority = .low
-            default: priority = .none
-            }
-
-            // Parse category
-            let categoryStr = json["category"] as? String ?? "uncategorized"
-            var category: TaskCategory = .uncategorized
-            var customCategoryID: UUID?
-
-            switch categoryStr.lowercased() {
-            case "work": category = .work
-            case "personal": category = .personal
-            case "health": category = .health
-            case "finance": category = .finance
-            case "shopping": category = .shopping
-            case "errands": category = .errands
-            case "learning": category = .learning
-            case "home": category = .home
-            default:
-                if let custom = categoryService.getCategory(byName: categoryStr) {
-                    customCategoryID = custom.id
-                }
-            }
-
-            // Parse due date from LLM or merge from deterministic
-            var dueDate: Date?
-            var dueTime: Date?
-
-            if let dueDateStr = json["due_date"] as? String, !dueDateStr.isEmpty {
-                if let parsed = Date.parse(from: dueDateStr) {
-                    dueDate = parsed.date
-                    dueTime = parsed.time
-                }
-            }
-
-            // If LLM didn't find a date, fuzzy-match against deterministic segments
-            if dueDate == nil {
-                let titleWords = Set(title.lowercased().split(separator: " ").map(String.init))
-                let matchingSegment = segments.first { segment in
-                    guard segment.parsedDate != nil else { return false }
-                    let segmentWords = Set(segment.text.lowercased().split(separator: " ").map(String.init))
-                    // Match if at least 2 significant words overlap
-                    return titleWords.intersection(segmentWords).count >= min(2, segmentWords.count)
-                }
-                if let segment = matchingSegment {
-                    dueDate = segment.parsedDate
-                    dueTime = segment.parsedTime
-                }
-            }
-
-            // Match list by name
-            var listID: UUID?
-            if let listName = json["list"] as? String, !listName.isEmpty {
-                listID = lists.first { $0.name.lowercased() == listName.lowercased() }?.id
-            }
-
-            return TaskDraft(
-                title: title,
-                dueDate: dueDate,
-                dueTime: dueTime,
-                priority: priority,
-                category: category,
-                customCategoryID: customCategoryID,
-                listID: listID
-            )
+            parseSingleDraft(from: json, segments: segments, lists: lists)
         }
         return (drafts, true)
+    }
+
+    /// Parse a single task JSON object into a TaskDraft (with optional subtasks)
+    private func parseSingleDraft(
+        from json: [String: Any],
+        segments: [RawSegment],
+        lists: [TaskList]
+    ) -> TaskDraft? {
+        guard let rawTitle = json["title"] as? String else { return nil }
+        let title = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return nil }
+
+        // Parse priority
+        let priorityStr = json["priority"] as? String ?? "none"
+        let priority = parsePriority(from: priorityStr)
+
+        // Parse category
+        let categoryStr = json["category"] as? String ?? "uncategorized"
+        let (category, customCategoryID) = parseCategory(from: categoryStr)
+
+        // Parse due date from LLM or merge from deterministic
+        var dueDate: Date?
+        var dueTime: Date?
+
+        if let dueDateStr = json["due_date"] as? String, !dueDateStr.isEmpty {
+            if let parsed = Date.parse(from: dueDateStr) {
+                dueDate = parsed.date
+                dueTime = parsed.time
+            }
+        }
+
+        // If LLM didn't find a date, fuzzy-match against deterministic segments
+        if dueDate == nil {
+            let titleWords = Set(title.lowercased().split(separator: " ").map(String.init))
+            let matchingSegment = segments.first { segment in
+                guard segment.parsedDate != nil else { return false }
+                let segmentWords = Set(segment.text.lowercased().split(separator: " ").map(String.init))
+                // Match if at least 2 significant words overlap
+                return titleWords.intersection(segmentWords).count >= min(2, segmentWords.count)
+            }
+            if let segment = matchingSegment {
+                dueDate = segment.parsedDate
+                dueTime = segment.parsedTime
+            }
+        }
+
+        // Match list by name
+        var listID: UUID?
+        if let listName = json["list"] as? String, !listName.isEmpty {
+            listID = lists.first { $0.name.lowercased() == listName.lowercased() }?.id
+        }
+
+        // Parse subtasks
+        var subtaskDrafts: [TaskDraft] = []
+        if let subtasksJSON = json["subtasks"] as? [[String: Any]] {
+            subtaskDrafts = subtasksJSON.compactMap { sub in
+                guard let subTitle = sub["title"] as? String,
+                      !subTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    return nil
+                }
+                let cleanTitle = subTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                var subDueDate: Date?
+                var subDueTime: Date?
+                if let dueDateStr = sub["due_date"] as? String, !dueDateStr.isEmpty {
+                    if let parsed = Date.parse(from: dueDateStr) {
+                        subDueDate = parsed.date
+                        subDueTime = parsed.time
+                    }
+                }
+                var subPriority: Priority = .none
+                if let priorityStr = sub["priority"] as? String, !priorityStr.isEmpty {
+                    subPriority = parsePriority(from: priorityStr)
+                }
+                return TaskDraft(
+                    title: cleanTitle,
+                    dueDate: subDueDate,
+                    dueTime: subDueTime,
+                    priority: subPriority
+                )
+            }
+        }
+
+        return TaskDraft(
+            title: title,
+            dueDate: dueDate,
+            dueTime: dueTime,
+            priority: priority,
+            category: category,
+            customCategoryID: customCategoryID,
+            listID: listID,
+            subtasks: subtaskDrafts
+        )
+    }
+
+    // MARK: - Parsing Helpers
+
+    private func parsePriority(from string: String) -> Priority {
+        switch string.lowercased() {
+        case "urgent": return .urgent
+        case "high": return .high
+        case "medium": return .medium
+        case "low": return .low
+        default: return .none
+        }
+    }
+
+    private func parseCategory(from string: String) -> (TaskCategory, UUID?) {
+        switch string.lowercased() {
+        case "work": return (.work, nil)
+        case "personal": return (.personal, nil)
+        case "health": return (.health, nil)
+        case "finance": return (.finance, nil)
+        case "shopping": return (.shopping, nil)
+        case "errands": return (.errands, nil)
+        case "learning": return (.learning, nil)
+        case "home": return (.home, nil)
+        default:
+            if let custom = categoryService.getCategory(byName: string) {
+                return (.uncategorized, custom.id)
+            }
+            return (.uncategorized, nil)
+        }
     }
 
     // MARK: - Timeout Helper

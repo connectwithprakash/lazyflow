@@ -69,7 +69,10 @@ struct QuickCaptureReviewView: View {
                                 set: { viewModel.drafts[index] = $0 }
                             ),
                             onToggle: { viewModel.toggleDraft(at: index) },
-                            onExpand: { viewModel.toggleExpansion(at: index) }
+                            onExpand: { viewModel.toggleExpansion(at: index) },
+                            onToggleSubtask: { subtaskIndex in
+                                viewModel.toggleSubtask(parentIndex: index, subtaskIndex: subtaskIndex)
+                            }
                         )
                     }
                 }
@@ -196,6 +199,11 @@ private struct DraftCardView: View {
     @Binding var draft: TaskDraft
     let onToggle: () -> Void
     let onExpand: () -> Void
+    let onToggleSubtask: (Int) -> Void
+
+    private var hasSubtasks: Bool {
+        !draft.subtasks.isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -212,50 +220,64 @@ private struct DraftCardView: View {
                 }
                 .buttonStyle(.plain)
 
-                    // Title and metadata
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                        Text(draft.title)
-                            .font(DesignSystem.Typography.body)
-                            .foregroundColor(Color.Lazyflow.textPrimary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
+                // Title and metadata
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                    Text(draft.title)
+                        .font(DesignSystem.Typography.body)
+                        .foregroundColor(Color.Lazyflow.textPrimary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
 
-                        // Metadata chips
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            if let dueDate = draft.dueDate {
-                                metadataChip(
-                                    icon: "calendar",
-                                    text: dueDate.relativeFormatted
-                                )
-                            }
+                    // Metadata chips
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        if let dueDate = draft.dueDate {
+                            metadataChip(
+                                icon: "calendar",
+                                text: dueDate.relativeFormatted
+                            )
+                        }
 
-                            if draft.priority != .none {
-                                metadataChip(
-                                    icon: draft.priority.iconName,
-                                    text: draft.priority.displayName,
-                                    color: draft.priority.color
-                                )
-                            }
+                        if draft.priority != .none {
+                            metadataChip(
+                                icon: draft.priority.iconName,
+                                text: draft.priority.displayName,
+                                color: draft.priority.color
+                            )
+                        }
 
-                            if draft.category != .uncategorized {
-                                metadataChip(
-                                    icon: draft.category.iconName,
-                                    text: draft.category.displayName
-                                )
-                            }
+                        if draft.category != .uncategorized {
+                            metadataChip(
+                                icon: draft.category.iconName,
+                                text: draft.category.displayName
+                            )
+                        }
+
+                        // Subtask count badge (collapsed only)
+                        if hasSubtasks && !draft.isExpanded {
+                            let selectedSubtaskCount = draft.subtasks.filter(\.isSelected).count
+                            metadataChip(
+                                icon: "list.bullet",
+                                text: "\(selectedSubtaskCount)/\(draft.subtasks.count) subtasks"
+                            )
                         }
                     }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
-                        .foregroundColor(Color.Lazyflow.textTertiary)
-                        .rotationEffect(.degrees(draft.isExpanded ? 180 : 0))
                 }
-                .padding(DesignSystem.Spacing.md)
-                .contentShape(Rectangle())
-                .onTapGesture { onExpand() }
+
+                Spacer()
+
+                Image(systemName: "chevron.down")
+                    .font(.caption)
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+                    .rotationEffect(.degrees(draft.isExpanded ? 180 : 0))
+            }
+            .padding(DesignSystem.Spacing.md)
+            .contentShape(Rectangle())
+            .onTapGesture { onExpand() }
+
+            // Subtask list (visible when expanded)
+            if draft.isExpanded && hasSubtasks {
+                subtaskList
+            }
 
             // Expanded editing
             if draft.isExpanded {
@@ -264,6 +286,43 @@ private struct DraftCardView: View {
         }
         .background(Color.adaptiveSurface)
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        .opacity(draft.isSelected ? 1 : 0.5)
+    }
+
+    // MARK: - Subtask List
+
+    private var subtaskList: some View {
+        VStack(spacing: 0) {
+            Divider()
+                .padding(.horizontal, DesignSystem.Spacing.md)
+
+            ForEach(Array(draft.subtasks.enumerated()), id: \.element.id) { index, subtask in
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Button {
+                        onToggleSubtask(index)
+                    } label: {
+                        Image(systemName: subtask.isSelected ? "checkmark.circle.fill" : "circle")
+                            .font(.subheadline)
+                            .foregroundColor(subtask.isSelected ? Color.Lazyflow.accent : Color.Lazyflow.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!draft.isSelected)
+
+                    TextField("Subtask", text: $draft.subtasks[index].title)
+                        .font(DesignSystem.Typography.subheadline)
+                        .foregroundColor(
+                            draft.isSelected && subtask.isSelected
+                                ? Color.Lazyflow.textPrimary
+                                : Color.Lazyflow.textTertiary
+                        )
+
+                    Spacer()
+                }
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.leading, DesignSystem.Spacing.xl)
+                .padding(.vertical, DesignSystem.Spacing.xs)
+            }
+        }
     }
 
     private func metadataChip(icon: String, text: String, color: Color = Color.Lazyflow.textSecondary) -> some View {

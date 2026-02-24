@@ -203,6 +203,290 @@ final class NoteParsingServiceTests: XCTestCase {
         XCTAssertTrue(systemPrompt.contains("actionable"))
     }
 
+    // MARK: - Hierarchy Detection Tests
+
+    @MainActor
+    func testHierarchy_BulletListUnderHeader() {
+        let text = """
+        Plan birthday party
+        - Send invitations
+        - Order cake
+        - Book venue
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent, "Plan birthday party")
+        XCTAssertEqual(groups[0].children.count, 3)
+        XCTAssertEqual(groups[0].children[0], "Send invitations")
+        XCTAssertEqual(groups[0].children[1], "Order cake")
+        XCTAssertEqual(groups[0].children[2], "Book venue")
+    }
+
+    @MainActor
+    func testHierarchy_NumberedListUnderHeader() {
+        let text = """
+        Prepare presentation
+        1. Create slides
+        2. Write speaker notes
+        3. Practice delivery
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent, "Prepare presentation")
+        XCTAssertEqual(groups[0].children.count, 3)
+        XCTAssertEqual(groups[0].children[0], "Create slides")
+        XCTAssertEqual(groups[0].children[1], "Write speaker notes")
+        XCTAssertEqual(groups[0].children[2], "Practice delivery")
+    }
+
+    @MainActor
+    func testHierarchy_IndentedLinesUnderHeader() {
+        let text = "Morning routine\n  Exercise\n  Shower\n  Breakfast"
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent, "Morning routine")
+        XCTAssertEqual(groups[0].children.count, 3)
+        XCTAssertEqual(groups[0].children[0], "Exercise")
+    }
+
+    @MainActor
+    func testHierarchy_MarkdownCheckboxes() {
+        let text = """
+        Weekly review
+        - [ ] Check email
+        - [x] Update calendar
+        - [ ] Plan next week
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent, "Weekly review")
+        XCTAssertEqual(groups[0].children.count, 3)
+        XCTAssertEqual(groups[0].children[0], "Check email")
+        XCTAssertEqual(groups[0].children[1], "Update calendar")
+        XCTAssertEqual(groups[0].children[2], "Plan next week")
+    }
+
+    @MainActor
+    func testHierarchy_ColonHeader() {
+        let text = """
+        Groceries:
+        - Milk
+        - Eggs
+        - Bread
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent, "Groceries")
+        XCTAssertEqual(groups[0].children.count, 3)
+    }
+
+    @MainActor
+    func testHierarchy_AllBulletsNoHeader_FlatTasks() {
+        let text = """
+        - Buy groceries
+        - Call dentist
+        - Finish report
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        // All bullets with no parent header = flat tasks (empty result, fall back to flat)
+        XCTAssertTrue(groups.isEmpty, "All-bullet lists should return empty (fall back to flat)")
+    }
+
+    @MainActor
+    func testHierarchy_SingleLine_NoHierarchy() {
+        let text = "Buy groceries"
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertTrue(groups.isEmpty, "Single line should return empty (no hierarchy)")
+    }
+
+    @MainActor
+    func testHierarchy_MultipleParentSubtaskGroups() {
+        let text = """
+        Plan birthday party
+        - Send invitations
+        - Order cake
+        Prepare presentation
+        - Create slides
+        - Practice delivery
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 2)
+        XCTAssertEqual(groups[0].parent, "Plan birthday party")
+        XCTAssertEqual(groups[0].children.count, 2)
+        XCTAssertEqual(groups[1].parent, "Prepare presentation")
+        XCTAssertEqual(groups[1].children.count, 2)
+    }
+
+    @MainActor
+    func testHierarchy_MixedStandaloneAndHierarchy() {
+        let text = """
+        Call dentist
+        Plan birthday party
+        - Send invitations
+        - Order cake
+        Buy groceries
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 3)
+        XCTAssertEqual(groups[0].parent, "Call dentist")
+        XCTAssertTrue(groups[0].children.isEmpty)
+        XCTAssertEqual(groups[1].parent, "Plan birthday party")
+        XCTAssertEqual(groups[1].children.count, 2)
+        XCTAssertEqual(groups[2].parent, "Buy groceries")
+        XCTAssertTrue(groups[2].children.isEmpty)
+    }
+
+    @MainActor
+    func testHierarchy_EmptyChildLinesIgnored() {
+        let text = "Plan party\n- Send invitations\n- \n- Order cake"
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].children.count, 2, "Empty bullet lines should be ignored")
+    }
+
+    @MainActor
+    func testHierarchy_StarBullets() {
+        let text = """
+        Home repairs
+        * Fix faucet
+        * Paint bedroom
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent, "Home repairs")
+        XCTAssertEqual(groups[0].children.count, 2)
+    }
+
+    @MainActor
+    func testHierarchy_TabIndentation() {
+        let text = "Morning routine\n\tExercise\n\tShower"
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent, "Morning routine")
+        XCTAssertEqual(groups[0].children.count, 2)
+    }
+
+    @MainActor
+    func testHierarchy_MultiplePlainLines_NoHierarchy() {
+        let text = """
+        Buy groceries
+        Call dentist
+        Finish report
+        """
+        let service = NoteParsingService.shared
+        let groups = service.detectHierarchy(text)
+
+        XCTAssertTrue(groups.isEmpty, "Multiple plain lines with no bullets should return empty")
+    }
+
+    // MARK: - Hierarchical Deterministic Parsing Tests
+
+    @MainActor
+    func testDeterministicParseHierarchical_CreatesSubtaskDrafts() {
+        let text = """
+        Plan birthday party
+        - Send invitations
+        - Order cake
+        - Book venue
+        """
+        let service = NoteParsingService.shared
+        let groups = service.deterministicParseHierarchical(text)
+
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups[0].parent.text, "Plan birthday party")
+        XCTAssertEqual(groups[0].children.count, 3)
+        XCTAssertEqual(groups[0].children[0].text, "Send invitations")
+    }
+
+    @MainActor
+    func testDeterministicParseHierarchical_FlatInput_NoChildren() {
+        let text = "Buy groceries, and call the dentist"
+        let service = NoteParsingService.shared
+        let groups = service.deterministicParseHierarchical(text)
+
+        // Falls through to flat parsing
+        XCTAssertEqual(groups.count, 2)
+        XCTAssertTrue(groups[0].children.isEmpty)
+        XCTAssertTrue(groups[1].children.isEmpty)
+    }
+
+    // MARK: - TaskDraft Subtask Tests
+
+    func testTaskDraft_TotalSelectedCount_ParentAndSubtasks() {
+        var draft = TaskDraft(
+            title: "Parent",
+            subtasks: [
+                TaskDraft(title: "Sub 1"),
+                TaskDraft(title: "Sub 2"),
+                TaskDraft(title: "Sub 3")
+            ]
+        )
+        XCTAssertEqual(draft.totalSelectedCount, 4) // 1 parent + 3 subtasks
+
+        draft.subtasks[1].isSelected = false
+        XCTAssertEqual(draft.totalSelectedCount, 3) // 1 parent + 2 subtasks
+    }
+
+    func testTaskDraft_TotalSelectedCount_ParentDeselected() {
+        var draft = TaskDraft(
+            title: "Parent",
+            subtasks: [TaskDraft(title: "Sub 1"), TaskDraft(title: "Sub 2")]
+        )
+        draft.isSelected = false
+        XCTAssertEqual(draft.totalSelectedCount, 0, "Parent deselected should return 0")
+    }
+
+    func testTaskDraft_TotalSelectedCount_NoSubtasks() {
+        let draft = TaskDraft(title: "Simple task")
+        XCTAssertEqual(draft.totalSelectedCount, 1)
+    }
+
+    func testTaskDraft_DefaultSubtasksEmpty() {
+        let draft = TaskDraft(title: "Test")
+        XCTAssertTrue(draft.subtasks.isEmpty)
+    }
+
+    // MARK: - Prompt Template Subtasks Tests
+
+    func testBuildNoteExtractionPrompt_IncludesSubtasksSchema() {
+        let prompt = PromptTemplates.buildNoteExtractionPrompt(
+            noteText: "Test",
+            customCategories: [],
+            listNames: [],
+            learningContext: ""
+        )
+        XCTAssertTrue(prompt.contains("\"subtasks\""))
+    }
+
+    func testNoteExtractionSystemPrompt_MentionsSubtasks() {
+        let systemPrompt = PromptTemplates.noteExtractionSystemPrompt
+        XCTAssertTrue(systemPrompt.contains("subtask"))
+    }
+
     // MARK: - QuickNote Model Tests
 
     func testQuickNote_PreviewText_Short() {
