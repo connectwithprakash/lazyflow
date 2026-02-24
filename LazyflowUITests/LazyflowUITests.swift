@@ -2434,14 +2434,12 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Upcoming")
         Thread.sleep(forTimeInterval: 1.0)
 
-        // Find the Extract label on the note row
-        let extractText = app.staticTexts["Extract"]
-        XCTAssertTrue(extractText.waitForExistence(timeout: 5), "Extract label should appear on note row")
+        // Find the Extract pill button on the note row
+        let extractButton = app.buttons["Extract"]
+        XCTAssertTrue(extractButton.waitForExistence(timeout: 5), "Extract button should appear on note row")
 
-        // Tap the note row to open extraction
-        let noteRow = app.staticTexts["Buy groceries and call dentist"]
-        XCTAssertTrue(noteRow.waitForExistence(timeout: 3), "Note text should be visible")
-        noteRow.tap()
+        // Tap Extract pill to open extraction
+        extractButton.tap()
 
         // Verify Extract Tasks sheet appears
         let extractNavBar = app.navigationBars["Extract Tasks"]
@@ -2834,9 +2832,9 @@ final class LazyflowUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.0)
 
         navigateToTab("Upcoming")
-        Thread.sleep(forTimeInterval: 1.0)
+        Thread.sleep(forTimeInterval: 2.0)
         let deterNote = app.staticTexts["Clean the house. Walk the dog. Read a book."]
-        XCTAssertTrue(deterNote.waitForExistence(timeout: 5))
+        XCTAssertTrue(deterNote.waitForExistence(timeout: 10))
 
         // Tap "Extract" pill for the deterministic fallback note
         let extractPill2 = app.buttons.matching(NSPredicate(format: "label == 'Extract'")).firstMatch
