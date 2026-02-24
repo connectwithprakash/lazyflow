@@ -208,6 +208,62 @@ final class OpenResponsesProviderTests: XCTestCase {
         XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
     }
 
+    func testBuildRequest_ExternalHTTP_ThrowsError() {
+        // Given - external endpoint using HTTP (not HTTPS)
+        let config = OpenResponsesConfig(
+            endpoint: "http://api.example.com/v1/responses",
+            apiKey: "test-key",
+            model: "gpt-4"
+        )
+        sut = OpenResponsesProvider(config: config)
+
+        // Then - should throw because external endpoints must use HTTPS
+        XCTAssertThrowsError(try sut.buildRequest(prompt: "Hello", systemPrompt: nil)) { error in
+            guard case LLMError.apiError(let message) = error else {
+                XCTFail("Expected LLMError.apiError, got \(error)")
+                return
+            }
+            XCTAssertTrue(message.contains("HTTPS"), "Error should mention HTTPS requirement")
+        }
+    }
+
+    func testBuildRequest_LocalHTTP_Allowed() throws {
+        // Given - localhost endpoint using HTTP (acceptable for local)
+        let config = OpenResponsesConfig(
+            endpoint: "http://localhost:11434/v1/responses",
+            apiKey: nil,
+            model: "llama2"
+        )
+        sut = OpenResponsesProvider(config: config)
+
+        // Then - should NOT throw because localhost is exempt from HTTPS requirement
+        let request = try sut.buildRequest(prompt: "Hello", systemPrompt: nil)
+        XCTAssertEqual(request.url?.scheme, "http")
+    }
+
+    func testBuildRequest_ExternalHTTPS_Allowed() throws {
+        // Given - external endpoint using HTTPS
+        let config = OpenResponsesConfig(
+            endpoint: "https://api.example.com/v1/responses",
+            apiKey: "test-key",
+            model: "gpt-4"
+        )
+        sut = OpenResponsesProvider(config: config)
+
+        // Then - should NOT throw
+        let request = try sut.buildRequest(prompt: "Hello", systemPrompt: nil)
+        XCTAssertEqual(request.url?.scheme, "https")
+    }
+
+    func testIsLocalHost() {
+        XCTAssertTrue(OpenResponsesProvider.isLocalHost("localhost"))
+        XCTAssertTrue(OpenResponsesProvider.isLocalHost("127.0.0.1"))
+        XCTAssertTrue(OpenResponsesProvider.isLocalHost("::1"))
+        XCTAssertTrue(OpenResponsesProvider.isLocalHost("my-mac.local"))
+        XCTAssertFalse(OpenResponsesProvider.isLocalHost("api.example.com"))
+        XCTAssertFalse(OpenResponsesProvider.isLocalHost("openai.com"))
+    }
+
     // MARK: - Response Parsing Tests
 
     func testParseResponse_ValidJSON() throws {

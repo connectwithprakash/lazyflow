@@ -242,6 +242,13 @@ final class OpenResponsesProvider: LLMProvider {
             throw LLMError.apiError("Invalid endpoint URL")
         }
 
+        // Enforce HTTPS for non-local endpoints
+        if let host = url.host?.lowercased(),
+           !Self.isLocalHost(host),
+           url.scheme?.lowercased() != "https" {
+            throw LLMError.apiError("External endpoints must use HTTPS for security.")
+        }
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -269,6 +276,13 @@ final class OpenResponsesProvider: LLMProvider {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         return request
+    }
+
+    // MARK: - URL Validation
+
+    /// Check if a hostname is a local/loopback address (HTTP is acceptable for local endpoints)
+    static func isLocalHost(_ host: String) -> Bool {
+        host == "localhost" || host == "127.0.0.1" || host == "::1" || host.hasSuffix(".local")
     }
 
     // MARK: - Response Parsing

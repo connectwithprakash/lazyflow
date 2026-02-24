@@ -76,7 +76,7 @@
     <div class="back"><a href="../">&larr; Back to Lazyflow</a></div>
 
     <h1>Privacy Policy</h1>
-    <p><strong>Last updated: January 6, 2026</strong></p>
+    <p><strong>Last updated: February 24, 2026</strong></p>
 
     <h2>Overview</h2>
     <p>Lazyflow is an open-source, privacy-focused task management app. We believe your data belongs to you.</p>
@@ -95,8 +95,27 @@
     <ul>
         <li>All tasks and lists are stored locally on your device</li>
         <li>Calendar data is accessed only through Apple's EventKit framework</li>
-        <li>AI analysis is processed entirely on-device using Apple Intelligence</li>
-        <li>No data is sent to external servers for AI processing</li>
+        <li>By default, AI analysis is processed entirely on-device using Apple Intelligence</li>
+    </ul>
+
+    <h2>AI Features</h2>
+    <p>Lazyflow uses AI to help categorize tasks, estimate durations, and provide smart suggestions. You can choose from three AI provider tiers:</p>
+    <h3>On-Device (Default)</h3>
+    <ul>
+        <li><strong>Apple Intelligence</strong> — All processing happens on your device. No task data leaves your device.</li>
+    </ul>
+    <h3>Local Network</h3>
+    <ul>
+        <li><strong>Ollama</strong> — Runs AI models on your Mac over your local network. No data is sent to the internet.</li>
+    </ul>
+    <h3>External Providers (Optional, User-Initiated)</h3>
+    <ul>
+        <li>You may optionally configure a <strong>custom AI endpoint</strong> (e.g., OpenAI, Anthropic, or other Open Responses-compatible services).</li>
+        <li>When enabled, <strong>task titles, descriptions, and related context may be sent to the external server</strong> you configure.</li>
+        <li>External endpoints require HTTPS to protect your data in transit.</li>
+        <li>API keys are stored securely in your device's Keychain, not in plain text.</li>
+        <li>The app clearly labels external providers with an "External" badge and displays a warning before any data is sent.</li>
+        <li>You can switch back to on-device processing at any time.</li>
     </ul>
 
     <h2>iCloud Sync</h2>
