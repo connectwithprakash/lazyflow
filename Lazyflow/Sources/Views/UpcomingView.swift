@@ -151,6 +151,13 @@ struct UpcomingView: View {
                         }, onExtract: {
                             noteToExtract = note
                         })
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                noteService.deleteNote(note)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .listRowBackground(Color.adaptiveBackground)
                         .listRowSeparator(.hidden)
