@@ -194,13 +194,13 @@ final class NoteParsingServiceTests: XCTestCase {
         XCTAssertTrue(prompt.contains("\"title\""))
         XCTAssertTrue(prompt.contains("\"priority\""))
         XCTAssertTrue(prompt.contains("\"category\""))
-        XCTAssertTrue(prompt.contains("JSON array"))
+        XCTAssertTrue(prompt.contains("JSON format"))
     }
 
     func testNoteExtractionSystemPrompt_ContainsRole() {
         let systemPrompt = PromptTemplates.noteExtractionSystemPrompt
-        XCTAssertTrue(systemPrompt.contains("task extraction"))
-        XCTAssertTrue(systemPrompt.contains("actionable"))
+        XCTAssertTrue(systemPrompt.contains("extract"))
+        XCTAssertTrue(systemPrompt.contains("tasks"))
     }
 
     // MARK: - Hierarchy Detection Tests
@@ -563,6 +563,102 @@ final class NoteParsingServiceTests: XCTestCase {
             let sub1 = array[0]["subtasks"] as? [[String: Any]]
             XCTAssertEqual(sub1?.count, 0, "No subtasks on flat task")
         }
+    }
+
+    // MARK: - Merge Path Tests (LLM flattens hierarchy)
+
+    @MainActor
+    func testMerge_LLMFlattensHierarchy_RestoresStructure() {
+        let noteText = "Image normalization\n- migrate normalized images to s3 bucket with CDN setup\n- deploy to stage environment with testing"
+        let service = NoteParsingService.shared
+
+        // Step 1: Deterministic parser detects hierarchy
+        let hierarchical = service.deterministicParseHierarchical(noteText)
+        XCTAssertEqual(hierarchical.count, 1, "Deterministic should find 1 group")
+        XCTAssertEqual(hierarchical[0].children.count, 2, "Parent should have 2 children")
+
+        // Step 2: Simulate LLM returning flat tasks (what actually happened on device)
+        let llmFlatDrafts = [
+            TaskDraft(title: "Migrate Images to S3", priority: .high, category: .work),
+            TaskDraft(title: "Deploy to Stage Environment", priority: .high, category: .work)
+        ]
+
+        // Step 3: Merge should restore hierarchy with LLM metadata
+        let merged = service.mergeHierarchy(
+            deterministicGroups: hierarchical,
+            llmDrafts: llmFlatDrafts
+        )
+
+        XCTAssertEqual(merged.count, 1, "Merge should produce 1 parent task")
+        XCTAssertEqual(merged[0].title, "Image normalization", "Parent title from deterministic")
+        XCTAssertEqual(merged[0].subtasks.count, 2, "Should have 2 subtasks")
+
+        // Subtasks should get LLM-enriched titles and metadata
+        let sub1 = merged[0].subtasks[0]
+        XCTAssertEqual(sub1.title, "Migrate Images to S3", "Subtask gets LLM's cleaned title")
+        XCTAssertEqual(sub1.priority, .high, "Subtask gets LLM's priority")
+
+        let sub2 = merged[0].subtasks[1]
+        XCTAssertEqual(sub2.title, "Deploy to Stage Environment")
+        XCTAssertEqual(sub2.priority, .high)
+    }
+
+    @MainActor
+    func testMerge_CreateAppNote_RestoresStructure() {
+        let noteText = "Create app\n- implement home page\n- implement calendar page\n\nBuy groceries"
+        let service = NoteParsingService.shared
+
+        let hierarchical = service.deterministicParseHierarchical(noteText)
+
+        // Simulate LLM flattening everything
+        let llmFlatDrafts = [
+            TaskDraft(title: "Create App", priority: .medium, category: .work),
+            TaskDraft(title: "Implement Home Page", priority: .medium, category: .work),
+            TaskDraft(title: "Implement Calendar Page", priority: .medium, category: .work),
+            TaskDraft(title: "Buy Groceries", priority: .low, category: .shopping)
+        ]
+
+        let merged = service.mergeHierarchy(
+            deterministicGroups: hierarchical,
+            llmDrafts: llmFlatDrafts
+        )
+
+        XCTAssertEqual(merged.count, 2, "Should produce 2 top-level items")
+
+        // First: parent with subtasks
+        XCTAssertEqual(merged[0].subtasks.count, 2)
+        XCTAssertEqual(merged[0].category, .work, "Parent gets LLM category")
+        XCTAssertEqual(merged[0].subtasks[0].title, "Implement Home Page")
+        XCTAssertEqual(merged[0].subtasks[1].title, "Implement Calendar Page")
+
+        // Second: standalone task
+        XCTAssertEqual(merged[1].title, "Buy Groceries")
+        XCTAssertEqual(merged[1].category, .shopping)
+        XCTAssertTrue(merged[1].subtasks.isEmpty)
+    }
+
+    @MainActor
+    func testMerge_NoLLMMatch_FallsBackToDeterministic() {
+        let noteText = "Weekly tasks\n- Review PRs\n- Update docs"
+        let service = NoteParsingService.shared
+
+        let hierarchical = service.deterministicParseHierarchical(noteText)
+
+        // LLM returned completely different titles (no match possible)
+        let llmFlatDrafts = [
+            TaskDraft(title: "Something Unrelated", priority: .high, category: .personal)
+        ]
+
+        let merged = service.mergeHierarchy(
+            deterministicGroups: hierarchical,
+            llmDrafts: llmFlatDrafts
+        )
+
+        XCTAssertEqual(merged.count, 1)
+        XCTAssertEqual(merged[0].title, "Weekly tasks", "Falls back to deterministic title")
+        XCTAssertEqual(merged[0].category, .uncategorized, "No LLM match = default category")
+        XCTAssertEqual(merged[0].subtasks.count, 2)
+        XCTAssertEqual(merged[0].subtasks[0].title, "Review PRs", "Falls back to deterministic")
     }
 
     // MARK: - En-dash / Em-dash Bullet Tests

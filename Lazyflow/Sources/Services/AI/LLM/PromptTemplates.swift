@@ -681,19 +681,11 @@ enum PromptTemplates {
 
     /// System prompt for note-to-task extraction
     static let noteExtractionSystemPrompt = """
-    You are a task extraction assistant. Given a quick note, extract actionable tasks.
-
-    Guidelines:
-    - Extract ONLY actionable items (things the user needs to do)
-    - Ignore greetings, opinions, or non-actionable observations
-    - Keep task titles concise and action-oriented (start with a verb when possible)
-    - Assign categories and priorities based on content
-    - Parse any mentioned dates or deadlines
-    - When the note contains a main task with sub-items (bullets, numbered lists, indented items, or items clearly subordinate to a heading), represent them as subtasks
-    - Only use subtasks when the note clearly implies a parent-child relationship. Simple lists of independent tasks should remain flat.
-
-    DO NOT include personal opinions or unnecessary elaboration.
-    Respond ONLY in the specified JSON format.
+    You extract tasks from notes as JSON. Rules:
+    1. Only extract what is explicitly in the note. Never invent tasks.
+    2. If a line has bullet items (- or *) or numbered items below it, that line is the PARENT and those items are its SUBTASKS.
+    3. If all items are independent (no bullets under a heading), return flat tasks with empty subtasks arrays.
+    4. Respond with ONLY a JSON array. No other text.
     """
 
     /// Build prompt for extracting tasks from a quick note
@@ -720,36 +712,23 @@ enum PromptTemplates {
         """
 
         return """
-        Extract actionable tasks from this quick note. Only extract tasks that are explicitly stated in the note. Never invent tasks that are not in the note.
-
-        Available categories: \(allCategories)\(listSection)
+        Categories: \(allCategories)\(listSection)
         \(contextSection)
-        Extract tasks as a JSON array. Each task object:
-        {
-            "title": "<concise action-oriented title>",
-            "priority": "<none|low|medium|high|urgent>",
-            "category": "<one of the available categories>",
-            "due_date": "<natural language date or null>",
-            "list": "<list name or null>",
-            "subtasks": [{"title": "<subtask title>", "due_date": "<date or null>", "priority": "<priority or null>"}]
-        }
+        JSON format per task: {"title": "...", "priority": "none|low|medium|high|urgent", "category": "...", "due_date": "... or null", "list": "... or null", "subtasks": [{"title": "...", "due_date": "... or null", "priority": "... or null"}]}
 
-        Use "subtasks" only when items are clearly subordinate to a parent task. Independent tasks should have an empty subtasks array.
+        EXAMPLE — flat note (no bullets):
+        Note: "Water plants and return library books by friday"
+        Output: [{"title": "Water plants", "priority": "none", "category": "home", "due_date": null, "list": null, "subtasks": []}, {"title": "Return library books", "priority": "none", "category": "errands", "due_date": "friday", "list": null, "subtasks": []}]
 
-        Example 1 (flat):
-        Note: "Task_A by next friday and Task_B"
-        Response: [{"title": "Task_A", "priority": "none", "category": "uncategorized", "due_date": "next friday", "list": null, "subtasks": []}, {"title": "Task_B", "priority": "none", "category": "uncategorized", "due_date": null, "list": null, "subtasks": []}]
+        EXAMPLE — note with bullets under a heading:
+        Note: "Garage cleanup
+        - Donate old furniture
+        - Organize tool shelf
+        - Fix broken shelf by Sunday"
+        Output: [{"title": "Garage cleanup", "priority": "none", "category": "home", "due_date": null, "list": null, "subtasks": [{"title": "Donate old furniture", "due_date": null, "priority": null}, {"title": "Organize tool shelf", "due_date": null, "priority": null}, {"title": "Fix broken shelf", "due_date": "sunday", "priority": null}]}]
 
-        Example 2 (hierarchical):
-        Note: "Task_C\\n- Sub_1\\n- Sub_2\\n- Sub_3 by Thursday"
-        Response: [{"title": "Task_C", "priority": "none", "category": "uncategorized", "due_date": null, "list": null, "subtasks": [{"title": "Sub_1", "due_date": null, "priority": null}, {"title": "Sub_2", "due_date": null, "priority": null}, {"title": "Sub_3", "due_date": "thursday", "priority": null}]}]
-
-        If no actionable tasks can be extracted, return an empty array: []
-
-        Note:
+        Now extract from this note:
         \(noteText)
-
-        Respond with ONLY the JSON array:
         """
     }
 

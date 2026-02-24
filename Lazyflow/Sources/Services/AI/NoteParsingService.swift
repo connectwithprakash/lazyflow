@@ -75,7 +75,7 @@ final class NoteParsingService: ObservableObject {
 
     /// Merge deterministic hierarchy structure with LLM-enriched metadata.
     /// Uses deterministic parent/child grouping but takes LLM's categories, priorities, etc.
-    private func mergeHierarchy(
+    func mergeHierarchy(
         deterministicGroups: [HierarchicalSegment],
         llmDrafts: [TaskDraft]
     ) -> [TaskDraft] {
