@@ -95,6 +95,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         UNUserNotificationCenter.current().delegate = self
 
         NotificationService.shared.registerNotificationCategories()
+
+        // Start collecting performance metrics and crash diagnostics
+        MetricsService.shared.startCollecting()
+
         return true
     }
 
