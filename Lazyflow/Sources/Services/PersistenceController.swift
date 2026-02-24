@@ -2,6 +2,7 @@ import CloudKit
 import Combine
 import CoreData
 import Foundation
+import os
 
 // MARK: - Sync Status
 
@@ -290,6 +291,8 @@ final class PersistenceController: @unchecked Sendable {
         return controller
     }()
 
+    private let logger = Logger(subsystem: "com.lazyflow.app", category: "Persistence")
+
     /// The persistent container with CloudKit sync support
     let container: NSPersistentCloudKitContainer
 
@@ -301,6 +304,25 @@ final class PersistenceController: @unchecked Sendable {
 
     /// Most recent save error, observable by the UI
     @Published private(set) var lastSaveError: NSError?
+
+    /// Last persistent history token processed — used for incremental merge
+    private var lastHistoryToken: NSPersistentHistoryToken? {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: "lastHistoryToken") else { return nil }
+            return try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data)
+        }
+        set {
+            if let token = newValue,
+               let data = try? NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true) {
+                UserDefaults.standard.set(data, forKey: "lastHistoryToken")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "lastHistoryToken")
+            }
+        }
+    }
+
+    /// Most recent sync error for UI display
+    @Published private(set) var lastSyncError: String?
 
     /// The main view context
     var viewContext: NSManagedObjectContext {
@@ -489,25 +511,89 @@ final class PersistenceController: @unchecked Sendable {
         NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange, object: container.persistentStoreCoordinator)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.handleRemoteStoreChange()
+                self?.processRemoteStoreChanges()
             }
             .store(in: &cancellables)
+
+        // Listen for CloudKit import events to detect sync errors
+        NotificationCenter.default.publisher(for: NSNotification.Name.NSPersistentStoreCoordinatorStoresDidChange, object: container.persistentStoreCoordinator)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                self?.handleStoreDidChange(notification)
+            }
+            .store(in: &cancellables)
+
+        logger.info("CloudKit sync observers configured")
     }
 
-    /// Handle remote changes from CloudKit sync
-    private func handleRemoteStoreChange() {
-        // Refresh the view context to pick up remote changes
-        container.viewContext.perform { [weak self] in
+    /// Process remote changes using persistent history tokens for incremental merge
+    private func processRemoteStoreChanges() {
+        let context = container.newBackgroundContext()
+        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+
+        context.perform { [weak self] in
             guard let self = self else { return }
 
-            // Force refresh all objects to pick up remote changes
-            self.container.viewContext.refreshAllObjects()
+            // Fetch only transactions since our last token
+            let request = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastHistoryToken)
 
-            // Update last sync date
-            Self.setLastSyncDate(Date())
+            guard let result = try? context.execute(request) as? NSPersistentHistoryResult,
+                  let transactions = result.result as? [NSPersistentHistoryTransaction],
+                  !transactions.isEmpty else {
+                return
+            }
 
-            // Post notification for services to refresh their data
-            NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
+            self.logger.info("Processing \(transactions.count) remote transaction(s)")
+
+            var changeCount = 0
+
+            // Merge each transaction into the view context
+            for transaction in transactions {
+                if let changes = transaction.changes {
+                    changeCount += changes.count
+                }
+                self.container.viewContext.perform {
+                    self.container.viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
+                }
+            }
+
+            // Update the last processed token
+            if let lastToken = transactions.last?.token {
+                self.lastHistoryToken = lastToken
+            }
+
+            self.logger.info("Merged \(changeCount) change(s) from \(transactions.count) transaction(s)")
+
+            // Clean up old history (keep last 7 days)
+            self.purgeOldHistory(context: context)
+
+            DispatchQueue.main.async {
+                Self.setLastSyncDate(Date())
+                self.lastSyncError = nil
+                NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
+            }
+        }
+    }
+
+    /// Handle persistent store coordinator changes to detect sync errors
+    private func handleStoreDidChange(_ notification: Notification) {
+        // Check for error info in the store change notification
+        if let error = notification.userInfo?["error"] as? NSError {
+            logger.error("CloudKit sync error: \(error.localizedDescription, privacy: .public)")
+            lastSyncError = error.localizedDescription
+        }
+    }
+
+    /// Remove processed history older than 7 days to prevent unbounded growth
+    private func purgeOldHistory(context: NSManagedObjectContext) {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let purgeRequest = NSPersistentHistoryChangeRequest.deleteHistory(before: cutoff)
+
+        do {
+            try context.execute(purgeRequest)
+            logger.debug("Purged persistent history older than 7 days")
+        } catch {
+            logger.warning("Failed to purge persistent history: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -523,6 +609,11 @@ final class PersistenceController: @unchecked Sendable {
         // Check if iCloud is available
         guard Self.isICloudAvailable else {
             return .offline
+        }
+
+        // Check for sync errors
+        if let syncError = lastSyncError {
+            return .error(syncError)
         }
 
         // Check for last sync date
@@ -678,7 +769,7 @@ final class PersistenceController: @unchecked Sendable {
     /// Posts the error to `lastSaveError` for UI observation on failure
     func save() {
         guard isLoaded else {
-            print("Warning: Attempted to save before store was loaded")
+            logger.warning("Attempted to save before store was loaded")
             return
         }
 
@@ -691,7 +782,7 @@ final class PersistenceController: @unchecked Sendable {
         } catch {
             let nsError = error as NSError
             lastSaveError = nsError
-            print("Core Data save error: \(nsError), \(nsError.userInfo)")
+            logger.error("Core Data save error: \(nsError.localizedDescription, privacy: .public) — \(nsError.userInfo, privacy: .private)")
         }
     }
 

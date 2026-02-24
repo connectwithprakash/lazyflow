@@ -183,6 +183,7 @@
 		F3DD5D78DA037DC32D7D4B4D /* LazyflowUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */; };
 		F6538631367C9A9E80D16A5E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB436CC06BC124AF3305385B /* DesignSystem.swift */; };
 		F680CA23A252E46F199361F4 /* PlanYourDayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A10EC43A4CC1C21F47B3205 /* PlanYourDayData.swift */; };
+		F746777C9029FCD92722C4B0 /* CloudKitSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87F0D661D35CF15B12D6025 /* CloudKitSyncTests.swift */; };
 		F847E633D5AD71A505F65E36 /* LazyflowWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FA69873A99353C1F676B9595 /* QuickCaptureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F59BC74D9F97F78C3DC225 /* QuickCaptureViewModel.swift */; };
 		FAC027E5D1D747D10A908349 /* AIContextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 766E1ADEBDA6F3C3BF445A09 /* AIContextService.swift */; };
@@ -388,6 +389,7 @@
 		A7B1349EEB55473E75B6E480 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A86E4AE86370BB8D002A6E8C /* WeekdayButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekdayButton.swift; sourceTree = "<group>"; };
 		A87E8C6CE81AAE400BCBDCC6 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		A87F0D661D35CF15B12D6025 /* CloudKitSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncTests.swift; sourceTree = "<group>"; };
 		AA64F742C04DFBDBF3CA43FA /* PrioritizationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrioritizationServiceTests.swift; sourceTree = "<group>"; };
 		B263F189EA72FAE978FD5299 /* Priority.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Priority.swift; sourceTree = "<group>"; };
 		B2F8B47155C202D2CA845026 /* ListsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewModelTests.swift; sourceTree = "<group>"; };
@@ -586,6 +588,7 @@
 				EFE8F136C54F6451EEDEDE55 /* BehavioralSignalsTests.swift */,
 				4AF8442AA52B1DA00F88D2EB /* CalendarSyncServiceTests.swift */,
 				F1B80002E148BF3F059F003E /* CategoryServiceTests.swift */,
+				A87F0D661D35CF15B12D6025 /* CloudKitSyncTests.swift */,
 				9F21A0F5B6EA6B158DD1EEAD /* ColorExtensionsTests.swift */,
 				79878ECB4B8D1E2274BF2E3E /* ConflictDetectionServiceTests.swift */,
 				5F44E5FAD747B2345B46B51A /* DailySummaryCarryoverTests.swift */,
@@ -1102,6 +1105,7 @@
 				21D4D1580E6D6AB06DD5CBA4 /* BehavioralSignalsTests.swift in Sources */,
 				4E1AB451859EA3CD0944D128 /* CalendarSyncServiceTests.swift in Sources */,
 				E2348389624C78DAE63B632F /* CategoryServiceTests.swift in Sources */,
+				F746777C9029FCD92722C4B0 /* CloudKitSyncTests.swift in Sources */,
 				835D54447423E5F93B0DDB86 /* ColorExtensionsTests.swift in Sources */,
 				00FCF99113DE7C7D45EE56E3 /* ConflictDetectionServiceTests.swift in Sources */,
 				55D043F6F8063A39FF708981 /* DailySummaryCarryoverTests.swift in Sources */,
