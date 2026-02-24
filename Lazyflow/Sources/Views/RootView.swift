@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Root view - shows UI immediately, no loading screen
 struct RootView: View {
-    @AppStorage("hasSeenOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage(AppConstants.StorageKey.hasSeenOnboarding) private var hasCompletedOnboarding = false
 
     /// Check if running in UI test mode - bypasses onboarding
     private var isUITesting: Bool {
@@ -20,7 +20,7 @@ struct RootView: View {
                         PersistenceController.shared.createDefaultListsIfNeeded()
 
                         // Start calendar sync if enabled
-                        if UserDefaults.standard.bool(forKey: "calendarAutoSync") {
+                        if UserDefaults.standard.bool(forKey: AppConstants.StorageKey.calendarAutoSync) {
                             CalendarSyncService.shared.startObserving()
                         }
                     }

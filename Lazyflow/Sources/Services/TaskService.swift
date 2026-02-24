@@ -354,7 +354,7 @@ final class TaskService: ObservableObject {
         // to avoid overwriting busy-only titles and bypassing loop prevention
         if CalendarSyncService.shared.isSyncing { return }
         // When auto-sync is enabled, CalendarSyncService owns the sync lifecycle
-        if UserDefaults.standard.bool(forKey: "calendarAutoSync") { return }
+        if UserDefaults.standard.bool(forKey: AppConstants.StorageKey.calendarAutoSync) { return }
 
         do {
             try calendarService.syncTaskToEvent(task)

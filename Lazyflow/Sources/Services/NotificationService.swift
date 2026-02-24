@@ -170,7 +170,7 @@ final class NotificationService: @unchecked Sendable {
     // MARK: - Intraday Notifications
 
     /// Maximum notifications per intraday task (to leave budget for other tasks)
-    private static let maxIntradayNotificationsPerTask = 10
+    private static let maxIntradayNotificationsPerTask = AppConstants.Limits.maxIntradayNotificationsPerTask
 
     /// Schedule intraday reminders for a task with an intraday recurring rule
     /// Uses a rolling 24-hour window and respects iOS notification budget

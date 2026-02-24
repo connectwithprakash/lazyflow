@@ -5,7 +5,7 @@ struct PlanYourDayView: View {
     @StateObject private var viewModel = PlanYourDayViewModel()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("autoHideSkippedEvents") private var autoHideSkippedEvents = false
+    @AppStorage(AppConstants.StorageKey.autoHideSkippedEvents) private var autoHideSkippedEvents = false
     @State private var showHiddenEvents = false
     private let learningService = EventPreferenceLearningService.shared
 

@@ -9,7 +9,7 @@ struct SubtaskDetailView: View {
     @StateObject private var taskService = TaskService.shared
     @FocusState private var isTitleFocused: Bool
 
-    @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
+    @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
 
     @State private var showAISuggestions = false
     @State private var aiAnalysis: TaskAnalysis?

@@ -14,7 +14,7 @@ final class LLMService: ObservableObject {
         didSet {
             // Only save if provider is available
             if availableProviders.contains(selectedProvider) {
-                UserDefaults.standard.set(selectedProvider.rawValue, forKey: "llm_provider")
+                UserDefaults.standard.set(selectedProvider.rawValue, forKey: AppConstants.StorageKey.llmProvider)
             } else {
                 // Fall back to Apple if selected provider is not available
                 selectedProvider = .apple
@@ -40,7 +40,7 @@ final class LLMService: ObservableObject {
 
     private init() {
         // Load saved provider preference
-        if let savedProvider = UserDefaults.standard.string(forKey: "llm_provider"),
+        if let savedProvider = UserDefaults.standard.string(forKey: AppConstants.StorageKey.llmProvider),
            let providerType = LLMProviderType(rawValue: savedProvider) {
             self.selectedProvider = providerType
         } else {

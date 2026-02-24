@@ -8,10 +8,10 @@ final class FocusSessionCoordinator: ObservableObject {
 
     // MARK: - Persistence Keys
 
-    private static let focusTaskIDKey = "focusSessionTaskID"
-    private static let focusStartedAtKey = "focusSessionStartedAt"
-    private static let focusIsPausedKey = "focusSessionIsPaused"
-    private static let focusIsOnBreakKey = "focusSessionIsOnBreak"
+    private static let focusTaskIDKey = AppConstants.StorageKey.focusSessionTaskID
+    private static let focusStartedAtKey = AppConstants.StorageKey.focusSessionStartedAt
+    private static let focusIsPausedKey = AppConstants.StorageKey.focusSessionIsPaused
+    private static let focusIsOnBreakKey = AppConstants.StorageKey.focusSessionIsOnBreak
 
     // MARK: - Published State
 
@@ -56,14 +56,14 @@ final class FocusSessionCoordinator: ObservableObject {
 
     /// Pomodoro work interval in seconds. User-configurable via Settings.
     var pomodoroWorkInterval: TimeInterval {
-        let minutes = UserDefaults.standard.double(forKey: "pomodoroWorkMinutes")
-        return minutes > 0 ? minutes * 60 : 25 * 60
+        let minutes = UserDefaults.standard.double(forKey: AppConstants.StorageKey.pomodoroWorkMinutes)
+        return minutes > 0 ? minutes * 60 : AppConstants.Defaults.pomodoroWorkMinutes * 60
     }
 
     /// Pomodoro break interval in seconds. User-configurable via Settings.
     var pomodoroBreakInterval: TimeInterval {
-        let minutes = UserDefaults.standard.double(forKey: "pomodoroBreakMinutes")
-        return minutes > 0 ? minutes * 60 : 5 * 60
+        let minutes = UserDefaults.standard.double(forKey: AppConstants.StorageKey.pomodoroBreakMinutes)
+        return minutes > 0 ? minutes * 60 : AppConstants.Defaults.pomodoroBreakMinutes * 60
     }
 
     /// Timestamp when current Pomodoro interval started (for countdown)

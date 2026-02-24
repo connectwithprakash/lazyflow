@@ -3,13 +3,13 @@ import SwiftUI
 /// Settings view for app configuration
 struct SettingsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
-    @AppStorage("defaultReminderTime") private var defaultReminderTime: Int = 9
-    @AppStorage("showCompletedTasks") private var showCompletedTasks: Bool = true
-    @AppStorage("hapticFeedback") private var hapticFeedback: Bool = true
-    @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
-    @AppStorage("pomodoroWorkMinutes") private var pomodoroWorkMinutes: Double = 25
-    @AppStorage("pomodoroBreakMinutes") private var pomodoroBreakMinutes: Double = 5
+    @AppStorage(AppConstants.StorageKey.appearanceMode) private var appearanceMode: AppearanceMode = .system
+    @AppStorage(AppConstants.StorageKey.defaultReminderTime) private var defaultReminderTime: Int = AppConstants.Defaults.reminderHour
+    @AppStorage(AppConstants.StorageKey.showCompletedTasks) private var showCompletedTasks: Bool = true
+    @AppStorage(AppConstants.StorageKey.hapticFeedback) private var hapticFeedback: Bool = true
+    @AppStorage(AppConstants.StorageKey.summaryPromptHour) private var summaryPromptHour: Int = AppConstants.Defaults.summaryPromptHour
+    @AppStorage(AppConstants.StorageKey.pomodoroWorkMinutes) private var pomodoroWorkMinutes: Double = AppConstants.Defaults.pomodoroWorkMinutes
+    @AppStorage(AppConstants.StorageKey.pomodoroBreakMinutes) private var pomodoroBreakMinutes: Double = AppConstants.Defaults.pomodoroBreakMinutes
 
     @State private var showAbout = false
     @State private var showNotificationSettings = false
@@ -78,8 +78,8 @@ struct SettingsView: View {
                 // Plan Your Day
                 Section {
                     Toggle("Auto-Hide Frequently Skipped", isOn: Binding(
-                        get: { UserDefaults.standard.bool(forKey: "autoHideSkippedEvents") },
-                        set: { UserDefaults.standard.set($0, forKey: "autoHideSkippedEvents") }
+                        get: { UserDefaults.standard.bool(forKey: AppConstants.StorageKey.autoHideSkippedEvents) },
+                        set: { UserDefaults.standard.set($0, forKey: AppConstants.StorageKey.autoHideSkippedEvents) }
                     ))
                 } header: {
                     Text("Plan Your Day")
@@ -854,9 +854,9 @@ struct AISettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var llmService = LLMService.shared
     @StateObject private var taskService = TaskService.shared
-    @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
-    @AppStorage("aiEstimateDuration") private var aiEstimateDuration: Bool = true
-    @AppStorage("aiSuggestPriority") private var aiSuggestPriority: Bool = true
+    @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
+    @AppStorage(AppConstants.StorageKey.aiEstimateDuration) private var aiEstimateDuration: Bool = true
+    @AppStorage(AppConstants.StorageKey.aiSuggestPriority) private var aiSuggestPriority: Bool = true
 
     @State private var isBatchAnalyzing = false
     @State private var batchAnalysisProgress: Int = 0
@@ -1330,7 +1330,7 @@ struct BatchAnalysisResultRow: View {
 // MARK: - Morning Briefing Prompt Toggle
 
 struct MorningBriefingPromptToggle: View {
-    @AppStorage("morningBriefingEnabled") private var isEnabled = true
+    @AppStorage(AppConstants.StorageKey.morningBriefingEnabled) private var isEnabled = true
 
     var body: some View {
         Toggle(isOn: $isEnabled) {
@@ -1348,8 +1348,8 @@ struct MorningBriefingPromptToggle: View {
 // MARK: - Morning Briefing Notification Toggle
 
 struct MorningBriefingNotificationToggle: View {
-    @AppStorage("morningBriefingNotificationEnabled") private var isEnabled = false
-    @AppStorage("morningBriefingNotificationHour") private var notificationHour = 7 // 7 AM default
+    @AppStorage(AppConstants.StorageKey.morningBriefingNotificationEnabled) private var isEnabled = false
+    @AppStorage(AppConstants.StorageKey.morningBriefingNotificationHour) private var notificationHour = AppConstants.Defaults.morningBriefingNotificationHour
 
     private let notificationService = NotificationService.shared
 
@@ -1408,8 +1408,8 @@ struct MorningBriefingNotificationToggle: View {
 // MARK: - Daily Summary Notification Toggle
 
 struct DailySummaryNotificationToggle: View {
-    @AppStorage("dailySummaryNotificationEnabled") private var isEnabled = false
-    @AppStorage("dailySummaryNotificationHour") private var notificationHour = 20 // 8 PM default
+    @AppStorage(AppConstants.StorageKey.dailySummaryNotificationEnabled) private var isEnabled = false
+    @AppStorage(AppConstants.StorageKey.dailySummaryNotificationHour) private var notificationHour = AppConstants.Defaults.dailySummaryNotificationHour
     @State private var showTimePicker = false
 
     private let notificationService = NotificationService.shared
@@ -2094,9 +2094,9 @@ struct ModelDetailSheet: View {
 // MARK: - Calendar Sync Toggle
 
 struct CalendarSyncToggle: View {
-    @AppStorage("calendarAutoSync") private var calendarAutoSync = false
-    @AppStorage("calendarCompletionPolicy") private var completionPolicy = "keep"
-    @AppStorage("calendarBusyOnly") private var busyOnly = false
+    @AppStorage(AppConstants.StorageKey.calendarAutoSync) private var calendarAutoSync = false
+    @AppStorage(AppConstants.StorageKey.calendarCompletionPolicy) private var completionPolicy = "keep"
+    @AppStorage(AppConstants.StorageKey.calendarBusyOnly) private var busyOnly = false
     @State private var isRequestingAccess = false
 
     var body: some View {

@@ -15,7 +15,7 @@ final class AIContextService: ObservableObject {
 
     // MARK: - Private
 
-    private let recentTasksLimit = 10
+    private let recentTasksLimit = AppConstants.Limits.recentTasksLimit
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initialization

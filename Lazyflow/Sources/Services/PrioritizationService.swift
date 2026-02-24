@@ -51,8 +51,8 @@ final class PrioritizationService: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Periodically check for expired snoozes (every 60 seconds)
-        Timer.publish(every: 60, on: .main, in: .common)
+        // Periodically check for expired snoozes
+        Timer.publish(every: AppConstants.Timing.snoozeCheckInterval, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.refreshExpiredSnoozes()

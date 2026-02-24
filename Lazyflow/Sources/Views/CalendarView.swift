@@ -7,7 +7,7 @@ struct CalendarView: View {
     @StateObject private var taskService = TaskService.shared
     @State private var selectedDate = Date()
     @State private var currentWeekStart = Calendar.current.startOfWeek(for: Date())
-    @AppStorage("calendarViewMode") private var viewModeRaw: String = ""
+    @AppStorage(AppConstants.StorageKey.calendarViewMode) private var viewModeRaw: String = ""
     @State private var showingTimeBlockSheet = false
     @State private var pendingTask: Task?
     @State private var pendingDropTime: Date?

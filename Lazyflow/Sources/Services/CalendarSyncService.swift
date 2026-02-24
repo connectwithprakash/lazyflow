@@ -34,16 +34,16 @@ final class CalendarSyncService: ObservableObject {
     // MARK: - Settings Keys
 
     private var isAutoSyncEnabled: Bool {
-        UserDefaults.standard.bool(forKey: "calendarAutoSync")
+        UserDefaults.standard.bool(forKey: AppConstants.StorageKey.calendarAutoSync)
     }
 
     private var completionPolicy: CompletionPolicy {
-        let raw = UserDefaults.standard.string(forKey: "calendarCompletionPolicy") ?? "keep"
+        let raw = UserDefaults.standard.string(forKey: AppConstants.StorageKey.calendarCompletionPolicy) ?? "keep"
         return CompletionPolicy(rawValue: raw) ?? .keepEvent
     }
 
     private var isBusyOnly: Bool {
-        UserDefaults.standard.bool(forKey: "calendarBusyOnly")
+        UserDefaults.standard.bool(forKey: AppConstants.StorageKey.calendarBusyOnly)
     }
 
     // MARK: - Init

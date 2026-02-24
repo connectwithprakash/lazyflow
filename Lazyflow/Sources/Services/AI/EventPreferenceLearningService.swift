@@ -8,10 +8,10 @@ final class EventPreferenceLearningService: ObservableObject {
 
     // MARK: - Constants
 
-    private let recordsKey = "eventSelectionRecords"
-    private let preferencesKey = "eventTitlePreferences"
-    private let maxRecords = 500
-    private let expiryDays = 180
+    private let recordsKey = AppConstants.StorageKey.eventSelectionRecords
+    private let preferencesKey = AppConstants.StorageKey.eventTitlePreferences
+    private let maxRecords = AppConstants.Limits.maxEventRecords
+    private let expiryDays = AppConstants.Limits.eventExpiryDays
 
     // MARK: - Published State
 

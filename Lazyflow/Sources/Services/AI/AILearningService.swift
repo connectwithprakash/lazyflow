@@ -30,15 +30,15 @@ struct DurationAccuracy: Codable, Identifiable {
 final class AILearningService: ObservableObject {
     static let shared = AILearningService()
 
-    private let correctionsKey = "aiCorrections"
-    private let durationAccuracyKey = "durationAccuracyData"
-    private let impressionsKey = "aiImpressions"
-    private let refinementsKey = "aiRefinementRequests"
-    private let maxCorrections = 100
-    private let maxAccuracyRecords = 100
-    private let maxImpressions = 200
-    private let maxRefinements = 200
-    private let correctionExpiryDays = 90
+    private let correctionsKey = AppConstants.StorageKey.aiCorrections
+    private let durationAccuracyKey = AppConstants.StorageKey.durationAccuracyData
+    private let impressionsKey = AppConstants.StorageKey.aiImpressions
+    private let refinementsKey = AppConstants.StorageKey.aiRefinementRequests
+    private let maxCorrections = AppConstants.Limits.maxAICorrections
+    private let maxAccuracyRecords = AppConstants.Limits.maxAccuracyRecords
+    private let maxImpressions = AppConstants.Limits.maxAIImpressions
+    private let maxRefinements = AppConstants.Limits.maxAIRefinements
+    private let correctionExpiryDays = AppConstants.Limits.correctionExpiryDays
 
     @Published private(set) var corrections: [AICorrection] = []
     @Published private(set) var durationAccuracyRecords: [DurationAccuracy] = []

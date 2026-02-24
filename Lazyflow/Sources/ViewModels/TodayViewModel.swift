@@ -44,7 +44,7 @@ final class TodayViewModel: ObservableObject {
             .store(in: &cancellables)
 
         $searchQuery
-            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+            .debounce(for: .seconds(AppConstants.Timing.searchDebounce), scheduler: DispatchQueue.main)
             .sink { [weak self] query in
                 self?.filterTasks(query: query)
             }

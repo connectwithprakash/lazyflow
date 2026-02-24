@@ -9,7 +9,7 @@ struct AddTaskView: View {
     @StateObject private var llmService = LLMService.shared
     @FocusState private var isTitleFocused: Bool
 
-    @AppStorage("aiAutoSuggest") private var aiAutoSuggest: Bool = true
+    @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
 
     @State private var showDatePicker = false
     @State private var showListPicker = false
