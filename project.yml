@@ -23,6 +23,7 @@ targets:
     sources:
       - path: Lazyflow/Sources
       - path: Lazyflow/Resources
+      - path: Lazyflow/PrivacyInfo.xcprivacy
       - path: LazyflowWidget/LiveActivity/TaskActivityAttributes.swift
         group: LazyflowWidget/LiveActivity
     info:
@@ -54,6 +55,13 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: YES
         LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         INFOPLIST_KEY_NSSiriUsageDescription: "Lazyflow uses Siri to create tasks and check your agenda"
+    postBuildScripts:
+      - script: |
+          if [ -z "$DISABLE_SWIFTLINT" ] && command -v swiftlint >/dev/null 2>&1; then
+            swiftlint lint --quiet || true
+          fi
+        name: SwiftLint
+        basedOnDependencyAnalysis: false
     dependencies:
       - target: LazyflowWidget
         embed: true
