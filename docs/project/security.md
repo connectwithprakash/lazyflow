@@ -30,9 +30,10 @@ No passwords, tokens, or personally identifiable information is stored in UserDe
 - No `NSAllowsArbitraryLoads` or `NSExceptionDomains` in Info.plist.
 
 ### HTTPS Enforcement (LLM Providers)
-- External AI provider endpoints must use HTTPS. HTTP is rejected at the request-building layer with a clear error.
-- **Localhost exemption**: `localhost`, `127.0.0.1`, `::1`, and `.local` addresses are allowed over HTTP for local inference servers (e.g., Ollama).
-- Endpoint URL validation is also enforced in the provider configuration UI.
+- **ATS is the primary enforcement layer** — iOS App Transport Security blocks non-HTTPS connections by default for all network requests.
+- External AI provider endpoints are additionally validated at the configuration layer to require HTTPS URLs.
+- **Localhost exemption**: `localhost`, `127.0.0.1`, `::1`, and `.local` addresses are allowed over HTTP for local inference servers (e.g., Ollama). ATS permits these by default.
+- Note: Model discovery requests (fetching available models) follow the same ATS restrictions but may use different URL paths than the configured endpoint.
 
 ### CloudKit
 - Uses Apple's CloudKit framework over HTTPS.
