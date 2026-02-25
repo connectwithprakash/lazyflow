@@ -135,6 +135,8 @@ final class PersistenceController: @unchecked Sendable {
 
         // Create new store description with updated CloudKit settings
         let newDescription = NSPersistentStoreDescription(url: storeURL)
+        newDescription.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+        newDescription.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
         newDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         newDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
