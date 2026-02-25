@@ -170,6 +170,9 @@ final class PersistenceController: @unchecked Sendable {
         if let error = loadError {
             print("Failed to reload store: \(error)")
         } else {
+            // Reset history token — old history is no longer valid after store reload
+            lastHistoryToken = nil
+
             // Reset and refresh context
             container.viewContext.reset()
             container.viewContext.refreshAllObjects()
@@ -515,11 +518,11 @@ final class PersistenceController: @unchecked Sendable {
             }
             .store(in: &cancellables)
 
-        // Listen for CloudKit import events to detect sync errors
-        NotificationCenter.default.publisher(for: NSNotification.Name.NSPersistentStoreCoordinatorStoresDidChange, object: container.persistentStoreCoordinator)
+        // Listen for CloudKit sync events to detect errors
+        NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification, object: container)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                self?.handleStoreDidChange(notification)
+                self?.handleCloudKitEvent(notification)
             }
             .store(in: &cancellables)
 
@@ -537,8 +540,20 @@ final class PersistenceController: @unchecked Sendable {
             // Fetch only transactions since our last token
             let request = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastHistoryToken)
 
-            guard let result = try? context.execute(request) as? NSPersistentHistoryResult,
-                  let transactions = result.result as? [NSPersistentHistoryTransaction],
+            let result: NSPersistentHistoryResult
+            do {
+                guard let historyResult = try context.execute(request) as? NSPersistentHistoryResult else {
+                    return
+                }
+                result = historyResult
+            } catch {
+                self.logger.warning("History fetch failed (resetting token): \(error.localizedDescription, privacy: .public)")
+                // Reset token so the next notification can retry from scratch
+                self.lastHistoryToken = nil
+                return
+            }
+
+            guard let transactions = result.result as? [NSPersistentHistoryTransaction],
                   !transactions.isEmpty else {
                 return
             }
@@ -575,12 +590,24 @@ final class PersistenceController: @unchecked Sendable {
         }
     }
 
-    /// Handle persistent store coordinator changes to detect sync errors
-    private func handleStoreDidChange(_ notification: Notification) {
-        // Check for error info in the store change notification
-        if let error = notification.userInfo?["error"] as? NSError {
-            logger.error("CloudKit sync error: \(error.localizedDescription, privacy: .public)")
-            lastSyncError = error.localizedDescription
+    /// Handle CloudKit sync events to detect errors
+    private func handleCloudKitEvent(_ notification: Notification) {
+        guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event else {
+            return
+        }
+
+        if event.endDate != nil {
+            // Event has finished
+            if let error = event.error {
+                logger.error("CloudKit sync error (\(event.type.rawValue, privacy: .public)): \(error.localizedDescription, privacy: .public)")
+                lastSyncError = error.localizedDescription
+            } else {
+                // Successful sync event — clear any previous error
+                if lastSyncError != nil {
+                    lastSyncError = nil
+                }
+                Self.setLastSyncDate(Date())
+            }
         }
     }
 
@@ -862,6 +889,9 @@ final class PersistenceController: @unchecked Sendable {
         } else {
             print("Local cache cleared - CloudKit will re-sync data")
         }
+
+        // Reset history token — old history is no longer valid after local wipe
+        lastHistoryToken = nil
 
         // Reset and refresh view context
         container.viewContext.reset()
