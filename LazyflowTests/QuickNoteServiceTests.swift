@@ -105,6 +105,7 @@ final class QuickNoteServiceTests: XCTestCase {
         XCTAssertNotNil(updated)
         XCTAssertFalse(updated!.isProcessed)
         XCTAssertEqual(updated!.extractedTaskCount, 0)
+        XCTAssertNil(updated!.processedAt, "processedAt should be nil after unmark")
     }
 
     // MARK: - Delete

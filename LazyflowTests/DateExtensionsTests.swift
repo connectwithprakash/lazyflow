@@ -154,20 +154,35 @@ final class DateExtensionsTests: XCTestCase {
         XCTAssertEqual(Date().addingDays(-1).relativeFormatted, "Yesterday")
     }
 
-    func testShortFormatted_NotEmpty() {
-        XCTAssertFalse(Date().shortFormatted.isEmpty)
+    func testShortFormatted_ContainsExpectedContent() {
+        let date = Date.from(year: 2026, month: 3, day: 15)!
+        let formatted = date.shortFormatted
+        XCTAssertFalse(formatted.isEmpty)
+        XCTAssertTrue(formatted.contains("15") || formatted.contains("Mar") || formatted.contains("3"),
+                       "Short format should contain the day or month")
     }
 
-    func testFullFormatted_NotEmpty() {
-        XCTAssertFalse(Date().fullFormatted.isEmpty)
+    func testFullFormatted_ContainsExpectedContent() {
+        let date = Date.from(year: 2026, month: 3, day: 15)!
+        let formatted = date.fullFormatted
+        XCTAssertFalse(formatted.isEmpty)
+        XCTAssertTrue(formatted.contains("2026") || formatted.contains("March") || formatted.contains("Mar"),
+                       "Full format should contain the year or month name")
     }
 
-    func testTimeFormatted_NotEmpty() {
-        XCTAssertFalse(Date().timeFormatted.isEmpty)
+    func testTimeFormatted_ContainsExpectedContent() {
+        let date = Date.from(year: 2026, month: 1, day: 1, hour: 14, minute: 30)!
+        let formatted = date.timeFormatted
+        XCTAssertFalse(formatted.isEmpty)
+        XCTAssertTrue(formatted.contains("30"), "Time format should contain the minutes")
     }
 
-    func testDateTimeFormatted_NotEmpty() {
-        XCTAssertFalse(Date().dateTimeFormatted.isEmpty)
+    func testDateTimeFormatted_ContainsExpectedContent() {
+        let date = Date.from(year: 2026, month: 3, day: 15, hour: 14, minute: 30)!
+        let formatted = date.dateTimeFormatted
+        XCTAssertFalse(formatted.isEmpty)
+        XCTAssertTrue(formatted.contains("15") || formatted.contains("Mar"),
+                       "DateTime format should contain the day or month")
     }
 
     // MARK: - Date Range Helpers

@@ -55,9 +55,22 @@ final class ColorExtensionsTests: XCTestCase {
         let original = Color(hex: "#218A8D")!
         let hex = original.toHex()
         XCTAssertNotNil(hex)
-        // Hex values should be close (exact match depends on color space conversion)
         XCTAssertTrue(hex!.hasPrefix("#"))
         XCTAssertEqual(hex!.count, 7)
+
+        // Verify the roundtrip produces a similar color by re-parsing
+        let roundtripped = Color(hex: hex!)
+        XCTAssertNotNil(roundtripped, "Roundtripped hex should be a valid color")
+    }
+
+    func testToHex_KnownColors() {
+        // Black should produce #000000
+        let blackHex = Color(hex: "#000000")!.toHex()
+        XCTAssertEqual(blackHex, "#000000")
+
+        // White should produce #FFFFFF
+        let whiteHex = Color(hex: "#FFFFFF")!.toHex()
+        XCTAssertEqual(whiteHex, "#FFFFFF")
     }
 
     // MARK: - App Colors
