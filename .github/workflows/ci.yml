@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -83,20 +86,20 @@ jobs:
 
       - name: Extract Coverage Report
         if: always()
+        continue-on-error: true
         run: |
-          set -euo pipefail
           if [ -d "TestResults.xcresult" ]; then
             # Extract coverage percentage using xccov
-            xcrun xccov view --report --only-targets TestResults.xcresult > coverage-report.txt
+            xcrun xccov view --report --only-targets TestResults.xcresult > coverage-report.txt || true
 
             # Parse overall coverage for the Lazyflow target
-            COVERAGE=$(grep "Lazyflow.app" coverage-report.txt | awk '{print $NF}' | head -1)
+            COVERAGE=$(grep "Lazyflow" coverage-report.txt | awk '{print $NF}' | head -1 || true)
             echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "**Overall coverage: ${COVERAGE:-N/A}**" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
-            cat coverage-report.txt >> "$GITHUB_STEP_SUMMARY"
+            cat coverage-report.txt >> "$GITHUB_STEP_SUMMARY" || true
             echo '```' >> "$GITHUB_STEP_SUMMARY"
 
             echo "::notice::Code coverage: ${COVERAGE:-N/A}"
