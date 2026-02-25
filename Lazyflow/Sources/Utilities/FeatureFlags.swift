@@ -10,6 +10,7 @@ import os
 ///
 /// Debug overrides persist in UserDefaults and take precedence over defaults.
 /// Clear overrides with `removeOverride(_:)` or `removeAllOverrides()`.
+@MainActor
 final class FeatureFlags: ObservableObject {
     static let shared = FeatureFlags()
 
@@ -107,14 +108,17 @@ final class FeatureFlags: ObservableObject {
 
     /// Check if a feature flag is enabled
     func isEnabled(_ flag: Flag) -> Bool {
-        // Debug override takes priority
+        #if DEBUG
+        // Debug override takes priority (only in debug builds)
         if let override = getOverride(flag) {
             return override
         }
+        #endif
         return flag.defaultValue
     }
 
-    /// Set a debug override for a flag
+    #if DEBUG
+    /// Set a debug override for a flag (debug builds only)
     func setOverride(_ flag: Flag, enabled: Bool) {
         let key = overridePrefix + flag.rawValue
         UserDefaults.standard.set(enabled, forKey: key)
@@ -152,11 +156,14 @@ final class FeatureFlags: ObservableObject {
         guard UserDefaults.standard.object(forKey: key) != nil else { return nil }
         return UserDefaults.standard.bool(forKey: key)
     }
+    #endif
 
-    /// Get flags grouped by category
+    #if DEBUG
+    /// Get flags grouped by category (debug only)
     static var groupedFlags: [(group: Flag.Group, flags: [Flag])] {
         Flag.Group.allCases.map { group in
             (group: group, flags: Flag.allCases.filter { $0.group == group })
         }
     }
+    #endif
 }

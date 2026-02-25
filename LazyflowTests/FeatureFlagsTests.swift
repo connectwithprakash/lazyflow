@@ -1,6 +1,7 @@
 import XCTest
 @testable import Lazyflow
 
+@MainActor
 final class FeatureFlagsTests: XCTestCase {
 
     override func setUp() {

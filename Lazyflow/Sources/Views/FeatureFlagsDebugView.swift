@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 
 /// Debug view for overriding feature flags during development.
@@ -95,3 +96,4 @@ private struct FlagRow: View {
         FeatureFlagsDebugView()
     }
 }
+#endif
