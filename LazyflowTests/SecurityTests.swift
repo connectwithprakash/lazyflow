@@ -14,7 +14,7 @@ final class SecurityTests: XCTestCase {
         }
 
         let fileProtection = description.options[NSPersistentStoreFileProtectionKey] as? FileProtectionType
-        XCTAssertEqual(fileProtection, .complete, "Core Data store should use NSFileProtectionComplete")
+        XCTAssertEqual(fileProtection, .completeUnlessOpen, "Core Data store should use NSFileProtectionCompleteUnlessOpen for widget/CloudKit compatibility")
     }
 
     func testPersistentStoreDescription_HasHistoryTracking() {
