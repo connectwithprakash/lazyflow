@@ -227,7 +227,7 @@ final class NotificationService: @unchecked Sendable {
         }
 
         if !timesToSchedule.isEmpty {
-            Logger.notifications.info("Scheduled \(timesToSchedule.count, privacy: .public) intraday notifications for task: \(task.title)")
+            Logger.notifications.info("Scheduled \(timesToSchedule.count, privacy: .public) intraday notifications for task: \(task.title, privacy: .private)")
         }
     }
 

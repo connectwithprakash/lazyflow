@@ -167,7 +167,7 @@ final class CalendarSyncService: ObservableObject {
 
             recentlyPushedTaskIDs[task.id] = Date()
         } catch {
-            Logger.calendar.error("CalendarSyncService: Failed to create event for task '\(task.title)': \(error)")
+            Logger.calendar.error("CalendarSyncService: Failed to create event for task '\(task.title, privacy: .private)': \(error)")
         }
     }
 
@@ -233,7 +233,7 @@ final class CalendarSyncService: ObservableObject {
 
             recentlyPushedTaskIDs[task.id] = Date()
         } catch {
-            Logger.calendar.error("CalendarSyncService: Failed to push updates for task '\(task.title)': \(error)")
+            Logger.calendar.error("CalendarSyncService: Failed to push updates for task '\(task.title, privacy: .private)': \(error)")
         }
     }
 
@@ -285,7 +285,7 @@ final class CalendarSyncService: ObservableObject {
 
                 recentlyPushedTaskIDs[task.id] = Date()
             } catch {
-                Logger.calendar.error("CalendarSyncService: Failed to delete event for completed task '\(task.title)': \(error)")
+                Logger.calendar.error("CalendarSyncService: Failed to delete event for completed task '\(task.title, privacy: .private)': \(error)")
             }
         }
     }
