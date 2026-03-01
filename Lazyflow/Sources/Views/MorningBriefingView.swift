@@ -42,6 +42,7 @@ struct MorningBriefingView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
+                .accessibilityIdentifier("Refresh Briefing")
                 .accessibilityLabel("Refresh briefing")
                 .accessibilityHint("Recalculate morning briefing data")
                 .disabled(isLoading)
@@ -55,6 +56,7 @@ struct MorningBriefingView: View {
                     } label: {
                         Image(systemName: "sparkles")
                     }
+                    .accessibilityIdentifier("Regenerate AI")
                     .accessibilityLabel("Regenerate AI briefing")
                     .accessibilityHint("Generate a new AI-powered briefing")
                     .disabled(isLoading)

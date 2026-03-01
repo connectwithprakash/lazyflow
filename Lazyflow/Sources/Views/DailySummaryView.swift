@@ -42,6 +42,7 @@ struct DailySummaryView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
+                .accessibilityIdentifier("Refresh Summary")
                 .accessibilityLabel("Refresh summary")
                 .accessibilityHint("Recalculate today's productivity stats")
                 .disabled(isLoading)
@@ -55,6 +56,7 @@ struct DailySummaryView: View {
                     } label: {
                         Image(systemName: "sparkles")
                     }
+                    .accessibilityIdentifier("Regenerate AI")
                     .accessibilityLabel("Regenerate AI recap")
                     .accessibilityHint("Generate a new AI-powered summary")
                     .disabled(isLoading)

@@ -32,6 +32,7 @@ struct InsightsView: View {
                             subtitle: "Yesterday's recap & today's plan"
                         )
                     }
+                    .accessibilityIdentifier("MorningBriefingCard")
                     .accessibilityLabel("Morning Briefing: Yesterday's recap and today's plan")
 
                     // Daily Summary Card
@@ -48,6 +49,7 @@ struct InsightsView: View {
                             badgeText: summaryService.streakData.currentStreak > 0 ? "\(summaryService.streakData.currentStreak)" : nil
                         )
                     }
+                    .accessibilityIdentifier("DailySummaryCard")
                     .accessibilityLabel("Daily Summary: Track your productivity\(summaryService.streakData.currentStreak > 0 ? ", \(summaryService.streakData.currentStreak) day streak" : "")")
 
                     // AI Quality Card
@@ -61,6 +63,7 @@ struct InsightsView: View {
                             subtitle: "Correction & refinement rates"
                         )
                     }
+                    .accessibilityIdentifier("AIQualityCard")
                     .accessibilityLabel("AI Quality: Correction and refinement rates")
 
                     // MARK: - History Section
@@ -78,6 +81,7 @@ struct InsightsView: View {
                             subtitle: "View completed tasks"
                         )
                     }
+                    .accessibilityIdentifier("HistoryCard")
                     .accessibilityLabel("History: View completed tasks")
 
                     // MARK: - Analytics Section
@@ -95,6 +99,7 @@ struct InsightsView: View {
                             subtitle: "Category & list insights"
                         )
                     }
+                    .accessibilityIdentifier("AnalyticsCard")
                     .accessibilityLabel("Analytics: Category and list insights")
 
                     Spacer(minLength: DesignSystem.Spacing.xxl)
