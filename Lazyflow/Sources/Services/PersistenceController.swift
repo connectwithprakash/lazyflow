@@ -138,7 +138,7 @@ final class PersistenceController: @unchecked Sendable {
         newDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         newDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
         newDescription.setOption(
-            FileProtectionType.complete as NSObject,
+            FileProtectionType.completeUnlessOpen as NSObject,
             forKey: NSPersistentStoreFileProtectionKey
         )
 
@@ -341,7 +341,7 @@ final class PersistenceController: @unchecked Sendable {
 
             // Encrypt Core Data store when device is locked
             description.setOption(
-                FileProtectionType.complete as NSObject,
+                FileProtectionType.completeUnlessOpen as NSObject,
                 forKey: NSPersistentStoreFileProtectionKey
             )
 
