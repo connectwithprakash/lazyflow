@@ -155,6 +155,7 @@ struct QuickNoteRow: View {
                         .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("Extract")
                 .accessibilityLabel(isProcessed ? "Extract tasks again" : "Extract tasks")
                 .accessibilityHint("Use AI to extract tasks from this note")
             }
