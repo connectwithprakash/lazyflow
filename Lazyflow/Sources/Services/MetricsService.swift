@@ -25,6 +25,7 @@ final class MetricsService: NSObject, MXMetricManagerSubscriber {
     /// Unsubscribe (typically not needed, but available for testing)
     func stopCollecting() {
         MXMetricManager.shared.remove(self)
+        isCollecting = false
     }
 
     // MARK: - MXMetricManagerSubscriber
