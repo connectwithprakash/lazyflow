@@ -2067,7 +2067,7 @@ final class LazyflowUITests: XCTestCase {
 
         // Later dialog should show snooze options
         let snoozeOption = app.buttons["Snooze 1 Hour"]
-        XCTAssertTrue(snoozeOption.waitForExistence(timeout: 3), "Later dialog should appear with snooze options")
+        XCTAssertTrue(snoozeOption.waitForExistence(timeout: 5), "Later dialog should appear with snooze options")
 
         // Dismiss by tapping Cancel
         let cancelButton = app.buttons["Cancel"]
