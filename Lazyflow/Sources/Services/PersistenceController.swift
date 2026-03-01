@@ -172,6 +172,7 @@ final class PersistenceController: @unchecked Sendable {
             // Reset and refresh context
             container.viewContext.reset()
             container.viewContext.refreshAllObjects()
+            lastSaveError = nil
 
             // Post notification for UI to refresh
             NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)

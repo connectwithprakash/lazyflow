@@ -245,10 +245,23 @@ final class PersistenceControllerTests: XCTestCase {
     // MARK: - Migration Options
 
     func testMigrationOptions_AreSet() {
-        // Create a non-inMemory controller to check description options
-        // We use inMemory=true here but verify the code path exists
-        let controller = PersistenceController(inMemory: true, enableCloudKit: false)
-        XCTAssertTrue(controller.isLoaded, "Store with migration options should load")
+        // Use inMemory:false so the init actually sets migration options on the description
+        let controller = PersistenceController(inMemory: false, enableCloudKit: false)
+        guard let description = controller.container.persistentStoreDescriptions.first else {
+            XCTFail("No persistent store description found")
+            return
+        }
+
+        XCTAssertEqual(
+            description.options[NSMigratePersistentStoresAutomaticallyOption] as? NSNumber,
+            true as NSNumber,
+            "Auto migration should be enabled"
+        )
+        XCTAssertEqual(
+            description.options[NSInferMappingModelAutomaticallyOption] as? NSNumber,
+            true as NSNumber,
+            "Infer mapping should be enabled"
+        )
         controller.deleteAllDataEverywhere()
     }
 }
