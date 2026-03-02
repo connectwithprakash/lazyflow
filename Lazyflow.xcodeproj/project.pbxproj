@@ -77,6 +77,7 @@
 		69EBDD3F05B7C8373F64B872 /* AIContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5492628B3176A195B73EAB60 /* AIContextTests.swift */; };
 		6A0FD16ADFB90DEFD8EF8328 /* TaskListService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C28B175A2ABFA5B21D7837 /* TaskListService.swift */; };
 		6A44464EF2F0BE24D12A1B76 /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3150E45BE443F39C5F4025AF /* CategoryDetailView.swift */; };
+		6C8A1D0868D4A8C79FAB1532 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FA1F8425DBDB22992BB177EA /* Localizable.xcstrings */; };
 		6D57A0A6FDF8FA8A2F637A9E /* UndoToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759DF447CB9E87A4077D9134 /* UndoToast.swift */; };
 		6FC1B87B18463CF203566DB1 /* GetTodayTasksIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3FB71AB248FDD9843E5449 /* GetTodayTasksIntent.swift */; };
 		738C0EF9D5999920D27633EC /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9CF8B88B573FE889545383 /* NotificationServiceTests.swift */; };
@@ -425,6 +426,7 @@
 		F8769C43782895FD84F8B04A /* LazyflowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowUITests.swift; sourceTree = "<group>"; };
 		F891A77BAC392674B76D2FB9 /* UpcomingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingView.swift; sourceTree = "<group>"; };
 		F9732C67059BB87D362CA70F /* AIQualityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIQualityViewModel.swift; sourceTree = "<group>"; };
+		FA1F8425DBDB22992BB177EA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		FC516A82C70E5F743C402129 /* SwitchFocusTaskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchFocusTaskSheet.swift; sourceTree = "<group>"; };
 		FCCEEDCCC7E90A6148060ACD /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		FD2FB30BC0A133FB4090F724 /* MoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreView.swift; sourceTree = "<group>"; };
@@ -727,6 +729,7 @@
 				C19F41E89A7D7A23F7315459 /* Assets.xcassets */,
 				A7B1349EEB55473E75B6E480 /* Info.plist */,
 				9C2C6D7CF3D5DE85D39BCFD9 /* LaunchScreen.storyboard */,
+				FA1F8425DBDB22992BB177EA /* Localizable.xcstrings */,
 			);
 			name = Resources;
 			path = Lazyflow/Resources;
@@ -1037,6 +1040,7 @@
 				060FCFCAF48C8886212BD282 /* AppIcon.svg in Resources */,
 				209BA1B6F191D44710C74DDE /* Assets.xcassets in Resources */,
 				5E2CDE489A38DDAB96C565B9 /* LaunchScreen.storyboard in Resources */,
+				6C8A1D0868D4A8C79FAB1532 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1505,8 +1509,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app;
 				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1533,8 +1539,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lazyflow.app;
 				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
