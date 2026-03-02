@@ -4,7 +4,7 @@ import UserNotifications
 
 /// Onboarding tutorial carousel for first-time users
 struct OnboardingView: View {
-    @AppStorage("hasSeenOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage(AppConstants.StorageKey.hasSeenOnboarding) private var hasCompletedOnboarding = false
     @State private var currentPage = 0
     @State private var calendarPermissionGranted = false
     @State private var notificationPermissionGranted = false

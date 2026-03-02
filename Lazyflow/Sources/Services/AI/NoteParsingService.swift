@@ -11,10 +11,10 @@ final class NoteParsingService: ObservableObject {
     private let categoryService = CategoryService.shared
 
     /// Maximum characters sent to LLM
-    private let maxLLMInputLength = 1000
+    private let maxLLMInputLength = AppConstants.Limits.maxLLMInputLength
 
     /// LLM timeout in seconds
-    private let llmTimeout: TimeInterval = 5.0
+    private let llmTimeout: TimeInterval = AppConstants.Timing.llmTimeout
 
     private init() {}
 

@@ -84,7 +84,7 @@ final class CalendarService: ObservableObject {
 
     // MARK: - Lazyflow Calendar
 
-    private static let lazyflowCalendarIDKey = "lazyflowCalendarID"
+    private static let lazyflowCalendarIDKey = AppConstants.StorageKey.lazyflowCalendarID
     private static let lazyflowCalendarTitle = "Lazyflow"
 
     /// Get or create the dedicated Lazyflow calendar for auto-synced events

@@ -6,8 +6,8 @@ import SwiftUI
 /// - iPhone (compact size class): TabView with bottom tabs
 struct ContentView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
-    @AppStorage("hasShownICloudPrompt") private var hasShownICloudPrompt = false
+    @AppStorage(AppConstants.StorageKey.appearanceMode) private var appearanceMode: AppearanceMode = .system
+    @AppStorage(AppConstants.StorageKey.hasShownICloudPrompt) private var hasShownICloudPrompt = false
     @State private var selectedTab: Tab? = .today
     @State private var activeSheet: SheetType?
     @State private var showICloudPrompt = false

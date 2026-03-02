@@ -26,10 +26,10 @@ struct TodayView: View {
     @State private var autoCompletedParentTitle = ""
     @StateObject private var summaryService = DailySummaryService.shared
     @StateObject private var listService = TaskListService.shared
-    @AppStorage("summaryPromptHour") private var summaryPromptHour: Int = 18
-    @AppStorage("morningBriefingEnabled") private var morningBriefingEnabled: Bool = true
-    @AppStorage("lastMorningBriefingDate") private var lastMorningBriefingDate: Double = 0
-    @AppStorage("lastPlanYourDayDate") private var lastPlanYourDayDate: Double = 0
+    @AppStorage(AppConstants.StorageKey.summaryPromptHour) private var summaryPromptHour: Int = AppConstants.Defaults.summaryPromptHour
+    @AppStorage(AppConstants.StorageKey.morningBriefingEnabled) private var morningBriefingEnabled: Bool = true
+    @AppStorage(AppConstants.StorageKey.lastMorningBriefingDate) private var lastMorningBriefingDate: Double = 0
+    @AppStorage(AppConstants.StorageKey.lastPlanYourDayDate) private var lastPlanYourDayDate: Double = 0
     @State private var showPlanYourDay = false
     @State private var actionToast: ActionToastData?
     @State private var highlightedTaskID: UUID?

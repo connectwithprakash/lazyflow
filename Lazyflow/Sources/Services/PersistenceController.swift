@@ -76,10 +76,10 @@ final class PersistenceController: @unchecked Sendable {
     private static let cloudKitContainerIdentifier = "iCloud.com.lazyflow.app"
 
     /// UserDefaults key for iCloud sync preference
-    private static let iCloudSyncEnabledKey = "iCloudSyncEnabled"
+    private static let iCloudSyncEnabledKey = AppConstants.StorageKey.iCloudSyncEnabled
 
     /// UserDefaults key for last sync date
-    private static let lastSyncDateKey = "lastCloudKitSyncDate"
+    private static let lastSyncDateKey = AppConstants.StorageKey.lastCloudKitSyncDate
 
     // MARK: - iCloud Sync Preference
 
@@ -367,7 +367,7 @@ final class PersistenceController: @unchecked Sendable {
         }
 
         // Wait for store to load (with timeout)
-        let timeout = DispatchTime.now() + .seconds(10)
+        let timeout = DispatchTime.now() + .seconds(Int(AppConstants.Timing.cloudKitTimeout))
         if semaphore.wait(timeout: timeout) == .timedOut {
             print("Warning: Persistent store loading timed out")
         }
@@ -849,8 +849,8 @@ final class PersistenceController: @unchecked Sendable {
             return
         }
 
-        // Delete records in batches of 400 (CloudKit limit)
-        let batchSize = 400
+        // Delete records in batches (CloudKit limit)
+        let batchSize = AppConstants.Limits.batchDeleteSize
         for startIndex in stride(from: 0, to: recordIDs.count, by: batchSize) {
             let endIndex = min(startIndex + batchSize, recordIDs.count)
             let batch = Array(recordIDs[startIndex..<endIndex])

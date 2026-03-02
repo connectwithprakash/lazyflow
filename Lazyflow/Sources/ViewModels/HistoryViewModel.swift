@@ -165,7 +165,7 @@ final class HistoryViewModel: ObservableObject {
 
         // Debounced search
         $searchQuery
-            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+            .debounce(for: .seconds(AppConstants.Timing.searchDebounce), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.refreshTasks()
             }

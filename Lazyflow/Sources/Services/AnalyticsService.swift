@@ -268,7 +268,7 @@ class AnalyticsService: ObservableObject {
     }
 
     /// Minimum days of inactivity to consider a list "stale"
-    static let staleThresholdDays = 7
+    static let staleThresholdDays = AppConstants.Limits.staleThresholdDays
 
     /// Detect lists with no activity in 7+ days that have incomplete tasks
     /// Note: Uses fixed threshold regardless of selected period for consistent UX

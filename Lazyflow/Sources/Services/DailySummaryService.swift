@@ -35,13 +35,13 @@ final class DailySummaryService: ObservableObject {
 
     // MARK: - Constants
 
-    private let maxContextCharacters = 1500
-    private let minContextQualityThreshold = 0.2
+    private let maxContextCharacters = AppConstants.Limits.maxContextCharacters
+    private let minContextQualityThreshold = AppConstants.Limits.minContextQualityThreshold
 
     // MARK: - UserDefaults Keys
 
-    private static let summaryHistoryKey = "daily_summary_history"
-    private static let lastSummaryDateKey = "last_summary_date"
+    private static let summaryHistoryKey = AppConstants.StorageKey.dailySummaryHistory
+    private static let lastSummaryDateKey = AppConstants.StorageKey.lastSummaryDate
 
     // MARK: - Initialization
 
