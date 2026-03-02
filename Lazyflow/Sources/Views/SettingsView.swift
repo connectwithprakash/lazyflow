@@ -1566,7 +1566,21 @@ struct ProviderConfigurationSheet: View {
     }
 
     private var canSave: Bool {
-        !endpoint.isEmpty && !model.isEmpty
+        !endpoint.isEmpty && !model.isEmpty && endpointValidationError == nil
+    }
+
+    /// Validates that external endpoints use HTTPS
+    private var endpointValidationError: String? {
+        guard !endpoint.isEmpty,
+              let url = URL(string: endpoint),
+              let host = url.host?.lowercased() else { return nil }
+
+        if providerType == .custom,
+           !OpenResponsesProvider.isLocalHost(host),
+           url.scheme?.lowercased() != "https" {
+            return "External endpoints must use HTTPS for security."
+        }
+        return nil
     }
 
     var body: some View {
@@ -1616,6 +1630,12 @@ struct ProviderConfigurationSheet: View {
                             availableModels = []
                             modelFetchError = nil
                         }
+
+                    if let error = endpointValidationError {
+                        Text(error)
+                            .font(DesignSystem.Typography.caption1)
+                            .foregroundColor(Color.Lazyflow.error)
+                    }
 
                     // Show API key field for providers that require it OR custom endpoints (optional)
                     if providerType.requiresAPIKey || providerType == .custom {

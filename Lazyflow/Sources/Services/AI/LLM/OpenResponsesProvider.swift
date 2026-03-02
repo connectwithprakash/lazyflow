@@ -242,6 +242,13 @@ final class OpenResponsesProvider: LLMProvider {
             throw LLMError.apiError("Invalid endpoint URL")
         }
 
+        // Enforce HTTPS for non-local endpoints
+        if let host = url.host?.lowercased(),
+           !Self.isLocalHost(host),
+           url.scheme?.lowercased() != "https" {
+            throw LLMError.apiError("External endpoints must use HTTPS for security.")
+        }
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -269,6 +276,28 @@ final class OpenResponsesProvider: LLMProvider {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         return request
+    }
+
+    // MARK: - URL Validation
+
+    /// Check if a hostname is a local or private network address (HTTP is acceptable for these)
+    /// Covers loopback, .local mDNS, and RFC1918 private ranges used by LAN inference servers
+    static func isLocalHost(_ host: String) -> Bool {
+        if host == "localhost" || host == "127.0.0.1" || host == "::1" || host.hasSuffix(".local") {
+            return true
+        }
+        // RFC1918 private network ranges (common for LAN Ollama setups)
+        if host.hasPrefix("10.") || host.hasPrefix("192.168.") {
+            return true
+        }
+        // 172.16.0.0 – 172.31.255.255
+        if host.hasPrefix("172.") {
+            let parts = host.split(separator: ".")
+            if parts.count >= 2, let second = Int(parts[1]), (16...31).contains(second) {
+                return true
+            }
+        }
+        return false
     }
 
     // MARK: - Response Parsing
