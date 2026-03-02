@@ -135,6 +135,8 @@ final class PersistenceController: @unchecked Sendable {
 
         // Create new store description with updated CloudKit settings
         let newDescription = NSPersistentStoreDescription(url: storeURL)
+        newDescription.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+        newDescription.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
         newDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         newDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
@@ -170,6 +172,7 @@ final class PersistenceController: @unchecked Sendable {
             // Reset and refresh context
             container.viewContext.reset()
             container.viewContext.refreshAllObjects()
+            lastSaveError = nil
 
             // Post notification for UI to refresh
             NotificationCenter.default.post(name: .cloudKitSyncDidComplete, object: nil)
@@ -296,6 +299,9 @@ final class PersistenceController: @unchecked Sendable {
     /// Error that occurred during Core Data initialization
     private(set) var initializationError: Error?
 
+    /// Most recent save error, observable by the UI
+    @Published private(set) var lastSaveError: NSError?
+
     /// The main view context
     var viewContext: NSManagedObjectContext {
         container.viewContext
@@ -330,6 +336,10 @@ final class PersistenceController: @unchecked Sendable {
             }
 
             let description = NSPersistentStoreDescription(url: storeURL)
+
+            // Enable lightweight migration to handle model version changes automatically
+            description.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+            description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
 
             // Enable persistent history tracking for CloudKit sync
             description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
@@ -665,6 +675,7 @@ final class PersistenceController: @unchecked Sendable {
     }
 
     /// Save the view context if there are changes
+    /// Posts the error to `lastSaveError` for UI observation on failure
     func save() {
         guard isLoaded else {
             print("Warning: Attempted to save before store was loaded")
@@ -676,8 +687,10 @@ final class PersistenceController: @unchecked Sendable {
 
         do {
             try context.save()
+            lastSaveError = nil
         } catch {
             let nsError = error as NSError
+            lastSaveError = nsError
             print("Core Data save error: \(nsError), \(nsError.userInfo)")
         }
     }
