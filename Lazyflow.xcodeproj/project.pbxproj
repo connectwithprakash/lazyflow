@@ -181,6 +181,7 @@
 		F17F638CD450DED1113D0D65 /* RecurringRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F018E899F22FF4A0E0F8001 /* RecurringRule.swift */; };
 		F36424258A454AA94CD67151 /* PlanYourDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6439D0F9A7CB5FB23D32A88A /* PlanYourDayView.swift */; };
 		F3DD5D78DA037DC32D7D4B4D /* LazyflowUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */; };
+		F49BDCAB611AE705EA473FD2 /* SecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733561F4C57F4B459DA8C1DF /* SecurityTests.swift */; };
 		F6538631367C9A9E80D16A5E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB436CC06BC124AF3305385B /* DesignSystem.swift */; };
 		F680CA23A252E46F199361F4 /* PlanYourDayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A10EC43A4CC1C21F47B3205 /* PlanYourDayData.swift */; };
 		F847E633D5AD71A505F65E36 /* LazyflowWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -337,6 +338,7 @@
 		6D121549295C26AB16F4B7AB /* QuickActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActionButton.swift; sourceTree = "<group>"; };
 		7093DE3C5A54912EB3A2FB18 /* ExpandableTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableTaskRowView.swift; sourceTree = "<group>"; };
 		72A0FCB4B915FD258190C3F4 /* WatchTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTaskRowView.swift; sourceTree = "<group>"; };
+		733561F4C57F4B459DA8C1DF /* SecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityTests.swift; sourceTree = "<group>"; };
 		759DF447CB9E87A4077D9134 /* UndoToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoToast.swift; sourceTree = "<group>"; };
 		766E1ADEBDA6F3C3BF445A09 /* AIContextService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIContextService.swift; sourceTree = "<group>"; };
 		76E8E2C72CAC2A87123CEA27 /* AIQualityViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIQualityViewModelTests.swift; sourceTree = "<group>"; };
@@ -609,6 +611,7 @@
 				E7DBD6476A3F8A043E9A1970 /* PromptTemplatesTests.swift */,
 				77D478B921D188403235B517 /* QuickNoteServiceTests.swift */,
 				3D8DDB4423AAB1E6EB7F61A0 /* RecurringRuleTests.swift */,
+				733561F4C57F4B459DA8C1DF /* SecurityTests.swift */,
 				EF88D5A45529A957D9EA88B9 /* SmartRescheduleServiceTests.swift */,
 				2268C58F54537A0DCFC08992 /* SuggestionFeedbackTests.swift */,
 				2191176F2DC72BA5B861C6C8 /* TaskListServiceTests.swift */,
@@ -1125,6 +1128,7 @@
 				7FA9390071FAFEF331CEB4FA /* PromptTemplatesTests.swift in Sources */,
 				A028A92405D16F15FE6B963B /* QuickNoteServiceTests.swift in Sources */,
 				12F7B5C3E697A0FE4280330E /* RecurringRuleTests.swift in Sources */,
+				F49BDCAB611AE705EA473FD2 /* SecurityTests.swift in Sources */,
 				5D1046464CCDBD9F90DE57E3 /* SmartRescheduleServiceTests.swift in Sources */,
 				BF862F11A763C88933858321 /* SuggestionFeedbackTests.swift in Sources */,
 				983E5B535FAF3C3E60C023EF /* TaskListServiceTests.swift in Sources */,
