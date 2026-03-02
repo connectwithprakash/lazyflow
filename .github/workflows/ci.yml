@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -76,15 +79,51 @@ jobs:
             -scheme Lazyflow \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -only-testing:LazyflowTests \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --report junit --output test-results.xml
+
+      - name: Extract Coverage Report
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -d "TestResults.xcresult" ]; then
+            # Extract coverage percentage using xccov
+            xcrun xccov view --report --only-targets TestResults.xcresult > coverage-report.txt || true
+
+            # Parse overall coverage for the Lazyflow target
+            COVERAGE=$(grep "Lazyflow" coverage-report.txt | awk '{print $NF}' | head -1 || true)
+            echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "**Overall coverage: ${COVERAGE:-N/A}**" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cat coverage-report.txt >> "$GITHUB_STEP_SUMMARY" || true
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+            echo "::notice::Code coverage: ${COVERAGE:-N/A}"
+          else
+            echo "::warning::No test results found — coverage report skipped"
+          fi
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
-          path: test-results.xml
+          path: |
+            test-results.xml
+            coverage-report.txt
+          retention-days: 30
+
+      - name: Upload xcresult Bundle
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xcresult-bundle
+          path: TestResults.xcresult
+          retention-days: 14
 
   ui-tests:
     runs-on: macos-15
@@ -139,5 +178,14 @@ jobs:
             -scheme Lazyflow \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -only-testing:LazyflowUITests \
+            -resultBundlePath UITestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty
+
+      - name: Upload UI Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-test-results
+          path: UITestResults.xcresult
+          retention-days: 14
