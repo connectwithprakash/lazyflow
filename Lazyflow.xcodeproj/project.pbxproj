@@ -103,6 +103,7 @@
 		8866988C5945766F87C8620D /* TaskActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28E22B96CFCEC9E8C7E4324F /* TaskActivityAttributes.swift */; };
 		89C5AA721859327B73862644 /* DailySummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B2071A23A13F5E9CB0EC8A /* DailySummaryService.swift */; };
 		8AC2370A648F531F5B8C3745 /* EventPreferenceLearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9677642FAF385A19C8ED2C87 /* EventPreferenceLearningService.swift */; };
+		8C680B3BCD00A17F7DE83173 /* MetricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11F669EE4AD1F4B8070D13 /* MetricsService.swift */; };
 		8CA9A62611BC163D451A0B46 /* AIQualityViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76E8E2C72CAC2A87123CEA27 /* AIQualityViewModelTests.swift */; };
 		8EE2EC378E8A63587EB39A61 /* CustomCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5760FDBBA61D5FF9EB511AF0 /* CustomCategory.swift */; };
 		905E6CDA8C1894B18A2EAFBB /* SubtaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5374569A0EFD2E70AAE8FCE6 /* SubtaskRowView.swift */; };
@@ -397,6 +398,7 @@
 		C93EBD505C5414F7455490AF /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		C94A51F5646A3AF94E7D3C0E /* DurationChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationChip.swift; sourceTree = "<group>"; };
 		CA4FED1BAEBC8929BA6A99A8 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
+		CC11F669EE4AD1F4B8070D13 /* MetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsService.swift; sourceTree = "<group>"; };
 		CFFF7E86D0A6B05D7A3E8005 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		D02792F18772E41185C3AA44 /* SmartRescheduleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleService.swift; sourceTree = "<group>"; };
 		D3391545EB6E7A4277AF8D35 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
@@ -553,6 +555,7 @@
 				795DC26627EBE7C54E1A28A1 /* ConflictDetectionService.swift */,
 				69B2071A23A13F5E9CB0EC8A /* DailySummaryService.swift */,
 				CA4FED1BAEBC8929BA6A99A8 /* LiveActivityManager.swift */,
+				CC11F669EE4AD1F4B8070D13 /* MetricsService.swift */,
 				A87E8C6CE81AAE400BCBDCC6 /* NotificationService.swift */,
 				F09AE32EF0444EDF2CDB9D8A /* PersistenceController.swift */,
 				22C28D5A65078E06A1F29948 /* PrioritizationService.swift */,
@@ -1199,6 +1202,7 @@
 				584AEAA632B8FBA89C12CCFF /* ListsView.swift in Sources */,
 				868C5108CBC9EEC25ABE4CE7 /* ListsViewModel.swift in Sources */,
 				C0CF583DCD31284AE5781C26 /* LiveActivityManager.swift in Sources */,
+				8C680B3BCD00A17F7DE83173 /* MetricsService.swift in Sources */,
 				D247AA2BB9D0EFC135D908F4 /* MoreView.swift in Sources */,
 				4884FDF6305640157B5BEA77 /* MorningBriefingView.swift in Sources */,
 				758570C26D66738EF70C0E28 /* NoteParsingService.swift in Sources */,
