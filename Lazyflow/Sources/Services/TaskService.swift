@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import Combine
+import os
 
 /// Service responsible for all Task-related CRUD operations
 final class TaskService: ObservableObject {
@@ -70,7 +71,7 @@ final class TaskService: ObservableObject {
             syncTasksToWidget()
         } catch {
             self.error = error
-            print("Failed to fetch tasks: \(error)")
+            Logger.tasks.error("Failed to fetch tasks: \(error, privacy: .public)")
         }
     }
 
@@ -341,7 +342,7 @@ final class TaskService: ObservableObject {
             fetchAllTasks()
         } catch {
             self.error = error
-            print("Failed to update task: \(error)")
+            Logger.tasks.error("Failed to update task: \(error, privacy: .public)")
         }
     }
 
@@ -359,7 +360,7 @@ final class TaskService: ObservableObject {
         do {
             try calendarService.syncTaskToEvent(task)
         } catch {
-            print("Failed to sync task to calendar: \(error)")
+            Logger.calendar.error("Failed to sync task to calendar: \(error, privacy: .public)")
         }
     }
 
@@ -637,7 +638,7 @@ final class TaskService: ObservableObject {
             fetchAllTasks()
         } catch {
             self.error = error
-            print("Failed to delete task: \(error)")
+            Logger.tasks.error("Failed to delete task: \(error, privacy: .public)")
         }
     }
 
@@ -657,7 +658,7 @@ final class TaskService: ObservableObject {
                 persistenceController.save()
             }
         } catch {
-            print("Failed to commit pending delete: \(error)")
+            Logger.tasks.error("Failed to commit pending delete: \(error, privacy: .public)")
         }
 
         pendingDeleteTaskID = nil
@@ -690,7 +691,7 @@ final class TaskService: ObservableObject {
                 fetchAllTasks()
             }
         } catch {
-            print("Failed to undo delete: \(error)")
+            Logger.tasks.error("Failed to undo delete: \(error, privacy: .public)")
         }
 
         pendingDeleteTaskID = nil
@@ -703,7 +704,7 @@ final class TaskService: ObservableObject {
         do {
             try calendarService.deleteLinkedEvent(for: task)
         } catch {
-            print("Failed to delete linked calendar event: \(error)")
+            Logger.calendar.error("Failed to delete linked calendar event: \(error, privacy: .public)")
         }
     }
 
@@ -742,7 +743,7 @@ final class TaskService: ObservableObject {
         parentRequest.predicate = NSPredicate(format: "id == %@", parentTaskID as CVarArg)
 
         guard let parentEntity = try? context.fetch(parentRequest).first else {
-            print("Failed to find parent task: \(parentTaskID)")
+            Logger.tasks.error("Failed to find parent task: \(parentTaskID, privacy: .public)")
             return nil
         }
 
@@ -750,7 +751,7 @@ final class TaskService: ObservableObject {
         if let recurringRule = parentEntity.recurringRule,
            let frequency = RecurringFrequency(rawValue: recurringRule.frequencyRaw),
            (frequency == .hourly || frequency == .timesPerDay) {
-            print("Cannot add subtasks to intraday recurring tasks")
+            Logger.tasks.warning("Cannot add subtasks to intraday recurring tasks")
             return nil
         }
 
@@ -824,7 +825,7 @@ final class TaskService: ObservableObject {
             let entities = try context.fetch(request)
             return entities.map { $0.toDomainModel() }
         } catch {
-            print("Failed to fetch subtasks: \(error)")
+            Logger.tasks.error("Failed to fetch subtasks: \(error, privacy: .public)")
             return []
         }
     }
@@ -851,7 +852,7 @@ final class TaskService: ObservableObject {
                 subtaskEntity.updatedAt = Date()
             }
         } catch {
-            print("Failed to update subtasks list: \(error)")
+            Logger.tasks.error("Failed to update subtasks list: \(error, privacy: .public)")
         }
     }
 
@@ -878,7 +879,7 @@ final class TaskService: ObservableObject {
             fetchAllTasks()
         } catch {
             self.error = error
-            print("Failed to promote subtask: \(error)")
+            Logger.tasks.error("Failed to promote subtask: \(error, privacy: .public)")
         }
     }
 

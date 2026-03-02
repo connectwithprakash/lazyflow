@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import UIKit
+import os
 
 /// Service for intelligent task prioritization and suggestions
 @MainActor
@@ -535,7 +536,7 @@ final class PrioritizationService: ObservableObject {
                 behaviorContext: behaviorContext
             )
         } catch {
-            print("Failed to get AI task order: \(error)")
+            Logger.ai.error("Failed to get AI task order: \(error)")
             return nil
         }
     }

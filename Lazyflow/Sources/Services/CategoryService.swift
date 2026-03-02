@@ -2,6 +2,7 @@ import CoreData
 import Foundation
 import Combine
 import SwiftUI
+import os
 
 /// Service responsible for all CustomCategory-related CRUD operations
 final class CategoryService: ObservableObject {
@@ -57,7 +58,7 @@ final class CategoryService: ObservableObject {
             categories = entities.map { $0.toDomainModel() }
         } catch {
             self.error = error
-            print("Failed to fetch custom categories: \(error)")
+            Logger.categories.error("Failed to fetch custom categories: \(error)")
         }
     }
 
@@ -120,7 +121,7 @@ final class CategoryService: ObservableObject {
             fetchAllCategories()
         } catch {
             self.error = error
-            print("Failed to update category: \(error)")
+            Logger.categories.error("Failed to update category: \(error)")
         }
     }
 
@@ -136,7 +137,7 @@ final class CategoryService: ObservableObject {
                 guard let entity = try context.fetch(request).first else { continue }
                 entity.order = Int32(index)
             } catch {
-                print("Failed to reorder category: \(error)")
+                Logger.categories.error("Failed to reorder category: \(error)")
             }
         }
 
@@ -163,7 +164,7 @@ final class CategoryService: ObservableObject {
             }
         } catch {
             self.error = error
-            print("Failed to delete category: \(error)")
+            Logger.categories.error("Failed to delete category: \(error)")
         }
     }
 
@@ -179,7 +180,7 @@ final class CategoryService: ObservableObject {
                 task.customCategoryID = nil
             }
         } catch {
-            print("Failed to clear category from tasks: \(error)")
+            Logger.categories.error("Failed to clear category from tasks: \(error)")
         }
     }
 

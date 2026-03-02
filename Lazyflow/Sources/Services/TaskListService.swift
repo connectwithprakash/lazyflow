@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import Combine
+import os
 
 /// Service responsible for all TaskList-related CRUD operations
 final class TaskListService: ObservableObject {
@@ -63,7 +64,7 @@ final class TaskListService: ObservableObject {
             lists = entities.map { $0.toDomainModel() }
         } catch {
             self.error = error
-            print("Failed to fetch lists: \(error)")
+            Logger.lists.error("Failed to fetch lists: \(error)")
         }
     }
 
@@ -86,7 +87,7 @@ final class TaskListService: ObservableObject {
         do {
             return try context.count(for: request)
         } catch {
-            print("Failed to count tasks: \(error)")
+            Logger.lists.error("Failed to count tasks: \(error)")
             return 0
         }
     }
@@ -141,7 +142,7 @@ final class TaskListService: ObservableObject {
             fetchAllLists()
         } catch {
             self.error = error
-            print("Failed to update list: \(error)")
+            Logger.lists.error("Failed to update list: \(error)")
         }
     }
 
@@ -157,7 +158,7 @@ final class TaskListService: ObservableObject {
                 guard let entity = try context.fetch(request).first else { continue }
                 entity.order = Int32(index)
             } catch {
-                print("Failed to reorder list: \(error)")
+                Logger.lists.error("Failed to reorder list: \(error)")
             }
         }
 
@@ -202,7 +203,7 @@ final class TaskListService: ObservableObject {
             fetchAllLists()
         } catch {
             self.error = error
-            print("Failed to delete list: \(error)")
+            Logger.lists.error("Failed to delete list: \(error)")
         }
     }
 }

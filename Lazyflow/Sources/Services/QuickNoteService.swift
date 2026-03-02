@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import Combine
+import os
 
 /// Service responsible for Quick Note CRUD operations
 @MainActor
@@ -48,7 +49,7 @@ final class QuickNoteService: ObservableObject {
             let entities = try context.fetch(request)
             notes = entities.map { QuickNote(entity: $0) }
         } catch {
-            print("Failed to fetch quick notes: \(error)")
+            Logger.notes.error("Failed to fetch quick notes: \(error)")
         }
     }
 
@@ -82,7 +83,7 @@ final class QuickNoteService: ObservableObject {
         do {
             try context.save()
         } catch {
-            print("Failed to save quick note: \(error)")
+            Logger.notes.error("Failed to save quick note: \(error)")
         }
 
         let note = QuickNote(entity: entity)
@@ -107,7 +108,7 @@ final class QuickNoteService: ObservableObject {
         do {
             try context.save()
         } catch {
-            print("Failed to update quick note: \(error)")
+            Logger.notes.error("Failed to update quick note: \(error)")
         }
 
         fetchAllNotes()
@@ -127,7 +128,7 @@ final class QuickNoteService: ObservableObject {
         do {
             try context.save()
         } catch {
-            print("Failed to mark note as processed: \(error)")
+            Logger.notes.error("Failed to mark note as processed: \(error)")
         }
 
         fetchAllNotes()
@@ -148,7 +149,7 @@ final class QuickNoteService: ObservableObject {
         do {
             try context.save()
         } catch {
-            print("Failed to unmark note: \(error)")
+            Logger.notes.error("Failed to unmark note: \(error)")
         }
 
         fetchAllNotes()
@@ -168,7 +169,7 @@ final class QuickNoteService: ObservableObject {
         do {
             try context.save()
         } catch {
-            print("Failed to delete quick note: \(error)")
+            Logger.notes.error("Failed to delete quick note: \(error)")
         }
 
         fetchAllNotes()

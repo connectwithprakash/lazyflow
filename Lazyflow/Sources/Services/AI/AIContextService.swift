@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import os
 
 /// Service for building unified AI context from multiple sources
 final class AIContextService: ObservableObject {
@@ -137,7 +138,7 @@ final class AIContextService: ObservableObject {
                 )
             }
         } catch {
-            print("Failed to fetch recent tasks: \(error)")
+            Logger.ai.error("Failed to fetch recent tasks: \(error)")
             return []
         }
     }
