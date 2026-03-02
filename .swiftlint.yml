@@ -1,0 +1,96 @@
+# SwiftLint Configuration for Lazyflow
+# Warning thresholds catch new issues; error thresholds set above all existing code
+
+included:
+  - Lazyflow/Sources
+  - LazyflowWidget
+  - LazyflowWatch/Sources
+  - LazyflowTests
+  - LazyflowUITests
+
+excluded:
+  - Lazyflow.xcodeproj
+  - .build
+  - DerivedData
+
+# Rules configuration
+line_length:
+  warning: 160
+  error: 400
+  ignores_comments: true
+  ignores_urls: true
+  ignores_interpolated_strings: true
+
+file_length:
+  warning: 800
+  error: 3000
+  ignore_comment_only_lines: true
+
+type_body_length:
+  warning: 500
+  error: 2000
+
+function_body_length:
+  warning: 80
+  error: 350
+
+cyclomatic_complexity:
+  warning: 15
+  error: 30
+
+function_parameter_count:
+  warning: 8
+  error: 15
+
+large_tuple:
+  warning: 4
+  error: 6
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - i
+    - x
+    - y
+    - r
+    - g
+    - b
+    - to
+    - up
+    - on
+    - ok
+
+# Disabled rules that conflict with project conventions
+disabled_rules:
+  - trailing_comma
+  - implicit_optional_initialization
+  - redundant_string_enum_value
+  - for_where
+  - vertical_parameter_alignment_on_call
+
+# Opt-in rules for code quality
+opt_in_rules:
+  - closure_spacing
+  - empty_count
+  - empty_string
+  - fatal_error_message
+  - first_where
+  - modifier_order
+  - overridden_super_call
+  - private_over_fileprivate
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+
+# Per-rule severity overrides
+empty_count:
+  severity: warning
+
+force_cast:
+  severity: warning
