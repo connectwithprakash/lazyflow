@@ -39,6 +39,7 @@ struct ListDetailView: View {
                             Image(systemName: "ellipsis.circle")
                                 .foregroundColor(Color.Lazyflow.accent)
                         }
+                        .accessibilityLabel("Edit list")
                     }
 
                     Button {
@@ -48,6 +49,7 @@ struct ListDetailView: View {
                             .font(.title2)
                             .foregroundColor(Color.Lazyflow.accent)
                     }
+                    .accessibilityLabel("Add task to \(list.name)")
                 }
             }
         }

@@ -63,6 +63,8 @@ struct SettingsView: View {
                                 .foregroundColor(Color.Lazyflow.textTertiary)
                         }
                     }
+                    .accessibilityLabel("Notification Settings")
+                    .accessibilityHint("Configure task reminder notifications")
                 }
 
                 // Morning Briefing
@@ -166,6 +168,8 @@ struct SettingsView: View {
                                 .foregroundColor(Color.Lazyflow.textTertiary)
                         }
                     }
+                    .accessibilityLabel("AI Settings\(LLMService.shared.isReady ? ", \(LLMService.shared.selectedProvider.displayName) configured" : ", not configured")")
+                    .accessibilityHint("Configure AI provider and features")
                 }
 
                 // Data

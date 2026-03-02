@@ -137,6 +137,8 @@ struct QuickNoteRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Note: \(note.previewText)")
+            .accessibilityHint("Double-tap to edit")
 
             // Extract pill — separate tap target
             if let onExtract {
@@ -153,6 +155,9 @@ struct QuickNoteRow: View {
                         .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("Extract")
+                .accessibilityLabel(isProcessed ? "Extract tasks again" : "Extract tasks")
+                .accessibilityHint("Use AI to extract tasks from this note")
             }
         }
         .padding(.vertical, DesignSystem.Spacing.xs)

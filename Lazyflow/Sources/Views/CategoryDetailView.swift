@@ -74,6 +74,7 @@ struct CategoryDetailView: View {
                         .font(.title2)
                         .foregroundColor(Color.Lazyflow.accent)
                 }
+                .accessibilityLabel("Add task to \(categoryName)")
             }
         }
         .sheet(isPresented: $showAddTask) {

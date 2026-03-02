@@ -29,6 +29,7 @@ struct ProfileView: View {
                         )
                     }
                     .accessibilityIdentifier("ListsCard")
+                    .accessibilityLabel("Lists: Organize your tasks")
 
                     // Categories Card
                     NavigationLink {
@@ -42,6 +43,7 @@ struct ProfileView: View {
                         )
                     }
                     .accessibilityIdentifier("CategoriesCard")
+                    .accessibilityLabel("Categories: Browse tasks by category")
 
                     // MARK: - System Section
                     sectionHeader("System")
@@ -59,6 +61,7 @@ struct ProfileView: View {
                         )
                     }
                     .accessibilityIdentifier("SettingsCard")
+                    .accessibilityLabel("Settings: Customize your experience")
 
                     Spacer(minLength: DesignSystem.Spacing.xxl)
 

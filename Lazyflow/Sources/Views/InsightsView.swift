@@ -33,6 +33,7 @@ struct InsightsView: View {
                         )
                     }
                     .accessibilityIdentifier("MorningBriefingCard")
+                    .accessibilityLabel("Morning Briefing: Yesterday's recap and today's plan")
 
                     // Daily Summary Card
                     Button {
@@ -49,6 +50,7 @@ struct InsightsView: View {
                         )
                     }
                     .accessibilityIdentifier("DailySummaryCard")
+                    .accessibilityLabel("Daily Summary: Track your productivity\(summaryService.streakData.currentStreak > 0 ? ", \(summaryService.streakData.currentStreak) day streak" : "")")
 
                     // AI Quality Card
                     Button {
@@ -62,6 +64,7 @@ struct InsightsView: View {
                         )
                     }
                     .accessibilityIdentifier("AIQualityCard")
+                    .accessibilityLabel("AI Quality: Correction and refinement rates")
 
                     // MARK: - History Section
                     sectionHeader("Activity")
@@ -79,6 +82,7 @@ struct InsightsView: View {
                         )
                     }
                     .accessibilityIdentifier("HistoryCard")
+                    .accessibilityLabel("History: View completed tasks")
 
                     // MARK: - Analytics Section
                     sectionHeader("Analytics")
@@ -96,6 +100,7 @@ struct InsightsView: View {
                         )
                     }
                     .accessibilityIdentifier("AnalyticsCard")
+                    .accessibilityLabel("Analytics: Category and list insights")
 
                     Spacer(minLength: DesignSystem.Spacing.xxl)
                 }

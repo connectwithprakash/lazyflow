@@ -69,6 +69,7 @@ struct SearchView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(Color.Lazyflow.textTertiary)
                 }
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(.horizontal, DesignSystem.Spacing.md)
@@ -208,6 +209,8 @@ struct RecentTaskRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Recent task: \(task.title)")
+        .accessibilityHint("Double-tap to view details")
     }
 }
 
@@ -256,6 +259,9 @@ struct SearchResultRow: View {
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(task.title)\(task.isCompleted ? ", completed" : "")\(task.priority != .none ? ", \(task.priority.displayName) priority" : "")\(task.isOverdue ? ", overdue" : "")")
+        .accessibilityHint("Double-tap to view details")
     }
 
     private var highlightedTitle: some View {

@@ -2687,8 +2687,8 @@ final class LazyflowUITests: XCTestCase {
         // previewText shows full first line (single-line note under 80 chars)
         let noteText = app.staticTexts["Clean the house. Walk the dog. Read a book."]
         XCTAssertTrue(noteText.waitForExistence(timeout: 5), "Note should appear in Upcoming Quick Notes section")
-        let extractPill = app.buttons.matching(NSPredicate(format: "label == 'Extract'")).firstMatch
-        XCTAssertTrue(extractPill.waitForExistence(timeout: 3))
+        let extractPill = app.buttons["Extract"]
+        XCTAssertTrue(extractPill.waitForExistence(timeout: 5))
         extractPill.tap()
 
         // Wait for Extract Tasks sheet
@@ -2837,8 +2837,8 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(deterNote.waitForExistence(timeout: 10))
 
         // Tap "Extract" pill for the deterministic fallback note
-        let extractPill2 = app.buttons.matching(NSPredicate(format: "label == 'Extract'")).firstMatch
-        XCTAssertTrue(extractPill2.waitForExistence(timeout: 3))
+        let extractPill2 = app.buttons["Extract"]
+        XCTAssertTrue(extractPill2.waitForExistence(timeout: 5))
         extractPill2.tap()
 
         let extractNavBar2 = app.navigationBars["Extract Tasks"]
