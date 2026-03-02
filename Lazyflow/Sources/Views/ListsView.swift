@@ -3,7 +3,7 @@ import SwiftUI
 /// View showing all task lists and smart lists
 struct ListsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @StateObject private var viewModel = ListsViewModel()
+    @State private var viewModel = ListsViewModel()
     @State private var showAddList = false
 
     var body: some View {
@@ -269,7 +269,7 @@ struct CustomListRow: View {
 // MARK: - Add List Sheet
 
 struct AddListSheet: View {
-    @ObservedObject var viewModel: ListsViewModel
+    @Bindable var viewModel: ListsViewModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

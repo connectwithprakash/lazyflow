@@ -2,7 +2,7 @@ import SwiftUI
 
 /// View for managing custom categories
 struct CategoryManagementView: View {
-    @StateObject private var categoryService = CategoryService.shared
+    @State private var categoryService = CategoryService.shared
     @State private var showAddSheet = false
     @State private var categoryToEdit: CustomCategory?
     @State private var showDeleteConfirmation = false

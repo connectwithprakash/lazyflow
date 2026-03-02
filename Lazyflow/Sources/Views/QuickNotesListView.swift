@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Full list of all quick notes (both unprocessed and processed)
 struct QuickNotesListView: View {
-    @StateObject private var noteService = QuickNoteService.shared
+    @State private var noteService = QuickNoteService.shared
     @State private var noteToEdit: QuickNote?
     @State private var noteToExtract: QuickNote?
     @State private var noteToDelete: QuickNote?

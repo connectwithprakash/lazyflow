@@ -5,8 +5,8 @@ struct UpcomingView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
     @StateObject private var taskService = TaskService.shared
-    @StateObject private var listService = TaskListService.shared
-    @StateObject private var noteService = QuickNoteService.shared
+    @State private var listService = TaskListService.shared
+    @State private var noteService = QuickNoteService.shared
     @State private var selectedTask: Task?
     @State private var noteToEdit: QuickNote?
     @State private var noteToExtract: QuickNote?

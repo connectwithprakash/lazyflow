@@ -3,7 +3,7 @@ import SwiftUI
 /// Minimal capture sheet for quick notes — supports both creating new notes and editing existing ones
 struct QuickCaptureSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var noteService = QuickNoteService.shared
+    @State private var noteService = QuickNoteService.shared
     @State private var noteText = ""
     @FocusState private var isTextFieldFocused: Bool
 

@@ -1,8 +1,10 @@
 import Foundation
+import Observation
 
 /// Two-stage extraction pipeline: deterministic parsing + optional LLM enhancement
 @MainActor
-final class NoteParsingService: ObservableObject {
+@Observable
+final class NoteParsingService {
     static let shared = NoteParsingService()
 
     private let llmService = LLMService.shared

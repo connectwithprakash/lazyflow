@@ -3,8 +3,8 @@ import SwiftUI
 /// View showing all task categories (system and custom)
 struct CategoriesView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @StateObject private var viewModel = CategoriesViewModel()
-    @StateObject private var categoryService = CategoryService.shared
+    @State private var viewModel = CategoriesViewModel()
+    @State private var categoryService = CategoryService.shared
     @State private var showManageCategories = false
 
     var body: some View {

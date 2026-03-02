@@ -4,12 +4,14 @@ import SwiftUI
 
 /// ViewModel for the Categories view
 @MainActor
-final class CategoriesViewModel: ObservableObject {
-    @Published private(set) var taskCountBySystemCategory: [TaskCategory: Int] = [:]
-    @Published private(set) var taskCountByCustomCategory: [UUID: Int] = [:]
+@Observable
+final class CategoriesViewModel {
+    private(set) var taskCountBySystemCategory: [TaskCategory: Int] = [:]
+    private(set) var taskCountByCustomCategory: [UUID: Int] = [:]
 
     private let taskService: TaskService
     private let categoryService: CategoryService
+    @ObservationIgnored
     private var cancellables = Set<AnyCancellable>()
 
     init(taskService: TaskService = .shared, categoryService: CategoryService = .shared) {
@@ -20,16 +22,8 @@ final class CategoriesViewModel: ObservableObject {
     }
 
     private func setupObservers() {
-        // Listen for task changes
+        // TaskService is still ObservableObject, so we keep its Combine subscription
         taskService.$tasks
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.refreshCounts()
-            }
-            .store(in: &cancellables)
-
-        // Listen for category changes
-        categoryService.$categories
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.refreshCounts()

@@ -25,7 +25,7 @@ struct TodayView: View {
     @State private var showAutoCompleteCelebration = false
     @State private var autoCompletedParentTitle = ""
     @StateObject var summaryService = DailySummaryService.shared
-    @StateObject var listService = TaskListService.shared
+    @State var listService = TaskListService.shared
     @AppStorage(AppConstants.StorageKey.summaryPromptHour) var summaryPromptHour: Int = AppConstants.Defaults.summaryPromptHour
     @AppStorage(AppConstants.StorageKey.morningBriefingEnabled) var morningBriefingEnabled: Bool = true
     @AppStorage(AppConstants.StorageKey.lastMorningBriefingDate) var lastMorningBriefingDate: Double = 0

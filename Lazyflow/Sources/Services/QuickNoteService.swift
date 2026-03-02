@@ -1,17 +1,20 @@
 import CoreData
 import Foundation
 import Combine
+import Observation
 import os
 
 /// Service responsible for Quick Note CRUD operations
 @MainActor
-final class QuickNoteService: ObservableObject {
+@Observable
+final class QuickNoteService {
     static let shared = QuickNoteService()
 
     private let persistenceController: PersistenceController
 
-    @Published private(set) var notes: [QuickNote] = []
+    private(set) var notes: [QuickNote] = []
 
+    @ObservationIgnored
     private var cancellables = Set<AnyCancellable>()
 
     init(persistenceController: PersistenceController = .shared) {

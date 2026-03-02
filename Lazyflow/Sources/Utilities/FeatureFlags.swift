@@ -10,12 +10,16 @@ import os
 ///
 /// Debug overrides persist in UserDefaults and take precedence over defaults.
 /// Clear overrides with `removeOverride(_:)` or `removeAllOverrides()`.
+@Observable
 @MainActor
-final class FeatureFlags: ObservableObject {
+final class FeatureFlags {
     static let shared = FeatureFlags()
 
     private let logger = Logger(subsystem: "com.lazyflow.app", category: "FeatureFlags")
     private let overridePrefix = "featureFlag_override_"
+
+    /// Tracked version counter to trigger observation when overrides change
+    private var overrideVersion = 0
 
     /// All available feature flags with their compile-time defaults
     enum Flag: String, CaseIterable, Identifiable {
@@ -108,6 +112,8 @@ final class FeatureFlags: ObservableObject {
 
     /// Check if a feature flag is enabled
     func isEnabled(_ flag: Flag) -> Bool {
+        // Access tracked property to create observation dependency
+        _ = overrideVersion
         #if DEBUG
         // Debug override takes priority (only in debug builds)
         if let override = getOverride(flag) {
@@ -123,7 +129,7 @@ final class FeatureFlags: ObservableObject {
         let key = overridePrefix + flag.rawValue
         UserDefaults.standard.set(enabled, forKey: key)
         logger.info("Flag '\(flag.rawValue, privacy: .public)' overridden to \(enabled, privacy: .public)")
-        objectWillChange.send()
+        overrideVersion += 1
     }
 
     /// Remove a debug override (revert to default)
@@ -131,7 +137,7 @@ final class FeatureFlags: ObservableObject {
         let key = overridePrefix + flag.rawValue
         UserDefaults.standard.removeObject(forKey: key)
         logger.info("Flag '\(flag.rawValue, privacy: .public)' override removed")
-        objectWillChange.send()
+        overrideVersion += 1
     }
 
     /// Remove all debug overrides
@@ -141,7 +147,7 @@ final class FeatureFlags: ObservableObject {
             UserDefaults.standard.removeObject(forKey: key)
         }
         logger.info("All feature flag overrides removed")
-        objectWillChange.send()
+        overrideVersion += 1
     }
 
     /// Check if a flag has a debug override

@@ -4,7 +4,7 @@ import SwiftUI
 /// Debug view for overriding feature flags during development.
 /// Only available in DEBUG builds via Settings > Developer > Feature Flags.
 struct FeatureFlagsDebugView: View {
-    @ObservedObject private var flags = FeatureFlags.shared
+    private var flags = FeatureFlags.shared
     @State private var showResetConfirmation = false
 
     var body: some View {
@@ -41,7 +41,7 @@ struct FeatureFlagsDebugView: View {
 
 private struct FlagRow: View {
     let flag: FeatureFlags.Flag
-    @ObservedObject private var flags = FeatureFlags.shared
+    var flags = FeatureFlags.shared
 
     private var isEnabled: Bool {
         flags.isEnabled(flag)

@@ -1,14 +1,16 @@
 import ActivityKit
 import Foundation
+import Observation
 import os
 
 /// Manages Live Activity lifecycle for task tracking
 @MainActor
-final class LiveActivityManager: ObservableObject {
+@Observable
+final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
     /// Currently active task tracking activity
-    @Published private(set) var currentActivity: Activity<TaskActivityAttributes>?
+    private(set) var currentActivity: Activity<TaskActivityAttributes>?
 
     /// Whether Live Activities are supported on this device
     var areActivitiesSupported: Bool {

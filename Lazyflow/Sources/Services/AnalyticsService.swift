@@ -32,16 +32,9 @@ class AnalyticsService: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Also observe custom category changes
-        categoryService.$categories
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.lastUpdated = Date()
-            }
-            .store(in: &cancellables)
-
-        // Observe list metadata changes (rename, color, add, delete)
-        taskListService.$lists
+        // Observe Core Data saves to pick up category/list metadata changes
+        // (CategoryService and TaskListService are @Observable, so we use notifications instead of Combine)
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.lastUpdated = Date()

@@ -1,26 +1,28 @@
 import Foundation
+import Observation
 
 @MainActor
-final class AIQualityViewModel: ObservableObject {
+@Observable
+final class AIQualityViewModel {
     private let learningService: AILearningService
 
     // MARK: - 7-day metrics
 
-    @Published private(set) var correctionRate7d: Double = 0
-    @Published private(set) var refinementRate7d: Double = 0
-    @Published private(set) var acceptanceRate7d: Double = 0
-    @Published private(set) var impressionCount7d: Int = 0
-    @Published private(set) var correctionCount7d: Int = 0
-    @Published private(set) var refinementCount7d: Int = 0
+    private(set) var correctionRate7d: Double = 0
+    private(set) var refinementRate7d: Double = 0
+    private(set) var acceptanceRate7d: Double = 0
+    private(set) var impressionCount7d: Int = 0
+    private(set) var correctionCount7d: Int = 0
+    private(set) var refinementCount7d: Int = 0
 
     // MARK: - 30-day metrics
 
-    @Published private(set) var correctionRate30d: Double = 0
-    @Published private(set) var refinementRate30d: Double = 0
-    @Published private(set) var acceptanceRate30d: Double = 0
-    @Published private(set) var impressionCount30d: Int = 0
-    @Published private(set) var correctionCount30d: Int = 0
-    @Published private(set) var refinementCount30d: Int = 0
+    private(set) var correctionRate30d: Double = 0
+    private(set) var refinementRate30d: Double = 0
+    private(set) var acceptanceRate30d: Double = 0
+    private(set) var impressionCount30d: Int = 0
+    private(set) var correctionCount30d: Int = 0
+    private(set) var refinementCount30d: Int = 0
 
     var hasData: Bool {
         impressionCount7d > 0 || impressionCount30d > 0
