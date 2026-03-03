@@ -7,11 +7,14 @@ import SnapshotTesting
 ///
 /// Uses a fixed viewport (iPhone 13 Pro, 375×812) so images are identical
 /// regardless of the local simulator (iPhone 17 Pro) or CI simulator (iPhone 16 Pro).
+///
+/// Reference images are recorded on CI (via `SNAPSHOT_RECORD` env var) to avoid
+/// cross-environment rendering differences between local macOS and CI runners.
 @MainActor
 class SnapshotTestCase: XCTestCase {
 
     /// Set `isRecording = true` locally (or via `SNAPSHOT_RECORD` env var) to regenerate
-    /// reference images. CI never records — tests fail on mismatch instead.
+    /// reference images. CI records on demand via workflow dispatch.
     override func setUp() {
         super.setUp()
 //        isRecording = true
@@ -26,6 +29,8 @@ class SnapshotTestCase: XCTestCase {
     func assertLightAndDarkSnapshot<V: View>(
         of view: V,
         named name: String,
+        precision: Float = 0.99,
+        perceptualPrecision: Float = 0.98,
         file: StaticString = #file,
         testName: String = #function,
         line: UInt = #line
@@ -38,7 +43,7 @@ class SnapshotTestCase: XCTestCase {
 
         assertSnapshot(
             of: UIHostingController(rootView: lightView),
-            as: .image(on: .iPhone13Pro),
+            as: .image(on: .iPhone13Pro, precision: precision, perceptualPrecision: perceptualPrecision),
             named: "\(name)-light",
             file: file,
             testName: testName,
@@ -47,7 +52,7 @@ class SnapshotTestCase: XCTestCase {
 
         assertSnapshot(
             of: UIHostingController(rootView: darkView),
-            as: .image(on: .iPhone13Pro),
+            as: .image(on: .iPhone13Pro, precision: precision, perceptualPrecision: perceptualPrecision),
             named: "\(name)-dark",
             file: file,
             testName: testName,
@@ -59,6 +64,8 @@ class SnapshotTestCase: XCTestCase {
     func assertAccessibilitySnapshot<V: View>(
         of view: V,
         named name: String,
+        precision: Float = 0.99,
+        perceptualPrecision: Float = 0.98,
         file: StaticString = #file,
         testName: String = #function,
         line: UInt = #line
@@ -68,7 +75,7 @@ class SnapshotTestCase: XCTestCase {
 
         assertSnapshot(
             of: UIHostingController(rootView: extraLargeView),
-            as: .image(on: .iPhone13Pro),
+            as: .image(on: .iPhone13Pro, precision: precision, perceptualPrecision: perceptualPrecision),
             named: "\(name)-xxxLarge",
             file: file,
             testName: testName,
@@ -80,7 +87,7 @@ class SnapshotTestCase: XCTestCase {
 
         assertSnapshot(
             of: UIHostingController(rootView: accessibilityView),
-            as: .image(on: .iPhone13Pro),
+            as: .image(on: .iPhone13Pro, precision: precision, perceptualPrecision: perceptualPrecision),
             named: "\(name)-accessibility3",
             file: file,
             testName: testName,
