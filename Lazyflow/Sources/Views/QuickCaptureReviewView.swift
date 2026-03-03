@@ -415,3 +415,14 @@ private struct DraftCardView: View {
         )
     )
 }
+
+// MARK: - Test Support
+
+#if DEBUG
+extension QuickCaptureReviewView {
+    /// Test-only initializer for snapshot tests with pre-configured ViewModel.
+    init(viewModel: QuickCaptureViewModel) {
+        _viewModel = State(wrappedValue: viewModel)
+    }
+}
+#endif

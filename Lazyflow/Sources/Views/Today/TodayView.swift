@@ -366,3 +366,14 @@ struct TodayView: View {
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
         .environment(FocusSessionCoordinator())
 }
+
+// MARK: - Test Support
+
+#if DEBUG
+extension TodayView {
+    /// Test-only initializer for snapshot tests with injected ViewModel.
+    init(viewModel: TodayViewModel) {
+        self._viewModel = State(wrappedValue: viewModel)
+    }
+}
+#endif

@@ -6,7 +6,7 @@ import Foundation
 final class MockTaskService: TaskServiceProtocol {
     // MARK: - Observable Properties
 
-    private(set) var tasks: [Task] = []
+    var tasks: [Task] = []
     private(set) var isLoading: Bool = false
     private(set) var error: Error?
     private(set) var pendingDeleteTaskID: UUID?
