@@ -4,7 +4,7 @@ import Combine
 import os
 
 /// Service for managing calendar integration using EventKit
-final class CalendarService: ObservableObject {
+final class CalendarService: ObservableObject, CalendarServiceProtocol {
     static let shared = CalendarService()
 
     private let eventStore = EKEventStore()

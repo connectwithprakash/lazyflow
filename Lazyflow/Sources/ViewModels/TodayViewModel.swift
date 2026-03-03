@@ -31,11 +31,11 @@ final class TodayViewModel {
     var todayTasks: [Task] { taskData.todayTasks }
     var completedTodayTasks: [Task] { taskData.completedTodayTasks }
 
-    private let taskService: TaskService
+    private let taskService: any TaskServiceProtocol
     @ObservationIgnored private var cancellables = Set<AnyCancellable>()
     @ObservationIgnored private var searchDebounceTask: _Concurrency.Task<Void, Never>?
 
-    init(taskService: TaskService = .shared) {
+    init(taskService: any TaskServiceProtocol = TaskService.shared) {
         self.taskService = taskService
         setupBindings()
     }

@@ -3,7 +3,7 @@ import UserNotifications
 import os
 
 /// Service responsible for managing local notifications for task reminders
-final class NotificationService: @unchecked Sendable {
+final class NotificationService: @unchecked Sendable, NotificationServiceProtocol {
     static let shared = NotificationService()
 
     private let notificationCenter = UNUserNotificationCenter.current()

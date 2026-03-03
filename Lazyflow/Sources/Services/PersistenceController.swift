@@ -69,7 +69,7 @@ struct DataCounts: Equatable {
 // MARK: - Persistence Controller
 
 /// Core Data persistence controller managing the Core Data stack
-final class PersistenceController: @unchecked Sendable {
+final class PersistenceController: @unchecked Sendable, PersistenceControllerProtocol {
     /// App Group identifier for sharing data with widgets
     private static let appGroupIdentifier = "group.com.lazyflow.shared"
 

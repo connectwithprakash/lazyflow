@@ -98,7 +98,7 @@ final class HistoryViewModel {
 
     // MARK: - Dependencies
 
-    private let taskService: TaskService
+    private let taskService: any TaskServiceProtocol
     private let taskListService: TaskListService
     @ObservationIgnored private var cancellables = Set<AnyCancellable>()
     @ObservationIgnored private var searchDebounceTask: _Concurrency.Task<Void, Never>?
@@ -160,7 +160,7 @@ final class HistoryViewModel {
 
     // MARK: - Initialization
 
-    init(taskService: TaskService = .shared, taskListService: TaskListService = .init()) {
+    init(taskService: any TaskServiceProtocol = TaskService.shared, taskListService: TaskListService = .init()) {
         self.taskService = taskService
         self.taskListService = taskListService
 

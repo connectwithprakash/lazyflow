@@ -12,11 +12,16 @@ final class CalendarViewModel {
     private(set) var isLoading = false
     var errorMessage: String?
 
-    private let calendarService = CalendarService.shared
-    private let taskService = TaskService()
+    private let calendarService: CalendarService
+    private let taskService: any TaskServiceProtocol
     @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
-    init() {
+    init(
+        calendarService: CalendarService = .shared,
+        taskService: any TaskServiceProtocol = TaskService.shared
+    ) {
+        self.calendarService = calendarService
+        self.taskService = taskService
         setupBindings()
         checkAccess()
     }

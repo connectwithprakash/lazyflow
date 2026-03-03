@@ -9,12 +9,12 @@ final class CategoriesViewModel {
     private(set) var taskCountBySystemCategory: [TaskCategory: Int] = [:]
     private(set) var taskCountByCustomCategory: [UUID: Int] = [:]
 
-    private let taskService: TaskService
-    private let categoryService: CategoryService
+    private let taskService: any TaskServiceProtocol
+    private let categoryService: any CategoryServiceProtocol
     @ObservationIgnored
     private var cancellables = Set<AnyCancellable>()
 
-    init(taskService: TaskService = .shared, categoryService: CategoryService = .shared) {
+    init(taskService: any TaskServiceProtocol = TaskService.shared, categoryService: any CategoryServiceProtocol = CategoryService.shared) {
         self.taskService = taskService
         self.categoryService = categoryService
         setupObservers()
