@@ -22,7 +22,7 @@ final class PlanYourDayViewModel {
     var events: [PlanEventItem] = []
 
     private let calendarService: CalendarService
-    private let taskService: TaskService
+    private let taskService: any TaskServiceProtocol
     private let learningService: EventPreferenceLearningService
 
     // MARK: - Computed Properties
@@ -76,7 +76,7 @@ final class PlanYourDayViewModel {
 
     init(
         calendarService: CalendarService = .shared,
-        taskService: TaskService = .shared,
+        taskService: any TaskServiceProtocol = TaskService.shared,
         learningService: EventPreferenceLearningService? = nil
     ) {
         self.calendarService = calendarService

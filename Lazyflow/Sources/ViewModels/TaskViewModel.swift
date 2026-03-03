@@ -37,10 +37,10 @@ final class TaskViewModel {
     var isValid: Bool = false
     var isSaving: Bool = false
 
-    private let taskService: TaskService
+    private let taskService: any TaskServiceProtocol
     private var existingTask: Task?
 
-    init(taskService: TaskService = TaskService(), task: Task? = nil) {
+    init(taskService: any TaskServiceProtocol = TaskService.shared, task: Task? = nil) {
         self.taskService = taskService
         self.existingTask = task
 

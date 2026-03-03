@@ -18,11 +18,11 @@ final class ListsViewModel {
     var newListIcon: String = "list.bullet"
 
     private let taskListService: TaskListService
-    private let taskService: TaskService
+    private let taskService: any TaskServiceProtocol
     @ObservationIgnored
     private var cancellables = Set<AnyCancellable>()
 
-    init(taskListService: TaskListService = .shared, taskService: TaskService = TaskService()) {
+    init(taskListService: TaskListService = .shared, taskService: any TaskServiceProtocol = TaskService.shared) {
         self.taskListService = taskListService
         self.taskService = taskService
         setupBindings()

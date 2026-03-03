@@ -100,14 +100,14 @@ final class FocusSessionCoordinator {
 
     // MARK: - Dependencies
 
-    private let taskService: TaskService
+    private let taskService: any TaskServiceProtocol
     private let prioritizationService: PrioritizationService
     @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
 
     init(
-        taskService: TaskService = .shared,
+        taskService: any TaskServiceProtocol = TaskService.shared,
         prioritizationService: PrioritizationService? = nil
     ) {
         self.taskService = taskService

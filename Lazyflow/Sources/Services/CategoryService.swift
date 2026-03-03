@@ -6,7 +6,7 @@ import os
 
 /// Service responsible for all CustomCategory-related CRUD operations
 @Observable
-final class CategoryService {
+final class CategoryService: CategoryServiceProtocol {
     static let shared = CategoryService()
 
     private let persistenceController: PersistenceController

@@ -6,7 +6,7 @@ import os
 
 /// Service responsible for all Task-related CRUD operations
 @Observable
-final class TaskService {
+final class TaskService: TaskServiceProtocol {
     static let shared = TaskService()
 
     private let persistenceController: PersistenceController

@@ -4,7 +4,7 @@ import Observation
 /// Unified service for LLM-powered task analysis
 /// Supports Apple Intelligence (default) and Open Responses compatible providers
 @Observable
-final class LLMService {
+final class LLMService: LLMServiceProtocol {
     static let shared = LLMService()
 
     // MARK: - Properties

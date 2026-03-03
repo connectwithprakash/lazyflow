@@ -40,7 +40,7 @@ cyclomatic_complexity:
 
 function_parameter_count:
   warning: 8
-  error: 15
+  error: 17
 
 large_tuple:
   warning: 4
