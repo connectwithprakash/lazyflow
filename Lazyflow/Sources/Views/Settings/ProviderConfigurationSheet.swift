@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProviderConfigurationSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var llmService = LLMService.shared
+    var llmService = LLMService.shared
 
     let providerType: LLMProviderType
 

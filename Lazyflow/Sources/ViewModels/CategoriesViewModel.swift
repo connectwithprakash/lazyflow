@@ -22,8 +22,8 @@ final class CategoriesViewModel {
     }
 
     private func setupObservers() {
-        // TaskService is still ObservableObject, so we keep its Combine subscription
-        taskService.$tasks
+        // Observe Core Data saves to refresh category counts
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.refreshCounts()

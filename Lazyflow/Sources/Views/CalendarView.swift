@@ -4,7 +4,7 @@ import EventKit
 struct CalendarView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var viewModel = CalendarViewModel()
-    @StateObject private var taskService = TaskService.shared
+    private var taskService = TaskService.shared
     @State private var selectedDate = Date()
     @State private var currentWeekStart = Calendar.current.startOfWeek(for: Date())
     @AppStorage(AppConstants.StorageKey.calendarViewMode) private var viewModeRaw: String = ""

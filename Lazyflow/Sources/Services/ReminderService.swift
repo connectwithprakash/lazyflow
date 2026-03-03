@@ -26,10 +26,11 @@ final class ReminderService: ObservableObject {
     }
 
     private func observeTaskChanges() {
-        taskService.$tasks
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
-            .sink { [weak self] tasks in
-                self?.scheduleRemindersForTasks(tasks)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.scheduleRemindersForTasks(self.taskService.tasks)
             }
             .store(in: &cancellables)
     }

@@ -6,7 +6,7 @@ struct AddTaskView: View {
     @State private var viewModel: TaskViewModel
     @State private var listService = TaskListService.shared
     @State private var categoryService = CategoryService.shared
-    @StateObject private var llmService = LLMService.shared
+    private var llmService = LLMService.shared
     @FocusState private var isTitleFocused: Bool
 
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true

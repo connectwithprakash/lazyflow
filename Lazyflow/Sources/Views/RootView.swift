@@ -14,7 +14,7 @@ struct RootView: View {
             if hasCompletedOnboarding || isUITesting {
                 ContentView()
                     .environment(\.managedObjectContext, PersistenceController.shared.viewContext)
-                    .environmentObject(TaskService.shared)
+                    .environment(TaskService.shared)
                     .onAppear {
                         WatchConnectivityService.shared.configure(with: TaskService.shared)
                         PersistenceController.shared.createDefaultListsIfNeeded()

@@ -3,8 +3,8 @@ import SwiftUI
 /// View showing upcoming tasks grouped by date
 struct UpcomingView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var focusCoordinator: FocusSessionCoordinator
-    @StateObject private var taskService = TaskService.shared
+    @Environment(FocusSessionCoordinator.self) private var focusCoordinator
+    private var taskService = TaskService.shared
     @State private var listService = TaskListService.shared
     @State private var noteService = QuickNoteService.shared
     @State private var selectedTask: Task?
@@ -353,6 +353,6 @@ struct UpcomingView: View {
 
 #Preview {
     UpcomingView()
-        .environmentObject(FocusSessionCoordinator())
+        .environment(FocusSessionCoordinator())
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

@@ -11,7 +11,7 @@ struct CategoryDetailView: View {
     // For custom categories
     let customCategoryID: UUID?
 
-    @StateObject private var taskService = TaskService.shared
+    private var taskService = TaskService.shared
     @State private var selectedTask: Task?
     @State private var showAddTask = false
 

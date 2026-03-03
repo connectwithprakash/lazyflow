@@ -41,7 +41,8 @@ final class TodayViewModel {
     }
 
     private func setupBindings() {
-        taskService.$tasks
+        // Observe Core Data saves to refresh tasks
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.refreshTasks()

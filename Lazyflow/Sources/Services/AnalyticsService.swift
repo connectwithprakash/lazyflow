@@ -24,17 +24,8 @@ class AnalyticsService {
         self.taskListService = taskListService
         self.categoryService = categoryService
 
-        // Observe task changes to trigger analytics refresh
-        // Subscribe to $tasks (not objectWillChange) to ensure data is updated before refresh
-        taskService.$tasks
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.lastUpdated = Date()
-            }
-            .store(in: &cancellables)
-
-        // Observe Core Data saves to pick up category/list metadata changes
-        // (CategoryService and TaskListService are @Observable, so we use notifications instead of Combine)
+        // Observe Core Data saves to trigger analytics refresh
+        // Covers task changes, category/list metadata changes
         NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in

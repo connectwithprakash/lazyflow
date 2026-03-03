@@ -1,10 +1,12 @@
 import Combine
 import SwiftUI
+import Observation
 
 /// Thin coordinator managing Focus Mode state.
 /// Persists active session to @AppStorage for rehydration across app restarts.
 @MainActor
-final class FocusSessionCoordinator: ObservableObject {
+@Observable
+final class FocusSessionCoordinator {
 
     // MARK: - Persistence Keys
 
@@ -13,25 +15,25 @@ final class FocusSessionCoordinator: ObservableObject {
     private static let focusIsPausedKey = AppConstants.StorageKey.focusSessionIsPaused
     private static let focusIsOnBreakKey = AppConstants.StorageKey.focusSessionIsOnBreak
 
-    // MARK: - Published State
+    // MARK: - State
 
-    @Published var focusTaskID: UUID? {
+    var focusTaskID: UUID? {
         didSet { persistState() }
     }
-    @Published var isFocusPresented: Bool = false
+    var isFocusPresented: Bool = false
 
     /// When true, the success animation is playing and invalidation
     /// should be suppressed (the task was just completed by us).
-    @Published var isCompletionAnimating: Bool = false
+    var isCompletionAnimating: Bool = false
 
     /// When true, the focus ring timer is paused (user tapped ring).
-    @Published var isPaused: Bool = false {
+    var isPaused: Bool = false {
         didSet { persistState() }
     }
 
     /// When true, user took a break — task stopped but focusTaskID retained
     /// so the pill shows and Focus can be resumed.
-    @Published var isOnBreak: Bool = false {
+    var isOnBreak: Bool = false {
         didSet { persistState() }
     }
 
@@ -52,7 +54,7 @@ final class FocusSessionCoordinator: ObservableObject {
         }
     }
 
-    @Published var timerMode: TimerMode = .stopwatch
+    var timerMode: TimerMode = .stopwatch
 
     /// Pomodoro work interval in seconds. User-configurable via Settings.
     var pomodoroWorkInterval: TimeInterval {
@@ -67,16 +69,16 @@ final class FocusSessionCoordinator: ObservableObject {
     }
 
     /// Timestamp when current Pomodoro interval started (for countdown)
-    @Published var pomodoroIntervalStart: Date?
+    var pomodoroIntervalStart: Date?
 
     /// Accumulated elapsed time in the current Pomodoro interval (handles pause)
-    @Published var pomodoroAccumulatedElapsed: TimeInterval = 0
+    var pomodoroAccumulatedElapsed: TimeInterval = 0
 
     /// Whether currently in a Pomodoro break interval
-    @Published var isPomodoroBreak: Bool = false
+    var isPomodoroBreak: Bool = false
 
     /// Number of completed Pomodoro work intervals in this session
-    @Published var pomodoroCompletedIntervals: Int = 0
+    var pomodoroCompletedIntervals: Int = 0
 
     /// Remaining seconds in the current Pomodoro interval (pause-aware)
     var pomodoroRemainingSeconds: TimeInterval {
@@ -100,7 +102,7 @@ final class FocusSessionCoordinator: ObservableObject {
 
     private let taskService: TaskService
     private let prioritizationService: PrioritizationService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
 
@@ -113,7 +115,7 @@ final class FocusSessionCoordinator: ObservableObject {
 
         // Observe task changes to invalidate stale focus state
         // (covers both full-screen and pill modes)
-        taskService.$tasks
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.checkForExternalInvalidation()

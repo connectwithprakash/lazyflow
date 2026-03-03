@@ -6,7 +6,7 @@ struct TodayView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     @State private var viewModel = TodayViewModel()
-    @StateObject private var prioritizationService = PrioritizationService.shared
+    @State private var prioritizationService = PrioritizationService.shared
     @State var conflictService = ConflictDetectionService.shared
     @StateObject var rescheduleService = SmartRescheduleService.shared
     @State var showAddTask = false
@@ -36,7 +36,7 @@ struct TodayView: View {
     @State var isNextUpPulsing = false
     @State var optimisticInProgressID: UUID?
     @State var optimisticPausedID: UUID?
-    @EnvironmentObject var focusCoordinator: FocusSessionCoordinator
+    @Environment(FocusSessionCoordinator.self) var focusCoordinator
 
     // Internal accessors for viewModel (used by extensions in other files)
     var todayViewModel: TodayViewModel { viewModel }
@@ -364,5 +364,5 @@ struct TodayView: View {
 #Preview {
     TodayView()
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
-        .environmentObject(FocusSessionCoordinator())
+        .environment(FocusSessionCoordinator())
 }

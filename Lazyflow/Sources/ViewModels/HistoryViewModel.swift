@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Observation
 
 /// Preset date ranges for quick filtering
 enum DateRangePreset: String, CaseIterable, Identifiable {
@@ -58,20 +59,39 @@ struct PeriodStats {
 
 /// ViewModel for the History view - displays completed tasks with filtering
 @MainActor
-final class HistoryViewModel: ObservableObject {
-    // MARK: - Published Properties
+@Observable
+final class HistoryViewModel {
+    // MARK: - Properties
 
-    @Published private(set) var completedTasks: [Task] = []
-    @Published private(set) var groupedTasks: [TaskDateGroup] = []
-    @Published private(set) var isLoading: Bool = false
+    private(set) var completedTasks: [Task] = []
+    private(set) var groupedTasks: [TaskDateGroup] = []
+    private(set) var isLoading: Bool = false
 
     // Filters
-    @Published var startDate: Date
-    @Published var endDate: Date
-    @Published var selectedListID: UUID?
-    @Published var selectedPriority: Priority?
-    @Published var searchQuery: String = ""
-    @Published var selectedPreset: DateRangePreset = .recent
+    var startDate: Date {
+        didSet {
+            guard !isSettingPresetDates else { return }
+            selectedPreset = .custom
+            refreshTasks()
+        }
+    }
+    var endDate: Date {
+        didSet {
+            guard !isSettingPresetDates else { return }
+            selectedPreset = .custom
+            refreshTasks()
+        }
+    }
+    var selectedListID: UUID? {
+        didSet { refreshTasks() }
+    }
+    var selectedPriority: Priority? {
+        didSet { refreshTasks() }
+    }
+    var searchQuery: String = "" {
+        didSet { scheduleSearchDebounce() }
+    }
+    var selectedPreset: DateRangePreset = .recent
 
     // Flag to prevent date observers from resetting preset during programmatic changes
     private var isSettingPresetDates = false
@@ -80,7 +100,8 @@ final class HistoryViewModel: ObservableObject {
 
     private let taskService: TaskService
     private let taskListService: TaskListService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var searchDebounceTask: _Concurrency.Task<Void, Never>?
 
     // MARK: - Computed Properties
 
@@ -155,54 +176,22 @@ final class HistoryViewModel: ObservableObject {
     // MARK: - Setup
 
     private func setupBindings() {
-        // Refresh when task service updates
-        taskService.$tasks
+        // Refresh when Core Data saves (replaces taskService.$tasks subscription)
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.refreshTasks()
             }
             .store(in: &cancellables)
+    }
 
-        // Debounced search
-        $searchQuery
-            .debounce(for: .seconds(AppConstants.Timing.searchDebounce), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.refreshTasks()
-            }
-            .store(in: &cancellables)
-
-        // React to filter changes
-        $selectedListID
-            .dropFirst()
-            .sink { [weak self] _ in
-                self?.refreshTasks()
-            }
-            .store(in: &cancellables)
-
-        $selectedPriority
-            .dropFirst()
-            .sink { [weak self] _ in
-                self?.refreshTasks()
-            }
-            .store(in: &cancellables)
-
-        $startDate
-            .dropFirst()
-            .sink { [weak self] _ in
-                guard let self = self, !self.isSettingPresetDates else { return }
-                self.selectedPreset = .custom
-                self.refreshTasks()
-            }
-            .store(in: &cancellables)
-
-        $endDate
-            .dropFirst()
-            .sink { [weak self] _ in
-                guard let self = self, !self.isSettingPresetDates else { return }
-                self.selectedPreset = .custom
-                self.refreshTasks()
-            }
-            .store(in: &cancellables)
+    private func scheduleSearchDebounce() {
+        searchDebounceTask?.cancel()
+        searchDebounceTask = _Concurrency.Task { @MainActor [weak self] in
+            try? await _Concurrency.Task.sleep(nanoseconds: UInt64(AppConstants.Timing.searchDebounce * 1_000_000_000))
+            guard !_Concurrency.Task.isCancelled else { return }
+            self?.refreshTasks()
+        }
     }
 
     // MARK: - Data Fetching

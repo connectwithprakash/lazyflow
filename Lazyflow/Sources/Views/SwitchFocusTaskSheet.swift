@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Bottom sheet showing up to 2 alternative suggestions for switching focus.
 struct SwitchFocusTaskSheet: View {
-    @EnvironmentObject private var coordinator: FocusSessionCoordinator
+    @Environment(FocusSessionCoordinator.self) private var coordinator
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

@@ -19,8 +19,8 @@ struct BatchAnalysisResult: Identifiable {
 
 struct AISettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var llmService = LLMService.shared
-    @StateObject private var taskService = TaskService.shared
+    private var llmService = LLMService.shared
+    private var taskService = TaskService.shared
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
     @AppStorage(AppConstants.StorageKey.aiEstimateDuration) private var aiEstimateDuration: Bool = true
     @AppStorage(AppConstants.StorageKey.aiSuggestPriority) private var aiSuggestPriority: Bool = true

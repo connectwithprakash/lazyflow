@@ -3,7 +3,7 @@ import SwiftUI
 /// Floating pill shown when Focus Mode is dismissed but task is still in progress.
 /// Tap "Resume" to reopen the full-screen focus view.
 struct ReturnToFocusPill: View {
-    @EnvironmentObject private var coordinator: FocusSessionCoordinator
+    @Environment(FocusSessionCoordinator.self) private var coordinator
 
     private var tintColor: Color {
         coordinator.isOnBreak ? .orange : Color.Lazyflow.accent

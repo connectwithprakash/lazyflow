@@ -1,23 +1,23 @@
 import Foundation
-import Combine
+import Observation
 import os
 
 /// Service for building unified AI context from multiple sources
-final class AIContextService: ObservableObject {
+@Observable
+final class AIContextService {
     static let shared = AIContextService()
 
     // MARK: - Dependencies
 
     private let learningService = AILearningService.shared
 
-    // MARK: - Published State
+    // MARK: - State
 
-    @Published private(set) var userPatterns: UserPatterns
+    private(set) var userPatterns: UserPatterns
 
     // MARK: - Private
 
     private let recentTasksLimit = AppConstants.Limits.recentTasksLimit
-    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initialization
 

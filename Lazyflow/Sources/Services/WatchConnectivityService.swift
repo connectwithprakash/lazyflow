@@ -106,11 +106,12 @@ final class WatchConnectivityService: NSObject {
     func configure(with taskService: TaskService) {
         self.taskService = taskService
 
-        // Subscribe to task changes
-        taskService.$tasks
+        // Subscribe to task changes via Core Data save notifications
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
-            .sink { [weak self] tasks in
-                self?.sendTasksToWatch(tasks)
+            .sink { [weak self] _ in
+                guard let self, let taskService = self.taskService else { return }
+                self.sendTasksToWatch(taskService.tasks)
             }
             .store(in: &cancellables)
     }
