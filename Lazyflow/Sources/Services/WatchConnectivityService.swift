@@ -80,11 +80,11 @@ struct WatchMessage: Codable {
 // MARK: - Watch Connectivity Service (iPhone Side)
 
 /// Manages iPhone ↔ Watch communication on the iPhone side
-final class WatchConnectivityService: NSObject, ObservableObject {
+final class WatchConnectivityService: NSObject {
     static let shared = WatchConnectivityService()
 
-    @Published private(set) var isWatchAppInstalled = false
-    @Published private(set) var isReachable = false
+    private(set) var isWatchAppInstalled = false
+    private(set) var isReachable = false
 
     private let session: WCSession
     private var taskService: TaskService?

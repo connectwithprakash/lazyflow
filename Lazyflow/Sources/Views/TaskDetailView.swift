@@ -3,7 +3,7 @@ import SwiftUI
 /// Detail view for viewing and editing a task
 struct TaskDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: TaskViewModel
+    @State private var viewModel: TaskViewModel
     @StateObject private var llmService = LLMService.shared
     @StateObject private var taskService = TaskService.shared
     @State private var listService = TaskListService.shared
@@ -39,7 +39,7 @@ struct TaskDetailView: View {
     private let originalTask: Task
 
     init(task: Task) {
-        _viewModel = StateObject(wrappedValue: TaskViewModel(task: task))
+        _viewModel = State(wrappedValue: TaskViewModel(task: task))
         self.originalTask = task
     }
 

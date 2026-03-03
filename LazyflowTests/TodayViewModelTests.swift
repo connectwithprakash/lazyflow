@@ -1,5 +1,4 @@
 import XCTest
-import Combine
 @testable import Lazyflow
 
 @MainActor
@@ -7,13 +6,11 @@ final class TodayViewModelTests: XCTestCase {
     var persistenceController: PersistenceController!
     var taskService: TaskService!
     var viewModel: TodayViewModel!
-    var cancellables: Set<AnyCancellable>!
 
     override func setUpWithError() throws {
         persistenceController = PersistenceController(inMemory: true)
         taskService = TaskService(persistenceController: persistenceController)
         viewModel = TodayViewModel(taskService: taskService)
-        cancellables = Set<AnyCancellable>()
     }
 
     override func tearDownWithError() throws {
@@ -21,7 +18,6 @@ final class TodayViewModelTests: XCTestCase {
         persistenceController = nil
         taskService = nil
         viewModel = nil
-        cancellables = nil
     }
 
     // MARK: - Initial State Tests
@@ -242,19 +238,11 @@ final class TodayViewModelTests: XCTestCase {
     // MARK: - Reactive Updates Tests
 
     func testTaskServiceChanges_UpdatesViewModel() async throws {
-        let expectation = XCTestExpectation(description: "Tasks updated")
-
-        viewModel.$taskData
-            .dropFirst()
-            .sink { data in
-                if !data.todayTasks.isEmpty {
-                    expectation.fulfill()
-                }
-            }
-            .store(in: &cancellables)
-
         taskService.createTask(title: "New Task", dueDate: Date())
 
-        await fulfillment(of: [expectation], timeout: 2.0)
+        // Wait for the Combine pipeline (taskService.$tasks -> refreshTasks) to propagate
+        try await _Concurrency.Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertFalse(viewModel.todayTasks.isEmpty, "ViewModel should reflect task changes from TaskService")
     }
 }

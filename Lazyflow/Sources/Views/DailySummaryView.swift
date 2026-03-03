@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Daily summary view showing productivity stats, streak, and AI-generated recap
 struct DailySummaryView: View {
-    @StateObject private var summaryService = DailySummaryService.shared
+    @State private var summaryService = DailySummaryService.shared
     @State private var summary: DailySummaryData?
     @State private var isLoading = false
     @State private var didRecordImpression = false

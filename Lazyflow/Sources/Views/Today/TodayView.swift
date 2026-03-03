@@ -5,9 +5,9 @@ import UIKit
 struct TodayView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.accessibilityReduceMotion) var reduceMotion
-    @StateObject private var viewModel = TodayViewModel()
+    @State private var viewModel = TodayViewModel()
     @StateObject private var prioritizationService = PrioritizationService.shared
-    @StateObject var conflictService = ConflictDetectionService.shared
+    @State var conflictService = ConflictDetectionService.shared
     @StateObject var rescheduleService = SmartRescheduleService.shared
     @State var showAddTask = false
     @State var taskToSchedule: Task?
@@ -24,7 +24,7 @@ struct TodayView: View {
     @State var parentTaskForSubtask: Task?
     @State private var showAutoCompleteCelebration = false
     @State private var autoCompletedParentTitle = ""
-    @StateObject var summaryService = DailySummaryService.shared
+    @State var summaryService = DailySummaryService.shared
     @State var listService = TaskListService.shared
     @AppStorage(AppConstants.StorageKey.summaryPromptHour) var summaryPromptHour: Int = AppConstants.Defaults.summaryPromptHour
     @AppStorage(AppConstants.StorageKey.morningBriefingEnabled) var morningBriefingEnabled: Bool = true

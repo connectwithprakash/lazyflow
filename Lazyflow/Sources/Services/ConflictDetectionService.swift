@@ -1,20 +1,22 @@
 import Foundation
+import Observation
 import EventKit
 import Combine
 
 /// Service for detecting conflicts between tasks and calendar events
-final class ConflictDetectionService: ObservableObject {
+@Observable
+final class ConflictDetectionService {
     static let shared = ConflictDetectionService()
 
     // MARK: - Dependencies
 
     private let calendarService: CalendarService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Published Properties
 
-    @Published private(set) var detectedConflicts: [TaskConflict] = []
-    @Published private(set) var lastScanDate: Date?
+    private(set) var detectedConflicts: [TaskConflict] = []
+    private(set) var lastScanDate: Date?
 
     private init(calendarService: CalendarService = .shared) {
         self.calendarService = calendarService

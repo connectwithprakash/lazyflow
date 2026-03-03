@@ -3,7 +3,7 @@ import SwiftUI
 /// View for creating a new task
 struct AddTaskView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: TaskViewModel
+    @State private var viewModel: TaskViewModel
     @State private var listService = TaskListService.shared
     @State private var categoryService = CategoryService.shared
     @StateObject private var llmService = LLMService.shared
@@ -61,7 +61,7 @@ struct AddTaskView: View {
         } else if let category = defaultCategory {
             vm.selectSystemCategory(category)
         }
-        _viewModel = StateObject(wrappedValue: vm)
+        _viewModel = State(wrappedValue: vm)
     }
 
     var body: some View {

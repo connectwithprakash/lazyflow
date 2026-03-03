@@ -5,14 +5,15 @@ import Combine
 /// Service for calculating productivity analytics and insights
 /// Part of Issue #130 - Category and List Analytics
 @MainActor
-class AnalyticsService: ObservableObject {
+@Observable
+class AnalyticsService {
     private let taskService: TaskService
     private let taskListService: TaskListService
     private let categoryService: CategoryService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     /// Triggers view updates when underlying data changes
-    @Published private(set) var lastUpdated = Date()
+    private(set) var lastUpdated = Date()
 
     init(
         taskService: TaskService = .shared,

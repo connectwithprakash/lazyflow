@@ -4,7 +4,7 @@ import Charts
 /// Analytics dashboard view showing category and list insights
 /// Part of Issue #130 - Category and List Analytics
 struct AnalyticsView: View {
-    @StateObject private var analyticsService = AnalyticsService()
+    @State private var analyticsService = AnalyticsService()
     @State private var selectedPeriod: AnalyticsPeriod = .thisWeek
     /// Triggers view refresh when task data changes, without resetting scroll
     @State private var refreshTrigger = Date()
@@ -40,7 +40,7 @@ struct AnalyticsView: View {
         .background(Color.adaptiveBackground)
         .navigationTitle("Analytics")
         .navigationBarTitleDisplayMode(.large)
-        .onReceive(analyticsService.$lastUpdated) { newValue in
+        .onChange(of: analyticsService.lastUpdated) { _, newValue in
             // Update local state to trigger view refresh without recreating scroll container
             refreshTrigger = newValue
         }

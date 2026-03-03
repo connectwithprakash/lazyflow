@@ -8,7 +8,7 @@ struct InsightsView: View {
     @State private var showMorningBriefing = false
     @State private var showDailySummary = false
     @State private var showAIQuality = false
-    @StateObject private var summaryService = DailySummaryService.shared
+    @State private var summaryService = DailySummaryService.shared
 
     init(navigationPath: Binding<NavigationPath> = .constant(NavigationPath())) {
         _navigationPath = navigationPath

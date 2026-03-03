@@ -1,5 +1,5 @@
 import Foundation
-import Combine
+import Observation
 import EventKit
 
 /// Context type for AI prompt building
@@ -9,20 +9,21 @@ enum AIPromptContextType {
 }
 
 /// Service for generating daily summaries and managing productivity streaks
-final class DailySummaryService: ObservableObject {
+@Observable
+final class DailySummaryService {
     static let shared = DailySummaryService()
 
     // MARK: - Published Properties
 
-    @Published private(set) var todaySummary: DailySummaryData?
-    @Published private(set) var streakData: StreakData
-    @Published private(set) var isGeneratingSummary: Bool = false
-    @Published private(set) var summaryHistory: [DailySummaryData] = []
+    private(set) var todaySummary: DailySummaryData?
+    private(set) var streakData: StreakData
+    private(set) var isGeneratingSummary: Bool = false
+    private(set) var summaryHistory: [DailySummaryData] = []
 
     // MARK: - Cached Data for Preloading
 
-    @Published private(set) var cachedMorningBriefing: MorningBriefingData?
-    @Published private(set) var isPreloading: Bool = false
+    private(set) var cachedMorningBriefing: MorningBriefingData?
+    private(set) var isPreloading: Bool = false
     private var morningBriefingCacheDate: Date?
 
     // MARK: - Dependencies

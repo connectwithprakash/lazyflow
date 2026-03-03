@@ -5,7 +5,7 @@ import SwiftUI
 struct MoreView: View {
     @State private var showMorningBriefing = false
     @State private var showDailySummary = false
-    @StateObject private var summaryService = DailySummaryService.shared
+    @State private var summaryService = DailySummaryService.shared
 
     var body: some View {
         NavigationStack {

@@ -1,18 +1,20 @@
 import Foundation
+import Observation
 import EventKit
 import Combine
 
 @MainActor
-final class CalendarViewModel: ObservableObject {
-    @Published private(set) var calendarEvents: [CalendarEvent] = []
-    @Published private(set) var hasAccess = false
-    @Published private(set) var isDenied = false
-    @Published private(set) var isLoading = false
-    @Published var errorMessage: String?
+@Observable
+final class CalendarViewModel {
+    private(set) var calendarEvents: [CalendarEvent] = []
+    private(set) var hasAccess = false
+    private(set) var isDenied = false
+    private(set) var isLoading = false
+    var errorMessage: String?
 
     private let calendarService = CalendarService.shared
     private let taskService = TaskService()
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     init() {
         setupBindings()

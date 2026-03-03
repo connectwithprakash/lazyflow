@@ -27,7 +27,8 @@ struct DurationAccuracy: Codable, Identifiable {
 }
 
 /// Service for tracking AI corrections and providing learning context
-final class AILearningService: ObservableObject {
+@Observable
+final class AILearningService {
     static let shared = AILearningService()
 
     private let correctionsKey = AppConstants.StorageKey.aiCorrections
@@ -40,10 +41,10 @@ final class AILearningService: ObservableObject {
     private let maxRefinements = AppConstants.Limits.maxAIRefinements
     private let correctionExpiryDays = AppConstants.Limits.correctionExpiryDays
 
-    @Published private(set) var corrections: [AICorrection] = []
-    @Published private(set) var durationAccuracyRecords: [DurationAccuracy] = []
-    @Published private(set) var impressions: [Date] = []
-    @Published private(set) var refinementRequests: [Date] = []
+    private(set) var corrections: [AICorrection] = []
+    private(set) var durationAccuracyRecords: [DurationAccuracy] = []
+    private(set) var impressions: [Date] = []
+    private(set) var refinementRequests: [Date] = []
 
     private init() {
         loadCorrections()

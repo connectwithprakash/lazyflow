@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import Combine
 
 /// Atomic data structure for all task lists - ensures single SwiftUI update
@@ -12,15 +13,18 @@ struct TodayTaskData: Equatable {
 
 /// ViewModel for the Today view
 @MainActor
-final class TodayViewModel: ObservableObject {
+@Observable
+final class TodayViewModel {
     // SINGLE source of truth - atomic updates prevent UICollectionView crashes
-    @Published private(set) var taskData = TodayTaskData.empty
+    private(set) var taskData = TodayTaskData.empty
 
-    @Published var isLoading: Bool = false
-    @Published var showAddTask: Bool = false
-    @Published var selectedTask: Task?
-    @Published var searchQuery: String = ""
-    @Published var expandedTaskIDs: Set<UUID> = []
+    var isLoading: Bool = false
+    var showAddTask: Bool = false
+    var selectedTask: Task?
+    var searchQuery: String = "" {
+        didSet { scheduleSearchDebounce() }
+    }
+    var expandedTaskIDs: Set<UUID> = []
 
     // Computed properties for backward compatibility
     var overdueTasks: [Task] { taskData.overdueTasks }
@@ -28,7 +32,8 @@ final class TodayViewModel: ObservableObject {
     var completedTodayTasks: [Task] { taskData.completedTodayTasks }
 
     private let taskService: TaskService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var searchDebounceTask: _Concurrency.Task<Void, Never>?
 
     init(taskService: TaskService = .shared) {
         self.taskService = taskService
@@ -42,13 +47,16 @@ final class TodayViewModel: ObservableObject {
                 self?.refreshTasks()
             }
             .store(in: &cancellables)
+    }
 
-        $searchQuery
-            .debounce(for: .seconds(AppConstants.Timing.searchDebounce), scheduler: DispatchQueue.main)
-            .sink { [weak self] query in
-                self?.filterTasks(query: query)
-            }
-            .store(in: &cancellables)
+    private func scheduleSearchDebounce() {
+        searchDebounceTask?.cancel()
+        let query = searchQuery
+        searchDebounceTask = _Concurrency.Task { @MainActor [weak self] in
+            try? await _Concurrency.Task.sleep(nanoseconds: UInt64(AppConstants.Timing.searchDebounce * 1_000_000_000))
+            guard !_Concurrency.Task.isCancelled else { return }
+            self?.filterTasks(query: query)
+        }
     }
 
     func refreshTasks() {

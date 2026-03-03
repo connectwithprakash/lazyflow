@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RecurringOptionsSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var viewModel: TaskViewModel
+    @Bindable var viewModel: TaskViewModel
 
     var body: some View {
         NavigationStack {

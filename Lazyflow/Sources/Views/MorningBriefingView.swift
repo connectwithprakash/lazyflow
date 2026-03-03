@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Morning briefing view showing yesterday's recap, today's plan, and weekly stats
 struct MorningBriefingView: View {
-    @StateObject private var summaryService = DailySummaryService.shared
+    @State private var summaryService = DailySummaryService.shared
     @State private var briefing: MorningBriefingData?
     @State private var isLoading = false
     @State private var didRecordImpression = false

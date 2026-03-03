@@ -3,7 +3,7 @@ import EventKit
 
 struct CalendarView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @StateObject private var viewModel = CalendarViewModel()
+    @State private var viewModel = CalendarViewModel()
     @StateObject private var taskService = TaskService.shared
     @State private var selectedDate = Date()
     @State private var currentWeekStart = Calendar.current.startOfWeek(for: Date())
