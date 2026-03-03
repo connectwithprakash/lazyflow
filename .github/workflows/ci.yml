@@ -72,8 +72,6 @@ jobs:
             | xcpretty
 
       - name: Run Unit Tests
-        env:
-          SNAPSHOT_RECORD: "true"
         run: |
           set -o pipefail
           xcodebuild test \
@@ -126,14 +124,6 @@ jobs:
           name: xcresult-bundle
           path: TestResults.xcresult
           retention-days: 14
-
-      - name: Upload Recorded Snapshots
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: recorded-snapshots
-          path: LazyflowTests/Snapshots/__Snapshots__/
-          retention-days: 30
 
       - name: Upload Snapshot Failure Diffs
         uses: actions/upload-artifact@v7
