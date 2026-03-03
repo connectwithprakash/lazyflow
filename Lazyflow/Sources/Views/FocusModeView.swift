@@ -4,8 +4,8 @@ import SwiftUI
 /// "Calm Precision" design: dark background, centered title, progress ring.
 /// Includes collapsible subtasks/notes panels and Pomodoro timer mode.
 struct FocusModeView: View {
-    @EnvironmentObject private var coordinator: FocusSessionCoordinator
-    @StateObject private var taskService = TaskService.shared
+    @Environment(FocusSessionCoordinator.self) private var coordinator
+    private var taskService = TaskService.shared
 
     @State private var showSuccess = false
     @State private var showSwitchSheet = false
@@ -52,7 +52,7 @@ struct FocusModeView: View {
         }
         .sheet(isPresented: $showSwitchSheet) {
             SwitchFocusTaskSheet()
-                .environmentObject(coordinator)
+                .environment(coordinator)
         }
         .onChange(of: coordinator.focusTaskID) { oldValue, newValue in
             if let newValue, oldValue != nil, oldValue != newValue,

@@ -1,9 +1,11 @@
 import Foundation
 import SwiftUI
+import Observation
 
 /// View model for the Quick Capture extraction review flow
 @MainActor
-final class QuickCaptureViewModel: ObservableObject {
+@Observable
+final class QuickCaptureViewModel {
 
     // MARK: - State Machine
 
@@ -26,10 +28,10 @@ final class QuickCaptureViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Published Properties
+    // MARK: - Properties
 
-    @Published var viewState: ViewState = .extracting
-    @Published var drafts: [TaskDraft] = []
+    var viewState: ViewState = .extracting
+    var drafts: [TaskDraft] = []
 
     let note: QuickNote
 

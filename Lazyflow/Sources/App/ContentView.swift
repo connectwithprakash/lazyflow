@@ -18,7 +18,7 @@ struct ContentView: View {
     @State private var profileNavigationPath = NavigationPath()
 
     // Focus Mode coordinator (persists active session across restarts)
-    @StateObject private var focusCoordinator = FocusSessionCoordinator(
+    @State private var focusCoordinator = FocusSessionCoordinator(
         taskService: TaskService.shared,
         prioritizationService: PrioritizationService.shared
     )
@@ -112,9 +112,9 @@ struct ContentView: View {
         }
         .fullScreenCover(isPresented: $focusCoordinator.isFocusPresented) {
             FocusModeView()
-                .environmentObject(focusCoordinator)
+                .environment(focusCoordinator)
         }
-        .environmentObject(focusCoordinator)
+        .environment(focusCoordinator)
         .tint(Color.Lazyflow.accent)
         .preferredColorScheme(appearanceMode.colorScheme)
         .onChange(of: horizontalSizeClass) { _, newValue in

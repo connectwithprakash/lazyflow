@@ -1,10 +1,11 @@
 import Foundation
-import Combine
+import Observation
 import EventKit
 
 /// ViewModel for the Plan Your Day flow
 @MainActor
-final class PlanYourDayViewModel: ObservableObject {
+@Observable
+final class PlanYourDayViewModel {
 
     // MARK: - State
 
@@ -17,8 +18,8 @@ final class PlanYourDayViewModel: ObservableObject {
         case completed(PlanYourDayResult)
     }
 
-    @Published var viewState: ViewState = .loading
-    @Published var events: [PlanEventItem] = []
+    var viewState: ViewState = .loading
+    var events: [PlanEventItem] = []
 
     private let calendarService: CalendarService
     private let taskService: TaskService

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Sheet-based flow for planning the day by selecting calendar events to convert to tasks
 struct PlanYourDayView: View {
-    @StateObject private var viewModel = PlanYourDayViewModel()
+    @State private var viewModel = PlanYourDayViewModel()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppConstants.StorageKey.autoHideSkippedEvents) private var autoHideSkippedEvents = false

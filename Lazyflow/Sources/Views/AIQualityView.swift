@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AIQualityView: View {
-    @StateObject private var viewModel = AIQualityViewModel()
+    @State private var viewModel = AIQualityViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var selectedPeriod: TimePeriod = .sevenDays
 

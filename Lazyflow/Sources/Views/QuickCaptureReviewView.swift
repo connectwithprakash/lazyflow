@@ -2,11 +2,11 @@ import SwiftUI
 
 /// Review screen for AI-extracted tasks from a quick note
 struct QuickCaptureReviewView: View {
-    @StateObject private var viewModel: QuickCaptureViewModel
+    @State private var viewModel: QuickCaptureViewModel
     @Environment(\.dismiss) private var dismiss
 
     init(note: QuickNote) {
-        _viewModel = StateObject(wrappedValue: QuickCaptureViewModel(note: note))
+        _viewModel = State(wrappedValue: QuickCaptureViewModel(note: note))
     }
 
     var body: some View {

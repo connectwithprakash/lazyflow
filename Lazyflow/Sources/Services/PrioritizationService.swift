@@ -1,30 +1,32 @@
 import Foundation
 import Combine
 import UIKit
+import Observation
 import os
 
 /// Service for intelligent task prioritization and suggestions
 @MainActor
-final class PrioritizationService: ObservableObject {
+@Observable
+final class PrioritizationService {
     static let shared = PrioritizationService()
 
-    // MARK: - Published Properties
+    // MARK: - Properties
 
-    @Published private(set) var suggestedNextTask: Task?
-    @Published private(set) var prioritizedTasks: [Task] = []
-    @Published private(set) var topThreeSuggestions: [Task] = []
-    @Published private(set) var cachedSuggestions: [TaskSuggestion] = []
-    @Published private(set) var isAnalyzing = false
+    private(set) var suggestedNextTask: Task?
+    private(set) var prioritizedTasks: [Task] = []
+    private(set) var topThreeSuggestions: [Task] = []
+    private(set) var cachedSuggestions: [TaskSuggestion] = []
+    private(set) var isAnalyzing = false
 
     // MARK: - Dependencies
 
     private let taskService: TaskService
     private let llmService: LLMService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Pattern Learning Storage
 
-    @Published private(set) var completionPatterns: CompletionPatterns
+    private(set) var completionPatterns: CompletionPatterns
     private(set) var suggestionFeedback: SuggestionFeedback
 
     private init(
@@ -44,11 +46,12 @@ final class PrioritizationService: ObservableObject {
     }
 
     private func setupObservers() {
-        // Re-analyze when tasks change
-        taskService.$tasks
+        // Re-analyze when Core Data saves (replaces taskService.$tasks subscription)
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
-            .sink { [weak self] tasks in
-                self?.analyzeAndPrioritize(tasks)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.analyzeAndPrioritize(self.taskService.tasks)
             }
             .store(in: &cancellables)
 

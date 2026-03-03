@@ -4,9 +4,9 @@ import SwiftUI
 /// Only shows essential options: title, notes, due date, priority, duration, reminder
 struct SubtaskDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: TaskViewModel
-    @StateObject private var llmService = LLMService.shared
-    @StateObject private var taskService = TaskService.shared
+    @State private var viewModel: TaskViewModel
+    private var llmService = LLMService.shared
+    private var taskService = TaskService.shared
     @FocusState private var isTitleFocused: Bool
 
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
@@ -24,7 +24,7 @@ struct SubtaskDetailView: View {
     private let originalSubtask: Task
 
     init(subtask: Task) {
-        _viewModel = StateObject(wrappedValue: TaskViewModel(task: subtask))
+        _viewModel = State(wrappedValue: TaskViewModel(task: subtask))
         self.originalSubtask = subtask
     }
 

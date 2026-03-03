@@ -80,11 +80,11 @@ struct WatchMessage: Codable {
 // MARK: - Watch Connectivity Service (iPhone Side)
 
 /// Manages iPhone ↔ Watch communication on the iPhone side
-final class WatchConnectivityService: NSObject, ObservableObject {
+final class WatchConnectivityService: NSObject {
     static let shared = WatchConnectivityService()
 
-    @Published private(set) var isWatchAppInstalled = false
-    @Published private(set) var isReachable = false
+    private(set) var isWatchAppInstalled = false
+    private(set) var isReachable = false
 
     private let session: WCSession
     private var taskService: TaskService?
@@ -106,11 +106,12 @@ final class WatchConnectivityService: NSObject, ObservableObject {
     func configure(with taskService: TaskService) {
         self.taskService = taskService
 
-        // Subscribe to task changes
-        taskService.$tasks
+        // Subscribe to task changes via Core Data save notifications
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
-            .sink { [weak self] tasks in
-                self?.sendTasksToWatch(tasks)
+            .sink { [weak self] _ in
+                guard let self, let taskService = self.taskService else { return }
+                self.sendTasksToWatch(taskService.tasks)
             }
             .store(in: &cancellables)
     }

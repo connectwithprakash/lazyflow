@@ -1,21 +1,23 @@
 import CoreData
 import Foundation
 import Combine
+import Observation
 import os
 
 /// Service responsible for all Task-related CRUD operations
-final class TaskService: ObservableObject {
+@Observable
+final class TaskService {
     static let shared = TaskService()
 
     private let persistenceController: PersistenceController
     private let notificationService: NotificationService
     private let calendarService: CalendarService
 
-    @Published private(set) var tasks: [Task] = []
-    @Published private(set) var isLoading: Bool = false
-    @Published private(set) var error: Error?
+    private(set) var tasks: [Task] = []
+    private(set) var isLoading: Bool = false
+    private(set) var error: Error?
 
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     init(
         persistenceController: PersistenceController = .shared,

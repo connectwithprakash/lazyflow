@@ -1,18 +1,21 @@
 import CoreData
 import Foundation
 import Combine
+import Observation
 import os
 
 /// Service responsible for all TaskList-related CRUD operations
-final class TaskListService: ObservableObject {
+@Observable
+final class TaskListService {
     static let shared = TaskListService()
 
     private let persistenceController: PersistenceController
 
-    @Published private(set) var lists: [TaskList] = []
-    @Published private(set) var isLoading: Bool = false
-    @Published private(set) var error: Error?
+    private(set) var lists: [TaskList] = []
+    private(set) var isLoading: Bool = false
+    private(set) var error: Error?
 
+    @ObservationIgnored
     private var cancellables = Set<AnyCancellable>()
 
     init(persistenceController: PersistenceController = .shared) {

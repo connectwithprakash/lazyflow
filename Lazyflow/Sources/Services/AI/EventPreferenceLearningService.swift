@@ -1,9 +1,11 @@
 import Foundation
+import Observation
 
 /// Service for learning user preferences about which calendar events to convert to tasks.
 /// Tracks selection patterns in Plan Your Day and uses them to improve defaults over time.
 @MainActor
-final class EventPreferenceLearningService: ObservableObject {
+@Observable
+final class EventPreferenceLearningService {
     static let shared = EventPreferenceLearningService()
 
     // MARK: - Constants
@@ -13,10 +15,10 @@ final class EventPreferenceLearningService: ObservableObject {
     private let maxRecords = AppConstants.Limits.maxEventRecords
     private let expiryDays = AppConstants.Limits.eventExpiryDays
 
-    // MARK: - Published State
+    // MARK: - State
 
-    @Published private(set) var records: [EventSelectionRecord] = []
-    @Published private(set) var preferences: [String: EventTitlePreference] = [:]
+    private(set) var records: [EventSelectionRecord] = []
+    private(set) var preferences: [String: EventTitlePreference] = [:]
 
     // MARK: - Init
 

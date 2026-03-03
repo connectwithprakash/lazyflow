@@ -3,7 +3,7 @@ import SwiftUI
 /// View showing completed tasks history with stats and filtering
 struct HistoryView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @StateObject private var viewModel = HistoryViewModel()
+    @State private var viewModel = HistoryViewModel()
     @State private var selectedTask: Task?
     @State private var showFilters = false
     @FocusState private var isSearchFocused: Bool
@@ -382,7 +382,7 @@ struct HistoryTaskRow: View {
 // MARK: - Filters Sheet
 
 struct HistoryFiltersSheet: View {
-    @ObservedObject var viewModel: HistoryViewModel
+    @Bindable var viewModel: HistoryViewModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

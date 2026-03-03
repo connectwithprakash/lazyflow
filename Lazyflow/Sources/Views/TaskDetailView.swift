@@ -3,11 +3,11 @@ import SwiftUI
 /// Detail view for viewing and editing a task
 struct TaskDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: TaskViewModel
-    @StateObject private var llmService = LLMService.shared
-    @StateObject private var taskService = TaskService.shared
-    @StateObject private var listService = TaskListService.shared
-    @StateObject private var categoryService = CategoryService.shared
+    @State private var viewModel: TaskViewModel
+    private var llmService = LLMService.shared
+    private var taskService = TaskService.shared
+    @State private var listService = TaskListService.shared
+    @State private var categoryService = CategoryService.shared
     @FocusState private var isTitleFocused: Bool
 
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
@@ -39,7 +39,7 @@ struct TaskDetailView: View {
     private let originalTask: Task
 
     init(task: Task) {
-        _viewModel = StateObject(wrappedValue: TaskViewModel(task: task))
+        _viewModel = State(wrappedValue: TaskViewModel(task: task))
         self.originalTask = task
     }
 

@@ -143,7 +143,7 @@ struct DailySummaryNotificationToggle: View {
 // MARK: - Live Activity Toggle
 
 struct LiveActivityToggle: View {
-    @ObservedObject private var liveActivityManager = LiveActivityManager.shared
+    private var liveActivityManager = LiveActivityManager.shared
     @State private var isEnabled = false
 
     var body: some View {

@@ -1,42 +1,44 @@
 import Foundation
-import Combine
+import Observation
 
 /// ViewModel for task detail and editing
 @MainActor
-final class TaskViewModel: ObservableObject {
-    @Published var title: String = ""
-    @Published var notes: String = ""
-    @Published var dueDate: Date?
-    @Published var hasDueDate: Bool = false
-    @Published var dueTime: Date?
-    @Published var hasDueTime: Bool = false
-    @Published var reminderDate: Date?
-    @Published var hasReminder: Bool = false
-    @Published var priority: Priority = .none
-    @Published var category: TaskCategory = .uncategorized
-    @Published var customCategoryID: UUID?  // When set, takes precedence over system category
-    @Published var selectedListID: UUID?
-    @Published var estimatedDuration: TimeInterval?
-    @Published var isRecurring: Bool = false
-    @Published var recurringFrequency: RecurringFrequency = .daily
-    @Published var recurringInterval: Int = 1
-    @Published var recurringDaysOfWeek: [Int] = []
-    @Published var recurringEndDate: Date?
+@Observable
+final class TaskViewModel {
+    var title: String = "" {
+        didSet { validateTitle() }
+    }
+    var notes: String = ""
+    var dueDate: Date?
+    var hasDueDate: Bool = false
+    var dueTime: Date?
+    var hasDueTime: Bool = false
+    var reminderDate: Date?
+    var hasReminder: Bool = false
+    var priority: Priority = .none
+    var category: TaskCategory = .uncategorized
+    var customCategoryID: UUID?  // When set, takes precedence over system category
+    var selectedListID: UUID?
+    var estimatedDuration: TimeInterval?
+    var isRecurring: Bool = false
+    var recurringFrequency: RecurringFrequency = .daily
+    var recurringInterval: Int = 1
+    var recurringDaysOfWeek: [Int] = []
+    var recurringEndDate: Date?
 
     // Intraday recurring properties
-    @Published var hourInterval: Int = 2
-    @Published var timesPerDay: Int = 3
-    @Published var specificTimes: [Date] = []
-    @Published var useSpecificTimes: Bool = false
-    @Published var activeHoursStart: Date = TaskViewModel.defaultActiveHoursStart
-    @Published var activeHoursEnd: Date = TaskViewModel.defaultActiveHoursEnd
+    var hourInterval: Int = 2
+    var timesPerDay: Int = 3
+    var specificTimes: [Date] = []
+    var useSpecificTimes: Bool = false
+    var activeHoursStart: Date = TaskViewModel.defaultActiveHoursStart
+    var activeHoursEnd: Date = TaskViewModel.defaultActiveHoursEnd
 
-    @Published var isValid: Bool = false
-    @Published var isSaving: Bool = false
+    var isValid: Bool = false
+    var isSaving: Bool = false
 
     private let taskService: TaskService
     private var existingTask: Task?
-    private var cancellables = Set<AnyCancellable>()
 
     init(taskService: TaskService = TaskService(), task: Task? = nil) {
         self.taskService = taskService
@@ -46,7 +48,7 @@ final class TaskViewModel: ObservableObject {
             loadTask(task)
         }
 
-        setupValidation()
+        validateTitle()
     }
 
     private func loadTask(_ task: Task) {
@@ -81,10 +83,8 @@ final class TaskViewModel: ObservableObject {
         }
     }
 
-    private func setupValidation() {
-        $title
-            .map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .assign(to: &$isValid)
+    private func validateTitle() {
+        isValid = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     // MARK: - Actions

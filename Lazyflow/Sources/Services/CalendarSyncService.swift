@@ -1,17 +1,19 @@
 import Foundation
 import EventKit
 import Combine
+import Observation
 import os
 
 /// Orchestrates two-way sync between tasks and calendar events.
 /// Forward: eligible tasks → Lazyflow calendar events.
 /// Reverse: external event changes → task updates.
-final class CalendarSyncService: ObservableObject {
+@Observable
+final class CalendarSyncService {
     static let shared = CalendarSyncService()
 
     private let calendarService: CalendarService
     private let taskService: TaskService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Loop Prevention
 
@@ -64,12 +66,12 @@ final class CalendarSyncService: ObservableObject {
         guard isAutoSyncEnabled else { return }
         stopObserving()
 
-        // Forward sync: debounced task changes → push to calendar
-        taskService.$tasks
+        // Forward sync: debounced Core Data saves → push to calendar
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .debounce(for: .seconds(1.5), scheduler: DispatchQueue.main)
-            .sink { [weak self] tasks in
+            .sink { [weak self] _ in
                 guard let self, self.isAutoSyncEnabled, !self.isSyncing else { return }
-                self.performForwardSync(tasks: tasks)
+                self.performForwardSync(tasks: self.taskService.tasks)
             }
             .store(in: &cancellables)
 

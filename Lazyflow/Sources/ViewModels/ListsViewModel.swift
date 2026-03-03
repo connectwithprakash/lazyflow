@@ -1,23 +1,25 @@
 import Foundation
 import Combine
+import Observation
 
 /// ViewModel for the Lists view
 @MainActor
-final class ListsViewModel: ObservableObject {
-    @Published var lists: [TaskList] = []
-    @Published var taskCounts: [UUID: Int] = [:]
-    @Published var isLoading: Bool = false
-    @Published var showAddList: Bool = false
-    @Published var selectedList: TaskList?
-    @Published var editingList: TaskList?
+@Observable
+final class ListsViewModel {
+    var taskCounts: [UUID: Int] = [:]
+    var isLoading: Bool = false
+    var showAddList: Bool = false
+    var selectedList: TaskList?
+    var editingList: TaskList?
 
     // New list form
-    @Published var newListName: String = ""
-    @Published var newListColor: String = TaskList.availableColors[0]
-    @Published var newListIcon: String = "list.bullet"
+    var newListName: String = ""
+    var newListColor: String = TaskList.availableColors[0]
+    var newListIcon: String = "list.bullet"
 
     private let taskListService: TaskListService
     private let taskService: TaskService
+    @ObservationIgnored
     private var cancellables = Set<AnyCancellable>()
 
     init(taskListService: TaskListService = .shared, taskService: TaskService = TaskService()) {
@@ -27,20 +29,18 @@ final class ListsViewModel: ObservableObject {
     }
 
     private func setupBindings() {
-        taskListService.$lists
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] lists in
-                self?.lists = lists
-                self?.updateTaskCounts()
-            }
-            .store(in: &cancellables)
-
-        taskService.$tasks
+        // Observe Core Data saves to refresh task counts
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.updateTaskCounts()
             }
             .store(in: &cancellables)
+    }
+
+    /// Lists are read directly from the service; @Observable auto-tracks changes
+    var lists: [TaskList] {
+        taskListService.lists
     }
 
     private func updateTaskCounts() {

@@ -5,15 +5,17 @@ import SwiftUI
 import os
 
 /// Service responsible for all CustomCategory-related CRUD operations
-final class CategoryService: ObservableObject {
+@Observable
+final class CategoryService {
     static let shared = CategoryService()
 
     private let persistenceController: PersistenceController
 
-    @Published private(set) var categories: [CustomCategory] = []
-    @Published private(set) var isLoading: Bool = false
-    @Published private(set) var error: Error?
+    private(set) var categories: [CustomCategory] = []
+    private(set) var isLoading: Bool = false
+    private(set) var error: Error?
 
+    @ObservationIgnored
     private var cancellables = Set<AnyCancellable>()
 
     init(persistenceController: PersistenceController = .shared) {

@@ -5,14 +5,15 @@ import Combine
 /// Service for calculating productivity analytics and insights
 /// Part of Issue #130 - Category and List Analytics
 @MainActor
-class AnalyticsService: ObservableObject {
+@Observable
+class AnalyticsService {
     private let taskService: TaskService
     private let taskListService: TaskListService
     private let categoryService: CategoryService
-    private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     /// Triggers view updates when underlying data changes
-    @Published private(set) var lastUpdated = Date()
+    private(set) var lastUpdated = Date()
 
     init(
         taskService: TaskService = .shared,
@@ -23,25 +24,9 @@ class AnalyticsService: ObservableObject {
         self.taskListService = taskListService
         self.categoryService = categoryService
 
-        // Observe task changes to trigger analytics refresh
-        // Subscribe to $tasks (not objectWillChange) to ensure data is updated before refresh
-        taskService.$tasks
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.lastUpdated = Date()
-            }
-            .store(in: &cancellables)
-
-        // Also observe custom category changes
-        categoryService.$categories
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.lastUpdated = Date()
-            }
-            .store(in: &cancellables)
-
-        // Observe list metadata changes (rename, color, add, delete)
-        taskListService.$lists
+        // Observe Core Data saves to trigger analytics refresh
+        // Covers task changes, category/list metadata changes
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.lastUpdated = Date()

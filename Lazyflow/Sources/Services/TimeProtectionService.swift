@@ -1,8 +1,9 @@
 import Foundation
-import Combine
+import Observation
 
 /// Service for managing protected time rules (lunch, family time, focus time, etc.)
-final class TimeProtectionService: ObservableObject {
+@Observable
+final class TimeProtectionService {
     static let shared = TimeProtectionService()
 
     // MARK: - Storage Keys
@@ -12,7 +13,7 @@ final class TimeProtectionService: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published private(set) var rules: [TimeProtectionRule] = []
+    private(set) var rules: [TimeProtectionRule] = []
 
     private init() {
         loadRules()

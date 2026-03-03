@@ -1,16 +1,17 @@
 import Foundation
-import Combine
+import Observation
 
 /// Unified service for LLM-powered task analysis
 /// Supports Apple Intelligence (default) and Open Responses compatible providers
-final class LLMService: ObservableObject {
+@Observable
+final class LLMService {
     static let shared = LLMService()
 
-    // MARK: - Published Properties
+    // MARK: - Properties
 
-    @Published private(set) var isProcessing = false
-    @Published var errorMessage: String?
-    @Published var selectedProvider: LLMProviderType {
+    private(set) var isProcessing = false
+    var errorMessage: String?
+    var selectedProvider: LLMProviderType {
         didSet {
             // Only save if provider is available
             if availableProviders.contains(selectedProvider) {
