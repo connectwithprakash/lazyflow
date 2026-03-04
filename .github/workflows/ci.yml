@@ -125,14 +125,13 @@ jobs:
           path: TestResults.xcresult
           retention-days: 14
 
-      - name: Upload Snapshot Failure Diffs
+      - name: Upload Recorded Snapshots
         uses: actions/upload-artifact@v7
-        if: failure()
+        if: always()
         with:
-          name: snapshot-failures
-          path: LazyflowTests/Snapshots/__Snapshots__/**/*failure*.png
-          retention-days: 14
-          if-no-files-found: ignore
+          name: recorded-snapshots
+          path: LazyflowTests/Snapshots/__Snapshots__/
+          retention-days: 30
 
   ui-tests:
     runs-on: macos-15

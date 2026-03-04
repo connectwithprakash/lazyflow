@@ -8,13 +8,15 @@ import SnapshotTesting
 /// Uses a fixed viewport (iPhone 13 Pro, 375×812) so images are identical
 /// regardless of the local simulator (iPhone 17 Pro) or CI simulator (iPhone 16 Pro).
 ///
-/// Reference images are recorded on CI (via `SNAPSHOT_RECORD` env var) to avoid
-/// cross-environment rendering differences between local macOS and CI runners.
+/// Reference images are recorded on CI to avoid cross-environment rendering
+/// differences between local macOS and CI runners. To re-record, either:
+/// - Set `isRecording = true` temporarily and run tests on CI
+/// - Set `SNAPSHOT_RECORD=true` env var when launching xcodebuild
 @MainActor
 class SnapshotTestCase: XCTestCase {
 
-    /// Set `isRecording = true` locally (or via `SNAPSHOT_RECORD` env var) to regenerate
-    /// reference images. CI records on demand via workflow dispatch.
+    /// To regenerate reference images, uncomment `isRecording = true` below or
+    /// set the `SNAPSHOT_RECORD` env var. Commit images recorded on CI, not locally.
     override func setUp() {
         super.setUp()
 //        isRecording = true

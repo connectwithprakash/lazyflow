@@ -135,6 +135,7 @@ enum SnapshotFixtures {
     /// A MockTaskService populated with a variety of tasks for the Today view.
     static func populatedTaskService() -> MockTaskService {
         let service = MockTaskService()
+        service.referenceDate = fixedNow
         service.tasks = [
             overdueTask(),
             todayTaskUrgent(),
@@ -149,6 +150,7 @@ enum SnapshotFixtures {
     /// A MockTaskService with upcoming and no-date tasks for the Upcoming view.
     static func upcomingTaskService() -> MockTaskService {
         let service = MockTaskService()
+        service.referenceDate = fixedNow
         service.tasks = [
             upcomingTask(),
             nextWeekTask(),
@@ -159,7 +161,9 @@ enum SnapshotFixtures {
 
     /// An empty MockTaskService.
     static func emptyTaskService() -> MockTaskService {
-        return MockTaskService()
+        let service = MockTaskService()
+        service.referenceDate = fixedNow
+        return service
     }
 
     // MARK: - Quick Notes
