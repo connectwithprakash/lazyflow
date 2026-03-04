@@ -4,7 +4,7 @@ import SwiftUI
 struct UpcomingView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(FocusSessionCoordinator.self) private var focusCoordinator
-    private var taskService = TaskService.shared
+    var taskService: any TaskServiceProtocol = TaskService.shared
     @State private var listService = TaskListService.shared
     @State private var noteService = QuickNoteService.shared
     @State private var selectedTask: Task?
@@ -356,3 +356,4 @@ struct UpcomingView: View {
         .environment(FocusSessionCoordinator())
         .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }
+

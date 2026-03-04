@@ -6,12 +6,16 @@ import Foundation
 final class MockTaskService: TaskServiceProtocol {
     // MARK: - Observable Properties
 
-    private(set) var tasks: [Task] = []
+    var tasks: [Task] = []
     private(set) var isLoading: Bool = false
     private(set) var error: Error?
     private(set) var pendingDeleteTaskID: UUID?
     var canUndo: Bool = false
     var canRedo: Bool = false
+
+    /// Reference date for time-relative queries (today/overdue/upcoming).
+    /// Defaults to `Date()` for regular tests; set to a fixed date for snapshot tests.
+    var referenceDate: Date = Date()
 
     // MARK: - Call Recording
 
@@ -25,7 +29,7 @@ final class MockTaskService: TaskServiceProtocol {
 
     func fetchTodayTasks() -> [Task] {
         calls.append("fetchTodayTasks")
-        let todayStart = Calendar.current.startOfDay(for: Date())
+        let todayStart = Calendar.current.startOfDay(for: referenceDate)
         let tomorrowStart = Calendar.current.date(byAdding: .day, value: 1, to: todayStart)!
         return tasks.filter { task in
             guard let dueDate = task.dueDate else { return false }
@@ -35,7 +39,7 @@ final class MockTaskService: TaskServiceProtocol {
 
     func fetchOverdueTasks() -> [Task] {
         calls.append("fetchOverdueTasks")
-        let todayStart = Calendar.current.startOfDay(for: Date())
+        let todayStart = Calendar.current.startOfDay(for: referenceDate)
         return tasks.filter { task in
             guard let dueDate = task.dueDate else { return false }
             return dueDate < todayStart && !task.isCompleted
@@ -44,7 +48,7 @@ final class MockTaskService: TaskServiceProtocol {
 
     func fetchUpcomingTasks() -> [Task] {
         calls.append("fetchUpcomingTasks")
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date()))!
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: referenceDate))!
         return tasks.filter { task in
             guard let dueDate = task.dueDate else { return false }
             return dueDate >= tomorrow && !task.isCompleted
