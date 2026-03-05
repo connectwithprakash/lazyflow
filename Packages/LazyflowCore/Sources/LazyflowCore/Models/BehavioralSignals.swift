@@ -31,7 +31,7 @@ public struct BehavioralSignals: Sendable {
         }
     }
 
-    public struct CategoryAffinity {
+    public struct CategoryAffinity: Sendable {
         public let category: TaskCategory
         public let score: Int
         public let support: Int
@@ -43,7 +43,7 @@ public struct BehavioralSignals: Sendable {
         }
     }
 
-    public struct SnoozeHotspot {
+    public struct SnoozeHotspot: Sendable {
         public let category: TaskCategory
         public let bucket: TimeBucket
         public let count: Int
@@ -55,8 +55,8 @@ public struct BehavioralSignals: Sendable {
         }
     }
 
-    public struct SkipReasonHotspot {
-        public enum Reason: String { case wrongTime, needsFocus }
+    public struct SkipReasonHotspot: Sendable {
+        public enum Reason: String, Sendable { case wrongTime, needsFocus }
         public let reason: Reason
         public let category: TaskCategory
         public let count: Int
@@ -68,7 +68,7 @@ public struct BehavioralSignals: Sendable {
         }
     }
 
-    public struct CompletionPeak {
+    public struct CompletionPeak: Sendable {
         public let category: TaskCategory
         public let bucket: TimeBucket
         public let count: Int
