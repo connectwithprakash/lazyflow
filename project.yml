@@ -118,6 +118,8 @@ targets:
       - path: LazyflowTests
     dependencies:
       - target: Lazyflow
+      - package: LazyflowCore
+        product: LazyflowCore
       - package: SnapshotTesting
         product: SnapshotTesting
     settings:

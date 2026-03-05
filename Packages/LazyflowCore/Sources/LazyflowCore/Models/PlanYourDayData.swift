@@ -4,7 +4,7 @@ import EventKit
 // MARK: - Plan Event Item
 
 /// Wraps a calendar event with selection state for the Plan Your Day flow
-public struct PlanEventItem: Identifiable {
+public struct PlanEventItem: Identifiable, Sendable {
     public let id: String
     public let title: String
     public let startDate: Date
@@ -116,7 +116,7 @@ public struct PlanEventItem: Identifiable {
 // MARK: - Plan Your Day Result
 
 /// Summary of tasks created during the Plan Your Day flow
-public struct PlanYourDayResult {
+public struct PlanYourDayResult: Sendable {
     public let tasksCreated: Int
     public let totalEstimatedMinutes: Int
     public let createdAt: Date

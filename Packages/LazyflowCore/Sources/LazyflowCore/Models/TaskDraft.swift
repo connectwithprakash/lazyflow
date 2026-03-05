@@ -1,7 +1,7 @@
 import Foundation
 
 /// Mutable draft struct for AI-extracted tasks during review
-public struct TaskDraft: Identifiable {
+public struct TaskDraft: Identifiable, Sendable {
     public let id = UUID()
     public var title: String
     public var dueDate: Date?

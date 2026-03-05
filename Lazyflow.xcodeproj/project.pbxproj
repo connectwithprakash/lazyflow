@@ -123,7 +123,7 @@
 		7B9D81831C2E2CB388575266 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F756D48912C32CE20259C1C /* LLMService.swift */; };
 		7CF5BB784B0299E1C584034A /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7094D9FEC23F82DAABC7C15 /* AISettingsView.swift */; };
 		7D67DC8DFE777ACCCB8BAB0A /* CalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */; };
-		7D750FEC4EDCA6E251C15D9C /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 2441D67E5FE6E9703ECA036B /* SnapshotTesting */; };
+		7D750FEC4EDCA6E251C15D9C /* LazyflowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 786BC39DE40325D0E8AA4415 /* LazyflowCore */; };
 		7DA39286A48480A61E66CCF0 /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF4C4543097EBF9234F97 /* WidgetDataStore.swift */; };
 		7E0ADF244612E9B65C2A5052 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35E2E44708E42B8789988F8D /* TodayView.swift */; };
 		7FA9390071FAFEF331CEB4FA /* PromptTemplatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DBD6476A3F8A043E9A1970 /* PromptTemplatesTests.swift */; };
@@ -237,6 +237,7 @@
 		EB90EC843C74EF6627FB1A31 /* CompleteTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7C039CEAFEC1DDD74B7E84 /* CompleteTaskIntent.swift */; };
 		EDAE3C708E1600C9D2D1A1C1 /* WatchTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68F731F96242074EDA7DF785 /* WatchTask.swift */; };
 		EF4E56943CA23C8B21A7FDDE /* LazyflowLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA6E85B014FF9813EF3522A /* LazyflowLiveActivity.swift */; };
+		EFCD75831CDA57B7B08C3DFD /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 2441D67E5FE6E9703ECA036B /* SnapshotTesting */; };
 		EFFD6124FC34CBC61BB80907 /* CalendarSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A23799839226FBBF00C70F /* CalendarSyncService.swift */; };
 		EFFEFE25CDCE0F1804C97AF4 /* AddSubtaskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A00A1695EED140F9B2DF26 /* AddSubtaskSheet.swift */; };
 		F36424258A454AA94CD67151 /* PlanYourDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6439D0F9A7CB5FB23D32A88A /* PlanYourDayView.swift */; };
@@ -567,7 +568,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7D750FEC4EDCA6E251C15D9C /* SnapshotTesting in Frameworks */,
+				7D750FEC4EDCA6E251C15D9C /* LazyflowCore in Frameworks */,
+				EFCD75831CDA57B7B08C3DFD /* SnapshotTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1272,6 +1274,7 @@
 			);
 			name = LazyflowTests;
 			packageProductDependencies = (
+				786BC39DE40325D0E8AA4415 /* LazyflowCore */,
 				2441D67E5FE6E9703ECA036B /* SnapshotTesting */,
 			);
 			productName = LazyflowTests;
@@ -2144,6 +2147,10 @@
 			productName = LazyflowCore;
 		};
 		52F01E3F14158CD773B5A49E /* LazyflowCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LazyflowCore;
+		};
+		786BC39DE40325D0E8AA4415 /* LazyflowCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LazyflowCore;
 		};

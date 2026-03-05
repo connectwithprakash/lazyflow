@@ -1,7 +1,7 @@
 import Foundation
 
 /// Unified context for AI suggestions combining all available signals
-public struct AIContext {
+public struct AIContext: Sendable {
     /// Recent tasks for consistency (last 5-10 tasks)
     public let recentTasks: [RecentTaskContext]
 
@@ -38,7 +38,7 @@ public struct AIContext {
 
     // MARK: - Nested Types
 
-    public struct RecentTaskContext {
+    public struct RecentTaskContext: Sendable {
         public let title: String
         public let category: String
         public let priority: String
@@ -54,7 +54,7 @@ public struct AIContext {
         }
     }
 
-    public struct TimeContext {
+    public struct TimeContext: Sendable {
         public let currentHour: Int
         public let dayOfWeek: Int
         public let isWeekend: Bool
@@ -75,7 +75,7 @@ public struct AIContext {
         }
     }
 
-    public struct TaskSpecificContext {
+    public struct TaskSpecificContext: Sendable {
         public let title: String
         public let notes: String?
         public let dueDate: Date?

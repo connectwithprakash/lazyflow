@@ -17,9 +17,9 @@ public enum TimeBucket: String, Codable, CaseIterable, Sendable {
 
 // MARK: - Behavioral Signals
 
-public struct BehavioralSignals {
+public struct BehavioralSignals: Sendable {
 
-    public struct TimePreference {
+    public struct TimePreference: Sendable {
         public let bucket: TimeBucket
         public let support: Int
         public let share: Double
