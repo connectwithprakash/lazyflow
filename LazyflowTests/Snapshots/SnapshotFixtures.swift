@@ -1,5 +1,6 @@
 import Foundation
 @testable import Lazyflow
+import LazyflowCore
 
 /// Factory for deterministic test data used in snapshot tests.
 enum SnapshotFixtures {

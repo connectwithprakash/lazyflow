@@ -2,6 +2,7 @@ import XCTest
 import SwiftUI
 import SnapshotTesting
 @testable import Lazyflow
+import LazyflowCore
 
 final class QuickCaptureSheetSnapshotTests: SnapshotTestCase {
 
