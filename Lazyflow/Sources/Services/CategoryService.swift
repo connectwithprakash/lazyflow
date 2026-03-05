@@ -3,6 +3,7 @@ import Foundation
 import Combine
 import SwiftUI
 import os
+import LazyflowCore
 
 /// Service responsible for all CustomCategory-related CRUD operations
 @Observable

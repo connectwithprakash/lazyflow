@@ -1,5 +1,6 @@
 import ActivityKit
 import Foundation
+import LazyflowCore
 
 /// Defines the data model for Lazyflow Live Activities
 struct TaskActivityAttributes: ActivityAttributes {

@@ -1,5 +1,7 @@
 import SwiftUI
 import os
+import LazyflowCore
+import LazyflowUI
 
 struct DataManagementView: View {
     @State private var iCloudSyncEnabled = PersistenceController.isICloudSyncEnabled

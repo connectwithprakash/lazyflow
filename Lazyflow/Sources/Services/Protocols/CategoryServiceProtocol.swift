@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import LazyflowCore
 
 /// Protocol defining the public API surface of CategoryService consumed by ViewModels.
 protocol CategoryServiceProtocol: AnyObject {

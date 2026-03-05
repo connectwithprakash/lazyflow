@@ -1,6 +1,7 @@
 import XCTest
 import SwiftUI
 import SnapshotTesting
+import LazyflowCore
 @testable import Lazyflow
 
 /// TodayView snapshot tests.

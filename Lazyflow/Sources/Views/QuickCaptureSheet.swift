@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Minimal capture sheet for quick notes — supports both creating new notes and editing existing ones
 struct QuickCaptureSheet: View {

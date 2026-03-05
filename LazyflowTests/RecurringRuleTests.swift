@@ -1,4 +1,5 @@
 import XCTest
+import LazyflowCore
 @testable import Lazyflow
 
 final class RecurringRuleTests: XCTestCase {

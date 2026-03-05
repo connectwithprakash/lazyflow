@@ -1,5 +1,6 @@
 import SwiftUI
 import XCTest
+import LazyflowCore
 @testable import Lazyflow
 
 final class ColorExtensionsTests: XCTestCase {

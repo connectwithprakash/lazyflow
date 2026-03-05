@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Toast message types for undo actions
 enum UndoAction: Equatable {

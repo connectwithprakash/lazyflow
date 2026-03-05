@@ -1,5 +1,6 @@
 import Foundation
 import WidgetKit
+import LazyflowCore
 
 /// Shared data store using UserDefaults with App Groups
 /// This allows the widget to access task data written by the main app

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import LazyflowCore
 
 /// Two-stage extraction pipeline: deterministic parsing + optional LLM enhancement
 @MainActor

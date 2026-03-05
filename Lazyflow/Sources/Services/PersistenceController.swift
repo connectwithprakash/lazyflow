@@ -3,6 +3,7 @@ import Combine
 import CoreData
 import Foundation
 import os
+import LazyflowCore
 
 // MARK: - Sync Status
 

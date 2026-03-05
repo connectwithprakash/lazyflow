@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 /// Task categories with associated visual properties for automatic categorization
-enum TaskCategory: Int16, CaseIterable, Codable, Identifiable {
+public enum TaskCategory: Int16, CaseIterable, Codable, Identifiable, Sendable {
     case uncategorized = 0
     case work = 1
     case personal = 2
@@ -13,9 +13,9 @@ enum TaskCategory: Int16, CaseIterable, Codable, Identifiable {
     case learning = 7
     case home = 8
 
-    var id: Int16 { rawValue }
+    public var id: Int16 { rawValue }
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .uncategorized: return "Uncategorized"
         case .work: return "Work"
@@ -29,7 +29,7 @@ enum TaskCategory: Int16, CaseIterable, Codable, Identifiable {
         }
     }
 
-    var color: Color {
+    public var color: Color {
         switch self {
         case .uncategorized: return .secondary
         case .work: return .blue
@@ -43,7 +43,7 @@ enum TaskCategory: Int16, CaseIterable, Codable, Identifiable {
         }
     }
 
-    var iconName: String {
+    public var iconName: String {
         switch self {
         case .uncategorized: return "questionmark.circle"
         case .work: return "briefcase.fill"

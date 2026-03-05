@@ -1,5 +1,6 @@
 import AppIntents
 import CoreData
+import LazyflowCore
 
 /// Siri Shortcut for completing the highest priority task
 struct CompleteTaskIntent: AppIntent {

@@ -1,5 +1,6 @@
 import EventKit
 import Foundation
+import LazyflowCore
 
 /// Protocol defining the public API surface of CalendarService consumed by ViewModels.
 protocol CalendarServiceProtocol: AnyObject {

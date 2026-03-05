@@ -1,6 +1,7 @@
 import Combine
 import SwiftUI
 import Observation
+import LazyflowCore
 
 /// Thin coordinator managing Focus Mode state.
 /// Persists active session to @AppStorage for rehydration across app restarts.

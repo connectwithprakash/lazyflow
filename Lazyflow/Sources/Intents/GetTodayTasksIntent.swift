@@ -1,5 +1,6 @@
 import AppIntents
 import CoreData
+import LazyflowCore
 
 /// Siri Shortcut for listing today's tasks
 struct GetTodayTasksIntent: AppIntent {

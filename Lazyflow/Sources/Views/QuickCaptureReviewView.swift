@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Review screen for AI-extracted tasks from a quick note
 struct QuickCaptureReviewView: View {

@@ -1,5 +1,7 @@
 import SwiftUI
 import UIKit
+import LazyflowCore
+import LazyflowUI
 
 /// Compact row view for displaying subtasks with indentation and thread connection
 struct SubtaskRowView: View {

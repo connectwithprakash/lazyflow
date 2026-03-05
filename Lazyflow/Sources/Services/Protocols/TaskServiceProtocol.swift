@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 /// Protocol defining the public API surface of TaskService consumed by ViewModels.
 protocol TaskServiceProtocol: AnyObject {

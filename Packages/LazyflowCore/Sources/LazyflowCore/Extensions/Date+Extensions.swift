@@ -2,32 +2,32 @@ import Foundation
 
 extension Date {
     /// Check if date is today
-    var isToday: Bool {
+    public var isToday: Bool {
         Calendar.current.isDateInToday(self)
     }
 
     /// Check if date is tomorrow
-    var isTomorrow: Bool {
+    public var isTomorrow: Bool {
         Calendar.current.isDateInTomorrow(self)
     }
 
     /// Check if date is yesterday
-    var isYesterday: Bool {
+    public var isYesterday: Bool {
         Calendar.current.isDateInYesterday(self)
     }
 
     /// Check if date is in the past (before today)
-    var isPast: Bool {
+    public var isPast: Bool {
         self < Calendar.current.startOfDay(for: Date())
     }
 
     /// Check if date is within the current week
-    var isThisWeek: Bool {
+    public var isThisWeek: Bool {
         Calendar.current.isDate(self, equalTo: Date(), toGranularity: .weekOfYear)
     }
 
     /// Check if date is within the next 7 days
-    var isWithinNextWeek: Bool {
+    public var isWithinNextWeek: Bool {
         let today = Calendar.current.startOfDay(for: Date())
         guard let weekFromNow = Calendar.current.date(byAdding: .day, value: 7, to: today) else {
             return false
@@ -36,12 +36,12 @@ extension Date {
     }
 
     /// Start of the day
-    var startOfDay: Date {
+    public var startOfDay: Date {
         Calendar.current.startOfDay(for: self)
     }
 
     /// End of the day (23:59:59)
-    var endOfDay: Date {
+    public var endOfDay: Date {
         var components = DateComponents()
         components.day = 1
         components.second = -1
@@ -49,7 +49,7 @@ extension Date {
     }
 
     /// Formatted relative date string
-    var relativeFormatted: String {
+    public var relativeFormatted: String {
         if isToday {
             return "Today"
         } else if isTomorrow {
@@ -68,69 +68,69 @@ extension Date {
     }
 
     /// Short formatted date (e.g., "Dec 29")
-    var shortFormatted: String {
+    public var shortFormatted: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
         return formatter.string(from: self)
     }
 
     /// Full formatted date (e.g., "December 29, 2025")
-    var fullFormatted: String {
+    public var fullFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         return formatter.string(from: self)
     }
 
     /// Time only formatted (e.g., "3:30 PM")
-    var timeFormatted: String {
+    public var timeFormatted: String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: self)
     }
 
     /// Date and time formatted (e.g., "Dec 29, 3:30 PM")
-    var dateTimeFormatted: String {
+    public var dateTimeFormatted: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, h:mm a"
         return formatter.string(from: self)
     }
 
     /// Add days to date
-    func addingDays(_ days: Int) -> Date {
+    public func addingDays(_ days: Int) -> Date {
         Calendar.current.date(byAdding: .day, value: days, to: self) ?? self
     }
 
     /// Add hours to date
-    func addingHours(_ hours: Int) -> Date {
+    public func addingHours(_ hours: Int) -> Date {
         Calendar.current.date(byAdding: .hour, value: hours, to: self) ?? self
     }
 
     /// Add minutes to date
-    func addingMinutes(_ minutes: Int) -> Date {
+    public func addingMinutes(_ minutes: Int) -> Date {
         Calendar.current.date(byAdding: .minute, value: minutes, to: self) ?? self
     }
 
     /// Get the weekday (1 = Sunday, 7 = Saturday)
-    var weekday: Int {
+    public var weekday: Int {
         Calendar.current.component(.weekday, from: self)
     }
 
     /// Get the weekday name
-    var weekdayName: String {
+    public var weekdayName: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE"
         return formatter.string(from: self)
     }
 
     /// Get short weekday name (e.g., "Mon")
-    var shortWeekdayName: String {
+    public var shortWeekdayName: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
         return formatter.string(from: self)
     }
 
     /// Days until this date from today
-    var daysFromToday: Int {
+    public var daysFromToday: Int {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let target = calendar.startOfDay(for: self)
@@ -138,7 +138,7 @@ extension Date {
     }
 
     /// Create date from components
-    static func from(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0) -> Date? {
+    public static func from(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0) -> Date? {
         var components = DateComponents()
         components.year = year
         components.month = month
@@ -149,7 +149,7 @@ extension Date {
     }
 
     /// Combine date with time from another date
-    func withTime(from time: Date) -> Date {
+    public func withTime(from time: Date) -> Date {
         let calendar = Calendar.current
         let dateComponents = calendar.dateComponents([.year, .month, .day], from: self)
         let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: time)
@@ -170,14 +170,14 @@ extension Date {
 
 extension Date {
     /// Result of parsing natural language date text
-    struct ParsedDateResult {
-        let date: Date
-        let time: Date?
-        let matchedRange: Range<String.Index>
-        let matchedText: String
+    public struct ParsedDateResult {
+        public let date: Date
+        public let time: Date?
+        public let matchedRange: Range<String.Index>
+        public let matchedText: String
 
         /// The task title with the date portion removed
-        func cleanedTitle(from original: String) -> String {
+        public func cleanedTitle(from original: String) -> String {
             var cleaned = original
             cleaned.removeSubrange(matchedRange)
             // Clean up extra whitespace
@@ -188,7 +188,7 @@ extension Date {
 
     /// Parse natural language date from text using NSDataDetector
     /// Supports: "tomorrow", "next Friday", "3pm", "January 15", etc.
-    static func parse(from text: String) -> ParsedDateResult? {
+    public static func parse(from text: String) -> ParsedDateResult? {
         guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue) else {
             return nil
         }
@@ -301,7 +301,7 @@ extension Date {
 
 extension Date {
     /// Get dates for the current week
-    static var currentWeekDates: [Date] {
+    public static var currentWeekDates: [Date] {
         let calendar = Calendar.current
         let today = Date()
         let weekday = calendar.component(.weekday, from: today)
@@ -315,7 +315,7 @@ extension Date {
     }
 
     /// Get dates for the next N days
-    static func nextDays(_ count: Int) -> [Date] {
+    public static func nextDays(_ count: Int) -> [Date] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 

@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss

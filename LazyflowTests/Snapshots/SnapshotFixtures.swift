@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 @testable import Lazyflow
 
 /// Factory for deterministic test data used in snapshot tests.

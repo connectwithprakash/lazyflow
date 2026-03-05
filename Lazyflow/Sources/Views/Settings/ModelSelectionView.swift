@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// View for selecting a model from available models, grouped by provider
 struct ModelSelectionView: View {

@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import os
+import LazyflowCore
 
 /// Service responsible for managing local notifications for task reminders
 final class NotificationService: @unchecked Sendable, NotificationServiceProtocol {

@@ -3,24 +3,24 @@ import Foundation
 // MARK: - Daily Summary Data
 
 /// Represents a summary of tasks completed on a specific day
-struct DailySummaryData: Codable, Identifiable {
-    let id: UUID
-    let date: Date
-    let tasksCompleted: Int
-    let totalTasksPlanned: Int
-    let completedTasks: [CompletedTaskSummary]
-    let topCategory: TaskCategory?
-    let totalMinutesWorked: Int
-    let productivityScore: Double // 0-100
-    var aiSummary: String?
-    var encouragement: String?
-    let createdAt: Date
+public struct DailySummaryData: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let date: Date
+    public let tasksCompleted: Int
+    public let totalTasksPlanned: Int
+    public let completedTasks: [CompletedTaskSummary]
+    public let topCategory: TaskCategory?
+    public let totalMinutesWorked: Int
+    public let productivityScore: Double // 0-100
+    public var aiSummary: String?
+    public var encouragement: String?
+    public let createdAt: Date
 
     // Carryover: unfinished tasks due today or overdue
-    var carryoverTasks: [CarryoverTaskSummary]
-    var suggestedPriorities: [String]
+    public var carryoverTasks: [CarryoverTaskSummary]
+    public var suggestedPriorities: [String]
 
-    init(
+    public init(
         id: UUID = UUID(),
         date: Date,
         tasksCompleted: Int,
@@ -52,13 +52,13 @@ struct DailySummaryData: Codable, Identifiable {
 
 
     /// Completion percentage (0-100)
-    var completionPercentage: Int {
+    public var completionPercentage: Int {
         guard totalTasksPlanned > 0 else { return tasksCompleted > 0 ? 100 : 0 }
         return Int((Double(tasksCompleted) / Double(totalTasksPlanned)) * 100)
     }
 
     /// Formatted time worked string
-    var formattedTimeWorked: String {
+    public var formattedTimeWorked: String {
         if totalMinutesWorked < 60 {
             return "\(totalMinutesWorked)m"
         }
@@ -68,12 +68,12 @@ struct DailySummaryData: Codable, Identifiable {
     }
 
     /// Whether there are unfinished tasks to carry over
-    var hasCarryover: Bool {
+    public var hasCarryover: Bool {
         !carryoverTasks.isEmpty
     }
 
     /// Check if this was a productive day
-    var wasProductiveDay: Bool {
+    public var wasProductiveDay: Bool {
         guard tasksCompleted > 0 else { return false }
         if totalTasksPlanned > 0 {
             return Double(tasksCompleted) / Double(totalTasksPlanned) >= 0.5
@@ -85,15 +85,15 @@ struct DailySummaryData: Codable, Identifiable {
 // MARK: - Completed Task Summary
 
 /// Lightweight summary of a completed task for display
-struct CompletedTaskSummary: Codable, Identifiable {
-    let id: UUID
-    let title: String
-    let category: TaskCategory
-    let priority: Priority
-    let estimatedDuration: TimeInterval?
-    let completedAt: Date
+public struct CompletedTaskSummary: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let title: String
+    public let category: TaskCategory
+    public let priority: Priority
+    public let estimatedDuration: TimeInterval?
+    public let completedAt: Date
 
-    init(from task: Task) {
+    public init(from task: Task) {
         self.id = task.id
         self.title = task.title
         self.category = task.category
@@ -102,7 +102,7 @@ struct CompletedTaskSummary: Codable, Identifiable {
         self.completedAt = task.completedAt ?? Date()
     }
 
-    init(
+    public init(
         id: UUID,
         title: String,
         category: TaskCategory,
@@ -122,15 +122,15 @@ struct CompletedTaskSummary: Codable, Identifiable {
 // MARK: - Carryover Task Summary
 
 /// Lightweight summary of an unfinished task for carryover display
-struct CarryoverTaskSummary: Codable, Identifiable {
-    let id: UUID
-    let title: String
-    let category: TaskCategory
-    let priority: Priority
-    let dueDate: Date?
-    let isOverdue: Bool
+public struct CarryoverTaskSummary: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let title: String
+    public let category: TaskCategory
+    public let priority: Priority
+    public let dueDate: Date?
+    public let isOverdue: Bool
 
-    init(from task: Task) {
+    public init(from task: Task) {
         self.id = task.id
         self.title = task.title
         self.category = task.category
@@ -138,20 +138,36 @@ struct CarryoverTaskSummary: Codable, Identifiable {
         self.dueDate = task.dueDate
         self.isOverdue = task.isOverdue
     }
+
+    public init(
+        id: UUID,
+        title: String,
+        category: TaskCategory,
+        priority: Priority,
+        dueDate: Date?,
+        isOverdue: Bool = false
+    ) {
+        self.id = id
+        self.title = title
+        self.category = category
+        self.priority = priority
+        self.dueDate = dueDate
+        self.isOverdue = isOverdue
+    }
 }
 
 // MARK: - Streak Data
 
 /// Tracks user's productivity streak
-struct StreakData: Codable {
-    var currentStreak: Int
-    var longestStreak: Int
-    var lastProductiveDate: Date?
-    var totalProductiveDays: Int
+public struct StreakData: Codable, Sendable {
+    public var currentStreak: Int
+    public var longestStreak: Int
+    public var lastProductiveDate: Date?
+    public var totalProductiveDays: Int
 
     private static let userDefaultsKey = "streak_data"
 
-    init(
+    public init(
         currentStreak: Int = 0,
         longestStreak: Int = 0,
         lastProductiveDate: Date? = nil,
@@ -166,7 +182,7 @@ struct StreakData: Codable {
     // MARK: - Persistence
 
     /// Load streak data from UserDefaults
-    static func load() -> StreakData {
+    public static func load() -> StreakData {
         guard let data = UserDefaults.standard.data(forKey: userDefaultsKey),
               let streakData = try? JSONDecoder().decode(StreakData.self, from: data) else {
             return StreakData()
@@ -175,7 +191,7 @@ struct StreakData: Codable {
     }
 
     /// Save streak data to UserDefaults
-    func save() {
+    public func save() {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: StreakData.userDefaultsKey)
         }
@@ -184,7 +200,7 @@ struct StreakData: Codable {
     // MARK: - Streak Logic
 
     /// Record a day's productivity and update streak
-    mutating func recordDay(date: Date, wasProductive: Bool) {
+    public mutating func recordDay(date: Date, wasProductive: Bool) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: date)
 
@@ -225,19 +241,19 @@ struct StreakData: Codable {
     }
 
     /// Check if streak is at a milestone (7, 14, 30, 60, 90, 100, 365 days)
-    var isAtMilestone: Bool {
+    public var isAtMilestone: Bool {
         let milestones = [7, 14, 30, 60, 90, 100, 365]
         return milestones.contains(currentStreak)
     }
 
     /// Get next milestone to reach
-    var nextMilestone: Int? {
+    public var nextMilestone: Int? {
         let milestones = [7, 14, 30, 60, 90, 100, 365]
         return milestones.first { $0 > currentStreak }
     }
 
     /// Days until next milestone
-    var daysToNextMilestone: Int? {
+    public var daysToNextMilestone: Int? {
         guard let next = nextMilestone else { return nil }
         return next - currentStreak
     }
@@ -246,21 +262,37 @@ struct StreakData: Codable {
 // MARK: - Calendar Event Summary
 
 /// Lightweight summary of a calendar event for display in briefings
-struct CalendarEventSummary: Codable, Identifiable {
-    let id: String
-    let title: String
-    let startDate: Date
-    let endDate: Date
-    let isAllDay: Bool
-    let location: String?
+public struct CalendarEventSummary: Codable, Identifiable, Sendable {
+    public let id: String
+    public let title: String
+    public let startDate: Date
+    public let endDate: Date
+    public let isAllDay: Bool
+    public let location: String?
+
+    public init(
+        id: String,
+        title: String,
+        startDate: Date,
+        endDate: Date,
+        isAllDay: Bool,
+        location: String? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.startDate = startDate
+        self.endDate = endDate
+        self.isAllDay = isAllDay
+        self.location = location
+    }
 
     /// Duration in minutes
-    var durationMinutes: Int {
+    public var durationMinutes: Int {
         Int(endDate.timeIntervalSince(startDate) / 60)
     }
 
     /// Formatted time range (e.g., "9:00 AM - 10:30 AM")
-    var formattedTimeRange: String {
+    public var formattedTimeRange: String {
         if isAllDay {
             return "All day"
         }
@@ -270,7 +302,7 @@ struct CalendarEventSummary: Codable, Identifiable {
     }
 
     /// Formatted start time only
-    var formattedStartTime: String {
+    public var formattedStartTime: String {
         if isAllDay {
             return "All day"
         }
@@ -283,15 +315,29 @@ struct CalendarEventSummary: Codable, Identifiable {
 // MARK: - Schedule Summary
 
 /// Summary of today's calendar schedule for morning briefing
-struct ScheduleSummary: Codable {
-    let totalMeetingMinutes: Int
-    let meetingCount: Int
-    let nextEvent: CalendarEventSummary?
-    let largestFreeBlockMinutes: Int
-    let allDayEvents: [CalendarEventSummary]
+public struct ScheduleSummary: Codable, Sendable {
+    public let totalMeetingMinutes: Int
+    public let meetingCount: Int
+    public let nextEvent: CalendarEventSummary?
+    public let largestFreeBlockMinutes: Int
+    public let allDayEvents: [CalendarEventSummary]
+
+    public init(
+        totalMeetingMinutes: Int,
+        meetingCount: Int,
+        nextEvent: CalendarEventSummary? = nil,
+        largestFreeBlockMinutes: Int,
+        allDayEvents: [CalendarEventSummary] = []
+    ) {
+        self.totalMeetingMinutes = totalMeetingMinutes
+        self.meetingCount = meetingCount
+        self.nextEvent = nextEvent
+        self.largestFreeBlockMinutes = largestFreeBlockMinutes
+        self.allDayEvents = allDayEvents
+    }
 
     /// Formatted total meeting time
-    var formattedMeetingTime: String {
+    public var formattedMeetingTime: String {
         if totalMeetingMinutes < 60 {
             return "\(totalMeetingMinutes)m"
         }
@@ -301,7 +347,7 @@ struct ScheduleSummary: Codable {
     }
 
     /// Formatted largest free block
-    var formattedFreeBlock: String {
+    public var formattedFreeBlock: String {
         if largestFreeBlockMinutes < 60 {
             return "\(largestFreeBlockMinutes)m"
         }
@@ -311,12 +357,12 @@ struct ScheduleSummary: Codable {
     }
 
     /// Check if there are any meetings today
-    var hasMeetings: Bool {
+    public var hasMeetings: Bool {
         meetingCount > 0
     }
 
     /// Check if there's meaningful free time
-    var hasSignificantFreeBlock: Bool {
+    public var hasSignificantFreeBlock: Bool {
         largestFreeBlockMinutes >= 30
     }
 }
@@ -324,35 +370,35 @@ struct ScheduleSummary: Codable {
 // MARK: - Morning Briefing Data
 
 /// Represents the morning briefing content with yesterday's recap and today's plan
-struct MorningBriefingData: Codable, Identifiable {
-    let id: UUID
-    let date: Date
+public struct MorningBriefingData: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let date: Date
 
     // Yesterday's recap
-    let yesterdayCompleted: Int
-    let yesterdayPlanned: Int
-    let yesterdayTopCategory: TaskCategory?
+    public let yesterdayCompleted: Int
+    public let yesterdayPlanned: Int
+    public let yesterdayTopCategory: TaskCategory?
 
     // Today's plan
-    let todayTasks: [TaskBriefingSummary]
-    let todayHighPriority: Int
-    let todayOverdue: Int
-    let todayEstimatedMinutes: Int
+    public let todayTasks: [TaskBriefingSummary]
+    public let todayHighPriority: Int
+    public let todayOverdue: Int
+    public let todayEstimatedMinutes: Int
 
     // Weekly insights
-    let weeklyStats: WeeklyStats
+    public let weeklyStats: WeeklyStats
 
     // Calendar schedule (optional - nil if no calendar access)
-    let scheduleSummary: ScheduleSummary?
+    public let scheduleSummary: ScheduleSummary?
 
     // AI content
-    var aiSummary: String?
-    var todayFocus: String?
-    var motivationalMessage: String?
+    public var aiSummary: String?
+    public var todayFocus: String?
+    public var motivationalMessage: String?
 
-    let createdAt: Date
+    public let createdAt: Date
 
-    init(
+    public init(
         id: UUID = UUID(),
         date: Date = Date(),
         yesterdayCompleted: Int,
@@ -387,7 +433,7 @@ struct MorningBriefingData: Codable, Identifiable {
     }
 
     /// Formatted estimated time for today
-    var formattedTodayTime: String {
+    public var formattedTodayTime: String {
         if todayEstimatedMinutes < 60 {
             return "\(todayEstimatedMinutes)m"
         }
@@ -397,18 +443,18 @@ struct MorningBriefingData: Codable, Identifiable {
     }
 
     /// Yesterday's completion percentage
-    var yesterdayCompletionPercentage: Int {
+    public var yesterdayCompletionPercentage: Int {
         guard yesterdayPlanned > 0 else { return yesterdayCompleted > 0 ? 100 : 0 }
         return Int((Double(yesterdayCompleted) / Double(yesterdayPlanned)) * 100)
     }
 
     /// Check if there are any tasks for today
-    var hasTodayTasks: Bool {
+    public var hasTodayTasks: Bool {
         !todayTasks.isEmpty
     }
 
     /// Check if yesterday was productive
-    var wasYesterdayProductive: Bool {
+    public var wasYesterdayProductive: Bool {
         guard yesterdayCompleted > 0 else { return false }
         if yesterdayPlanned > 0 {
             return Double(yesterdayCompleted) / Double(yesterdayPlanned) >= 0.5
@@ -417,7 +463,7 @@ struct MorningBriefingData: Codable, Identifiable {
     }
 
     /// Check if calendar data is available
-    var hasCalendarData: Bool {
+    public var hasCalendarData: Bool {
         scheduleSummary != nil
     }
 }
@@ -425,15 +471,15 @@ struct MorningBriefingData: Codable, Identifiable {
 // MARK: - Weekly Stats
 
 /// Weekly productivity statistics for morning briefing
-struct WeeklyStats: Codable {
-    let tasksCompletedThisWeek: Int
-    let totalTasksPlannedThisWeek: Int
-    let averageCompletionRate: Double // 0-100
-    let mostProductiveDay: String?
-    let currentStreak: Int
-    let daysUntilWeekEnd: Int
+public struct WeeklyStats: Codable, Sendable {
+    public let tasksCompletedThisWeek: Int
+    public let totalTasksPlannedThisWeek: Int
+    public let averageCompletionRate: Double // 0-100
+    public let mostProductiveDay: String?
+    public let currentStreak: Int
+    public let daysUntilWeekEnd: Int
 
-    init(
+    public init(
         tasksCompletedThisWeek: Int = 0,
         totalTasksPlannedThisWeek: Int = 0,
         averageCompletionRate: Double = 0,
@@ -450,17 +496,17 @@ struct WeeklyStats: Codable {
     }
 
     /// Formatted completion rate
-    var formattedCompletionRate: String {
+    public var formattedCompletionRate: String {
         "\(Int(averageCompletionRate))%"
     }
 
     /// Check if user is on a streak
-    var hasStreak: Bool {
+    public var hasStreak: Bool {
         currentStreak > 0
     }
 
     /// Motivational text based on weekly performance
-    var weeklyInsight: String {
+    public var weeklyInsight: String {
         if averageCompletionRate >= 80 {
             return "Excellent week so far!"
         } else if averageCompletionRate >= 60 {
@@ -478,16 +524,16 @@ struct WeeklyStats: Codable {
 // MARK: - Task Briefing Summary
 
 /// Lightweight summary of a task for morning briefing display
-struct TaskBriefingSummary: Codable, Identifiable {
-    let id: UUID
-    let title: String
-    let priority: Priority
-    let category: TaskCategory
-    let dueTime: Date?
-    let estimatedDuration: TimeInterval?
-    let isOverdue: Bool
+public struct TaskBriefingSummary: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let title: String
+    public let priority: Priority
+    public let category: TaskCategory
+    public let dueTime: Date?
+    public let estimatedDuration: TimeInterval?
+    public let isOverdue: Bool
 
-    init(from task: Task) {
+    public init(from task: Task) {
         self.id = task.id
         self.title = task.title
         self.priority = task.priority
@@ -497,7 +543,7 @@ struct TaskBriefingSummary: Codable, Identifiable {
         self.isOverdue = task.isOverdue
     }
 
-    init(
+    public init(
         id: UUID,
         title: String,
         priority: Priority,
@@ -516,7 +562,7 @@ struct TaskBriefingSummary: Codable, Identifiable {
     }
 
     /// Formatted due time
-    var formattedDueTime: String? {
+    public var formattedDueTime: String? {
         guard let dueTime = dueTime else { return nil }
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -524,7 +570,7 @@ struct TaskBriefingSummary: Codable, Identifiable {
     }
 
     /// Formatted duration
-    var formattedDuration: String? {
+    public var formattedDuration: String? {
         guard let duration = estimatedDuration, duration > 0 else { return nil }
         let minutes = Int(duration / 60)
         if minutes < 60 {

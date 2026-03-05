@@ -1,4 +1,5 @@
 import CoreData
+import LazyflowCore
 
 extension RecurringRuleEntity {
     /// Typed accessor for daysOfWeek array

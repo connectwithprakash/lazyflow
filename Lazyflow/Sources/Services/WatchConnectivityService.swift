@@ -1,6 +1,7 @@
 import Foundation
 import WatchConnectivity
 import Combine
+import LazyflowCore
 
 /// Lightweight task model for Watch communication (iPhone side)
 struct WatchTask: Codable, Identifiable, Hashable {

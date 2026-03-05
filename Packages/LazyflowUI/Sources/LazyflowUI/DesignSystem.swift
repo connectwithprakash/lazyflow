@@ -1,71 +1,72 @@
 import SwiftUI
+import LazyflowCore
 
 /// Lazyflow Design System
 /// Based on PRD specifications: Teal accent, SF Pro typography, WCAG AAA accessibility
-enum DesignSystem {
+public enum DesignSystem {
     // MARK: - Spacing
 
-    enum Spacing {
-        static let xxs: CGFloat = 2
-        static let xs: CGFloat = 4
-        static let sm: CGFloat = 8
-        static let md: CGFloat = 12
-        static let lg: CGFloat = 16
-        static let xl: CGFloat = 20
-        static let xxl: CGFloat = 24
-        static let xxxl: CGFloat = 32
+    public enum Spacing {
+        public static let xxs: CGFloat = 2
+        public static let xs: CGFloat = 4
+        public static let sm: CGFloat = 8
+        public static let md: CGFloat = 12
+        public static let lg: CGFloat = 16
+        public static let xl: CGFloat = 20
+        public static let xxl: CGFloat = 24
+        public static let xxxl: CGFloat = 32
     }
 
     // MARK: - Corner Radius
 
-    enum CornerRadius {
-        static let small: CGFloat = 4
-        static let medium: CGFloat = 8
-        static let large: CGFloat = 12
-        static let extraLarge: CGFloat = 16
-        static let full: CGFloat = 9999
+    public enum CornerRadius {
+        public static let small: CGFloat = 4
+        public static let medium: CGFloat = 8
+        public static let large: CGFloat = 12
+        public static let extraLarge: CGFloat = 16
+        public static let full: CGFloat = 9999
     }
 
     // MARK: - Typography
 
-    enum Typography {
-        static let largeTitle = Font.system(size: 34, weight: .bold)
-        static let title1 = Font.system(size: 28, weight: .bold)
-        static let title2 = Font.system(size: 22, weight: .bold)
-        static let title3 = Font.system(size: 20, weight: .semibold)
-        static let headline = Font.system(size: 17, weight: .semibold)
-        static let body = Font.system(size: 17, weight: .regular)
-        static let callout = Font.system(size: 16, weight: .regular)
-        static let subheadline = Font.system(size: 15, weight: .regular)
-        static let footnote = Font.system(size: 13, weight: .regular)
-        static let caption1 = Font.system(size: 12, weight: .regular)
-        static let caption2 = Font.system(size: 11, weight: .regular)
+    public enum Typography {
+        public static let largeTitle = Font.system(size: 34, weight: .bold)
+        public static let title1 = Font.system(size: 28, weight: .bold)
+        public static let title2 = Font.system(size: 22, weight: .bold)
+        public static let title3 = Font.system(size: 20, weight: .semibold)
+        public static let headline = Font.system(size: 17, weight: .semibold)
+        public static let body = Font.system(size: 17, weight: .regular)
+        public static let callout = Font.system(size: 16, weight: .regular)
+        public static let subheadline = Font.system(size: 15, weight: .regular)
+        public static let footnote = Font.system(size: 13, weight: .regular)
+        public static let caption1 = Font.system(size: 12, weight: .regular)
+        public static let caption2 = Font.system(size: 11, weight: .regular)
     }
 
     // MARK: - Touch Targets
 
-    enum TouchTarget {
+    public enum TouchTarget {
         /// Minimum touch target size (44pt per Apple HIG)
-        static let minimum: CGFloat = 44
-        static let comfortable: CGFloat = 48
-        static let large: CGFloat = 56
+        public static let minimum: CGFloat = 44
+        public static let comfortable: CGFloat = 48
+        public static let large: CGFloat = 56
     }
 
     // MARK: - Animation
 
-    enum Animation {
-        static let quick = SwiftUI.Animation.easeInOut(duration: 0.15)
-        static let standard = SwiftUI.Animation.easeInOut(duration: 0.25)
-        static let slow = SwiftUI.Animation.easeInOut(duration: 0.4)
-        static let spring = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.7)
+    public enum Animation {
+        public static let quick = SwiftUI.Animation.easeInOut(duration: 0.15)
+        public static let standard = SwiftUI.Animation.easeInOut(duration: 0.25)
+        public static let slow = SwiftUI.Animation.easeInOut(duration: 0.4)
+        public static let spring = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.7)
     }
 
     // MARK: - Shadow
 
-    enum Shadow {
-        static let small = (color: Color.black.opacity(0.08), radius: CGFloat(4), x: CGFloat(0), y: CGFloat(2))
-        static let medium = (color: Color.black.opacity(0.12), radius: CGFloat(8), x: CGFloat(0), y: CGFloat(4))
-        static let large = (color: Color.black.opacity(0.16), radius: CGFloat(16), x: CGFloat(0), y: CGFloat(8))
+    public enum Shadow {
+        public static let small = (color: Color.black.opacity(0.08), radius: CGFloat(4), x: CGFloat(0), y: CGFloat(2))
+        public static let medium = (color: Color.black.opacity(0.12), radius: CGFloat(8), x: CGFloat(0), y: CGFloat(4))
+        public static let large = (color: Color.black.opacity(0.16), radius: CGFloat(16), x: CGFloat(0), y: CGFloat(8))
     }
 }
 
@@ -73,7 +74,7 @@ enum DesignSystem {
 
 extension View {
     /// Apply card styling
-    func cardStyle() -> some View {
+    public func cardStyle() -> some View {
         self
             .background(Color.adaptiveSurface)
             .cornerRadius(DesignSystem.CornerRadius.large)
@@ -86,17 +87,19 @@ extension View {
     }
 
     /// Ensure minimum touch target size
-    func accessibleTouchTarget() -> some View {
+    public func accessibleTouchTarget() -> some View {
         self.frame(minWidth: DesignSystem.TouchTarget.minimum, minHeight: DesignSystem.TouchTarget.minimum)
     }
 }
 
 // MARK: - Button Styles
 
-struct PrimaryButtonStyle: ButtonStyle {
+public struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) var isEnabled
 
-    func makeBody(configuration: Configuration) -> some View {
+    public init() {}
+
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(DesignSystem.Typography.headline)
             .foregroundColor(.white)
@@ -113,8 +116,10 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
-struct SecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct SecondaryButtonStyle: ButtonStyle {
+    public init() {}
+
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(DesignSystem.Typography.headline)
             .foregroundColor(Color.Lazyflow.accent)
@@ -127,8 +132,10 @@ struct SecondaryButtonStyle: ButtonStyle {
     }
 }
 
-struct IconButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct IconButtonStyle: ButtonStyle {
+    public init() {}
+
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundColor(Color.Lazyflow.accent)
             .frame(width: DesignSystem.TouchTarget.minimum, height: DesignSystem.TouchTarget.minimum)
@@ -142,12 +149,18 @@ struct IconButtonStyle: ButtonStyle {
 
 // MARK: - Custom Components
 
-struct TaskCheckbox: View {
-    let isCompleted: Bool
-    let priority: Priority
-    let action: () -> Void
+public struct TaskCheckbox: View {
+    public let isCompleted: Bool
+    public let priority: Priority
+    public let action: () -> Void
 
-    var body: some View {
+    public init(isCompleted: Bool, priority: Priority, action: @escaping () -> Void) {
+        self.isCompleted = isCompleted
+        self.priority = priority
+        self.action = action
+    }
+
+    public var body: some View {
         Button(action: action) {
             ZStack {
                 Circle()
@@ -173,10 +186,14 @@ struct TaskCheckbox: View {
     }
 }
 
-struct PriorityBadge: View {
-    let priority: Priority
+public struct PriorityBadge: View {
+    public let priority: Priority
 
-    var body: some View {
+    public init(priority: Priority) {
+        self.priority = priority
+    }
+
+    public var body: some View {
         if priority != .none {
             HStack(spacing: 4) {
                 Image(systemName: priority.iconName)
@@ -196,10 +213,16 @@ struct PriorityBadge: View {
     }
 }
 
-struct DueDateBadge: View {
-    let date: Date
-    let isOverdue: Bool
-    var isDueToday: Bool = false
+public struct DueDateBadge: View {
+    public let date: Date
+    public let isOverdue: Bool
+    public var isDueToday: Bool = false
+
+    public init(date: Date, isOverdue: Bool, isDueToday: Bool = false) {
+        self.date = date
+        self.isOverdue = isOverdue
+        self.isDueToday = isDueToday
+    }
 
     private var foregroundColor: Color {
         if isOverdue { return Color.Lazyflow.error }
@@ -213,7 +236,7 @@ struct DueDateBadge: View {
         return Color.secondary.opacity(0.1)
     }
 
-    var body: some View {
+    public var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "calendar")
                 .font(.caption2)
@@ -231,8 +254,12 @@ struct DueDateBadge: View {
     }
 }
 
-struct ScheduledTimeBadge: View {
-    let task: Task
+public struct ScheduledTimeBadge: View {
+    public let task: Task
+
+    public init(task: Task) {
+        self.task = task
+    }
 
     private var isPast: Bool {
         guard let start = task.scheduledStartTime else { return false }
@@ -248,7 +275,7 @@ struct ScheduledTimeBadge: View {
         isPast ? Color.secondary.opacity(0.1) : Color.Lazyflow.accent.opacity(0.12)
     }
 
-    var body: some View {
+    public var body: some View {
         if let timeText = task.formattedScheduledTime {
             HStack(spacing: 4) {
                 Image(systemName: "calendar.badge.clock")
@@ -268,10 +295,14 @@ struct ScheduledTimeBadge: View {
     }
 }
 
-struct CategoryBadge: View {
-    let category: TaskCategory
+public struct CategoryBadge: View {
+    public let category: TaskCategory
 
-    var body: some View {
+    public init(category: TaskCategory) {
+        self.category = category
+    }
+
+    public var body: some View {
         if category != .uncategorized {
             HStack(spacing: 4) {
                 Image(systemName: category.iconName)
@@ -291,41 +322,14 @@ struct CategoryBadge: View {
     }
 }
 
-struct TaskCategoryBadge: View {
-    let systemCategory: TaskCategory
-    var customCategoryID: UUID?
-    var isCompleted: Bool = false
+public struct ListColorDot: View {
+    public let colorHex: String
 
-    private var display: (name: String, color: Color, iconName: String) {
-        CategoryService.shared.getCategoryDisplay(systemCategory: systemCategory, customCategoryID: customCategoryID)
+    public init(colorHex: String) {
+        self.colorHex = colorHex
     }
 
-    /// True when a real category exists (handles stale customCategoryID gracefully)
-    private var hasCategory: Bool {
-        let info = display
-        // If customCategoryID is dangling (deleted), getCategoryDisplay falls back to system.
-        // Only show badge when there's a meaningful category.
-        if let _ = customCategoryID {
-            return info.name != TaskCategory.uncategorized.displayName
-        }
-        return systemCategory != .uncategorized
-    }
-
-    var body: some View {
-        if hasCategory {
-            Image(systemName: display.iconName)
-                .font(.caption2)
-                .foregroundColor(display.color)
-                .opacity(isCompleted ? 0.5 : 1.0)
-                .accessibilityHidden(true)
-        }
-    }
-}
-
-struct ListColorDot: View {
-    let colorHex: String
-
-    var body: some View {
+    public var body: some View {
         Circle()
             .fill(Color(hex: colorHex) ?? .gray)
             .frame(width: 12, height: 12)
@@ -335,14 +339,22 @@ struct ListColorDot: View {
 
 // MARK: - Empty State
 
-struct EmptyStateView: View {
-    let icon: String
-    let title: String
-    let message: String
-    var actionTitle: String? = nil
-    var action: (() -> Void)? = nil
+public struct EmptyStateView: View {
+    public let icon: String
+    public let title: String
+    public let message: String
+    public var actionTitle: String? = nil
+    public var action: (() -> Void)? = nil
 
-    var body: some View {
+    public init(icon: String, title: String, message: String, actionTitle: String? = nil, action: (() -> Void)? = nil) {
+        self.icon = icon
+        self.title = title
+        self.message = message
+        self.actionTitle = actionTitle
+        self.action = action
+    }
+
+    public var body: some View {
         VStack(spacing: DesignSystem.Spacing.lg) {
             Image(systemName: icon)
                 .font(.system(size: 48))

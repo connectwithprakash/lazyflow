@@ -1,4 +1,5 @@
 import AppIntents
+import LazyflowCore
 
 /// App Intents compatible priority enum for Siri Shortcuts
 enum TaskPriorityAppEnum: String, AppEnum {

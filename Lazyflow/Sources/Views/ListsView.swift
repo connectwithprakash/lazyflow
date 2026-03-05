@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// View showing all task lists and smart lists
 struct ListsView: View {

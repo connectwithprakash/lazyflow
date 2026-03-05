@@ -1,5 +1,7 @@
 import SwiftUI
 import UIKit
+import LazyflowCore
+import LazyflowUI
 
 /// Task row that can expand to show subtasks with edge progress indicator
 struct ExpandableTaskRowView: View {

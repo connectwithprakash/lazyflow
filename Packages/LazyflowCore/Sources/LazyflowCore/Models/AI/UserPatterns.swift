@@ -1,30 +1,46 @@
 import Foundation
 
 /// User behavior patterns learned from task history
-struct UserPatterns: Codable {
+public struct UserPatterns: Codable, Sendable {
     /// Category usage frequency (category -> count)
-    var categoryUsage: [String: Int] = [:]
+    public var categoryUsage: [String: Int] = [:]
 
     /// Time-of-day patterns for categories ("category_hour" -> count)
-    var categoryTimePatterns: [String: Int] = [:]
+    public var categoryTimePatterns: [String: Int] = [:]
 
     /// Day-of-week patterns for categories ("category_dayOfWeek" -> count)
-    var categoryDayPatterns: [String: Int] = [:]
+    public var categoryDayPatterns: [String: Int] = [:]
 
     /// Average duration by category (category -> average minutes)
-    var averageDurations: [String: Int] = [:]
+    public var averageDurations: [String: Int] = [:]
 
     /// Priority patterns by category (category -> most common priority)
-    var categoryPriorityPatterns: [String: String] = [:]
+    public var categoryPriorityPatterns: [String: String] = [:]
 
     /// Last updated timestamp
-    var lastUpdated: Date = Date()
+    public var lastUpdated: Date = Date()
+
+    public init(
+        categoryUsage: [String: Int] = [:],
+        categoryTimePatterns: [String: Int] = [:],
+        categoryDayPatterns: [String: Int] = [:],
+        averageDurations: [String: Int] = [:],
+        categoryPriorityPatterns: [String: String] = [:],
+        lastUpdated: Date = Date()
+    ) {
+        self.categoryUsage = categoryUsage
+        self.categoryTimePatterns = categoryTimePatterns
+        self.categoryDayPatterns = categoryDayPatterns
+        self.averageDurations = averageDurations
+        self.categoryPriorityPatterns = categoryPriorityPatterns
+        self.lastUpdated = lastUpdated
+    }
 
     // MARK: - Persistence
 
     private static let key = "user_patterns"
 
-    static func load() -> UserPatterns {
+    public static func load() -> UserPatterns {
         guard let data = UserDefaults.standard.data(forKey: key),
               let patterns = try? JSONDecoder().decode(UserPatterns.self, from: data) else {
             return UserPatterns()
@@ -32,7 +48,7 @@ struct UserPatterns: Codable {
         return patterns
     }
 
-    func save() {
+    public func save() {
         guard let data = try? JSONEncoder().encode(self) else { return }
         UserDefaults.standard.set(data, forKey: Self.key)
     }
@@ -40,7 +56,7 @@ struct UserPatterns: Codable {
     // MARK: - Analysis Helpers
 
     /// Get preferred time of day for a category
-    func preferredTime(for category: String) -> String? {
+    public func preferredTime(for category: String) -> String? {
         let prefix = "\(category.lowercased())_"
         let matching = categoryTimePatterns.filter { $0.key.hasPrefix(prefix) }
 
@@ -62,7 +78,7 @@ struct UserPatterns: Codable {
     }
 
     /// Get most used categories (top N)
-    func topCategories(limit: Int = 5) -> [String] {
+    public func topCategories(limit: Int = 5) -> [String] {
         categoryUsage
             .sorted { $0.value > $1.value }
             .prefix(limit)
@@ -70,7 +86,7 @@ struct UserPatterns: Codable {
     }
 
     /// Get average duration for a category
-    func averageDuration(for category: String) -> Int? {
+    public func averageDuration(for category: String) -> Int? {
         averageDurations[category.lowercased()]
     }
 }
@@ -79,7 +95,7 @@ struct UserPatterns: Codable {
 
 extension UserPatterns {
     /// Record a completed task to learn patterns
-    mutating func recordCompletion(
+    public mutating func recordCompletion(
         category: String,
         priority: String,
         duration: Int?,

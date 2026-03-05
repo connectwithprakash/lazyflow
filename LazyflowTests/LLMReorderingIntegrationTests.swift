@@ -1,4 +1,5 @@
 import XCTest
+import LazyflowCore
 @testable import Lazyflow
 
 /// Integration tests that simulate the full user journey:

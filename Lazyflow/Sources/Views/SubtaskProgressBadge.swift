@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Badge showing subtask progress (e.g., "2/3")
 struct SubtaskProgressBadge: View {

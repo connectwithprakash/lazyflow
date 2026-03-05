@@ -3,12 +3,12 @@ import UniformTypeIdentifiers
 import CoreTransferable
 
 /// Task status representing the current state
-enum TaskStatus: Int16, Codable, CaseIterable {
+public enum TaskStatus: Int16, Codable, CaseIterable, Sendable {
     case pending = 0      // Default - not started
     case inProgress = 1   // Actively working on
     case completed = 2    // Done
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .pending: return "Pending"
         case .inProgress: return "In Progress"
@@ -18,81 +18,81 @@ enum TaskStatus: Int16, Codable, CaseIterable {
 }
 
 /// Domain model representing a task
-struct Task: Identifiable, Codable, Equatable, Hashable {
-    let id: UUID
-    var title: String
-    var notes: String?
-    var dueDate: Date?
-    var dueTime: Date?
-    var reminderDate: Date?
-    var status: TaskStatus
-    var isArchived: Bool
+public struct Task: Identifiable, Codable, Equatable, Hashable, Sendable {
+    public let id: UUID
+    public var title: String
+    public var notes: String?
+    public var dueDate: Date?
+    public var dueTime: Date?
+    public var reminderDate: Date?
+    public var status: TaskStatus
+    public var isArchived: Bool
 
     /// Computed property for backward compatibility
-    var isCompleted: Bool {
+    public var isCompleted: Bool {
         get { status == .completed }
         set { status = newValue ? .completed : .pending }
     }
 
     /// Check if task is currently in progress
-    var isInProgress: Bool {
+    public var isInProgress: Bool {
         status == .inProgress
     }
-    var priority: Priority
-    var category: TaskCategory
-    var customCategoryID: UUID?  // When set, takes precedence over system category
-    var listID: UUID?
-    var linkedEventID: String?
-    var calendarItemExternalIdentifier: String?
-    var lastSyncedAt: Date?
-    var scheduledStartTime: Date?
-    var scheduledEndTime: Date?
-    var estimatedDuration: TimeInterval?
-    var completedAt: Date?
-    var startedAt: Date?
-    var accumulatedDuration: TimeInterval  // Total time spent across all work sessions
-    var createdAt: Date
-    var updatedAt: Date
-    var recurringRule: RecurringRule?
+    public var priority: Priority
+    public var category: TaskCategory
+    public var customCategoryID: UUID?  // When set, takes precedence over system category
+    public var listID: UUID?
+    public var linkedEventID: String?
+    public var calendarItemExternalIdentifier: String?
+    public var lastSyncedAt: Date?
+    public var scheduledStartTime: Date?
+    public var scheduledEndTime: Date?
+    public var estimatedDuration: TimeInterval?
+    public var completedAt: Date?
+    public var startedAt: Date?
+    public var accumulatedDuration: TimeInterval  // Total time spent across all work sessions
+    public var createdAt: Date
+    public var updatedAt: Date
+    public var recurringRule: RecurringRule?
 
     // MARK: - Intraday Completion Tracking
-    var intradayCompletionsToday: Int
-    var lastIntradayCompletionDate: Date?
+    public var intradayCompletionsToday: Int
+    public var lastIntradayCompletionDate: Date?
 
     // MARK: - Subtask Support
-    var parentTaskID: UUID?
-    var subtasks: [Task]
-    var subtaskOrder: Int32
+    public var parentTaskID: UUID?
+    public var subtasks: [Task]
+    public var subtaskOrder: Int32
 
     /// Whether this task is a subtask (has a parent)
-    var isSubtask: Bool {
+    public var isSubtask: Bool {
         parentTaskID != nil
     }
 
     /// Whether this task has subtasks
-    var hasSubtasks: Bool {
+    public var hasSubtasks: Bool {
         !subtasks.isEmpty
     }
 
     /// Count of completed subtasks
-    var completedSubtaskCount: Int {
+    public var completedSubtaskCount: Int {
         subtasks.filter { $0.isCompleted }.count
     }
 
     /// Progress of subtasks as a value from 0.0 to 1.0
-    var subtaskProgress: Double {
+    public var subtaskProgress: Double {
         guard !subtasks.isEmpty else { return 0 }
         return Double(completedSubtaskCount) / Double(subtasks.count)
     }
 
     /// Progress string for display (e.g., "2/3")
-    var subtaskProgressString: String? {
+    public var subtaskProgressString: String? {
         guard hasSubtasks else { return nil }
         return "\(completedSubtaskCount)/\(subtasks.count)"
     }
 
     /// Whether all subtasks are completed
-    var allSubtasksCompleted: Bool {
+    public var allSubtasksCompleted: Bool {
         guard hasSubtasks else { return false }
         return completedSubtaskCount == subtasks.count
     }
@@ -100,12 +100,12 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     // MARK: - Intraday Progress
 
     /// Whether this is an intraday recurring task
-    var isIntradayTask: Bool {
+    public var isIntradayTask: Bool {
         recurringRule?.isIntraday ?? false
     }
 
     /// Target completions for today (based on recurring rule)
-    var intradayTargetToday: Int {
+    public var intradayTargetToday: Int {
         guard let rule = recurringRule, rule.isIntraday else { return 0 }
 
         switch rule.frequency {
@@ -121,7 +121,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Current intraday completions (auto-resets if date changed)
-    var currentIntradayCompletions: Int {
+    public var currentIntradayCompletions: Int {
         guard let lastDate = lastIntradayCompletionDate else {
             return 0
         }
@@ -133,7 +133,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Progress string for intraday tasks (e.g., "2/3")
-    var intradayProgressString: String? {
+    public var intradayProgressString: String? {
         guard isIntradayTask else { return nil }
         let target = intradayTargetToday
         guard target > 0 else { return nil }
@@ -141,7 +141,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Progress as value from 0.0 to 1.0 for intraday tasks
-    var intradayProgress: Double {
+    public var intradayProgress: Double {
         guard isIntradayTask else { return 0 }
         let target = intradayTargetToday
         guard target > 0 else { return 0 }
@@ -149,12 +149,12 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Whether all intraday completions are done for today
-    var isIntradayCompleteForToday: Bool {
+    public var isIntradayCompleteForToday: Bool {
         guard isIntradayTask else { return false }
         return currentIntradayCompletions >= intradayTargetToday
     }
 
-    init(
+    public init(
         id: UUID = UUID(),
         title: String,
         notes: String? = nil,
@@ -217,7 +217,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Convenience initializer for backward compatibility with isCompleted
-    init(
+    public init(
         id: UUID = UUID(),
         title: String,
         notes: String? = nil,
@@ -282,19 +282,19 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Check if task is due today
-    var isDueToday: Bool {
+    public var isDueToday: Bool {
         guard let dueDate = dueDate else { return false }
         return Calendar.current.isDateInToday(dueDate)
     }
 
     /// Check if task is overdue
-    var isOverdue: Bool {
+    public var isOverdue: Bool {
         guard let dueDate = dueDate, !isCompleted else { return false }
         return dueDate < Date() && !Calendar.current.isDateInToday(dueDate)
     }
 
     /// Check if task is upcoming (within next 7 days)
-    var isUpcoming: Bool {
+    public var isUpcoming: Bool {
         guard let dueDate = dueDate else { return false }
         let today = Calendar.current.startOfDay(for: Date())
         let weekFromNow = Calendar.current.date(byAdding: .day, value: 7, to: today)!
@@ -302,22 +302,22 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Check if task has a reminder set
-    var hasReminder: Bool {
+    public var hasReminder: Bool {
         reminderDate != nil
     }
 
     /// Whether this task has a scheduled time block
-    var isScheduled: Bool {
+    public var isScheduled: Bool {
         scheduledStartTime != nil
     }
 
     /// Whether this task is eligible for automatic calendar sync
-    var isEligibleForAutoSync: Bool {
+    public var isEligibleForAutoSync: Bool {
         dueDate != nil && dueTime != nil && estimatedDuration != nil && (estimatedDuration ?? 0) > 0 && !isCompleted && !isArchived
     }
 
     /// Formatted scheduled time range (e.g., "2:00 – 3:30 PM" or "2:00 PM")
-    var formattedScheduledTime: String? {
+    public var formattedScheduledTime: String? {
         guard let start = scheduledStartTime else { return nil }
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -330,12 +330,12 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Check if task is recurring
-    var isRecurring: Bool {
+    public var isRecurring: Bool {
         recurringRule != nil
     }
 
     /// Formatted due date string
-    var formattedDueDate: String? {
+    public var formattedDueDate: String? {
         guard let dueDate = dueDate else { return nil }
 
         let calendar = Calendar.current
@@ -354,7 +354,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Formatted due time string
-    var formattedDueTime: String? {
+    public var formattedDueTime: String? {
         guard let dueTime = dueTime else { return nil }
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -362,7 +362,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Formatted estimated duration
-    var formattedDuration: String? {
+    public var formattedDuration: String? {
         guard let duration = estimatedDuration, duration > 0 else { return nil }
 
         let hours = Int(duration) / 3600
@@ -378,31 +378,31 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Actual time spent on the task (from startedAt to completedAt)
-    var actualDuration: TimeInterval? {
+    public var actualDuration: TimeInterval? {
         guard let started = startedAt, let completed = completedAt else { return nil }
         return completed.timeIntervalSince(started)
     }
 
     /// Formatted actual duration string in timer format (H:MM or M:SS)
-    var formattedActualDuration: String? {
+    public var formattedActualDuration: String? {
         guard let duration = actualDuration, duration > 0 else { return nil }
         return Self.formatDurationAsTimer(duration)
     }
 
     /// Current elapsed time including accumulated duration (for in-progress tasks)
-    var elapsedTime: TimeInterval? {
+    public var elapsedTime: TimeInterval? {
         guard let started = startedAt, !isCompleted else { return nil }
         return accumulatedDuration + Date().timeIntervalSince(started)
     }
 
     /// Formatted elapsed time for in-progress tasks
-    var formattedElapsedTime: String? {
+    public var formattedElapsedTime: String? {
         guard let elapsed = elapsedTime, elapsed > 0 else { return nil }
         return Self.formatDurationAsTimer(elapsed)
     }
 
     /// Format duration as timer (H:MM for >= 1 hour, M:SS for < 1 hour)
-    static func formatDurationAsTimer(_ duration: TimeInterval) -> String {
+    public static func formatDurationAsTimer(_ duration: TimeInterval) -> String {
         let totalSeconds = Int(duration)
         let hours = totalSeconds / 3600
         let minutes = (totalSeconds % 3600) / 60
@@ -417,7 +417,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
 
     /// Create a completed copy of this task
     /// Finalizes accumulated duration for time tracking
-    func completed() -> Task {
+    public func completed() -> Task {
         var copy = self
         copy.status = .completed
         copy.completedAt = Date()
@@ -431,7 +431,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
 
     /// Create an uncompleted copy of this task
     /// Clears startedAt and accumulated duration since we're resetting the task
-    func uncompleted() -> Task {
+    public func uncompleted() -> Task {
         var copy = self
         copy.status = .pending
         copy.completedAt = nil
@@ -443,7 +443,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
 
     /// Create an in-progress copy of this task
     /// Sets startedAt on first start, preserves it when resuming
-    func inProgress() -> Task {
+    public func inProgress() -> Task {
         var copy = self
         copy.status = .inProgress
         // Only set startedAt if not already set (first time starting)
@@ -457,7 +457,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
 
     /// Create a pending copy of this task (stop progress)
     /// Accumulates time spent before pausing
-    func stopProgress() -> Task {
+    public func stopProgress() -> Task {
         var copy = self
         copy.status = .pending
         // Accumulate time spent in current work session
@@ -471,7 +471,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
 
     /// Increment intraday completion count
     /// Resets count if it's a new day
-    func incrementIntradayCompletion() -> Task {
+    public func incrementIntradayCompletion() -> Task {
         var copy = self
         let now = Date()
 
@@ -488,7 +488,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Reset intraday completion count (for new day or manual reset)
-    func resetIntradayCompletions() -> Task {
+    public func resetIntradayCompletions() -> Task {
         var copy = self
         copy.intradayCompletionsToday = 0
         copy.lastIntradayCompletionDate = nil
@@ -497,7 +497,7 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Create a copy with updated fields
-    func updated(
+    public func updated(
         title: String? = nil,
         notes: String? = nil,
         dueDate: Date?? = nil,
@@ -535,14 +535,14 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// Whether task has a custom category assigned
-    var hasCustomCategory: Bool {
+    public var hasCustomCategory: Bool {
         customCategoryID != nil
     }
 }
 
 // MARK: - Sample Data
 extension Task {
-    static let sample = Task(
+    public static let sample = Task(
         title: "Review pull request",
         notes: "Check the new authentication module",
         dueDate: Date(),
@@ -550,7 +550,7 @@ extension Task {
         estimatedDuration: 1800 // 30 minutes
     )
 
-    static let sampleTasks: [Task] = [
+    public static let sampleTasks: [Task] = [
         Task(title: "Complete project documentation", dueDate: Date(), priority: .high),
         Task(title: "Review code changes", dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()), priority: .medium),
         Task(title: "Update dependencies", dueDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), priority: .low),
@@ -561,14 +561,14 @@ extension Task {
 
 // MARK: - Transferable (Drag & Drop)
 extension Task: Transferable {
-    static var transferRepresentation: some TransferRepresentation {
+    public static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(for: Task.self, contentType: .task)
     }
 }
 
 // MARK: - UTType Extension
 extension UTType {
-    static var task: UTType {
+    public static var task: UTType {
         UTType(exportedAs: "com.lazyflow.task")
     }
 }

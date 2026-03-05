@@ -3,6 +3,7 @@ import Foundation
 import Combine
 import Observation
 import os
+import LazyflowCore
 
 /// Service responsible for all TaskList-related CRUD operations
 @Observable

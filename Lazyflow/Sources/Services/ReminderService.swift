@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import LazyflowCore
 
 /// Service that handles smart reminder logic and scheduling
 final class ReminderService: ObservableObject {

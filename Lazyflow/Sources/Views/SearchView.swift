@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Global search view for finding tasks
 struct SearchView: View {

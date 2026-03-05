@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import LazyflowCore
 
 /// Protocol defining the public API surface of NotificationService consumed by services.
 protocol NotificationServiceProtocol: AnyObject, Sendable {

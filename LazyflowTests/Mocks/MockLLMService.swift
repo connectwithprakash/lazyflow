@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 @testable import Lazyflow
 
 /// Mock LLMService returning canned responses for testing.

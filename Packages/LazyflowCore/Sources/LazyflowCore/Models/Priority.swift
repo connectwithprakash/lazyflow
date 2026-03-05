@@ -2,16 +2,16 @@ import Foundation
 import SwiftUI
 
 /// Task priority levels with associated visual properties
-enum Priority: Int16, CaseIterable, Codable, Identifiable {
+public enum Priority: Int16, CaseIterable, Codable, Identifiable, Sendable {
     case none = 0
     case low = 1
     case medium = 2
     case high = 3
     case urgent = 4
 
-    var id: Int16 { rawValue }
+    public var id: Int16 { rawValue }
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .none: return "None"
         case .low: return "Low"
@@ -21,7 +21,7 @@ enum Priority: Int16, CaseIterable, Codable, Identifiable {
         }
     }
 
-    var color: Color {
+    public var color: Color {
         switch self {
         case .none: return .secondary
         case .low: return .blue
@@ -31,7 +31,7 @@ enum Priority: Int16, CaseIterable, Codable, Identifiable {
         }
     }
 
-    var iconName: String {
+    public var iconName: String {
         switch self {
         case .none: return "minus"
         case .low: return "flag"
@@ -41,7 +41,7 @@ enum Priority: Int16, CaseIterable, Codable, Identifiable {
         }
     }
 
-    var sortOrder: Int {
+    public var sortOrder: Int {
         switch self {
         case .urgent: return 0
         case .high: return 1

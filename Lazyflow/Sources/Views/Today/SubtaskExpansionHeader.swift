@@ -1,5 +1,7 @@
 import SwiftUI
 import UIKit
+import LazyflowCore
+import LazyflowUI
 
 /// Header row for expanding/collapsing subtasks in the flat list structure
 struct SubtaskExpansionHeader: View {

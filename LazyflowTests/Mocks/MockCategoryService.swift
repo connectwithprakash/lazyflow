@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import LazyflowCore
 @testable import Lazyflow
 
 /// In-memory mock of CategoryServiceProtocol for testing.

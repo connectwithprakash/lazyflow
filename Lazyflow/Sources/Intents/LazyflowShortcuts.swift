@@ -1,4 +1,5 @@
 import AppIntents
+import LazyflowCore
 
 /// Provides App Shortcuts that appear automatically in the Shortcuts app
 struct LazyflowShortcuts: AppShortcutsProvider {

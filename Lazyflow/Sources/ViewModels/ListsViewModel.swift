@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import Observation
+import LazyflowCore
 
 /// ViewModel for the Lists view
 @MainActor

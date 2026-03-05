@@ -2,6 +2,7 @@ import ActivityKit
 import Foundation
 import Observation
 import os
+import LazyflowCore
 
 /// Manages Live Activity lifecycle for task tracking
 @MainActor

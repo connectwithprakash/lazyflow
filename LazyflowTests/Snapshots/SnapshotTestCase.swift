@@ -1,6 +1,7 @@
 import XCTest
 import SwiftUI
 import SnapshotTesting
+import LazyflowCore
 @testable import Lazyflow
 
 /// Base class for snapshot tests providing consistent configuration and helpers.

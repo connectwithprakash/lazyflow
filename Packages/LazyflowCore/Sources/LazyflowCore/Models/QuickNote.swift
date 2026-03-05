@@ -1,15 +1,15 @@
 import Foundation
 
 /// Domain model for quick capture notes
-struct QuickNote: Identifiable, Equatable {
-    let id: UUID
-    var text: String
-    let createdAt: Date
-    var isProcessed: Bool
-    var processedAt: Date?
-    var extractedTaskCount: Int
+public struct QuickNote: Identifiable, Equatable, Sendable {
+    public let id: UUID
+    public var text: String
+    public let createdAt: Date
+    public var isProcessed: Bool
+    public var processedAt: Date?
+    public var extractedTaskCount: Int
 
-    init(
+    public init(
         id: UUID = UUID(),
         text: String,
         createdAt: Date = Date(),
@@ -25,18 +25,8 @@ struct QuickNote: Identifiable, Equatable {
         self.extractedTaskCount = extractedTaskCount
     }
 
-    /// Map from Core Data entity
-    init(entity: QuickNoteEntity) {
-        self.id = entity.id ?? UUID()
-        self.text = entity.text ?? ""
-        self.createdAt = entity.createdAt ?? Date()
-        self.isProcessed = entity.isProcessed
-        self.processedAt = entity.processedAt
-        self.extractedTaskCount = Int(entity.extractedTaskCount)
-    }
-
     /// Preview text (first line or truncated)
-    var previewText: String {
+    public var previewText: String {
         let firstLine = text.components(separatedBy: .newlines).first ?? text
         if firstLine.count > 80 {
             return String(firstLine.prefix(80)) + "..."
@@ -45,7 +35,7 @@ struct QuickNote: Identifiable, Equatable {
     }
 
     /// Relative time since creation
-    var timeAgo: String {
+    public var timeAgo: String {
         let interval = Date().timeIntervalSince(createdAt)
         if interval < 60 {
             return "Just now"

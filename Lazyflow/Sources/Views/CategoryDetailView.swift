@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Detail view showing tasks for a specific category
 struct CategoryDetailView: View {

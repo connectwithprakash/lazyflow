@@ -1,5 +1,7 @@
 import SwiftUI
 import UIKit
+import LazyflowCore
+import LazyflowUI
 
 /// Reusable task row component
 struct TaskRowView: View {

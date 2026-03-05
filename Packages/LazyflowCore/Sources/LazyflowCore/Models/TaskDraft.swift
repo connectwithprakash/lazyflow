@@ -1,26 +1,26 @@
 import Foundation
 
 /// Mutable draft struct for AI-extracted tasks during review
-struct TaskDraft: Identifiable {
-    let id = UUID()
-    var title: String
-    var dueDate: Date?
-    var dueTime: Date?
-    var priority: Priority
-    var category: TaskCategory
-    var customCategoryID: UUID?
-    var listID: UUID?
-    var isSelected: Bool = true
-    var isExpanded: Bool = false
-    var subtasks: [TaskDraft] = []
+public struct TaskDraft: Identifiable {
+    public let id = UUID()
+    public var title: String
+    public var dueDate: Date?
+    public var dueTime: Date?
+    public var priority: Priority
+    public var category: TaskCategory
+    public var customCategoryID: UUID?
+    public var listID: UUID?
+    public var isSelected: Bool = true
+    public var isExpanded: Bool = false
+    public var subtasks: [TaskDraft] = []
 
     // Track AI's original suggestions for learning
-    let originalTitle: String
-    let originalPriority: Priority
-    let originalCategory: TaskCategory
-    let originalDueDate: Date?
+    public let originalTitle: String
+    public let originalPriority: Priority
+    public let originalCategory: TaskCategory
+    public let originalDueDate: Date?
 
-    init(
+    public init(
         title: String,
         dueDate: Date? = nil,
         dueTime: Date? = nil,
@@ -46,7 +46,7 @@ struct TaskDraft: Identifiable {
     }
 
     /// Whether the user has modified this draft from the AI suggestion
-    var isModified: Bool {
+    public var isModified: Bool {
         title != originalTitle ||
         priority != originalPriority ||
         category != originalCategory ||
@@ -55,7 +55,7 @@ struct TaskDraft: Identifiable {
     }
 
     /// Total selected count including subtasks (parent deselected = 0)
-    var totalSelectedCount: Int {
+    public var totalSelectedCount: Int {
         guard isSelected else { return 0 }
         let subtaskCount = subtasks.filter(\.isSelected).count
         return 1 + subtaskCount

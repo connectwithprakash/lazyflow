@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import LazyflowCore
 @testable import Lazyflow
 
 /// No-op mock of NotificationServiceProtocol that records method calls.

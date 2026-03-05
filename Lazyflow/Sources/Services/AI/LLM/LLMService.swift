@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import LazyflowCore
 
 /// Unified service for LLM-powered task analysis
 /// Supports Apple Intelligence (default) and Open Responses compatible providers

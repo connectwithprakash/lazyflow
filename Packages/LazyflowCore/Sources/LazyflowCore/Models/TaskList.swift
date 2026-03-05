@@ -2,16 +2,16 @@ import Foundation
 import SwiftUI
 
 /// Domain model representing a task list/project
-struct TaskList: Identifiable, Codable, Equatable, Hashable {
-    let id: UUID
-    var name: String
-    var colorHex: String
-    var iconName: String?
-    var order: Int32
-    var isDefault: Bool
-    var createdAt: Date
+public struct TaskList: Identifiable, Codable, Equatable, Hashable, Sendable {
+    public let id: UUID
+    public var name: String
+    public var colorHex: String
+    public var iconName: String?
+    public var order: Int32
+    public var isDefault: Bool
+    public var createdAt: Date
 
-    init(
+    public init(
         id: UUID = UUID(),
         name: String,
         colorHex: String = "#218A8D",
@@ -30,19 +30,19 @@ struct TaskList: Identifiable, Codable, Equatable, Hashable {
     }
 
     /// SwiftUI Color from hex string
-    var color: Color {
+    public var color: Color {
         Color(hex: colorHex) ?? .teal
     }
 
     /// System icon or default
-    var icon: String {
+    public var icon: String {
         iconName ?? "list.bullet"
     }
 }
 
 // MARK: - Default Lists
 extension TaskList {
-    static let inbox = TaskList(
+    public static let inbox = TaskList(
         id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
         name: "Inbox",
         colorHex: "#5A6C71",
@@ -51,11 +51,11 @@ extension TaskList {
         isDefault: true
     )
 
-    static let defaultLists: [TaskList] = [
+    public static let defaultLists: [TaskList] = [
         inbox
     ]
 
-    static let sampleLists: [TaskList] = [
+    public static let sampleLists: [TaskList] = [
         inbox,
         TaskList(name: "Work", colorHex: "#218A8D", iconName: "briefcase", order: 1),
         TaskList(name: "Personal", colorHex: "#22C876", iconName: "person", order: 2),
@@ -65,7 +65,7 @@ extension TaskList {
 
 // MARK: - Predefined Colors
 extension TaskList {
-    static let availableColors: [String] = [
+    public static let availableColors: [String] = [
         "#218A8D", // Teal (Primary)
         "#5A6C71", // Gray
         "#22C876", // Green
@@ -80,7 +80,7 @@ extension TaskList {
         "#FF9500"  // Orange (Apple)
     ]
 
-    static let availableIcons: [String] = [
+    public static let availableIcons: [String] = [
         "list.bullet",
         "tray",
         "briefcase",

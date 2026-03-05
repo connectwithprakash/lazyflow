@@ -1,5 +1,6 @@
 import CoreData
 import XCTest
+import LazyflowCore
 
 @testable import Lazyflow
 

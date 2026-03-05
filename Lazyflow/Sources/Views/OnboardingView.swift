@@ -1,6 +1,7 @@
 import SwiftUI
 import EventKit
 import UserNotifications
+import LazyflowCore
 
 /// Onboarding tutorial carousel for first-time users
 struct OnboardingView: View {

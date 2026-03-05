@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 struct ConflictResolutionSheet: View {
     let conflict: TaskConflict

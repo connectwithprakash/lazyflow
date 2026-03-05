@@ -4,29 +4,29 @@ import EventKit
 // MARK: - Plan Event Item
 
 /// Wraps a calendar event with selection state for the Plan Your Day flow
-struct PlanEventItem: Identifiable {
-    let id: String
-    let title: String
-    let startDate: Date
-    let endDate: Date
-    let isAllDay: Bool
-    let location: String?
-    let calendarColor: CGColor?
-    let eventIdentifier: String
-    var isSelected: Bool
+public struct PlanEventItem: Identifiable {
+    public let id: String
+    public let title: String
+    public let startDate: Date
+    public let endDate: Date
+    public let isAllDay: Bool
+    public let location: String?
+    public let calendarColor: CGColor?
+    public let eventIdentifier: String
+    public var isSelected: Bool
 
     /// Duration in seconds
-    var duration: TimeInterval {
+    public var duration: TimeInterval {
         endDate.timeIntervalSince(startDate)
     }
 
     /// Duration in minutes
-    var durationMinutes: Int {
+    public var durationMinutes: Int {
         Int(duration / 60)
     }
 
     /// Formatted time range (e.g., "9:00 AM - 10:30 AM" or "All day")
-    var formattedTimeRange: String {
+    public var formattedTimeRange: String {
         if isAllDay {
             return "All day"
         }
@@ -36,7 +36,7 @@ struct PlanEventItem: Identifiable {
     }
 
     /// Formatted start time
-    var formattedStartTime: String {
+    public var formattedStartTime: String {
         if isAllDay {
             return "All day"
         }
@@ -46,7 +46,7 @@ struct PlanEventItem: Identifiable {
     }
 
     /// Formatted duration string (e.g., "30m", "1h 30m")
-    var formattedDuration: String {
+    public var formattedDuration: String {
         if isAllDay { return "All day" }
         let minutes = durationMinutes
         if minutes < 60 {
@@ -58,7 +58,7 @@ struct PlanEventItem: Identifiable {
     }
 
     /// Heuristic: likely a non-actionable event (all-day, recurring holidays, etc.)
-    var isLikelyNonTask: Bool {
+    public var isLikelyNonTask: Bool {
         if isAllDay { return true }
         let lowercasedTitle = title.lowercased()
         let nonTaskPatterns = [
@@ -69,7 +69,7 @@ struct PlanEventItem: Identifiable {
         return nonTaskPatterns.contains { lowercasedTitle.contains($0) }
     }
 
-    init(from ekEvent: EKEvent) {
+    public init(from ekEvent: EKEvent) {
         self.id = ekEvent.eventIdentifier ?? UUID().uuidString
         self.title = ekEvent.title ?? "Untitled Event"
         self.startDate = ekEvent.startDate
@@ -90,7 +90,7 @@ struct PlanEventItem: Identifiable {
         self.isSelected = isTimedEvent && !looksLikeNonTask
     }
 
-    init(
+    public init(
         id: String = UUID().uuidString,
         title: String,
         startDate: Date,
@@ -116,13 +116,13 @@ struct PlanEventItem: Identifiable {
 // MARK: - Plan Your Day Result
 
 /// Summary of tasks created during the Plan Your Day flow
-struct PlanYourDayResult {
-    let tasksCreated: Int
-    let totalEstimatedMinutes: Int
-    let createdAt: Date
+public struct PlanYourDayResult {
+    public let tasksCreated: Int
+    public let totalEstimatedMinutes: Int
+    public let createdAt: Date
 
     /// Formatted total time (e.g., "2h 30m")
-    var formattedTotalTime: String {
+    public var formattedTotalTime: String {
         if totalEstimatedMinutes < 60 {
             return "\(totalEstimatedMinutes)m"
         }
@@ -132,10 +132,16 @@ struct PlanYourDayResult {
     }
 
     /// Summary text for the completion screen
-    var summaryText: String {
+    public var summaryText: String {
         if tasksCreated == 1 {
             return "1 task added to your day"
         }
         return "\(tasksCreated) tasks added to your day"
+    }
+
+    public init(tasksCreated: Int, totalEstimatedMinutes: Int, createdAt: Date) {
+        self.tasksCreated = tasksCreated
+        self.totalEstimatedMinutes = totalEstimatedMinutes
+        self.createdAt = createdAt
     }
 }

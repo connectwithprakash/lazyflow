@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 /// Protocol defining the public API surface of LLMService consumed by ViewModels.
 protocol LLMServiceProtocol: AnyObject {

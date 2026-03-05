@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import Combine
+import LazyflowCore
 
 /// Atomic data structure for all task lists - ensures single SwiftUI update
 struct TodayTaskData: Equatable {

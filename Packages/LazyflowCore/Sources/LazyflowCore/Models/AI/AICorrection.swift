@@ -1,23 +1,23 @@
 import Foundation
 
 /// Represents a user correction to an AI suggestion for active learning
-struct AICorrection: Codable, Identifiable {
-    let id: UUID
-    let field: CorrectionField
-    let originalSuggestion: String
-    let userChoice: String
-    let taskKeywords: [String]
-    let timestamp: Date
+public struct AICorrection: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let field: CorrectionField
+    public let originalSuggestion: String
+    public let userChoice: String
+    public let taskKeywords: [String]
+    public let timestamp: Date
 
     /// The field that was corrected
-    enum CorrectionField: String, Codable, CaseIterable {
+    public enum CorrectionField: String, Codable, CaseIterable, Sendable {
         case category
         case priority
         case duration
         case title
     }
 
-    init(
+    public init(
         id: UUID = UUID(),
         field: CorrectionField,
         originalSuggestion: String,
@@ -38,7 +38,7 @@ struct AICorrection: Codable, Identifiable {
 
 extension AICorrection {
     /// Extract keywords from a task title for learning patterns
-    static func extractKeywords(from text: String) -> [String] {
+    public static func extractKeywords(from text: String) -> [String] {
         // Common stop words to filter out
         let stopWords: Set<String> = [
             "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",

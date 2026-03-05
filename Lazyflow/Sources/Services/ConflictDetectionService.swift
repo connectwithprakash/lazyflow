@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import EventKit
 import Combine
+import LazyflowCore
 
 /// Service for detecting conflicts between tasks and calendar events
 @Observable

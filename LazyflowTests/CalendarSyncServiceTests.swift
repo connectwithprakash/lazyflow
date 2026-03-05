@@ -1,5 +1,6 @@
 import XCTest
 import EventKit
+import LazyflowCore
 @testable import Lazyflow
 
 final class CalendarSyncServiceTests: XCTestCase {

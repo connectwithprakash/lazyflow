@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 /// Configuration for an Open Responses compatible provider
 struct OpenResponsesConfig: Codable, Equatable {

@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import LazyflowCore
 
 /// ViewModel for the Categories view
 @MainActor

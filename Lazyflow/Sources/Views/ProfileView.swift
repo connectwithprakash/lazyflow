@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Hub view for Me/Profile tab containing lists, categories, and settings
 /// Part of navigation restructure (Issue #110)

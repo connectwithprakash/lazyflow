@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 @testable import Lazyflow
 
 /// In-memory mock of TaskServiceProtocol for unit testing.

@@ -1,5 +1,7 @@
 import SwiftUI
 import EventKit
+import LazyflowCore
+import LazyflowUI
 
 struct CalendarView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass

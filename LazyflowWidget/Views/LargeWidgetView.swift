@@ -1,5 +1,6 @@
 import SwiftUI
 import WidgetKit
+import LazyflowCore
 
 /// Large widget (4x4) showing overdue, today, and upcoming sections
 struct LargeWidgetView: View {

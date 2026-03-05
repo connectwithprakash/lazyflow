@@ -1,5 +1,7 @@
 import SwiftUI
 import Charts
+import LazyflowCore
+import LazyflowUI
 
 /// Analytics dashboard view showing category and list insights
 /// Part of Issue #130 - Category and List Analytics

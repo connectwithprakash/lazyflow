@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Daily summary view showing productivity stats, streak, and AI-generated recap
 struct DailySummaryView: View {

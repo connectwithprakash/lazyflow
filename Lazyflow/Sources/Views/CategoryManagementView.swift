@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// View for managing custom categories
 struct CategoryManagementView: View {

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Feedback Action
 
-enum FeedbackAction: String, Codable {
+public enum FeedbackAction: String, Codable, Sendable {
     case startedImmediately
     case viewedDetails
     case snoozed1Hour
@@ -13,7 +13,7 @@ enum FeedbackAction: String, Codable {
     case skippedNeedsFocus
 
     /// Score adjustment delta for this action
-    var adjustmentDelta: Double {
+    public var adjustmentDelta: Double {
         switch self {
         case .startedImmediately: return 5
         case .viewedDetails: return 1
@@ -24,7 +24,7 @@ enum FeedbackAction: String, Codable {
     }
 
     /// Whether this action triggers a snooze suppression
-    var isSnooze: Bool {
+    public var isSnooze: Bool {
         switch self {
         case .snoozed1Hour, .snoozedEvening, .snoozedTomorrow: return true
         default: return false
@@ -32,7 +32,7 @@ enum FeedbackAction: String, Codable {
     }
 
     /// Snooze duration for snooze actions
-    func snoozeUntilDate() -> Date? {
+    public func snoozeUntilDate() -> Date? {
         let calendar = Calendar.current
         let now = Date()
         switch self {
@@ -71,29 +71,40 @@ enum FeedbackAction: String, Codable {
 
 // MARK: - Feedback Event
 
-struct FeedbackEvent: Codable {
-    let taskID: UUID
-    let action: FeedbackAction
-    let timestamp: Date
-    let originalScore: Double
-    let taskCategory: TaskCategory
-    let hourOfDay: Int
+public struct FeedbackEvent: Codable, Sendable {
+    public let taskID: UUID
+    public let action: FeedbackAction
+    public let timestamp: Date
+    public let originalScore: Double
+    public let taskCategory: TaskCategory
+    public let hourOfDay: Int
+
+    public init(taskID: UUID, action: FeedbackAction, timestamp: Date, originalScore: Double, taskCategory: TaskCategory, hourOfDay: Int) {
+        self.taskID = taskID
+        self.action = action
+        self.timestamp = timestamp
+        self.originalScore = originalScore
+        self.taskCategory = taskCategory
+        self.hourOfDay = hourOfDay
+    }
 }
 
 // MARK: - Suggestion Feedback (Persistence)
 
-struct SuggestionFeedback: Codable {
-    var events: [FeedbackEvent] = []
-    var adjustments: [UUID: Double] = [:]
-    var snoozedUntil: [UUID: Date] = [:]
-    var lastDecayDate: Date = Date()
+public struct SuggestionFeedback: Codable, Sendable {
+    public var events: [FeedbackEvent] = []
+    public var adjustments: [UUID: Double] = [:]
+    public var snoozedUntil: [UUID: Date] = [:]
+    public var lastDecayDate: Date = Date()
+
+    public init() {}
 
     private static let key = "suggestion_feedback"
     private static let maxEvents = 200
 
     // MARK: - Persistence
 
-    static func load() -> SuggestionFeedback {
+    public static func load() -> SuggestionFeedback {
         guard let data = UserDefaults.standard.data(forKey: key),
               let feedback = try? JSONDecoder().decode(SuggestionFeedback.self, from: data) else {
             return SuggestionFeedback()
@@ -101,18 +112,18 @@ struct SuggestionFeedback: Codable {
         return feedback
     }
 
-    func save() {
+    public func save() {
         guard let data = try? JSONEncoder().encode(self) else { return }
         UserDefaults.standard.set(data, forKey: Self.key)
     }
 
     // MARK: - Score Adjustments
 
-    func getAdjustment(for taskID: UUID) -> Double {
+    public func getAdjustment(for taskID: UUID) -> Double {
         adjustments[taskID] ?? 0
     }
 
-    mutating func recordFeedback(taskID: UUID, action: FeedbackAction, originalScore: Double, taskCategory: TaskCategory) {
+    public mutating func recordFeedback(taskID: UUID, action: FeedbackAction, originalScore: Double, taskCategory: TaskCategory) {
         let hour = Calendar.current.component(.hour, from: Date())
 
         let event = FeedbackEvent(
@@ -145,12 +156,12 @@ struct SuggestionFeedback: Codable {
 
     // MARK: - Snooze Check
 
-    func isSnoozed(_ taskID: UUID) -> Bool {
+    public func isSnoozed(_ taskID: UUID) -> Bool {
         guard let until = snoozedUntil[taskID] else { return false }
         return until > Date()
     }
 
-    mutating func cleanExpiredSnoozes() {
+    public mutating func cleanExpiredSnoozes() {
         let countBefore = snoozedUntil.count
         let now = Date()
         snoozedUntil = snoozedUntil.filter { $0.value > now }
@@ -162,7 +173,7 @@ struct SuggestionFeedback: Codable {
     // MARK: - Stale Data Cleanup
 
     /// Remove adjustments and snoozes for tasks that no longer exist
-    mutating func pruneDeletedTasks(activeTaskIDs: Set<UUID>) {
+    public mutating func pruneDeletedTasks(activeTaskIDs: Set<UUID>) {
         let adjBefore = adjustments.count
         let snoozeBefore = snoozedUntil.count
         adjustments = adjustments.filter { activeTaskIDs.contains($0.key) }
@@ -176,7 +187,7 @@ struct SuggestionFeedback: Codable {
 
     /// Apply 5% weekly decay if >=7 days since last decay.
     /// Prune adjustments < 0.5 magnitude after decay.
-    mutating func applyDecayIfNeeded() {
+    public mutating func applyDecayIfNeeded() {
         let calendar = Calendar.current
         guard let daysSinceLastDecay = calendar.dateComponents([.day], from: lastDecayDate, to: Date()).day,
               daysSinceLastDecay >= 7 else { return }

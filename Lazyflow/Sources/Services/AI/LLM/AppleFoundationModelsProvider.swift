@@ -2,6 +2,7 @@ import Foundation
 
 #if canImport(FoundationModels)
 import FoundationModels
+import LazyflowCore
 #endif
 
 /// LLM Provider using Apple's on-device Foundation Models (iOS 18.4+)

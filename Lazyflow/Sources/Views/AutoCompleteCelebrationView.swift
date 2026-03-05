@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Celebration toast shown when all subtasks are completed and parent is auto-completed
 struct AutoCompleteCelebrationView: View {

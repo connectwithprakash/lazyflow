@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 /// Protocol defining the interface for LLM providers
 protocol LLMProvider {

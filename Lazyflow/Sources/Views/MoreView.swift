@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Hub view for secondary features (Lists, Insights, Settings)
 /// Designed as a clean hub rather than a boring overflow menu
