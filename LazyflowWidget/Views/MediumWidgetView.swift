@@ -1,5 +1,6 @@
 import SwiftUI
 import WidgetKit
+import LazyflowCore
 
 /// Medium widget (4x2) showing today's task list with priority indicators
 struct MediumWidgetView: View {

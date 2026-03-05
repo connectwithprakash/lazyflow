@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import LazyflowCore
 
 /// Service for learning user preferences about which calendar events to convert to tasks.
 /// Tracks selection patterns in Plan Your Day and uses them to improve defaults over time.

@@ -3,6 +3,7 @@ import Foundation
 import Combine
 import Observation
 import os
+import LazyflowCore
 
 /// Service responsible for Quick Note CRUD operations
 @MainActor

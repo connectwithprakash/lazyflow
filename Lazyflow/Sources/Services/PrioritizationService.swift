@@ -3,6 +3,7 @@ import Combine
 import UIKit
 import Observation
 import os
+import LazyflowCore
 
 /// Service for intelligent task prioritization and suggestions
 @MainActor
@@ -638,27 +639,4 @@ struct ProductivityInsight: Identifiable {
     let iconName: String
 }
 
-// MARK: - Completion Patterns (Persistence)
-
-struct CompletionPatterns: Codable {
-    var lastCompletedCategory: TaskCategory?
-    var lastCompletedTime: Date?
-    var categoryTimePatterns: [String: Int] = [:] // "category_hour" -> count
-    var categoryDayPatterns: [String: Int] = [:]  // "category_dayOfWeek" -> count
-    var averageCompletionTimes: [String: TimeInterval] = [:] // category -> avg time
-
-    private static let key = "completion_patterns"
-
-    static func load() -> CompletionPatterns {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let patterns = try? JSONDecoder().decode(CompletionPatterns.self, from: data) else {
-            return CompletionPatterns()
-        }
-        return patterns
-    }
-
-    func save() {
-        guard let data = try? JSONEncoder().encode(self) else { return }
-        UserDefaults.standard.set(data, forKey: Self.key)
-    }
-}
+// CompletionPatterns moved to LazyflowCore

@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Simplified detail view for editing subtasks
 /// Only shows essential options: title, notes, due date, priority, duration, reminder

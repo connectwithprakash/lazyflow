@@ -2,6 +2,7 @@ import Foundation
 import EventKit
 import Combine
 import os
+import LazyflowCore
 
 /// Service for managing calendar integration using EventKit
 final class CalendarService: ObservableObject, CalendarServiceProtocol {

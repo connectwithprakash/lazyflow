@@ -1,4 +1,5 @@
 import XCTest
+import LazyflowCore
 @testable import Lazyflow
 
 /// Integration tests that call actual Apple Intelligence on physical device

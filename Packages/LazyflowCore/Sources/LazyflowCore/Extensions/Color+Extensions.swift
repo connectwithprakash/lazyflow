@@ -2,7 +2,7 @@ import SwiftUI
 
 extension Color {
     /// Initialize Color from hex string (e.g., "#218A8D" or "218A8D")
-    init?(hex: String) {
+    public init?(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
 
@@ -34,7 +34,7 @@ extension Color {
     }
 
     /// Convert Color to hex string
-    func toHex() -> String? {
+    public func toHex() -> String? {
         guard let components = UIColor(self).cgColor.components else { return nil }
 
         let r = components[0]
@@ -52,45 +52,46 @@ extension Color {
 
 extension Color {
     /// Lazyflow app color palette
-    struct Lazyflow {
+    public struct Lazyflow {
         // Primary
-        static let accent = Color(hex: "#218A8D")!
-        static let accentLight = Color(hex: "#2BA5A8")!
-        static let accentDark = Color(hex: "#1A6F71")!
+        public static let accent = Color(hex: "#218A8D")!
+        public static let accentLight = Color(hex: "#2BA5A8")!
+        public static let accentDark = Color(hex: "#1A6F71")!
 
         // Backgrounds
-        static let backgroundLight = Color(hex: "#F5F5F5")!
-        static let backgroundDark = Color(hex: "#1F2121")!
+        public static let backgroundLight = Color(hex: "#F5F5F5")!
+        public static let backgroundDark = Color(hex: "#1F2121")!
 
         // Surfaces
-        static let surfaceLight = Color.white
-        static let surfaceDark = Color(hex: "#272A2A")!
+        public static let surfaceLight = Color.white
+        public static let surfaceDark = Color(hex: "#272A2A")!
 
         // Text
-        static let textPrimary = Color.primary
-        static let textSecondary = Color.secondary
-        static let textTertiary = Color(hex: "#5A6C71")!
+        public static let textPrimary = Color.primary
+        public static let textSecondary = Color.secondary
+        public static let textTertiary = Color(hex: "#5A6C71")!
 
         // Semantic
-        static let success = Color(hex: "#22C876")!
-        static let error = Color(hex: "#FF5459")!
-        static let warning = Color(hex: "#E68157")!
-        static let info = Color(hex: "#5A6C71")!
+        public static let success = Color(hex: "#22C876")!
+        public static let error = Color(hex: "#FF5459")!
+        public static let warning = Color(hex: "#E68157")!
+        public static let info = Color(hex: "#5A6C71")!
 
         // Priority colors
-        static let priorityUrgent = Color(hex: "#FF5459")!
-        static let priorityHigh = Color(hex: "#E68157")!
-        static let priorityMedium = Color(hex: "#FFB800")!
-        static let priorityLow = Color(hex: "#007AFF")!
-        static let priorityNone = Color(hex: "#5A6C71")!
+        public static let priorityUrgent = Color(hex: "#FF5459")!
+        public static let priorityHigh = Color(hex: "#E68157")!
+        public static let priorityMedium = Color(hex: "#FFB800")!
+        public static let priorityLow = Color(hex: "#007AFF")!
+        public static let priorityNone = Color(hex: "#5A6C71")!
     }
 }
 
 // MARK: - Adaptive Colors
 
+#if os(iOS)
 extension Color {
     /// Adaptive background color based on color scheme
-    static var adaptiveBackground: Color {
+    public static var adaptiveBackground: Color {
         Color(UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark
                 ? UIColor(Color.Lazyflow.backgroundDark)
@@ -99,7 +100,7 @@ extension Color {
     }
 
     /// Adaptive surface color based on color scheme
-    static var adaptiveSurface: Color {
+    public static var adaptiveSurface: Color {
         Color(UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark
                 ? UIColor(Color.Lazyflow.surfaceDark)
@@ -107,3 +108,14 @@ extension Color {
         })
     }
 }
+#else
+extension Color {
+    public static var adaptiveBackground: Color {
+        Color.Lazyflow.backgroundLight
+    }
+
+    public static var adaptiveSurface: Color {
+        Color.Lazyflow.surfaceLight
+    }
+}
+#endif

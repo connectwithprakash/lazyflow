@@ -1,6 +1,7 @@
 import Foundation
 import MetricKit
 import os
+import LazyflowCore
 
 /// Collects runtime performance metrics and crash diagnostics via MetricKit
 /// Subscribes to MXMetricManager for daily metric payloads and immediate crash reports

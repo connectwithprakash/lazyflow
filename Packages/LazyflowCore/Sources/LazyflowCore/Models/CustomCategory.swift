@@ -2,27 +2,27 @@ import Foundation
 import SwiftUI
 
 /// A user-created custom category for tasks
-struct CustomCategory: Identifiable, Codable, Equatable, Hashable {
-    let id: UUID
-    var name: String
-    var colorHex: String
-    var iconName: String
-    var order: Int32
-    let createdAt: Date
+public struct CustomCategory: Identifiable, Codable, Equatable, Hashable, Sendable {
+    public let id: UUID
+    public var name: String
+    public var colorHex: String
+    public var iconName: String
+    public var order: Int32
+    public let createdAt: Date
 
     // MARK: - Computed Properties
 
-    var color: Color {
+    public var color: Color {
         Color(hex: colorHex) ?? .gray
     }
 
-    var displayName: String {
+    public var displayName: String {
         name
     }
 
     // MARK: - Initialization
 
-    init(
+    public init(
         id: UUID = UUID(),
         name: String,
         colorHex: String = "#808080",
@@ -40,7 +40,7 @@ struct CustomCategory: Identifiable, Codable, Equatable, Hashable {
 
     // MARK: - Update Methods
 
-    func updated(
+    public func updated(
         name: String? = nil,
         colorHex: String? = nil,
         iconName: String? = nil,
@@ -57,43 +57,28 @@ struct CustomCategory: Identifiable, Codable, Equatable, Hashable {
     }
 }
 
-// MARK: - CustomCategoryEntity to Domain Model
-
-extension CustomCategoryEntity {
-    func toDomainModel() -> CustomCategory {
-        CustomCategory(
-            id: id ?? UUID(),
-            name: name ?? "",
-            colorHex: colorHex ?? "#808080",
-            iconName: iconName ?? "tag.fill",
-            order: order,
-            createdAt: createdAt ?? Date()
-        )
-    }
-}
-
 // MARK: - Category Selection Type
 
 /// Represents either a system category or a custom category
-enum CategorySelection: Equatable, Hashable {
+public enum CategorySelection: Equatable, Hashable, Sendable {
     case system(TaskCategory)
     case custom(UUID)
 
-    var isUncategorized: Bool {
+    public var isUncategorized: Bool {
         if case .system(let category) = self {
             return category == .uncategorized
         }
         return false
     }
 
-    var systemCategory: TaskCategory? {
+    public var systemCategory: TaskCategory? {
         if case .system(let category) = self {
             return category
         }
         return nil
     }
 
-    var customCategoryID: UUID? {
+    public var customCategoryID: UUID? {
         if case .custom(let id) = self {
             return id
         }
@@ -105,7 +90,7 @@ enum CategorySelection: Equatable, Hashable {
 
 extension CustomCategory {
     /// Icons available for custom categories
-    static let availableIcons: [String] = [
+    public static let availableIcons: [String] = [
         "tag.fill",
         "star.fill",
         "heart.fill",
@@ -157,7 +142,7 @@ extension CustomCategory {
     ]
 
     /// Colors available for custom categories
-    static let availableColors: [String] = [
+    public static let availableColors: [String] = [
         "#808080", // Gray
         "#FF6B6B", // Red
         "#FF8E72", // Coral

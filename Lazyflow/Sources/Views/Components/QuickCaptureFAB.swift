@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Floating action button for quick capture — 56pt accent circle with pencil icon
 struct QuickCaptureFAB: View {

@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 extension Notification.Name {
     /// Triggered when user presses Cmd+N keyboard shortcut

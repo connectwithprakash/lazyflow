@@ -1,5 +1,6 @@
 import CoreData
 import Foundation
+import LazyflowCore
 @testable import Lazyflow
 
 /// Mock PersistenceController wrapping an in-memory Core Data stack for testing.

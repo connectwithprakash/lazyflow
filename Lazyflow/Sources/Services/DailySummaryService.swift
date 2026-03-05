@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import EventKit
+import LazyflowCore
 
 /// Context type for AI prompt building
 enum AIPromptContextType {

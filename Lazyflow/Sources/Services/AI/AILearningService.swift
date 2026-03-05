@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import LazyflowCore
 
 /// Represents a duration accuracy record for learning estimation patterns
 struct DurationAccuracy: Codable, Identifiable {

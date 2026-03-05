@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// View showing upcoming tasks grouped by date
 struct UpcomingView: View {

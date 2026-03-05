@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 /// Centralized prompt templates optimized for Apple Intelligence on-device model
 /// Following Apple's WWDC25 prompt design best practices

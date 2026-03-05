@@ -1,4 +1,5 @@
 import SwiftUI
+import LazyflowCore
 
 /// Root view - shows UI immediately, no loading screen
 struct RootView: View {

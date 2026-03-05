@@ -9,6 +9,10 @@ options:
   groupSortPosition: top
 
 packages:
+  LazyflowCore:
+    path: Packages/LazyflowCore
+  LazyflowUI:
+    path: Packages/LazyflowUI
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
     from: "1.17.0"
@@ -68,6 +72,10 @@ targets:
         name: SwiftLint
         basedOnDependencyAnalysis: false
     dependencies:
+      - package: LazyflowCore
+        product: LazyflowCore
+      - package: LazyflowUI
+        product: LazyflowUI
       - target: LazyflowWidget
         embed: true
       - target: LazyflowWatch
@@ -99,6 +107,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: LazyflowWidget/LazyflowWidget.entitlements
         SKIP_INSTALL: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
+    dependencies:
+      - package: LazyflowCore
+        product: LazyflowCore
 
   LazyflowTests:
     type: bundle.unit-test
@@ -107,6 +118,8 @@ targets:
       - path: LazyflowTests
     dependencies:
       - target: Lazyflow
+      - package: LazyflowCore
+        product: LazyflowCore
       - package: SnapshotTesting
         product: SnapshotTesting
     settings:
@@ -146,3 +159,6 @@ targets:
         ENABLE_PREVIEWS: YES
         SKIP_INSTALL: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
+    dependencies:
+      - package: LazyflowCore
+        product: LazyflowCore

@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Floating pill shown when Focus Mode is dismissed but task is still in progress.
 /// Tap "Resume" to reopen the full-screen focus view.

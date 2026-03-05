@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import LazyflowCore
 
 /// Service for calculating productivity analytics and insights
 /// Part of Issue #130 - Category and List Analytics

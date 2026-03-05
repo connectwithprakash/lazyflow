@@ -1,5 +1,6 @@
 import Foundation
 import os
+import LazyflowCore
 
 /// Lightweight feature flag system with local defaults and debug overrides.
 ///

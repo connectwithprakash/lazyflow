@@ -1,42 +1,66 @@
 import Foundation
 
 /// Unified context for AI suggestions combining all available signals
-struct AIContext {
+public struct AIContext: Sendable {
     /// Recent tasks for consistency (last 5-10 tasks)
-    let recentTasks: [RecentTaskContext]
+    public let recentTasks: [RecentTaskContext]
 
     /// User's behavioral patterns
-    let userPatterns: UserPatterns
+    public let userPatterns: UserPatterns
 
     /// User's correction history summary
-    let correctionsSummary: String
+    public let correctionsSummary: String
 
     /// Custom categories available
-    let customCategories: [String]
+    public let customCategories: [String]
 
     /// Current time context
-    let timeContext: TimeContext
+    public let timeContext: TimeContext
 
     /// Task-specific context (if analyzing a specific task)
-    let taskContext: TaskSpecificContext?
+    public let taskContext: TaskSpecificContext?
+
+    public init(
+        recentTasks: [RecentTaskContext],
+        userPatterns: UserPatterns,
+        correctionsSummary: String,
+        customCategories: [String],
+        timeContext: TimeContext,
+        taskContext: TaskSpecificContext?
+    ) {
+        self.recentTasks = recentTasks
+        self.userPatterns = userPatterns
+        self.correctionsSummary = correctionsSummary
+        self.customCategories = customCategories
+        self.timeContext = timeContext
+        self.taskContext = taskContext
+    }
 
     // MARK: - Nested Types
 
-    struct RecentTaskContext {
-        let title: String
-        let category: String
-        let priority: String
-        let duration: Int?
-        let completedAt: Date?
+    public struct RecentTaskContext: Sendable {
+        public let title: String
+        public let category: String
+        public let priority: String
+        public let duration: Int?
+        public let completedAt: Date?
+
+        public init(title: String, category: String, priority: String, duration: Int?, completedAt: Date?) {
+            self.title = title
+            self.category = category
+            self.priority = priority
+            self.duration = duration
+            self.completedAt = completedAt
+        }
     }
 
-    struct TimeContext {
-        let currentHour: Int
-        let dayOfWeek: Int
-        let isWeekend: Bool
-        let timeOfDay: String // "morning", "afternoon", "evening"
+    public struct TimeContext: Sendable {
+        public let currentHour: Int
+        public let dayOfWeek: Int
+        public let isWeekend: Bool
+        public let timeOfDay: String // "morning", "afternoon", "evening"
 
-        init(date: Date = Date()) {
+        public init(date: Date = Date()) {
             let calendar = Calendar.current
             self.currentHour = calendar.component(.hour, from: date)
             self.dayOfWeek = calendar.component(.weekday, from: date)
@@ -51,17 +75,24 @@ struct AIContext {
         }
     }
 
-    struct TaskSpecificContext {
-        let title: String
-        let notes: String?
-        let dueDate: Date?
-        let currentPriority: String
+    public struct TaskSpecificContext: Sendable {
+        public let title: String
+        public let notes: String?
+        public let dueDate: Date?
+        public let currentPriority: String
+
+        public init(title: String, notes: String?, dueDate: Date?, currentPriority: String) {
+            self.title = title
+            self.notes = notes
+            self.dueDate = dueDate
+            self.currentPriority = currentPriority
+        }
     }
 
     // MARK: - Prompt Generation
 
     /// Generate context string for LLM prompts
-    func toPromptString() -> String {
+    public func toPromptString() -> String {
         var context = ""
 
         // Time context
@@ -135,7 +166,7 @@ struct AIContext {
 
 extension AIContext {
     /// Create empty context when no data available
-    static var empty: AIContext {
+    public static var empty: AIContext {
         AIContext(
             recentTasks: [],
             userPatterns: UserPatterns(),

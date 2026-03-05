@@ -3,6 +3,7 @@ import EventKit
 import Combine
 import Observation
 import os
+import LazyflowCore
 
 /// Orchestrates two-way sync between tasks and calendar events.
 /// Forward: eligible tasks → Lazyflow calendar events.

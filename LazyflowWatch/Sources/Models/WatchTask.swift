@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 /// Lightweight task model for Watch communication
 struct WatchTask: Codable, Identifiable, Hashable {

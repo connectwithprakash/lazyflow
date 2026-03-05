@@ -1,5 +1,6 @@
 import AppIntents
 import CoreData
+import LazyflowCore
 
 /// Siri Shortcut for creating a new task
 struct CreateTaskIntent: AppIntent {

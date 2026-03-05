@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Detail view for viewing and editing a task
 struct TaskDetailView: View {

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import LazyflowCore
 
 /// ViewModel for task detail and editing
 @MainActor

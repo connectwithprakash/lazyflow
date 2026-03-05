@@ -1,5 +1,6 @@
 import XCTest
 import UserNotifications
+import LazyflowCore
 @testable import Lazyflow
 
 final class NotificationServiceTests: XCTestCase {

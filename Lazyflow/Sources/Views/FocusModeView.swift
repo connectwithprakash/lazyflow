@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Full-screen immersive focus experience for a single task.
 /// "Calm Precision" design: dark background, centered title, progress ring.

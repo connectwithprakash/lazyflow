@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Full list of all quick notes (both unprocessed and processed)
 struct QuickNotesListView: View {

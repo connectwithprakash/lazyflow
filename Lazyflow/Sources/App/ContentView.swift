@@ -1,5 +1,7 @@
 import CoreData
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Main content view with adaptive navigation
 /// - iPad (regular size class): NavigationSplitView with sidebar

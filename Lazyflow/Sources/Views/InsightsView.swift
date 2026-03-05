@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Hub view for Insights tab containing analytics, history, and AI summaries
 /// Part of navigation restructure (Issue #110)

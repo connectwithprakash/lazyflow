@@ -1,4 +1,5 @@
 import SwiftUI
+import LazyflowCore
 
 /// Compact task row for Watch display
 struct WatchTaskRowView: View {

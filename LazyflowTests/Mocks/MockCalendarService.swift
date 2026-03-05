@@ -1,5 +1,6 @@
 import EventKit
 import Foundation
+import LazyflowCore
 @testable import Lazyflow
 
 /// No-op mock of CalendarServiceProtocol that records method calls.

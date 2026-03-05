@@ -2,10 +2,10 @@ import Foundation
 
 // MARK: - Time Bucket
 
-enum TimeBucket: String, Codable, CaseIterable {
+public enum TimeBucket: String, Codable, CaseIterable, Sendable {
     case morning, afternoon, evening, night
 
-    static func from(hour: Int) -> TimeBucket {
+    public static func from(hour: Int) -> TimeBucket {
         switch hour {
         case 5..<12: return .morning
         case 12..<17: return .afternoon
@@ -17,47 +17,93 @@ enum TimeBucket: String, Codable, CaseIterable {
 
 // MARK: - Behavioral Signals
 
-struct BehavioralSignals {
+public struct BehavioralSignals: Sendable {
 
-    struct TimePreference {
-        let bucket: TimeBucket
-        let support: Int
-        let share: Double
+    public struct TimePreference: Sendable {
+        public let bucket: TimeBucket
+        public let support: Int
+        public let share: Double
+
+        public init(bucket: TimeBucket, support: Int, share: Double) {
+            self.bucket = bucket
+            self.support = support
+            self.share = share
+        }
     }
 
-    struct CategoryAffinity {
-        let category: TaskCategory
-        let score: Int
-        let support: Int
+    public struct CategoryAffinity: Sendable {
+        public let category: TaskCategory
+        public let score: Int
+        public let support: Int
+
+        public init(category: TaskCategory, score: Int, support: Int) {
+            self.category = category
+            self.score = score
+            self.support = support
+        }
     }
 
-    struct SnoozeHotspot {
-        let category: TaskCategory
-        let bucket: TimeBucket
-        let count: Int
+    public struct SnoozeHotspot: Sendable {
+        public let category: TaskCategory
+        public let bucket: TimeBucket
+        public let count: Int
+
+        public init(category: TaskCategory, bucket: TimeBucket, count: Int) {
+            self.category = category
+            self.bucket = bucket
+            self.count = count
+        }
     }
 
-    struct SkipReasonHotspot {
-        enum Reason: String { case wrongTime, needsFocus }
-        let reason: Reason
-        let category: TaskCategory
-        let count: Int
+    public struct SkipReasonHotspot: Sendable {
+        public enum Reason: String, Sendable { case wrongTime, needsFocus }
+        public let reason: Reason
+        public let category: TaskCategory
+        public let count: Int
+
+        public init(reason: Reason, category: TaskCategory, count: Int) {
+            self.reason = reason
+            self.category = category
+            self.count = count
+        }
     }
 
-    struct CompletionPeak {
-        let category: TaskCategory
-        let bucket: TimeBucket
-        let count: Int
+    public struct CompletionPeak: Sendable {
+        public let category: TaskCategory
+        public let bucket: TimeBucket
+        public let count: Int
+
+        public init(category: TaskCategory, bucket: TimeBucket, count: Int) {
+            self.category = category
+            self.bucket = bucket
+            self.count = count
+        }
     }
 
-    let totalEvents: Int
-    let timePreference: TimePreference?
-    let categoryAffinity: [CategoryAffinity]
-    let snoozeHotspot: SnoozeHotspot?
-    let skipReasonHotspots: [SkipReasonHotspot]
-    let completionPeak: CompletionPeak?
+    public let totalEvents: Int
+    public let timePreference: TimePreference?
+    public let categoryAffinity: [CategoryAffinity]
+    public let snoozeHotspot: SnoozeHotspot?
+    public let skipReasonHotspots: [SkipReasonHotspot]
+    public let completionPeak: CompletionPeak?
 
-    var isColdStart: Bool {
+    public init(
+        totalEvents: Int,
+        timePreference: TimePreference?,
+        categoryAffinity: [CategoryAffinity],
+        snoozeHotspot: SnoozeHotspot?,
+        skipReasonHotspots: [SkipReasonHotspot],
+        completionPeak: CompletionPeak?
+    ) {
+        self.totalEvents = totalEvents
+        self.timePreference = timePreference
+        self.categoryAffinity = categoryAffinity
+        self.snoozeHotspot = snoozeHotspot
+        self.skipReasonHotspots = skipReasonHotspots
+        self.completionPeak = completionPeak
+    }
+
+    public var isColdStart: Bool {
         totalEvents < 10 && completionPeak == nil
     }
 
@@ -65,7 +111,7 @@ struct BehavioralSignals {
 
     /// Extract behavioral signals from feedback events and completion patterns.
     /// Returns a cold start instance when there is insufficient data to generate signals.
-    static func extract(from feedback: SuggestionFeedback, completionPatterns: CompletionPatterns) -> BehavioralSignals {
+    public static func extract(from feedback: SuggestionFeedback, completionPatterns: CompletionPatterns) -> BehavioralSignals {
         let events = feedback.events
         let totalEvents = events.count
         let hasEnoughEvents = totalEvents >= 10
@@ -193,7 +239,7 @@ struct BehavioralSignals {
 
     // MARK: - Prompt Generation
 
-    func toPromptString() -> String {
+    public func toPromptString() -> String {
         if isColdStart {
             return ""
         }

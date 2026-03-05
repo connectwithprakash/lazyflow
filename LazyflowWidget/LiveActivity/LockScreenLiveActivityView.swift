@@ -1,6 +1,7 @@
 import ActivityKit
 import SwiftUI
 import WidgetKit
+import LazyflowCore
 
 /// Lock Screen presentation for Task Live Activity - Elegant centered design
 struct LockScreenLiveActivityView: View {

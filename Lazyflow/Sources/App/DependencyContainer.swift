@@ -1,4 +1,5 @@
 import Foundation
+import LazyflowCore
 
 /// Lightweight composition root that holds service instances.
 ///

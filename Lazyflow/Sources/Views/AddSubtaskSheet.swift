@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Sheet for adding a new subtask
 struct AddSubtaskSheet: View {

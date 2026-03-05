@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 struct SuggestionCard<Action: View>: View {
     let icon: String

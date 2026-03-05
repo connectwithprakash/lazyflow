@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import LazyflowCore
 
 /// Service for managing protected time rules (lunch, family time, focus time, etc.)
 @Observable

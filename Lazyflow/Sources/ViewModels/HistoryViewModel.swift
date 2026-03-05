@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import Observation
+import LazyflowCore
 
 /// Preset date ranges for quick filtering
 enum DateRangePreset: String, CaseIterable, Identifiable {

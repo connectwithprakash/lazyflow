@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Morning briefing view showing yesterday's recap, today's plan, and weekly stats
 struct MorningBriefingView: View {

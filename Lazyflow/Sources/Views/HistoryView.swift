@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// View showing completed tasks history with stats and filtering
 struct HistoryView: View {

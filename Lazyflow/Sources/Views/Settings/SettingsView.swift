@@ -1,5 +1,7 @@
 import SwiftUI
 import os
+import LazyflowCore
+import LazyflowUI
 
 /// Settings view for app configuration
 struct SettingsView: View {

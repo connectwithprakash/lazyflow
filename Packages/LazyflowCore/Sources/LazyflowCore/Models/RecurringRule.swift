@@ -2,7 +2,7 @@ import Foundation
 import EventKit
 
 /// Frequency options for recurring tasks
-enum RecurringFrequency: Int16, CaseIterable, Codable, Identifiable {
+public enum RecurringFrequency: Int16, CaseIterable, Codable, Identifiable, Sendable {
     case daily = 0
     case weekly = 1
     case biweekly = 2
@@ -12,9 +12,9 @@ enum RecurringFrequency: Int16, CaseIterable, Codable, Identifiable {
     case hourly = 6      // Every N hours within active hours
     case timesPerDay = 7 // X times per day (auto-distributed or specific times)
 
-    var id: Int16 { rawValue }
+    public var id: Int16 { rawValue }
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .daily: return "Daily"
         case .weekly: return "Weekly"
@@ -27,7 +27,7 @@ enum RecurringFrequency: Int16, CaseIterable, Codable, Identifiable {
         }
     }
 
-    var defaultInterval: Int {
+    public var defaultInterval: Int {
         switch self {
         case .daily: return 1
         case .weekly: return 1
@@ -42,21 +42,21 @@ enum RecurringFrequency: Int16, CaseIterable, Codable, Identifiable {
 }
 
 /// Model representing a recurring rule for tasks
-struct RecurringRule: Codable, Equatable, Hashable {
-    let id: UUID
-    var frequency: RecurringFrequency
-    var interval: Int
-    var daysOfWeek: [Int]?
-    var endDate: Date?
+public struct RecurringRule: Codable, Equatable, Hashable, Sendable {
+    public let id: UUID
+    public var frequency: RecurringFrequency
+    public var interval: Int
+    public var daysOfWeek: [Int]?
+    public var endDate: Date?
 
     // Intraday recurring fields
-    var hourInterval: Int?        // For .hourly: every N hours (1-12)
-    var timesPerDay: Int?         // For .timesPerDay: X times (2-12)
-    var specificTimes: [Date]?    // Optional: specific times for timesPerDay
-    var activeHoursStart: Date?   // Default: 8:00 AM when used
-    var activeHoursEnd: Date?     // Default: 10:00 PM when used
+    public var hourInterval: Int?        // For .hourly: every N hours (1-12)
+    public var timesPerDay: Int?         // For .timesPerDay: X times (2-12)
+    public var specificTimes: [Date]?    // Optional: specific times for timesPerDay
+    public var activeHoursStart: Date?   // Default: 8:00 AM when used
+    public var activeHoursEnd: Date?     // Default: 10:00 PM when used
 
-    init(
+    public init(
         id: UUID = UUID(),
         frequency: RecurringFrequency,
         interval: Int = 1,
@@ -81,12 +81,12 @@ struct RecurringRule: Codable, Equatable, Hashable {
     }
 
     /// Whether this is an intraday recurring rule (hourly or times per day)
-    var isIntraday: Bool {
+    public var isIntraday: Bool {
         frequency == .hourly || frequency == .timesPerDay
     }
 
     /// Calculate the next occurrence date from a given date
-    func nextOccurrence(from date: Date) -> Date? {
+    public func nextOccurrence(from date: Date) -> Date? {
         let calendar = Calendar.current
 
         // Check if we've passed the end date
@@ -259,7 +259,7 @@ struct RecurringRule: Codable, Equatable, Hashable {
     }
 
     /// Calculate all intraday times for a given date
-    func calculateIntradayTimes(for date: Date) -> [Date] {
+    public func calculateIntradayTimes(for date: Date) -> [Date] {
         let calendar = Calendar.current
         var times: [Date] = []
 
@@ -323,7 +323,7 @@ struct RecurringRule: Codable, Equatable, Hashable {
 
     /// Whether this recurring rule can be represented as an EKRecurrenceRule.
     /// Intraday frequencies (hourly, timesPerDay) have no EventKit equivalent.
-    var canMapToEKRecurrenceRule: Bool {
+    public var canMapToEKRecurrenceRule: Bool {
         switch frequency {
         case .daily, .weekly, .biweekly, .monthly, .yearly, .custom:
             return true
@@ -334,7 +334,7 @@ struct RecurringRule: Codable, Equatable, Hashable {
 
     /// Convert to an EKRecurrenceRule for EventKit calendar events.
     /// Returns nil for intraday frequencies that have no EventKit equivalent.
-    func toEKRecurrenceRule() -> EKRecurrenceRule? {
+    public func toEKRecurrenceRule() -> EKRecurrenceRule? {
         guard canMapToEKRecurrenceRule else { return nil }
 
         let ekFrequency: EKRecurrenceFrequency
@@ -395,7 +395,7 @@ struct RecurringRule: Codable, Equatable, Hashable {
     }
 
     /// Create a RecurringRule from an EKRecurrenceRule.
-    static func fromEKRecurrenceRule(_ rule: EKRecurrenceRule) -> RecurringRule? {
+    public static func fromEKRecurrenceRule(_ rule: EKRecurrenceRule) -> RecurringRule? {
         let frequency: RecurringFrequency
         let interval: Int
 
@@ -475,7 +475,7 @@ struct RecurringRule: Codable, Equatable, Hashable {
         return nil
     }
 
-    var displayDescription: String {
+    public var displayDescription: String {
         var description: String
 
         switch frequency {
@@ -507,7 +507,7 @@ struct RecurringRule: Codable, Equatable, Hashable {
     }
 
     /// Compact format for display in task cards (e.g., "1d", "1w", "3/wk", "2h", "3x/day")
-    var compactDisplayFormat: String {
+    public var compactDisplayFormat: String {
         switch frequency {
         case .daily:
             return interval == 1 ? "1d" : "\(interval)d"

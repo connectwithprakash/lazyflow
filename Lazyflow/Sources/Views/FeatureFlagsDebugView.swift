@@ -1,5 +1,7 @@
 #if DEBUG
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Debug view for overriding feature flags during development.
 /// Only available in DEBUG builds via Settings > Developer > Feature Flags.

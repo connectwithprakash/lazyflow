@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Observation
+import LazyflowCore
 
 /// View model for the Quick Capture extraction review flow
 @MainActor

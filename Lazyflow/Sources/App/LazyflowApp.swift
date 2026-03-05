@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import LazyflowCore
 
 /// Main entry point for the Lazyflow app
 @main

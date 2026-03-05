@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import os
+import LazyflowCore
 
 /// Service for building unified AI context from multiple sources
 @Observable

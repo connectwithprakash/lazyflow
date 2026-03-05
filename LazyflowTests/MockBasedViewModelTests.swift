@@ -1,4 +1,5 @@
 import XCTest
+import LazyflowCore
 @testable import Lazyflow
 
 /// Tests demonstrating the mock-based DI pattern.

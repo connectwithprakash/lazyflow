@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// View showing all task categories (system and custom)
 struct CategoriesView: View {

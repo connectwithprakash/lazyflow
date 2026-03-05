@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import EventKit
 import Combine
+import LazyflowCore
 
 @MainActor
 @Observable

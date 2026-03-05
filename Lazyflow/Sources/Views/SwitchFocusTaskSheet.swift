@@ -1,4 +1,6 @@
 import SwiftUI
+import LazyflowCore
+import LazyflowUI
 
 /// Bottom sheet showing up to 2 alternative suggestions for switching focus.
 struct SwitchFocusTaskSheet: View {

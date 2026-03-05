@@ -1,5 +1,6 @@
 import XCTest
 import SwiftUI
+import LazyflowCore
 @testable import Lazyflow
 
 final class LazyflowTests: XCTestCase {

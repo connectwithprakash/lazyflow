@@ -1,5 +1,6 @@
 import CoreData
 import Foundation
+import LazyflowCore
 
 /// Protocol defining the public API surface of PersistenceController consumed by services.
 protocol PersistenceControllerProtocol: AnyObject {

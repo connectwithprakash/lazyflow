@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import LazyflowCore
 
 /// Main Today view showing overdue and today's tasks
 struct TodayView: View {

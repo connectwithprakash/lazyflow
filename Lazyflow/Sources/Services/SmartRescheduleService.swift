@@ -1,6 +1,7 @@
 import Foundation
 import EventKit
 import Combine
+import LazyflowCore
 
 /// Service for intelligent task rescheduling suggestions
 @MainActor
