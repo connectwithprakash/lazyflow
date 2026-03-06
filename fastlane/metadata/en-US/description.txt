@@ -1,4 +1,4 @@
-Your tasks, your calendar, one app — powered by on-device AI that never sees your data. Lazyflow is free, open source, and built for people who want to get things done without subscriptions or cloud lock-in.
+Your tasks, your calendar, one app — powered by on-device AI that keeps your data private. Lazyflow is free, open source, and built for people who want to get things done without subscriptions or cloud lock-in.
 
 AI-POWERED PRODUCTIVITY
 - Next Up: a single focused task suggestion that learns what you skip, snooze, and complete
@@ -53,7 +53,7 @@ PRIVACY FIRST
 - All data stored locally on your device
 - Optional iCloud sync across your devices
 - No tracking, no analytics, no ads
-- AI runs entirely on-device with Apple Intelligence
+- AI runs on-device by default with Apple Intelligence
 
 OPEN SOURCE
 Lazyflow is free and open source under the MIT License. View the code, report issues, and contribute on GitHub.
