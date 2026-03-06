@@ -725,7 +725,6 @@
 		4FB05AC4F7D82545AC36ADBC /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				E36153335679E8D7C72BC1F1 /* AI */,
 				F8E00010BFEEB8CEBA96DD7D /* CustomCategoryEntity+DomainModel.swift */,
 				8B2FA8AC80A06886EF5CEFF0 /* Lazyflow.xcdatamodeld */,
 				8792FEC292A58CE79EF5DF73 /* QuickNoteEntity+DomainModel.swift */,
@@ -1133,13 +1132,6 @@
 				FFBF0524D133F7D5518CD670 /* TodayViewModel.swift */,
 			);
 			path = ViewModels;
-			sourceTree = "<group>";
-		};
-		E36153335679E8D7C72BC1F1 /* AI */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = AI;
 			sourceTree = "<group>";
 		};
 		F4C0E3DA24764E060A5EBF1C /* ViewModels */ = {
