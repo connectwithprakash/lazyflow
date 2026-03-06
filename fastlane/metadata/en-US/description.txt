@@ -1,58 +1,59 @@
-Lazyflow is a free, open-source, calendar-first todo app that makes task scheduling as natural as writing a todo.
+Your tasks, your calendar, one app — powered by on-device AI that keeps your data private. Lazyflow is free, open source, and built for people who want to get things done without subscriptions or cloud lock-in.
 
-KEY FEATURES
+AI-POWERED PRODUCTIVITY
+- Next Up: a single focused task suggestion that learns what you skip, snooze, and complete
+- Morning Briefing: start each day with a personalized plan based on your schedule and priorities
+- Daily Summary with automatic carryover from yesterday
+- Automatic categorization powered by Apple Intelligence
+- Connect Ollama or custom AI providers for advanced workflows
+- AI runs on-device by default — your data stays on your phone
 
-Task Management
-- Create, edit, and organize tasks with ease
-- Task lists for projects and categories
-- Due dates with smart reminders
-- Recurring tasks for habits and routines
-- Priority levels with color coding
-- Subtasks with auto-completion
+FOCUS MODE
+- Immersive full-screen timer with animated progress ring
+- Lock in on one task at a time with no distractions
+- Track focus streaks and build consistent habits
 
-Calendar Integration
-- Native Apple Calendar sync
+CALENDAR INTEGRATION
+- Native Apple Calendar sync — see events alongside tasks
 - Day and week calendar views
-- See events alongside tasks
-- Swipe events to create tasks
-- Schedule tasks as time blocks
+- Swipe any event to instantly create a task
+- Schedule tasks as time blocks on your calendar
 
-AI-Powered Productivity
-- Powered by Apple Intelligence
-- 100% on-device, private, and free
-- Next Up: focused single-task suggestion that learns from your feedback
-- Focus Mode: immersive full-screen timer with progress ring
-- Daily Summary with carryover from yesterday
-- Automatic categorization
+TASK MANAGEMENT
+- Task lists for projects and categories with custom colors and icons
+- Due dates, smart reminders, and recurring tasks
+- Priority levels with color coding
+- Subtasks with automatic completion tracking
+- Swipe actions for quick edits
+- Full task history with search and filters
 
-Siri Shortcuts
+SIRI SHORTCUTS
 - "Add a task in Lazyflow"
 - "Complete my next task"
 - "What's on my agenda today"
 - Hands-free task management
 
-Widgets & Live Activities
+WIDGETS & LIVE ACTIVITIES
 - Home Screen widgets (Small, Medium, Large)
-- Lock Screen Live Activity
-- Dynamic Island support
-- Real-time progress updates
+- Lock Screen Live Activity with Dynamic Island support
+- Real-time progress updates throughout your day
 
-Apple Watch
+APPLE WATCH
 - Today's tasks on your wrist
 - Tap to complete tasks
 - Real-time sync with iPhone
-- Watch complications
+- Watch complications for at-a-glance progress
 
-iPad Optimized
-- Sidebar navigation
-- Adaptive layouts
-- Keyboard shortcuts
-- Split view multitasking
+iPAD OPTIMIZED
+- Sidebar navigation with adaptive layouts
+- Full keyboard shortcuts
+- Split View multitasking
 
-Privacy First
-- All data stored locally on device
-- Optional iCloud sync
-- No tracking or analytics
-- AI runs entirely on-device with Apple Intelligence
+PRIVACY FIRST
+- All data stored locally on your device
+- Optional iCloud sync across your devices
+- No tracking, no analytics, no ads
+- AI runs on-device by default with Apple Intelligence
 
-Lazyflow is open source under the MIT License. View the code on GitHub.
+OPEN SOURCE
+Lazyflow is free and open source under the MIT License. View the code, report issues, and contribute on GitHub.

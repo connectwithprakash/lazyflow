@@ -1,1 +1,1 @@
-New: Focus Mode with immersive timer, smart Next Up suggestions, feedback-driven AI, Daily Summary carryover & redesigned task editing!
+v1.10: faster loading, smoother scrolling, and a more polished experience everywhere you tap.
