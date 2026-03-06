@@ -1,1 +1,1 @@
-todo,tasks,calendar,productivity,ai,planner,reminders,schedule,gtd,organizer
+todo,task manager,calendar,productivity,ai,planner,reminders,schedule,focus timer,daily planner,free
