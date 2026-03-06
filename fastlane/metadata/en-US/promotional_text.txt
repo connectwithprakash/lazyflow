@@ -1,1 +1,1 @@
-Faster, smoother, more reliable — v1.10 brings under-the-hood improvements for a snappier experience across every screen.
+v1.10: faster loading, smoother scrolling, and a more polished experience everywhere you tap.

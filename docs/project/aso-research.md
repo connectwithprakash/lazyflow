@@ -17,13 +17,13 @@ Last updated: v1.10 (March 2026)
 | `task manager` | High-intent compound term; Apple combines with "todo" for "todo task manager" |
 | `calendar` | Signature feature, strong search volume |
 | `productivity` | Broad category term, captures browsing users |
-| `ai` | Trending modifier, differentiator vs legacy apps |
-| `planner` | Overlaps daily planner / weekly planner searches |
 | `reminders` | Captures users searching for Apple Reminders alternatives |
 | `schedule` | Maps to calendar scheduling and time blocking |
-| `focus timer` | Maps to Focus Mode, strong differentiator |
 | `daily planner` | Maps to Morning Briefing / Plan Your Day |
 | `free` | Critical — Lazyflow is free vs competitors charging $4-$14/mo |
+| `checklist` | Common search term for simple task management |
+| `habit` | Maps to recurring tasks and focus streaks |
+| `to-do` | Hyphenated variant captures different search queries than `todo` |
 
 ### Keywords Removed
 | Keyword | Reason |
@@ -31,16 +31,20 @@ Last updated: v1.10 (March 2026)
 | `tasks` | Replaced with `task manager` (higher intent, Apple still indexes "tasks" from compound) |
 | `gtd` | Niche methodology, low search volume |
 | `organizer` | Redundant with `planner`, lower intent |
+| `ai` | Already indexed from subtitle ("AI Planner"), no need to repeat |
+| `planner` | Already indexed from subtitle, covered by `daily planner` compound |
+| `focus timer` | Already indexed from subtitle ("Focus Timer"), no need to repeat |
 
 ### Keywords Not Included (in title/subtitle already)
+Apple's search algorithm combines terms across title, subtitle, and keyword fields for compound matching. Repeating subtitle terms in keywords wastes characters.
+
 - "Lazyflow" — indexed from app name
-- "AI Planner" — indexed from subtitle
-- "Focus Timer" — indexed from subtitle (but also in keywords for compound matching)
+- "AI", "Planner", "Focus", "Timer" — all indexed from subtitle
 
 ## Subtitle Strategy
 
 **Current**: `Calendar-First Todo App` (23 chars) — descriptive but generic, doesn't differentiate
-**Optimized**: `AI Planner & Focus Timer` (25 chars) — highlights two strongest differentiators
+**Optimized**: `AI Planner & Focus Timer` (24 chars) — highlights two strongest differentiators
 
 The subtitle is indexed by App Store Search, so it contributes additional keyword coverage. "Calendar" moves to the keyword field since it's a well-known feature but not the primary differentiator.
 

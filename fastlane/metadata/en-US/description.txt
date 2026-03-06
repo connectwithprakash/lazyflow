@@ -6,7 +6,7 @@ AI-POWERED PRODUCTIVITY
 - Daily Summary with automatic carryover from yesterday
 - Automatic categorization powered by Apple Intelligence
 - Connect Ollama or custom AI providers for advanced workflows
-- All AI runs 100% on-device — your data never leaves your phone
+- AI runs on-device by default — your data stays on your phone
 
 FOCUS MODE
 - Immersive full-screen timer with animated progress ring
