@@ -1,0 +1,33 @@
+{
+  "skill_name": "performance-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "TodayView feels sluggish when I have a lot of tasks — maybe 50+. Can you audit the performance of TodayView and its ViewModel and figure out what's slow?",
+      "expected_output": "Agent should read TodayViewModel and TodayView, identify potential performance bottlenecks like unnecessary @Published updates, N+1 fetches, or heavy body computations, and suggest fixes",
+      "files": [],
+      "expectations": [
+        "The agent reads TodayViewModel.swift to analyze data loading patterns",
+        "The agent reads TodayView.swift to check for expensive body computations",
+        "The agent checks for N+1 Core Data fetch patterns",
+        "The agent checks for unnecessary @Published property updates",
+        "The agent provides specific, actionable recommendations with code examples",
+        "The agent suggests writing a performance test with measure{} blocks"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "do a full performance audit of the app — I want to make sure we're not doing anything obviously dumb before the v1.10 release",
+      "expected_output": "Agent should audit multiple critical paths: startup, main screen rendering, Core Data fetches, calendar sync, and memory usage patterns across key ViewModels and Services",
+      "files": [],
+      "expectations": [
+        "The agent audits more than just one screen — checks multiple ViewModels and Services",
+        "The agent checks for memory retain cycles (missing [weak self] in closures)",
+        "The agent checks Core Data fetch patterns across services (fetchBatchSize, predicates)",
+        "The agent checks for main thread blocking operations",
+        "The agent prioritizes findings by impact (high/medium/low)",
+        "The agent provides a structured summary of findings"
+      ]
+    }
+  ]
+}

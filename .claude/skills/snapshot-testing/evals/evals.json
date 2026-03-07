@@ -1,0 +1,32 @@
+{
+  "skill_name": "snapshot-testing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just redesigned the SettingsView and need to update the snapshot tests. The old snapshots are failing because the UI changed. Can you re-record them?",
+      "expected_output": "Agent should find the settings snapshot test, set isRecording = true, run the tests to re-record, set isRecording = false, and verify they pass",
+      "files": [],
+      "expectations": [
+        "The agent finds and reads the existing SettingsView snapshot test file",
+        "The agent sets isRecording = true before running the snapshot test",
+        "The agent runs the specific snapshot test with xcodebuild test -only-testing",
+        "The agent sets isRecording = false after recording",
+        "The agent re-runs the test to verify the new snapshots pass"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to add snapshot tests for the new FocusModeView I just built. It has two states — active (with a timer ring) and inactive (with a start button). Can you create the snapshot tests?",
+      "expected_output": "Agent should create a new snapshot test class following the project's SnapshotTestCase pattern, using SnapshotFixtures for deterministic data, testing both states in light and dark mode",
+      "files": [],
+      "expectations": [
+        "The agent reads existing snapshot tests (like TodayViewSnapshotTests) to understand the pattern",
+        "The agent creates a new test class extending SnapshotTestCase",
+        "The agent uses SnapshotFixtures or creates deterministic test data",
+        "The agent tests both active and inactive states",
+        "The agent includes both light and dark mode snapshots (assertLightAndDarkSnapshot)",
+        "The agent runs xcodegen generate after creating the new test file"
+      ]
+    }
+  ]
+}

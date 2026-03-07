@@ -65,3 +65,6 @@ Secrets.swift
 
 # Local Netlify folder
 .netlify
+
+# Agent artifacts (contexts, eval workspaces, analysis)
+.agents/
