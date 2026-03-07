@@ -22,7 +22,7 @@ Last updated: v1.10 (March 2026)
 | `daily planner` | Maps to Morning Briefing / Plan Your Day |
 | `free` | Critical — Lazyflow is free vs competitors charging $4-$14/mo |
 | `checklist` | Common search term for simple task management |
-| `habit` | Maps to recurring tasks and focus streaks |
+| `pomodoro` | Maps to new Pomodoro timer in Focus Mode, high-intent keyword |
 | `to-do` | Hyphenated variant captures different search queries than `todo` |
 
 ### Keywords Removed
@@ -62,8 +62,9 @@ The subtitle is indexed by App Store Search, so it contributes additional keywor
 
 ### Key Changes from v1.9 Description
 - Lead with free + AI + privacy hook (unique value prop)
-- Morning Briefing and Focus Mode get prominent placement
-- Focus Mode split into its own section (was a bullet under AI)
+- Quick Capture added as first bullet in AI section (headline v1.10 feature)
+- Focus Mode expanded: Pomodoro mode, subtasks/notes panel, session persistence
+- Calendar section rewritten: dedicated Lazyflow calendar, two-way sync, scheduled times, recurring event sync
 - Stronger privacy language: "no subscriptions or cloud lock-in"
 - Added "no ads" to privacy section
 
@@ -84,4 +85,4 @@ Lazyflow's unique combination: free + on-device AI + focus timer + open source. 
 The promotional text field (170 chars max) sits above the description and can be updated without a new app version. It should reflect the latest release highlights.
 
 - **v1.9**: Focused on new features (Focus Mode, Next Up, Daily Summary)
-- **v1.10**: Internal improvements (SPM modularization), so messaging emphasizes stability and performance
+- **v1.10**: Feature-focused — Quick Capture (headline), Pomodoro timer, two-way calendar sync, scheduled times
