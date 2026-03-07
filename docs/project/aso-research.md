@@ -23,7 +23,6 @@ Last updated: v1.10 (March 2026)
 | `free` | Critical — Lazyflow is free vs competitors charging $4-$14/mo |
 | `checklist` | Common search term for simple task management |
 | `pomodoro` | Maps to new Pomodoro timer in Focus Mode, high-intent keyword |
-| `to-do` | Hyphenated variant captures different search queries than `todo` |
 
 ### Keywords Removed
 | Keyword | Reason |
@@ -34,6 +33,8 @@ Last updated: v1.10 (March 2026)
 | `ai` | Already indexed from subtitle ("AI Planner"), no need to repeat |
 | `planner` | Already indexed from subtitle, covered by `daily planner` compound |
 | `focus timer` | Already indexed from subtitle ("Focus Timer"), no need to repeat |
+| `to-do` | Likely normalized to `todo` by Apple's search, low marginal value |
+| `habit` | Replaced by `pomodoro` (higher intent, maps to new feature) |
 
 ### Keywords Not Included (in title/subtitle already)
 Apple's search algorithm combines terms across title, subtitle, and keyword fields for compound matching. Repeating subtitle terms in keywords wastes characters.
@@ -43,8 +44,8 @@ Apple's search algorithm combines terms across title, subtitle, and keyword fiel
 
 ## Subtitle Strategy
 
-**Current**: `Calendar-First Todo App` (23 chars) — descriptive but generic, doesn't differentiate
-**Optimized**: `AI Planner & Focus Timer` (24 chars) — highlights two strongest differentiators
+**Previous (v1.9)**: `Calendar-First Todo App` (23 chars) — descriptive but generic, didn't differentiate
+**Current (v1.10)**: `AI Planner & Focus Timer` (24 chars) — highlights two strongest differentiators
 
 The subtitle is indexed by App Store Search, so it contributes additional keyword coverage. "Calendar" moves to the keyword field since it's a well-known feature but not the primary differentiator.
 

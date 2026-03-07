@@ -21,8 +21,8 @@ CALENDAR INTEGRATION
 - Dedicated Lazyflow calendar with two-way task-event sync
 - Day view (default on iPhone) and week view with persistent preference
 - Set scheduled start and end times for event-like task planning
-- Swipe any event to instantly create a task
-- Recurring tasks automatically sync as recurring calendar events
+- Tap any event to instantly create a task
+- Supported recurring tasks sync as recurring calendar events
 
 TASK MANAGEMENT
 - Task lists for projects and categories with custom colors and icons
