@@ -16,4 +16,17 @@ final class QuickCaptureSheetSnapshotTests: SnapshotTestCase {
         let view = QuickCaptureSheet(note: note, onExtract: { _ in })
         assertLightAndDarkSnapshot(of: view, named: "editNote")
     }
+
+    // MARK: - iPad
+
+    func testNewNoteModeIPad() {
+        let view = QuickCaptureSheet()
+        assertLightAndDarkSnapshotIPad(of: view, named: "newNote")
+    }
+
+    func testEditNoteModeIPad() {
+        let note = SnapshotFixtures.sampleNote()
+        let view = QuickCaptureSheet(note: note, onExtract: { _ in })
+        assertLightAndDarkSnapshotIPad(of: view, named: "editNote")
+    }
 }
