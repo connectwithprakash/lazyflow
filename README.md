@@ -18,7 +18,7 @@ A free, open-source todo app for iOS with AI-powered planning, Pomodoro focus ti
   <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/01-today-view.png" width="180" alt="Today View">
   <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/11-morning-briefing.png" width="180" alt="Morning Briefing">
   <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/03-ai-priority.png" width="180" alt="AI Priority">
-  <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/07-settings.png" width="180" alt="Settings">
+  <img src="https://raw.githubusercontent.com/connectwithprakash/lazyflow/main/docs/site/assets/screenshots/light/iphone/30-pomodoro-timer.png" width="180" alt="Pomodoro Focus Timer">
 </p>
 
 ## Why Lazyflow?
