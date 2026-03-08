@@ -14,7 +14,7 @@ final class AppleFoundationModelsProvider: LLMProvider {
     var isAvailable: Bool {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *) {
-            return true
+            return SystemLanguageModel.default.isAvailable
         }
         #endif
         return false
