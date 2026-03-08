@@ -6,8 +6,8 @@ import LazyflowCore
 
 /// Base class for snapshot tests providing consistent configuration and helpers.
 ///
-/// Uses a fixed viewport (iPhone 13 Pro, 375×812) so images are identical
-/// regardless of the local simulator (iPhone 17 Pro) or CI simulator (iPhone 16 Pro).
+/// Uses fixed viewports (iPhone 13 Pro 375×812, iPad Pro 12.9" 1024×1366) so images
+/// are identical regardless of the local simulator or CI simulator.
 ///
 /// Reference images are recorded on CI to avoid cross-environment rendering
 /// differences between local macOS and CI runners. To re-record, either:
@@ -26,9 +26,16 @@ class SnapshotTestCase: XCTestCase {
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - Device Detection
+
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+    // MARK: - iPhone Helpers
 
     /// Snapshot a view in both light and dark mode using a fixed iPhone 13 Pro viewport.
+    /// Automatically skips when running on iPad simulator.
     func assertLightAndDarkSnapshot<V: View>(
         of view: V,
         named name: String,
@@ -38,6 +45,8 @@ class SnapshotTestCase: XCTestCase {
         testName: String = #function,
         line: UInt = #line
     ) {
+        guard !isIPad else { return }
+
         let lightView = view
             .environment(\.colorScheme, .light)
 
@@ -73,6 +82,8 @@ class SnapshotTestCase: XCTestCase {
         testName: String = #function,
         line: UInt = #line
     ) {
+        guard !isIPad else { return }
+
         let extraLargeView = view
             .environment(\.dynamicTypeSize, .xxxLarge)
 
@@ -97,6 +108,84 @@ class SnapshotTestCase: XCTestCase {
             line: line
         )
     }
+
+    // MARK: - iPad Helpers
+
+    /// Snapshot a view in both light and dark mode using a fixed iPad Pro 12.9" viewport.
+    func assertLightAndDarkSnapshotIPad<V: View>(
+        of view: V,
+        named name: String,
+        precision: Float = 0.99,
+        perceptualPrecision: Float = 0.98,
+        file: StaticString = #file,
+        testName: String = #function,
+        line: UInt = #line
+    ) {
+        guard isIPad else { return }
+
+        let lightView = view
+            .environment(\.colorScheme, .light)
+
+        let darkView = view
+            .environment(\.colorScheme, .dark)
+
+        assertSnapshot(
+            of: UIHostingController(rootView: lightView),
+            as: .image(on: .iPadPro12_9(.portrait), precision: precision, perceptualPrecision: perceptualPrecision),
+            named: "\(name)-ipad-light",
+            file: file,
+            testName: testName,
+            line: line
+        )
+
+        assertSnapshot(
+            of: UIHostingController(rootView: darkView),
+            as: .image(on: .iPadPro12_9(.portrait), precision: precision, perceptualPrecision: perceptualPrecision),
+            named: "\(name)-ipad-dark",
+            file: file,
+            testName: testName,
+            line: line
+        )
+    }
+
+    /// Snapshot a view at two Dynamic Type sizes on iPad for accessibility testing.
+    func assertAccessibilitySnapshotIPad<V: View>(
+        of view: V,
+        named name: String,
+        precision: Float = 0.99,
+        perceptualPrecision: Float = 0.98,
+        file: StaticString = #file,
+        testName: String = #function,
+        line: UInt = #line
+    ) {
+        guard isIPad else { return }
+
+        let extraLargeView = view
+            .environment(\.dynamicTypeSize, .xxxLarge)
+
+        assertSnapshot(
+            of: UIHostingController(rootView: extraLargeView),
+            as: .image(on: .iPadPro12_9(.portrait), precision: precision, perceptualPrecision: perceptualPrecision),
+            named: "\(name)-ipad-xxxLarge",
+            file: file,
+            testName: testName,
+            line: line
+        )
+
+        let accessibilityView = view
+            .environment(\.dynamicTypeSize, .accessibility3)
+
+        assertSnapshot(
+            of: UIHostingController(rootView: accessibilityView),
+            as: .image(on: .iPadPro12_9(.portrait), precision: precision, perceptualPrecision: perceptualPrecision),
+            named: "\(name)-ipad-accessibility3",
+            file: file,
+            testName: testName,
+            line: line
+        )
+    }
+
+    // MARK: - Environment Helpers
 
     /// Wrap a view with the standard environment required by most Lazyflow views.
     func wrapInEnvironment<V: View>(_ view: V) -> some View {

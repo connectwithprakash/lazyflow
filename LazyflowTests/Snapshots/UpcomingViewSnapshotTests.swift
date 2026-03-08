@@ -15,4 +15,16 @@ final class UpcomingViewSnapshotTests: SnapshotTestCase {
         let view = wrapInEnvironment(UpcomingView(taskService: SnapshotFixtures.upcomingTaskService()))
         assertLightAndDarkSnapshot(of: view, named: "populated")
     }
+
+    // MARK: - iPad
+
+    func testEmptyStateIPad() {
+        let view = wrapInEnvironment(UpcomingView(taskService: SnapshotFixtures.emptyTaskService()))
+        assertLightAndDarkSnapshotIPad(of: view, named: "empty")
+    }
+
+    func testPopulatedStateIPad() {
+        let view = wrapInEnvironment(UpcomingView(taskService: SnapshotFixtures.upcomingTaskService()))
+        assertLightAndDarkSnapshotIPad(of: view, named: "populated")
+    }
 }
