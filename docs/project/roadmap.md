@@ -43,10 +43,11 @@ Anyone who:
 
 - **v1.8.0**: Navigation restructure — 5-tab layout (Today, Calendar, Upcoming, Insights, Me) with profile-centric organization; Analytics dashboard with category completion rates, work-life balance tracking, and productivity insights
 - **v1.9.0**: Focus Mode — full-screen immersive single-task experience with live timer and progress ring; Next Up — single focused task suggestion with state-dependent actions (Start/Pause, Focus, Later); Feedback-conditioned AI reranking that learns from task completion patterns; Daily Summary carryover; Timer fix preventing accumulated time loss on pause/resume (#221)
+- **v1.10.0**: Quick Capture & Foundation — AI task extraction from unstructured notes, Pomodoro timer with configurable work/break intervals, two-way calendar sync with dedicated Lazyflow calendar, scheduled start/end times, Focus Mode subtasks panel and session persistence; Architecture modernization: SPM packages (LazyflowCore, LazyflowUI), @Observable migration, DI protocol extraction, feature flags, MetricKit, String Catalogs, snapshot tests, SwiftLint, structured os.Logger, accessibility labels, privacy manifest
 
 ### Current & Upcoming
 
-- **v1.10.0** (planned): Calendar & Capture — natural language task parsing, quick capture from anywhere, deeper calendar integration
+- **v1.11.0** (planned): To be defined
 
 See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.
 

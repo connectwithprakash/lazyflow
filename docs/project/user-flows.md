@@ -22,7 +22,7 @@ Documentation of core user journeys, interaction patterns, and UX decisions.
 ### App Structure
 
 ```
-Lazyflow (v1.9.0+)
+Lazyflow (v1.10.0+)
 |-- Today (default landing) ★
 |   |-- Morning Briefing (optional prompt)
 |   |-- Overdue Tasks (red indicator)
@@ -30,35 +30,44 @@ Lazyflow (v1.9.0+)
 |   |   |-- Idle: Start/Resume + Focus + Later
 |   |   +-- In Progress: Pause + Focus + live timer
 |   |-- Focus Mode (full-screen overlay)
-|   |   |-- Timer ring with elapsed/estimated progress
+|   |   |-- Timer ring (standard or Pomodoro mode)
+|   |   |-- Subtasks checklist + notes panel (collapsible)
 |   |   |-- Mark Complete + Take a Break + Switch Task
 |   |   +-- ReturnToFocusPill (minimized state)
+|   |-- Quick Capture FAB (floating action button)
 |   |-- Today's Tasks (by priority)
+|   |   +-- Task rows with "Enter Focus" context menu
 |   |-- Completed Today (collapsible)
 |   +-- Daily Summary (optional prompt)
 |
 |-- Calendar
 |   |-- Month View (overview)
-|   |-- Week View (planning)
-|   +-- Day View (time blocking)
+|   |-- Week View (default on iPad)
+|   |-- Day View (default on iPhone)
+|   |-- Dedicated Lazyflow calendar (two-way sync)
+|   +-- Long-press event → create task
 |
 |-- Upcoming
+|   |-- Quick Notes section (captured notes)
 |   |-- Tomorrow
 |   |-- This Week
 |   +-- Later (grouped by date)
 |
-|-- Insights ★ (NEW)
+|-- Insights
 |   |-- Completion trends
 |   |-- Productivity metrics
 |   +-- Category breakdowns
 |
-+-- Me ★ (NEW)
++-- Me
     |-- Profile / Account
     |-- Preferences
     |-- Settings
         |-- Appearance (theme, app icon)
         |-- Notifications (reminders)
         |-- AI Settings (Apple Intelligence)
+        |-- Calendar Sync (auto-sync toggle, completion policy)
+        |-- Pomodoro (work/break intervals)
+        |-- Feature Flags (debug menu)
         |-- Data Management (sync, export)
         +-- About (version, legal)
     +-- Lists (access via profile)
@@ -699,14 +708,14 @@ Later          Mark Complete / Take a Break / Switch Task
 
 ---
 
-### 15. Focus Mode (v1.9.0)
+### 15. Focus Mode (v1.9.0, enhanced v1.10.0)
 
 **Goal**: Full-screen immersive experience for deep work on a single task
 
 **Success Metric**: < 500ms transition to Focus Mode overlay
 
 ```
-[Next Up Card - Focus Button]
+[Entry Points: Next Up "Focus" button, task row context menu, ReturnToFocusPill]
     |
     +-> [Focus Mode Overlay - Full Screen]
         |
@@ -717,11 +726,18 @@ Later          Mark Complete / Take a Break / Switch Task
         +-- Subtitle (due date + estimated duration)
         |
         +-- Timer Ring (240px diameter, 6pt stroke)
+        |   +-- Standard mode: elapsed time counter
+        |   +-- Pomodoro mode: countdown with work/break phases
         |   +-- Track: white @ 6% opacity
         |   +-- Progress arc: accent color with glow
         |   +-- Timer text: 52pt, monospacedDigit
-        |   +-- Label: "Focusing" (breathe animation) or "Paused"
+        |   +-- Label: "Focusing" / "Break" / "Paused"
         |   +-- Tap ring to toggle pause/resume
+        |
+        +-- Subtasks & Notes Panel (collapsible, v1.10)
+        |   +-- Subtask checklist: tap to toggle completion
+        |   +-- Notes: read-only display of task notes
+        |   +-- Collapse/expand with chevron toggle
         |
         +-- Action Bar
         |   +-- Mark Complete (primary, full-width, 56pt)
@@ -733,9 +749,35 @@ Later          Mark Complete / Take a Break / Switch Task
             +-- Spring scale animation, auto-dismiss 1.2s
 ```
 
-**Entry Points**:
+**Entry Points** (expanded in v1.10):
 - Next Up card "Focus" button
+- Task row context menu → "Enter Focus" (TodayView, UpcomingView)
 - ReturnToFocusPill (after minimize or break)
+
+**Pomodoro Mode** (v1.10):
+```
+[Settings → Pomodoro]
+    |
+    +-> Configure work interval (default: 25 min)
+    +-> Configure break interval (default: 5 min)
+    |
+[Focus Mode with Pomodoro enabled]
+    |
+    +-> Work phase: countdown from work interval
+    |   +-- Ring fills as time passes
+    |   +-- On completion → auto-transition to break
+    |
+    +-> Break phase: countdown from break interval
+    |   +-- Different ring color (orange)
+    |   +-- On completion → auto-transition to work
+    |
+    +-> Cycle repeats until task is completed or session dismissed
+```
+
+**Session Persistence** (v1.10):
+- Active focus sessions persist across app restarts via UserDefaults
+- On app launch, if a session was active, the ReturnToFocusPill appears
+- Timer state (elapsed time, phase, task) is rehydrated
 
 **ReturnToFocusPill**:
 ```
@@ -757,6 +799,7 @@ Idle --> enterFocus() --> Focusing
   On Break --> reopenFocus() --> Focusing
   Focusing --> markComplete() --> Success Animation --> Idle
   Focusing --> dismissFocus() --> Minimized (pill visible, timer continues)
+  [App terminated] --> [App launch] --> Rehydrate --> Minimized (pill visible)
 ```
 
 **Design Decisions**:
@@ -769,6 +812,113 @@ Idle --> enterFocus() --> Focusing
 | ReturnToFocusPill | Non-intrusive reminder to resume focus |
 | Switch Task sheet | Limited to 2 alternatives to reduce decision fatigue |
 | 1.2s completion animation | Satisfying reward without being slow |
+| Collapsible subtasks panel | See context without cluttering the focus UI |
+| Pomodoro as opt-in setting | Users who prefer free-form timing aren't forced into cycles |
+| Session persistence | Prevents losing progress on accidental app termination |
+
+### 16. Quick Capture (v1.10.0)
+
+**Goal**: Capture unstructured thoughts and let AI extract structured tasks
+
+**Success Metric**: < 2 seconds to open and start typing
+
+```
+[Today / Upcoming - Quick Capture FAB]
+    |
+    +-> Tap FAB or Cmd+Shift+N (iPad)
+    |
+    +-> [Quick Capture Sheet - Medium Detent]
+        |
+        +-- Text field (auto-focused, multi-line)
+        +-- "Save Note" button (always available)
+        +-- "Extract Tasks" button (AI-powered)
+        |
+        +-> [Save Note]
+        |   +-- Saved to Core Data as QuickNote
+        |   +-- Appears in Upcoming → "Quick Notes" section
+        |   +-- Sheet dismisses
+        |
+        +-> [Extract Tasks]
+            |
+            +-- Deterministic parsing (dates, priorities, keywords)
+            +-- Optional LLM enhancement (if AI enabled)
+            |
+            +-> [Quick Capture Review Sheet]
+                |
+                +-- List of extracted TaskDrafts
+                +-- Each draft editable (title, due date, priority, list)
+                +-- "Create All" → creates tasks, dismisses
+                +-- "Cancel" → returns to note
+```
+
+**Deep Link**: `lazyflow://quick-capture` opens the capture sheet directly.
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| FAB on Today/Upcoming only | Most common capture contexts; avoids cluttering other tabs |
+| Save Note separate from Extract | Users may want to just capture, not process immediately |
+| Review before creating | AI extraction isn't perfect; user confirms before task creation |
+| Persistent note inbox | Notes aren't lost if user doesn't extract tasks right away |
+
+### 17. Calendar Two-Way Sync (v1.10.0)
+
+**Goal**: Tasks with scheduled times automatically appear on the calendar, and external event changes sync back
+
+```
+[Task with due date + time + duration]
+    |
+    +-> Auto-creates event in dedicated "Lazyflow" calendar
+    |   +-- Event title = task title
+    |   +-- Event time = scheduled start/end (or due date + duration)
+    |   +-- Recurring tasks → recurring events (daily/weekly/monthly/yearly)
+    |
+[External calendar change]
+    |
+    +-> Event moved → task due date updated
+    +-> Event deleted → toast notification, task unlinked
+    |
+[Settings → Calendar Sync]
+    |
+    +-> Auto-sync toggle (on/off)
+    +-> On completion policy: keep event / delete event
+    +-> Busy-only privacy mode: marks events as "busy" without details
+```
+
+**Design Decisions**:
+
+| Decision | Rationale |
+|----------|-----------|
+| Dedicated Lazyflow calendar | Keeps synced events separate from user's personal events |
+| Auto-created in iCloud | Works across devices without additional setup |
+| Long-press event → create task | Quick way to turn calendar events into actionable tasks |
+| Intraday recurrence as one-off | EventKit has no sub-daily recurrence rules |
+
+### 18. Scheduled Times (v1.10.0)
+
+**Goal**: Tasks can have explicit start/end times for event-like planning
+
+```
+[Add/Edit Task → Schedule Section]
+    |
+    +-> "Add Scheduled Time" button
+    |
+    +-> [Date/Time Picker]
+        |
+        +-- Start time (required)
+        +-- End time (optional, defaults to start + estimated duration)
+        |
+        +-- Saved as scheduledStartTime / scheduledEndTime on task
+        |
+[Task Row]
+    |
+    +-> ScheduledTimeBadge: "2:00 – 3:30 PM" (formatted range)
+    |
+[Calendar View]
+    |
+    +-> Task appears as time block at scheduled position
+```
 
 ---
 
