@@ -1,1 +1,1 @@
-v1.10: faster loading, smoother scrolling, and a more polished experience everywhere you tap.
+New in v1.10: Quick Capture turns messy notes into tasks with AI. Plus Pomodoro timer, two-way calendar sync, and scheduled times.

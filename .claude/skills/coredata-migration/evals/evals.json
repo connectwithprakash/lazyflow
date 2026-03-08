@@ -1,0 +1,32 @@
+{
+  "skill_name": "coredata-migration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to add an optional 'estimatedDuration' field (Int16) to the TaskEntity so users can estimate how long a task will take. Walk me through the migration.",
+      "expected_output": "Agent should assess this as a lightweight, CloudKit-compatible migration, explain the steps to create a new model version, add the optional attribute, update entity extensions, and test",
+      "files": [],
+      "expectations": [
+        "The agent correctly identifies this as a lightweight migration (adding optional attribute)",
+        "The agent confirms this is CloudKit-compatible (optional attribute is additive)",
+        "The agent reads the current Core Data model to understand existing TaskEntity structure",
+        "The agent instructs the user to create a new model version in Xcode (not edit programmatically)",
+        "The agent explains what code changes are needed in entity extension files",
+        "The agent warns this is an L2 action requiring user confirmation before modifying .xcdatamodeld"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to rename the 'isCompleted' field to 'completionStatus' on TaskEntity and change it from Bool to Int16 so I can track partial completion. How do I do this safely?",
+      "expected_output": "Agent should flag this as NOT CloudKit-compatible, explain that renaming and type changes require a mapping model, and suggest alternative approaches like adding a new field instead",
+      "files": [],
+      "expectations": [
+        "The agent identifies this as NOT a lightweight migration (rename + type change)",
+        "The agent warns this is NOT CloudKit-compatible (non-additive change)",
+        "The agent suggests an alternative approach — adding a new optional field instead of renaming",
+        "The agent explains the risks of breaking existing CloudKit sync",
+        "The agent does NOT attempt to edit .xcdatamodeld files directly"
+      ]
+    }
+  ]
+}

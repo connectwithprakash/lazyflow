@@ -1,0 +1,32 @@
+{
+  "skill_name": "app-store-screenshots",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need fresh App Store screenshots for the v1.10 release. Can you capture them in both light and dark mode?",
+      "expected_output": "Agent should set up the simulator, configure demo data, capture screenshots for all key screens in both light and dark mode, and save to the correct directories",
+      "files": [],
+      "expectations": [
+        "The agent checks if the simulator is booted and boots it if needed",
+        "The agent builds and installs the app on the simulator",
+        "The agent configures demo data via @AppStorage defaults",
+        "The agent captures screenshots in both light and dark mode",
+        "The agent saves screenshots to docs/assets/screenshots/appstore/",
+        "The agent captures at least the Today, Calendar, and Lists screens"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I just need website screenshots updated for the new TodayView design. Dark mode only, just the main screens",
+      "expected_output": "Agent should focus on website screenshots in dark mode only, saving to the correct website directory with proper naming",
+      "files": [],
+      "expectations": [
+        "The agent sets appearance to dark mode using xcrun simctl ui",
+        "The agent saves to docs/site/assets/screenshots/dark/ (not appstore directory)",
+        "The agent uses the correct naming convention ({number}-{feature-name}.png)",
+        "The agent only captures in dark mode as requested (not both)",
+        "The agent lists the captured files for user review"
+      ]
+    }
+  ]
+}

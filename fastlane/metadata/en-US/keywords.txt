@@ -1,1 +1,1 @@
-todo,task manager,calendar,productivity,reminders,schedule,daily planner,free,checklist,habit,to-do
+todo,task manager,calendar,productivity,reminders,schedule,daily planner,free,pomodoro,checklist

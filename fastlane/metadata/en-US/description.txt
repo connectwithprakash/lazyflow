@@ -1,6 +1,7 @@
 Your tasks, your calendar, one app — powered by on-device AI that keeps your data private. Lazyflow is free, open source, and built for people who want to get things done without subscriptions or cloud lock-in.
 
 AI-POWERED PRODUCTIVITY
+- Quick Capture: jot down rough notes and let AI extract structured tasks with due dates, priorities, and subtasks
 - Next Up: a single focused task suggestion that learns what you skip, snooze, and complete
 - Morning Briefing: start each day with a personalized plan based on your schedule and priorities
 - Daily Summary with automatic carryover from yesterday
@@ -10,14 +11,18 @@ AI-POWERED PRODUCTIVITY
 
 FOCUS MODE
 - Immersive full-screen timer with animated progress ring
+- Pomodoro mode with configurable work and break intervals
+- Subtasks and notes panel — see everything without leaving focus
 - Lock in on one task at a time with no distractions
+- Sessions persist across app restarts — pick up where you left off
 - Track focus streaks and build consistent habits
 
 CALENDAR INTEGRATION
-- Native Apple Calendar sync — see events alongside tasks
-- Day and week calendar views
-- Swipe any event to instantly create a task
-- Schedule tasks as time blocks on your calendar
+- Dedicated Lazyflow calendar with two-way task-event sync
+- Day view (default on iPhone) and week view with persistent preference
+- Set scheduled start and end times for event-like task planning
+- Long-press any event to instantly create a task
+- Supported recurring tasks sync as recurring calendar events
 
 TASK MANAGEMENT
 - Task lists for projects and categories with custom colors and icons

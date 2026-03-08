@@ -1,0 +1,41 @@
+{
+  "skill_name": "debugging-build",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "hey the build is failing with 'No such module LazyflowCore' after I pulled from main. I didn't change anything, just git pull. Can you fix it?",
+      "expected_output": "Agent should diagnose the missing module error, try resolving SPM dependencies, possibly clean and rebuild, and get the build passing again",
+      "files": [],
+      "expectations": [
+        "The agent attempts to resolve SPM package dependencies (xcodebuild -resolvePackageDependencies or similar)",
+        "The agent runs xcodegen generate at some point in the debugging process",
+        "The agent attempts a build command to verify the fix worked",
+        "The agent follows a systematic approach rather than immediately jumping to clean DerivedData"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm getting a crash in TodayView — something about UICollectionView section count mismatch. The tests pass locally but the app crashes when I open it. Here's the error: 'Invalid update: invalid number of sections. The number of sections contained in the collection view after the update (3) must be equal to the number of sections contained in the collection view before the update (4)'",
+      "expected_output": "Agent should identify this as the known TodayView List section issue, find the conditional that removes a Section, and ensure all sections are always present even when empty",
+      "files": [],
+      "expectations": [
+        "The agent identifies the root cause as a conditional Section removal in TodayView's List body",
+        "The agent reads TodayView.swift to find the problematic conditional",
+        "The agent explains that TodayView List sections must ALWAYS be present even when empty",
+        "The agent proposes keeping the Section but with an empty content when there's no data"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "xcodebuild test keeps failing with 'Unable to find a destination matching the provided destination specifier' when I run tests. I think my simulator might be messed up",
+      "expected_output": "Agent should check available simulators, verify iPhone 17 Pro is available and booted, and help fix simulator configuration",
+      "files": [],
+      "expectations": [
+        "The agent runs xcrun simctl list to check available simulators",
+        "The agent checks if the correct simulator (iPhone 17 Pro) exists and is booted",
+        "The agent attempts to boot or create the simulator if it's missing",
+        "The agent retries the test command after fixing the simulator"
+      ]
+    }
+  ]
+}

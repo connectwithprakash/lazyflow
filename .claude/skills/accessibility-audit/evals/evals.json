@@ -1,0 +1,33 @@
+{
+  "skill_name": "accessibility-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you check if TodayView is accessible? I want to make sure VoiceOver works properly and the touch targets are big enough",
+      "expected_output": "Agent should read TodayView and its subviews, check VoiceOver labels/hints/traits, verify touch targets are >= 44pt, and check Dynamic Type support",
+      "files": [],
+      "expectations": [
+        "The agent reads TodayView.swift and key subviews (like TaskRowView)",
+        "The agent checks for accessibility labels on interactive elements",
+        "The agent checks for accessibility traits (.isHeader, .isButton)",
+        "The agent verifies touch targets are >= 44pt",
+        "The agent checks that DesignSystem.Typography tokens are used (not hardcoded fonts)",
+        "The agent provides specific SwiftUI modifier fixes for any issues found"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "run a full accessibility audit — we got a review saying the app is hard to use with VoiceOver. Check everything please",
+      "expected_output": "Agent should audit all major views for VoiceOver, Dynamic Type, color contrast, and touch targets, producing a comprehensive report",
+      "files": [],
+      "expectations": [
+        "The agent audits multiple views, not just one screen",
+        "The agent checks color contrast ratios against WCAG AA standards",
+        "The agent checks that information isn't conveyed by color alone",
+        "The agent checks both light and dark mode color combinations",
+        "The agent produces a structured report organized by issue category",
+        "The agent suggests accessibility snapshot tests for views with issues"
+      ]
+    }
+  ]
+}
