@@ -75,6 +75,15 @@ final class LazyflowUITests: XCTestCase {
         return false
     }
 
+    /// Tap a floating overlay element (e.g., FAB) using coordinate-based tap.
+    /// Standard `.tap()` fails on overlay buttons because XCTest tries to scroll them
+    /// into view first, which triggers kAXErrorCannotComplete for non-scrollable elements.
+    private func tapOverlay(_ element: XCUIElement) {
+        XCTAssertTrue(element.waitForExistence(timeout: 5), "Overlay element should exist")
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        Thread.sleep(forTimeInterval: 0.3)
+    }
+
     /// Navigate to Today tab. Works on both iPhone (tab bar) and iPad (sidebar).
     private func navigateToToday() {
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -2356,7 +2365,7 @@ final class LazyflowUITests: XCTestCase {
     func testQuickCaptureFABOpensSheet() throws {
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5), "Quick Capture FAB should exist")
-        fab.tap()
+        tapOverlay(fab)
 
         // Verify the Quick Note sheet appears
         let navBar = app.navigationBars["Quick Note"]
@@ -2370,7 +2379,7 @@ final class LazyflowUITests: XCTestCase {
     func testQuickCaptureCancelDismissesWithoutSaving() throws {
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
 
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2385,7 +2394,7 @@ final class LazyflowUITests: XCTestCase {
     func testQuickCaptureSaveNote() throws {
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
 
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2416,7 +2425,7 @@ final class LazyflowUITests: XCTestCase {
         // First create a quick note
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
 
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2449,7 +2458,7 @@ final class LazyflowUITests: XCTestCase {
     func testQuickCaptureSheetPlaceholder() throws {
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
 
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2462,7 +2471,7 @@ final class LazyflowUITests: XCTestCase {
     func testQuickCaptureSaveDisabledWhenEmpty() throws {
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
 
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2478,7 +2487,7 @@ final class LazyflowUITests: XCTestCase {
         for i in 1...3 {
             let fab = app.buttons["Quick Capture"]
             XCTAssertTrue(fab.waitForExistence(timeout: 5))
-            fab.tap()
+            tapOverlay(fab)
 
             let navBar = app.navigationBars["Quick Note"]
             XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2561,7 +2570,7 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(fab.waitForExistence(timeout: 5), "FAB should be visible on launch")
 
         // Tap FAB to open capture sheet
-        fab.tap()
+        tapOverlay(fab)
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3), "Quick Note sheet should open")
 
@@ -2594,7 +2603,7 @@ final class LazyflowUITests: XCTestCase {
         // Step 1: Create a quick note with extractable content
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
 
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2665,7 +2674,7 @@ final class LazyflowUITests: XCTestCase {
         // Create a note with multiple sentences (deterministic parser splits on ". ")
         let fab = app.buttons["Quick Capture"]
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
 
         let navBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2714,7 +2723,7 @@ final class LazyflowUITests: XCTestCase {
         for noteText in ["Navigation test note", "Second test note"] {
             let fab = app.buttons["Quick Capture"]
             XCTAssertTrue(fab.waitForExistence(timeout: 5))
-            fab.tap()
+            tapOverlay(fab)
 
             let navBar = app.navigationBars["Quick Note"]
             XCTAssertTrue(navBar.waitForExistence(timeout: 3))
@@ -2768,7 +2777,7 @@ final class LazyflowUITests: XCTestCase {
         snap("01-today-fab-visible")
 
         // ── Step 5: Tap FAB → Quick Note sheet opens ──
-        fab.tap()
+        tapOverlay(fab)
         let noteNavBar = app.navigationBars["Quick Note"]
         XCTAssertTrue(noteNavBar.waitForExistence(timeout: 3))
         snap("02-quick-note-sheet-empty")
@@ -2821,7 +2830,7 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Today")
         Thread.sleep(forTimeInterval: 0.5)
         XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
+        tapOverlay(fab)
         let noteNavBar2 = app.navigationBars["Quick Note"]
         XCTAssertTrue(noteNavBar2.waitForExistence(timeout: 3))
         let textEditor2 = app.textViews.firstMatch

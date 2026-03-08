@@ -216,6 +216,60 @@ If using Fastlane directly, set the environment variable:
 export MATCH_PASSWORD="your-password"
 ```
 
+## Continuous Integration
+
+### CI Pipeline (`.github/workflows/ci.yml`)
+
+Runs on every PR and push to `main`:
+
+| Job | Trigger | Timeout | Gates |
+|-----|---------|---------|-------|
+| **build-and-test** | PR + push | 30 min | Build, unit tests, coverage report |
+| **ui-tests** | PR only | 60 min | UI automation tests |
+
+**Steps in `build-and-test`:**
+1. Checkout → Select Xcode → Ensure simulator runtime
+2. Cache DerivedData (keyed on `.swift` + `project.pbxproj` hashes)
+3. Build (Debug, code signing disabled)
+4. Run unit tests with code coverage (`-enableCodeCoverage YES`)
+5. Extract coverage report → upload to job summary
+6. Upload test results + xcresult bundle as artifacts (30-day retention)
+
+**Artifacts uploaded:**
+- `test-results.xml` — JUnit XML for CI dashboards
+- `coverage-report.txt` — Coverage percentage per target
+- `TestResults.xcresult` / `UITestResults.xcresult` — Full Xcode result bundles (14-day retention)
+
+### Other Workflows
+
+| Workflow | File | Purpose |
+|----------|------|---------|
+| **Release** | `release.yml` | Release Please: auto-creates release PR, tags, GitHub Release |
+| **TestFlight** | `testflight.yml` | Builds and uploads to TestFlight on release |
+| **App Store** | `appstore.yml` | Submits to App Store (manually triggered) |
+
+### Dependabot
+
+Configured in `.github/dependabot.yml` for automatic GitHub Actions version updates.
+
+## Privacy Manifest
+
+`PrivacyInfo.xcprivacy` declares API usage categories required by Apple (effective Spring 2024):
+- File timestamp APIs
+- User defaults access
+- System boot time (for timer calculations)
+
+Include this file in every target that ships to the App Store.
+
+## Performance Monitoring
+
+**MetricKit** (`MetricsService`) subscribes to `MXMetricManager` for:
+- CPU, memory, disk I/O metrics
+- Hang diagnostics (main thread stalls)
+- Crash reports and diagnostic payloads
+
+Data is collected by iOS and delivered in 24-hour batches. No external analytics service needed.
+
 ## Security Notes
 
 - **Never commit** the `fastlane/keys/` directory (it's gitignored)

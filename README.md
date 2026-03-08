@@ -1,12 +1,12 @@
 # Lazyflow
 
-[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
+[![Version](https://img.shields.io/badge/version-1.10.0-blue.svg)](https://github.com/connectwithprakash/lazyflow/releases)
 [![App Store](https://img.shields.io/badge/App_Store-Available-0D96F6.svg?logo=apple)](https://apps.apple.com/us/app/lazyflow/id6757427688)
 [![iOS](https://img.shields.io/badge/iOS-17.0+-000000.svg?logo=apple)](https://developer.apple.com/ios/)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?logo=swift)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A free, open-source todo app for iOS that helps you plan your day with AI-powered task prioritization.
+A free, open-source todo app for iOS with AI-powered planning, Pomodoro focus timer, and calendar integration.
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/lazyflow/id6757427688">
@@ -23,18 +23,18 @@ A free, open-source todo app for iOS that helps you plan your day with AI-powere
 
 ## Why Lazyflow?
 
-Most todo apps just store tasks. Lazyflow helps you **plan your day** by combining calendar with tasks, letting AI tell you what to work on next, and tracking your productivity with daily summaries.
+Most todo apps just store tasks. Lazyflow helps you **plan your day** — capture rough notes and let AI turn them into tasks, sync tasks with your calendar, focus on one thing at a time with Pomodoro timers, and track your productivity with daily summaries.
 
 ## Features
 
-- **Focus Mode** - Full-screen immersive single-task experience with live timer and progress ring
-- **Next Up** - Single focused task suggestion with state-dependent actions (Start/Pause, Focus, Later)
+- **Quick Capture** - Jot down rough notes, AI extracts structured tasks with due dates and priorities
+- **Focus Mode** - Immersive single-task experience with Pomodoro timer, subtasks panel, and session persistence
+- **Calendar Sync** - Dedicated Lazyflow calendar with two-way task-event sync, scheduled start/end times
+- **Next Up** - Single focused task suggestion that learns from your completion patterns
 - **Plan Your Day** - Morning Briefing and Daily Summary with AI-generated insights and carryover
-- **Calendar Integration** - View events alongside tasks, schedule tasks as time blocks
-- **AI Priority** - Feedback-conditioned reranking learns from your task completion patterns
 - **Works Everywhere** - iPhone, iPad, Apple Watch, widgets, Siri, and Live Activities
-- **Privacy First** - Your data stays on your device. No tracking, no analytics
-- **100% Free** - No ads, no subscriptions, no premium tiers
+- **Privacy First** - AI runs on-device by default. No tracking, no analytics, no ads
+- **100% Free** - No subscriptions, no premium tiers. Open source under MIT License
 
 Learn more at [lazyflow.netlify.app](https://lazyflow.netlify.app)
 

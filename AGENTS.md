@@ -7,7 +7,8 @@ Lazyflow — AI-powered, calendar-integrated todo app for iOS.
 - **Language:** Swift | **UI:** SwiftUI | **Data:** Core Data (offline-first)
 - **Cloud:** CloudKit (iCloud sync) | **Calendar:** EventKit
 - **AI:** Apple Intelligence (on-device) | **Target:** iOS 17.0+ (min 16.0)
-- **Architecture:** MVVM + Combine | **Project:** XcodeGen (`project.yml`)
+- **Architecture:** MVVM + @Observable | **Project:** XcodeGen (`project.yml`)
+- **Packages:** LazyflowCore (models, extensions), LazyflowUI (design system)
 
 ## Build & Test
 
@@ -27,11 +28,15 @@ xcodegen generate
 
 ## Code Patterns
 
-**ViewModels:** `@MainActor final class FooViewModel: ObservableObject` with `@Published` properties
-**Services:** Singletons via `static let shared`, DI via init params for testing
+**ViewModels:** `@Observable @MainActor final class FooViewModel` — views use `@State` (not `@StateObject`)
+**Services:** Singletons via `static let shared`, DI via protocol + init params for testing
+**Service protocols:** `Lazyflow/Sources/Services/Protocols/` — `TaskServiceProtocol`, `CalendarServiceProtocol`, etc.
+**Feature flags:** `FeatureFlags.shared.isEnabled(.quickCapture)` — debug menu in Settings for overrides
+**Logging:** `Logger.tasks.info("message")` — category-based `os.Logger` (never `print()`)
 **Sheet flows:** `NavigationStack` inside sheet, `.task { await loadData() }` for async loading
 **State tracking:** `@AppStorage("lastXDate")` as `Double` (timeIntervalSince1970), check with `Calendar.current.isDateInToday()`
 **Prompt cards:** Button with HStack (icon circle + VStack text + chevron), `.buttonStyle(.plain)`
+**String Catalogs:** `.xcstrings` for localization — all user-facing strings are extractable
 
 ## Common Pitfalls
 
@@ -39,6 +44,10 @@ xcodegen generate
 - TodayView List sections must ALWAYS be present (even when empty) — prevents UICollectionView section count mismatch crashes
 - Never edit `.xcdatamodeld` files programmatically — Core Data model changes require manual handling
 - XcodeGen: run `xcodegen generate` after adding/removing Swift files, or build will fail
+- Core Data entity extensions stay in the app target — SPM packages can't reference `.xcdatamodeld`
+- `Task` name collides with `Swift.Task` — use explicit `import LazyflowCore` in test files to resolve
+- Snapshot tests use fixed device size/locale — update reference images when UI changes
+- Never manually edit `CHANGELOG.md` — Release Please auto-generates it from conventional commits
 
 ## Git Conventions
 
@@ -127,3 +136,5 @@ When blocked:
 - User Flows: `docs/project/user-flows.md`
 - Roadmap: `docs/project/roadmap.md`
 - Deployment: `docs/project/deployment.md`
+- Security: `docs/project/security.md`
+- ASO Research: `docs/project/aso-research.md`

@@ -634,7 +634,7 @@ Updated via `TimelineView(.periodic(every: 1))`.
 
 ---
 
-## Focus Mode Components (v1.9.0)
+## Focus Mode Components (v1.9.0, enhanced v1.10.0)
 
 Full-screen immersive overlay for deep work on a single task.
 
@@ -725,6 +725,139 @@ Tap: reopens Focus Mode overlay
 | `checkboxPop` | 180ms | spring(0.34, 1.56, 0.64, 1) | Checkbox fill |
 | `ambientDrift` | 12s | ease-in-out alternate | Focus background gradient |
 | `successScale` | 400ms | spring(0.34, 1.56, 0.64, 1) | Completion checkmark |
+
+### Pomodoro Timer Ring (v1.10.0)
+
+Extends the standard timer ring with work/break phase visualization.
+
+| Element | Work Phase | Break Phase |
+|---------|-----------|-------------|
+| **Progress color** | `Color.Lazyflow.accent` | `.orange` |
+| **Label text** | "Focusing" | "Break" |
+| **Direction** | Countdown (ring fills) | Countdown (ring fills) |
+| **Transition** | Auto on completion | Auto on completion |
+
+**Default intervals**: Work 25 min, Break 5 min (configurable in Settings).
+
+### Subtasks & Notes Panel (v1.10.0)
+
+Collapsible panel below the timer ring in Focus Mode.
+
+```
++--------------------------------------------+
+| ▼ Subtasks (2/5)                           |  Chevron toggles collapse
+|   ☐ Draft introduction section             |
+|   ☑ Research competitor pricing            |  Completed: strikethrough
+|   ☐ Create slide deck                      |
+|                                            |
+| Notes                                      |
+| "Remember to include Q3 data in the..."   |  Read-only, secondary text
++--------------------------------------------+
+
+Background: white @ 4% opacity
+Corner radius: CornerRadius.large
+Padding: Spacing.md
+Subtask rows: 44pt height, tap to toggle
+```
+
+### Focus Entry Point Badge (v1.10.0)
+
+Context menu item on task rows in TodayView and UpcomingView.
+
+| Element | Specification |
+|---------|---------------|
+| **Label** | "Enter Focus" |
+| **Icon** | `scope` (SF Symbol) |
+| **Context** | Long-press context menu on task row |
+
+---
+
+## Quick Capture Components (v1.10.0)
+
+### Floating Action Button (Quick Capture)
+
+```
++--------------------------------------------+
+|                                      [📝]  |  FAB, bottom-right
++--------------------------------------------+
+
+Position: trailing, above tab bar (same as Add Task FAB)
+Size: 56pt diameter
+Icon: note.text (SF Symbol)
+Color: accent fill, white icon
+Shadow: shadow-medium
+```
+
+Visible on Today and Upcoming tabs only.
+
+### Quick Capture Sheet
+
+```
++--------------------------------------------+
+| Quick Capture                        [✕]   |
+|                                            |
+| ┌────────────────────────────────────────┐ |
+| │ Type anything... your grocery list,    │ |
+| │ meeting notes, random thoughts...      │ |
+| └────────────────────────────────────────┘ |
+|                                            |
+|     [ Save Note ]  [ 🤖 Extract Tasks ]   |
++--------------------------------------------+
+
+Sheet detent: medium
+Text field: auto-focused, multi-line
+"Save Note": secondary button style
+"Extract Tasks": primary button style
+```
+
+### Quick Capture Review Sheet
+
+```
++--------------------------------------------+
+| Review Extracted Tasks              [Edit] |
+|                                            |
+| ┌──────────────────────────────────────┐   |
+| │ ☐ Buy groceries         📅 Today    │   |
+| │ ☐ Call dentist           📅 Tomorrow │   |
+| │ ☐ Review Q4 report      🔴 High     │   |
+| └──────────────────────────────────────┘   |
+|                                            |
+|          [ Create All Tasks ]              |
++--------------------------------------------+
+
+Each draft row: editable title, due date chip, priority indicator
+"Create All Tasks": primary button, full-width
+```
+
+---
+
+## Calendar Sync Components (v1.10.0)
+
+### Scheduled Time Badge
+
+Inline badge on task rows showing scheduled start/end time.
+
+```
+┌──────────────────────────────────────────────┐
+│ ☐ Review Q4 budget         🕐 2:00–3:30 PM  │
+└──────────────────────────────────────────────┘
+
+Font: caption1, monospacedDigit
+Color: textSecondary
+Icon: clock (SF Symbol)
+```
+
+### Calendar Sync Settings
+
+```
++--------------------------------------------+
+| Calendar Sync                              |
+|                                            |
+|   Auto-sync tasks to calendar    [toggle]  |
+|   On completion: Keep event      [picker]  |
+|   Busy-only mode                 [toggle]  |
++--------------------------------------------+
+```
 
 ---
 
