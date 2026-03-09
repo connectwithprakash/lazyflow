@@ -1,11 +1,28 @@
-Smarter AI
-• redesign AddTaskView and unify TaskDetailView layout
-• feedback-conditioned LLM reranking for task suggestions
-• add Focus Mode v1 with immersive single-task experience
-• move search bar to bottom for better reachability
-• replace multi-card suggestions with single focused Next Up card
-• revamp Next Up suggestion with top 3, feedback, and snooze/skip
-• add carryover section to Daily Summary
+Calendar Integration
+• add accessibility labels and hints to all views
+• extract LazyflowCore and LazyflowUI SPM packages
+• optimize App Store metadata and website for v1.10
+• update marketing copy for v1.10 features
+• add scheduled start/end time to tasks
+• add two-way sync between tasks and calendar events
+• sync recurring tasks as recurring calendar events
+• add quick capture with persistent note inbox and AI task extraction
+• add lightweight feature flag system with debug menu
+• centralize configuration constants and UserDefaults keys
+• harden Core Data migration strategy and error handling
+• extract service protocols for dependency injection
+• add focus entry points, subtasks, Pomodoro timer, and session persistence
+• add String Catalog for localization readiness
+• add MetricKit for performance and crash monitoring
+• migrate all ViewModels and services to @Observable
+• align privacy policy with external AI provider support
+• capture v1.10 screenshots for App Store and website
+• add Data Protection, Keychain hardening, and security docs
+• persistent history token merge and CloudKit sync monitoring
+• add snapshot tests for key screens
+• make Quick Capture FAB draggable along right edge
+• split large view files into focused modules
 
 Bug Fixes
-• Various bug fixes and stability improvements
+• check device capability before showing AI features
+• default to Day on iPhone and persist last-used view mode
