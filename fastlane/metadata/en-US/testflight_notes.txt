@@ -1,9 +1,14 @@
-What's New in v1.9.0:
+What's New in v1.10.0:
 
-• Focus Mode — tap Focus on the Next Up card, test the immersive timer
-• Next Up — verify single task suggestion appears with Start/Focus/Later actions
-• AI learning — start, snooze, or skip suggestions and check if ranking improves
-• Daily Summary — verify carryover section shows yesterday's incomplete tasks
-• Timer — pause and resume multiple times, confirm no time loss
+• Quick Capture — tap the pencil button, jot a note, let AI extract tasks. Drag the button to reposition it.
+• Focus Mode — Pomodoro timer with configurable intervals, subtasks panel, session persistence across restarts
+• Calendar Sync — two-way sync, scheduled times, recurring event support
+• Accessibility — labels and hints on all screens, Dynamic Type support
 
-Please report any issues with Focus Mode or Next Up suggestions.
+Please test:
+- Quick Capture: tap FAB, write a note, verify AI extracts tasks correctly
+- Drag FAB: drag the pencil button along the right edge, restart app, verify position persists
+- Focus Mode: start a Pomodoro session, pause/resume, verify timer accuracy
+- Calendar: create a task with scheduled time, verify it appears in calendar and vice versa
+
+Report issues at https://github.com/connectwithprakash/lazyflow/issues

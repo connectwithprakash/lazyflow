@@ -1,28 +1,25 @@
-Calendar Integration
-• add accessibility labels and hints to all views
-• extract LazyflowCore and LazyflowUI SPM packages
-• optimize App Store metadata and website for v1.10
-• update marketing copy for v1.10 features
-• add scheduled start/end time to tasks
-• add two-way sync between tasks and calendar events
-• sync recurring tasks as recurring calendar events
-• add quick capture with persistent note inbox and AI task extraction
-• add lightweight feature flag system with debug menu
-• centralize configuration constants and UserDefaults keys
-• harden Core Data migration strategy and error handling
-• extract service protocols for dependency injection
-• add focus entry points, subtasks, Pomodoro timer, and session persistence
-• add String Catalog for localization readiness
-• add MetricKit for performance and crash monitoring
-• migrate all ViewModels and services to @Observable
-• align privacy policy with external AI provider support
-• capture v1.10 screenshots for App Store and website
-• add Data Protection, Keychain hardening, and security docs
-• persistent history token merge and CloudKit sync monitoring
-• add snapshot tests for key screens
-• make Quick Capture FAB draggable along right edge
-• split large view files into focused modules
+What's New in v1.10
 
-Bug Fixes
-• check device capability before showing AI features
-• default to Day on iPhone and persist last-used view mode
+Quick Capture
+• Jot down rough notes and let AI extract structured tasks
+• Draggable capture button — move it out of the way of swipe actions
+
+Focus Mode
+• Pomodoro timer with configurable work and break intervals
+• Subtasks and notes panel inside Focus Mode
+• Sessions persist across app restarts
+
+Calendar Integration
+• Two-way sync between tasks and calendar events
+• Set scheduled start and end times for event-like planning
+• Recurring tasks sync as recurring calendar events
+
+Accessibility & Polish
+• Accessibility labels and hints on all views
+• Day view default on iPhone with persistent view mode
+• AI features now check device capability before appearing
+
+Under the Hood
+• Improved iCloud sync reliability and conflict resolution
+• Hardened Core Data migration and error handling
+• Performance and crash monitoring with MetricKit
