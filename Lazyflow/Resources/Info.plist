@@ -33,6 +33,8 @@
 			<string>Planner</string>
 		</dict>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Lazyflow needs calendar access to schedule tasks as time blocks and show your events alongside tasks.</string>
 	<key>NSSupportsLiveActivities</key>

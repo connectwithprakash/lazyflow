@@ -42,6 +42,7 @@ targets:
         NSCalendarsFullAccessUsageDescription: "Lazyflow needs calendar access to schedule tasks as time blocks and show your events alongside tasks."
         UIBackgroundModes:
           - remote-notification
+        ITSAppUsesNonExemptEncryption: NO
         INAlternativeAppNames:
           - INAlternativeAppName: Lazy Flow
           - INAlternativeAppName: Todo
