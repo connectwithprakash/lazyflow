@@ -29,6 +29,13 @@ if [ ! -f "$CHANGELOG_FILE" ]; then
     exit 1
 fi
 
+# Skip if release notes already reference this version (hand-written notes take priority)
+MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+if [ -f "$OUTPUT_FILE" ] && grep -q "$MAJOR_MINOR" "$OUTPUT_FILE"; then
+    echo -e "${GREEN}$OUTPUT_FILE already contains notes for v$MAJOR_MINOR — skipping auto-generation.${NC}"
+    exit 0
+fi
+
 # Extract the section for this version from CHANGELOG.md
 CHANGELOG_SECTION=$(awk "/^## \[$VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" "$CHANGELOG_FILE")
 

@@ -1,0 +1,16 @@
+name: Release Metadata Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-metadata:
+    if: startsWith(github.head_ref, 'release-please--branches--')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Validate release metadata
+        run: ./scripts/check-release-metadata.sh
