@@ -9,10 +9,9 @@ import LazyflowCore
 /// Uses fixed viewports (iPhone 13 Pro 375×812, iPad Pro 12.9" 1024×1366) so images
 /// are identical regardless of the local simulator or CI simulator.
 ///
-/// Reference images are recorded on CI to avoid cross-environment rendering
-/// differences between local macOS and CI runners. To re-record, either:
-/// - Set `SNAPSHOT_RECORD=true` env var when launching xcodebuild
-/// - Change `record` to `.all` in `invokeTest()` temporarily
+/// References are recorded on CI to match the CI rendering environment.
+/// Local mismatches are expected when Xcode versions differ.
+/// To re-record, trigger the "Re-record Snapshots" CI workflow.
 @MainActor
 class SnapshotTestCase: XCTestCase {
 
