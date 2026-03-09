@@ -50,7 +50,13 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -only-testing:LazyflowTests \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty || true
+            | xcpretty
+          # Record mode tests always "fail" by design — check that build succeeded
+          # by verifying snapshot files were actually written
+          if ! ls LazyflowTests/Snapshots/__Snapshots__/**/*.png &>/dev/null; then
+            echo "::error::No snapshot files found — build may have failed"
+            exit 1
+          fi
 
       - name: Commit Updated References
         run: |

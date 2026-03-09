@@ -110,6 +110,11 @@ struct ProfileView: View {
                     .frame(width: 60, height: 60)
                     .cornerRadius(DesignSystem.CornerRadius.medium)
                     .opacity(0.8)
+            } else {
+                Image(systemName: "app.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(Color.Lazyflow.accent)
+                    .opacity(0.8)
             }
 
             Text("Lazyflow")
