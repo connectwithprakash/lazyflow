@@ -98,6 +98,7 @@ struct QuickCaptureFAB: View {
                     }
                 }
             }
+            .accessibilityAddTraits(.isButton)
             .accessibilityLabel("Quick Capture")
             .accessibilityHint("Opens a quick note for capturing thoughts. Drag to reposition.")
     }
