@@ -14,6 +14,7 @@ public enum AppConstants {
         public static let hasShownICloudPrompt = "hasShownICloudPrompt"
         public static let hapticFeedback = "hapticFeedback"
         public static let showCompletedTasks = "showCompletedTasks"
+        public static let fabVerticalPosition = "fabVerticalPosition"
 
         // AI Settings
         public static let aiAutoSuggest = "aiAutoSuggest"
