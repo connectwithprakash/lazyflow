@@ -1,5 +1,2078 @@
 {
   "sourceLanguage" : "en",
-  "strings" : {},
+  "strings" : {
+    "" : {
+
+    },
+    "·" : {
+
+    },
+    "\"%@\" has been marked complete." : {
+
+    },
+    "\"Delete Everything\" will remove data from ALL devices synced with this iCloud account." : {
+
+    },
+    "(%lld)" : {
+
+    },
+    "%@ free" : {
+
+    },
+    "%@ Severity" : {
+
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%@, %lld task%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld task%3$@"
+          }
+        }
+      }
+    },
+    "%@, all day event" : {
+
+    },
+    "%@, completed" : {
+
+    },
+    "%@: %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@. %3$@"
+          }
+        }
+      }
+    },
+    "%@%@%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@%3$@%4$@"
+          }
+        }
+      }
+    },
+    "%lld" : {
+
+    },
+    "%lld change%@ pending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld change%2$@ pending"
+          }
+        }
+      }
+    },
+    "%lld Conflicts Found" : {
+
+    },
+    "%lld days to next milestone" : {
+
+    },
+    "%lld event%@ selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld event%2$@ selected"
+          }
+        }
+      }
+    },
+    "%lld high severity" : {
+
+    },
+    "%lld models available" : {
+
+    },
+    "%lld models available (%lld free)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld models available (%2$lld free)"
+          }
+        }
+      }
+    },
+    "%lld of %lld completed today" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld completed today"
+          }
+        }
+      }
+    },
+    "%lld of %lld models are free" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld models are free"
+          }
+        }
+      }
+    },
+    "%lld of %lld subtasks completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld subtasks completed"
+          }
+        }
+      }
+    },
+    "%lld of %lld subtasks completed. %@ subtasks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld subtasks completed. %3$@ subtasks"
+          }
+        }
+      }
+    },
+    "%lld of %lld subtasks. %@ to %@ subtasks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld subtasks. %3$@ to %4$@ subtasks"
+          }
+        }
+      }
+    },
+    "%lld result%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld result%2$@"
+          }
+        }
+      }
+    },
+    "%lld Schedule Conflict%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Schedule Conflict%2$@"
+          }
+        }
+      }
+    },
+    "%lld selected" : {
+
+    },
+    "%lld task%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld task%2$@"
+          }
+        }
+      }
+    },
+    "%lld task%@ analyzed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld task%2$@ analyzed"
+          }
+        }
+      }
+    },
+    "%lld Task%@ Created" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Task%2$@ Created"
+          }
+        }
+      }
+    },
+    "%lld tasks" : {
+
+    },
+    "%lld tasks need categorization" : {
+
+    },
+    "%lld times AI suggestions were shown" : {
+
+    },
+    "%lld total" : {
+
+    },
+    "%lld." : {
+
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "%lld/%lld completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld completed"
+          }
+        }
+      }
+    },
+    "%lld/%lld done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld done"
+          }
+        }
+      }
+    },
+    "%lld/%lld subtasks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld subtasks"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
+    "%lld%% done" : {
+
+    },
+    "%lldh %lldm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lldh %2$lldm"
+          }
+        }
+      }
+    },
+    "%lldm" : {
+
+    },
+    "%lldm of %lldm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lldm of %2$lldm"
+          }
+        }
+      }
+    },
+    "• %@" : {
+
+    },
+    "• %@/wk" : {
+
+    },
+    "• %lld overdue" : {
+
+    },
+    "+ %lld more" : {
+
+    },
+    "+ %lld more tasks" : {
+
+    },
+    "+%lld more" : {
+
+    },
+    "+%lld more categories" : {
+
+    },
+    "+%lld more lists" : {
+
+    },
+    "⚠️ Custom endpoints may send your task data to external servers. Ensure you trust the endpoint provider." : {
+
+    },
+    "⚠️ This will permanently delete all tasks and lists from this device AND all other devices synced with your iCloud account. This cannot be undone!" : {
+
+    },
+    "About" : {
+
+    },
+    "About Lazyflow" : {
+
+    },
+    "accepted" : {
+
+    },
+    "Accessibility" : {
+
+    },
+    "Active Hours" : {
+
+    },
+    "Add" : {
+
+    },
+    "Add custom category" : {
+
+    },
+    "Add Date" : {
+
+    },
+    "Add list" : {
+
+    },
+    "Add notes" : {
+
+    },
+    "Add some tasks to see your morning briefing" : {
+
+    },
+    "Add subtask" : {
+
+    },
+    "Add Subtask" : {
+
+    },
+    "Add task" : {
+
+    },
+    "Add task to %@" : {
+
+    },
+    "Add Time" : {
+
+    },
+    "AI Acceptance Rate" : {
+
+    },
+    "AI Acceptance Rate, %@" : {
+
+    },
+    "AI Analysis" : {
+
+    },
+    "AI estimates how long tasks will take" : {
+
+    },
+    "AI Features" : {
+
+    },
+    "AI Impressions" : {
+
+    },
+    "AI Provider" : {
+
+    },
+    "AI Quality" : {
+
+    },
+    "AI Quality: Correction and refinement rates" : {
+
+    },
+    "AI Settings" : {
+
+    },
+    "AI Settings%@" : {
+
+    },
+    "AI Suggest" : {
+
+    },
+    "AI Suggestions" : {
+
+    },
+    "AI suggests creating this category for tasks like yours" : {
+
+    },
+    "AI suggests task priority levels" : {
+
+    },
+    "AI Summary" : {
+
+    },
+    "All" : {
+
+    },
+    "All Day" : {
+
+    },
+    "All day: %@" : {
+
+    },
+    "All feature flags will revert to their compile-time defaults." : {
+
+    },
+    "All Lists" : {
+
+    },
+    "All Set!" : {
+
+    },
+    "All subtasks complete!" : {
+
+    },
+    "Analytics" : {
+
+    },
+    "Analytics: Category and list insights" : {
+
+    },
+    "Analyze Uncategorized Tasks" : {
+
+    },
+    "Analyzing your note..." : {
+
+    },
+    "Analyzing..." : {
+
+    },
+    "API Key" : {
+
+    },
+    "API Key (optional)" : {
+
+    },
+    "Appearance" : {
+
+    },
+    "Apple Intelligence runs entirely on your device. No data leaves your device. Requires iOS 18.4 or later." : {
+
+    },
+    "Applied" : {
+
+    },
+    "Apply" : {
+
+    },
+    "Apply %lld" : {
+
+    },
+    "Apply All Suggestions" : {
+
+    },
+    "Apply suggestion" : {
+
+    },
+    "Are you sure you want to delete \"%@\"? Tasks using this category will be set to Uncategorized." : {
+
+    },
+    "Are you sure you want to remove %@? You'll need to reconfigure it to use it again." : {
+
+    },
+    "As you use AI features like task suggestions, Morning Briefings, and Daily Summaries, quality metrics will appear here." : {
+
+    },
+    "at %@" : {
+
+    },
+    "Auto-Hide Frequently Skipped" : {
+
+    },
+    "Auto-Suggest" : {
+
+    },
+    "Auto-Sync to Calendar" : {
+
+    },
+    "Automatically categorize and estimate duration for tasks without a category." : {
+
+    },
+    "Automatically reschedule all %lld tasks to their optimal times." : {
+
+    },
+    "Avg Rate" : {
+
+    },
+    "Batch Analysis" : {
+
+    },
+    "Best" : {
+
+    },
+    "Best day: %@" : {
+
+    },
+    "Break Interval: %lld min" : {
+
+    },
+    "Busy-Only Privacy Mode" : {
+
+    },
+    "Calendar" : {
+
+    },
+    "Calendar Access Denied" : {
+
+    },
+    "Calendar access needed" : {
+
+    },
+    "Calendar Access Needed" : {
+
+    },
+    "Calendar Access Required" : {
+
+    },
+    "Calendar access was denied. Please enable it in Settings to view your events." : {
+
+    },
+    "Calendar access was previously denied. Please enable it in Settings to use this feature." : {
+
+    },
+    "Calendar Sync" : {
+
+    },
+    "Calendar-First Todo App" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Cancel adding subtask" : {
+
+    },
+    "Carryover" : {
+
+    },
+    "Categories" : {
+
+    },
+    "Categories: Browse tasks by category" : {
+
+    },
+    "Category" : {
+
+    },
+    "Category distribution chart" : {
+
+    },
+    "Category Name" : {
+
+    },
+    "Category: %@" : {
+
+    },
+    "Check" : {
+
+    },
+    "Checking permissions..." : {
+
+    },
+    "Clear" : {
+
+    },
+    "Clear All" : {
+
+    },
+    "Clear All Filters" : {
+
+    },
+    "Clear Cache" : {
+
+    },
+    "Clear Local Cache" : {
+
+    },
+    "Clear Local Cache?" : {
+
+    },
+    "Clear search" : {
+
+    },
+    "Clears learned Plan Your Day patterns" : {
+
+    },
+    "Close Focus Mode" : {
+
+    },
+    "Cloud only · Keeps local data" : {
+
+    },
+    "Color" : {
+
+    },
+    "Color %@" : {
+
+    },
+    "Color option" : {
+
+    },
+    "complete" : {
+
+    },
+    "Complete %@" : {
+
+    },
+    "Complete Next Task" : {
+
+    },
+    "Complete some tasks to see your daily summary" : {
+
+    },
+    "Complete Task" : {
+
+    },
+    "Completed" : {
+
+    },
+    "Completed Tasks" : {
+
+    },
+    "Completed: %@" : {
+
+    },
+    "Completion" : {
+
+    },
+    "Configuration" : {
+
+    },
+    "Configure" : {
+
+    },
+    "Configure %@" : {
+
+    },
+    "Configure AI provider and features" : {
+
+    },
+    "Configure task reminder notifications" : {
+
+    },
+    "Confirm subtask" : {
+
+    },
+    "Conflicts with" : {
+
+    },
+    "Conflicts with task" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Create" : {
+
+    },
+    "Create & Apply" : {
+
+    },
+    "Create %lld Task%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create %1$lld Task%2$@"
+          }
+        }
+      }
+    },
+    "Create Category" : {
+
+    },
+    "Create List" : {
+
+    },
+    "Create New Category" : {
+
+    },
+    "Create Task" : {
+
+    },
+    "Created" : {
+
+    },
+    "Created task: %@" : {
+
+    },
+    "Creates a new task in Lazyflow" : {
+
+    },
+    "Creating tasks..." : {
+
+    },
+    "Custom Categories" : {
+
+    },
+    "Daily Summary" : {
+
+    },
+    "Daily Summary: Track your productivity%@" : {
+
+    },
+    "Danger Zone" : {
+
+    },
+    "Data" : {
+
+    },
+    "Data is stored locally on this device only." : {
+
+    },
+    "Data Management" : {
+
+    },
+    "Date" : {
+
+    },
+    "Date detected: \"%@\"" : {
+
+    },
+    "Date Range" : {
+
+    },
+    "Day" : {
+
+    },
+    "day streak" : {
+
+    },
+    "Default Reminder Time" : {
+
+    },
+    "Delete" : {
+
+    },
+    "Delete %@" : {
+
+    },
+    "Delete All" : {
+
+    },
+    "Delete Category?" : {
+
+    },
+    "Delete Event" : {
+
+    },
+    "Delete Everything" : {
+
+    },
+    "Delete Everything?" : {
+
+    },
+    "Delete from iCloud" : {
+
+    },
+    "Delete iCloud Data" : {
+
+    },
+    "Delete iCloud Data?" : {
+
+    },
+    "Delete List" : {
+
+    },
+    "Delete List?" : {
+
+    },
+    "Delete Note?" : {
+
+    },
+    "Delete Subtask" : {
+
+    },
+    "Delete Task" : {
+
+    },
+    "Description" : {
+
+    },
+    "Deselect All" : {
+
+    },
+    "Developer" : {
+
+    },
+    "Dismiss date suggestion" : {
+
+    },
+    "Done" : {
+
+    },
+    "Double tap to create task instantly, or long press for options" : {
+
+    },
+    "Double tap to edit subtask" : {
+
+    },
+    "Double tap to toggle completion" : {
+
+    },
+    "Double tap to view details" : {
+
+    },
+    "Double tap to view event options" : {
+
+    },
+    "Double-tap to edit" : {
+
+    },
+    "Double-tap to grant permission" : {
+
+    },
+    "Double-tap to view details" : {
+
+    },
+    "Due Date" : {
+
+    },
+    "Due Time" : {
+
+    },
+    "Due Today" : {
+
+    },
+    "Duration" : {
+
+    },
+    "e.g., \"Drink water\", \"Take a break\"" : {
+
+    },
+    "Edit Configuration" : {
+
+    },
+    "Edit list" : {
+
+    },
+    "Edit List" : {
+
+    },
+    "Edit note" : {
+
+    },
+    "Edit Note" : {
+
+    },
+    "Edit Subtask" : {
+
+    },
+    "Edit Task" : {
+
+    },
+    "Eligible tasks (with date, time, and duration) are auto-synced to a dedicated Lazyflow calendar. Changes made in Apple Calendar sync back to your tasks." : {
+
+    },
+    "Empty" : {
+
+    },
+    "Enable" : {
+
+    },
+    "Enable Calendar Access" : {
+
+    },
+    "Enable calendar access to view your events and schedule tasks as time blocks." : {
+
+    },
+    "Enable iCloud Sync" : {
+
+    },
+    "Enable iCloud sync to access your tasks on all your Apple devices. You can change this later in Settings." : {
+
+    },
+    "Enable notifications in Settings to receive task reminders. Tap Open Settings, then tap Notifications." : {
+
+    },
+    "Enable to sync tasks across your Apple devices." : {
+
+    },
+    "End Date" : {
+
+    },
+    "End Time" : {
+
+    },
+    "Endpoint URL" : {
+
+    },
+    "Ends on" : {
+
+    },
+    "Enter Focus" : {
+
+    },
+    "Enter Manually" : {
+
+    },
+    "Enter your thought, idea, or task" : {
+
+    },
+    "Est: %@" : {
+
+    },
+    "Est. %@" : {
+
+    },
+    "Estimate Duration" : {
+
+    },
+    "Estimated Duration" : {
+
+    },
+    "Estimated: %@" : {
+
+    },
+    "Evening Reminder" : {
+
+    },
+    "Events show \"Focus Block\" instead of task title" : {
+
+    },
+    "Events you consistently skip will be hidden by default. You can always reveal them." : {
+
+    },
+    "Every" : {
+
+    },
+    "Every %lld day%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every %1$lld day%2$@"
+          }
+        }
+      }
+    },
+    "External" : {
+
+    },
+    "Extract" : {
+
+    },
+    "Extract Again" : {
+
+    },
+    "Extract tasks" : {
+
+    },
+    "Extract Tasks" : {
+
+    },
+    "Extract tasks again" : {
+
+    },
+    "Feature Flags" : {
+
+    },
+    "Filters" : {
+
+    },
+    "Focus" : {
+
+    },
+    "Focus Mode" : {
+
+    },
+    "FREE" : {
+
+    },
+    "Frequency" : {
+
+    },
+    "From" : {
+
+    },
+    "From Event" : {
+
+    },
+    "From your note:" : {
+
+    },
+    "Generate a new AI-powered briefing" : {
+
+    },
+    "Generate a new AI-powered summary" : {
+
+    },
+    "Generating your summary..." : {
+
+    },
+    "Get a notification and prompt card to review your day. Access your summary anytime from More > Daily Summary." : {
+
+    },
+    "Get a prompt card on Today and optional notification to view your morning briefing. Access it anytime from More > Morning Briefing." : {
+
+    },
+    "Get Started" : {
+
+    },
+    "Get Today's Tasks" : {
+
+    },
+    "Good Morning" : {
+
+    },
+    "Grant calendar access in Settings to\nreview events and plan your day." : {
+
+    },
+    "Great focus!" : {
+
+    },
+    "Great!" : {
+
+    },
+    "Haptic Feedback" : {
+
+    },
+    "Hide %lld usually skipped" : {
+
+    },
+    "High" : {
+
+    },
+    "History" : {
+
+    },
+    "History: View completed tasks" : {
+
+    },
+    "hour%@" : {
+
+    },
+    "Hours" : {
+
+    },
+    "iCloud" : {
+
+    },
+    "iCloud Sync" : {
+
+    },
+    "Icon" : {
+
+    },
+    "Icon %@" : {
+
+    },
+    "In iCloud" : {
+
+    },
+    "In progress" : {
+
+    },
+    "Individual Conflicts" : {
+
+    },
+    "Info" : {
+
+    },
+    "Insights" : {
+
+    },
+    "Jot down a thought, idea, or task..." : {
+
+    },
+    "Keep Event" : {
+
+    },
+    "Later" : {
+
+    },
+    "Lazyflow" : {
+
+    },
+    "Lazyflow helps engineers manage their tasks and time by seamlessly integrating todo lists with your calendar. See what's due, when you're free, and plan your day with ease." : {
+
+    },
+    "Let's Go!" : {
+
+    },
+    "Life %lld%%" : {
+
+    },
+    "List" : {
+
+    },
+    "List Name" : {
+
+    },
+    "Lists" : {
+
+    },
+    "Lists your tasks for today" : {
+
+    },
+    "Lists: Organize your tasks" : {
+
+    },
+    "Live Activity" : {
+
+    },
+    "Loading your calendar..." : {
+
+    },
+    "Local + iCloud · All devices" : {
+
+    },
+    "Local data only" : {
+
+    },
+    "Local only · iCloud backup kept" : {
+
+    },
+    "Low" : {
+
+    },
+    "Manage categories" : {
+
+    },
+    "Mark %@ complete" : {
+
+    },
+    "Mark %@ incomplete" : {
+
+    },
+    "Mark complete" : {
+
+    },
+    "Mark Complete" : {
+
+    },
+    "Mark incomplete" : {
+
+    },
+    "Mark Incomplete" : {
+
+    },
+    "Mark subtask complete" : {
+
+    },
+    "Mark subtask incomplete" : {
+
+    },
+    "Marks task as done" : {
+
+    },
+    "Marks your highest priority task as complete" : {
+
+    },
+    "Me" : {
+
+    },
+    "Medium" : {
+
+    },
+    "Milestone reached!" : {
+
+    },
+    "Model" : {
+
+    },
+    "Model Details" : {
+
+    },
+    "Model ID" : {
+
+    },
+    "Model Name" : {
+
+    },
+    "More" : {
+
+    },
+    "More options" : {
+
+    },
+    "Morning Briefing" : {
+
+    },
+    "Morning Briefing: Yesterday's recap and today's plan" : {
+
+    },
+    "Morning Reminder" : {
+
+    },
+    "Move %@ down" : {
+
+    },
+    "Move %@ up" : {
+
+    },
+    "Move to Today" : {
+
+    },
+    "My Lists" : {
+
+    },
+    "Name" : {
+
+    },
+    "Navigate" : {
+
+    },
+    "New List" : {
+
+    },
+    "New note" : {
+
+    },
+    "New Task" : {
+
+    },
+    "Next Up" : {
+
+    },
+    "Next up: %@" : {
+
+    },
+    "Next Week" : {
+
+    },
+    "Next: %@" : {
+
+    },
+    "No activity in %lld+ days" : {
+
+    },
+    "No AI data yet" : {
+
+    },
+    "No alternative suggestions right now" : {
+
+    },
+    "No custom categories" : {
+
+    },
+    "No custom categories yet" : {
+
+    },
+    "No custom lists yet" : {
+
+    },
+    "No List" : {
+
+    },
+    "No meetings today" : {
+
+    },
+    "No new calendar events to review.\nAll events are already linked to tasks." : {
+
+    },
+    "No quick notes yet" : {
+
+    },
+    "No Results" : {
+
+    },
+    "No subtasks yet" : {
+
+    },
+    "No tasks completed today" : {
+
+    },
+    "No tasks match \"%@\"" : {
+
+    },
+    "No tasks to complete today!" : {
+
+    },
+    "None" : {
+
+    },
+    "Not now" : {
+
+    },
+    "Not Now" : {
+
+    },
+    "Note: %@" : {
+
+    },
+    "Notes" : {
+
+    },
+    "Notes (optional)" : {
+
+    },
+    "Notification Settings" : {
+
+    },
+    "Notifications" : {
+
+    },
+    "Notifications Disabled" : {
+
+    },
+    "Notifications Enabled" : {
+
+    },
+    "Offline · Changes will sync when online" : {
+
+    },
+    "OK" : {
+
+    },
+    "Ollama runs locally on your Mac. Your data stays on your local network." : {
+
+    },
+    "On days" : {
+
+    },
+    "On Task Completion" : {
+
+    },
+    "On This Device" : {
+
+    },
+    "Open Settings" : {
+
+    },
+    "Open Task Details" : {
+
+    },
+    "Opens a quick note for capturing thoughts" : {
+
+    },
+    "Opens task details" : {
+
+    },
+    "Other Options" : {
+
+    },
+    "Over estimate" : {
+
+    },
+    "Overdue" : {
+
+    },
+    "Overdue — consider finishing today" : {
+
+    },
+    "OVERRIDE" : {
+
+    },
+    "Overrides are stored locally and persist across app launches. They do not affect other devices." : {
+
+    },
+    "Page %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Pause" : {
+
+    },
+    "Pause timer" : {
+
+    },
+    "Pause Working" : {
+
+    },
+    "Percentage of AI suggestions used as-is" : {
+
+    },
+    "Period" : {
+
+    },
+    "Plan Your Day" : {
+
+    },
+    "Please restart the app to enable iCloud sync." : {
+
+    },
+    "Preparing your morning briefing..." : {
+
+    },
+    "Preview" : {
+
+    },
+    "Priority" : {
+
+    },
+    "Privacy Policy" : {
+
+    },
+    "Processed" : {
+
+    },
+    "Productivity Tip" : {
+
+    },
+    "Promote" : {
+
+    },
+    "Promote to Task" : {
+
+    },
+    "Proposed Changes" : {
+
+    },
+    "Provider:" : {
+
+    },
+    "Push to Tomorrow" : {
+
+    },
+    "Quick Actions" : {
+
+    },
+    "Quick Capture" : {
+
+    },
+    "Quick Note" : {
+
+    },
+    "Quick Notes" : {
+
+    },
+    "Quick Options" : {
+
+    },
+    "Re-downloads from iCloud" : {
+
+    },
+    "Re-sync" : {
+
+    },
+    "Re-sync from iCloud" : {
+
+    },
+    "Re-sync from iCloud?" : {
+
+    },
+    "Ready to start your day!" : {
+
+    },
+    "Recalculate morning briefing data" : {
+
+    },
+    "Recalculate today's productivity stats" : {
+
+    },
+    "Recent task: %@" : {
+
+    },
+    "Recent Tasks" : {
+
+    },
+    "Recommended" : {
+
+    },
+    "Refresh briefing" : {
+
+    },
+    "Refresh summary" : {
+
+    },
+    "Regenerate AI briefing" : {
+
+    },
+    "Regenerate AI recap" : {
+
+    },
+    "Remind at" : {
+
+    },
+    "Reminder" : {
+
+    },
+    "Reminder Time" : {
+
+    },
+    "Reminders only during these hours" : {
+
+    },
+    "Reminders will be evenly distributed during active hours" : {
+
+    },
+    "Remove" : {
+
+    },
+    "Remove %@" : {
+
+    },
+    "Remove Date" : {
+
+    },
+    "Remove Provider" : {
+
+    },
+    "Removes all local data" : {
+
+    },
+    "Repeat" : {
+
+    },
+    "Repeat Interval" : {
+
+    },
+    "Repeat this task" : {
+
+    },
+    "Reset" : {
+
+    },
+    "Reset All Flags?" : {
+
+    },
+    "Reset All to Defaults" : {
+
+    },
+    "Reset Event Preferences" : {
+
+    },
+    "Reset Event Preferences?" : {
+
+    },
+    "Resolve" : {
+
+    },
+    "Resolve All Conflicts" : {
+
+    },
+    "Resolve Conflict" : {
+
+    },
+    "Restart Required" : {
+
+    },
+    "Resume" : {
+
+    },
+    "Resume focusing on %@" : {
+
+    },
+    "Resume working" : {
+
+    },
+    "Review calendar events and add tasks" : {
+
+    },
+    "Review Changes" : {
+
+    },
+    "Save" : {
+
+    },
+    "Schedule" : {
+
+    },
+    "Schedule Conflicts" : {
+
+    },
+    "Schedule Time Block" : {
+
+    },
+    "Schedule to Calendar" : {
+
+    },
+    "Search" : {
+
+    },
+    "Search completed tasks..." : {
+
+    },
+    "Search history" : {
+
+    },
+    "Search models" : {
+
+    },
+    "Search tasks..." : {
+
+    },
+    "See All" : {
+
+    },
+    "See your productivity stats for today" : {
+
+    },
+    "Select" : {
+
+    },
+    "Select All" : {
+
+    },
+    "Select Date" : {
+
+    },
+    "Select List" : {
+
+    },
+    "Select Model" : {
+
+    },
+    "Selected color" : {
+
+    },
+    "Set Due Date" : {
+
+    },
+    "Set Reminder" : {
+
+    },
+    "Set specific times" : {
+
+    },
+    "Set Up" : {
+
+    },
+    "Setting up your day..." : {
+
+    },
+    "Settings" : {
+
+    },
+    "Settings: Customize your experience" : {
+
+    },
+    "Show %lld usually skipped" : {
+
+    },
+    "Show AI suggestions when creating tasks" : {
+
+    },
+    "Show Completed Tasks" : {
+
+    },
+    "Show Free Models Only" : {
+
+    },
+    "Show Prompt After" : {
+
+    },
+    "Show Prompt on Today" : {
+
+    },
+    "Shows task progress on Lock Screen and Dynamic Island (iPhone 14+)" : {
+
+    },
+    "Sign in to iCloud in Settings to enable sync" : {
+
+    },
+    "Skip" : {
+
+    },
+    "Skip — Needs more focus" : {
+
+    },
+    "Skip — Not relevant" : {
+
+    },
+    "Skip — Wrong time" : {
+
+    },
+    "Skip onboarding and start using the app" : {
+
+    },
+    "Smart Lists" : {
+
+    },
+    "Smart Reschedule" : {
+
+    },
+    "Snooze 1 Hour" : {
+
+    },
+    "Snooze for later or skip to see a different suggestion" : {
+
+    },
+    "Snooze or skip suggestion" : {
+
+    },
+    "Snooze to Evening (6 PM)" : {
+
+    },
+    "Snooze to Tomorrow (9 AM)" : {
+
+    },
+    "Someday" : {
+
+    },
+    "Start" : {
+
+    },
+    "Start My Day" : {
+
+    },
+    "Start Time" : {
+
+    },
+    "Start working" : {
+
+    },
+    "Start Working" : {
+
+    },
+    "Start Your Day" : {
+
+    },
+    "Start your streak today!" : {
+
+    },
+    "Stop working" : {
+
+    },
+    "Storage" : {
+
+    },
+    "Streak" : {
+
+    },
+    "Subtask" : {
+
+    },
+    "Subtask suggestions are not available for subtasks" : {
+
+    },
+    "Subtask title" : {
+
+    },
+    "Subtasks" : {
+
+    },
+    "Suggest Priority" : {
+
+    },
+    "Suggested for you" : {
+
+    },
+    "Suggested Subtasks" : {
+
+    },
+    "Swipe left on a model for more details" : {
+
+    },
+    "Switch Task" : {
+
+    },
+    "Sync disabled" : {
+
+    },
+    "Sync is disabled. Data in iCloud will NOT be deleted unless you use \"Delete iCloud Data\"." : {
+
+    },
+    "Sync tasks and calendar events. Get notified for deadlines and daily briefings." : {
+
+    },
+    "Sync with iCloud?" : {
+
+    },
+    "Synced · %@" : {
+
+    },
+    "Syncing..." : {
+
+    },
+    "System" : {
+
+    },
+    "System Categories" : {
+
+    },
+    "System categories cannot be modified or deleted." : {
+
+    },
+    "Take a Break" : {
+
+    },
+    "Take Pomodoro Break" : {
+
+    },
+    "Tap + to create one" : {
+
+    },
+    "Tap Apply on suggestions you want to use" : {
+
+    },
+    "Tap the + button to capture a thought" : {
+
+    },
+    "Tap the download icon to fetch available models from the server." : {
+
+    },
+    "Tap to edit, swipe to delete, or drag to reorder." : {
+
+    },
+    "Target: 60% Work / 40% Life" : {
+
+    },
+    "task" : {
+
+    },
+    "Task" : {
+
+    },
+    "Task completed" : {
+
+    },
+    "Task Details" : {
+
+    },
+    "Task Preview" : {
+
+    },
+    "Task title" : {
+
+    },
+    "Task Title" : {
+
+    },
+    "tasks" : {
+
+    },
+    "Tasks" : {
+
+    },
+    "Tasks in this list will be moved to Inbox." : {
+
+    },
+    "Tasks stored locally only" : {
+
+    },
+    "Tasks sync automatically when you make changes." : {
+
+    },
+    "Tasks will be moved to Inbox when you delete this list." : {
+
+    },
+    "Terms of Service" : {
+
+    },
+    "Test Anyway" : {
+
+    },
+    "Test Connection" : {
+
+    },
+    "Theme" : {
+
+    },
+    "These permissions are optional." : {
+
+    },
+    "This note will be permanently deleted." : {
+
+    },
+    "This Week" : {
+
+    },
+    "This will clear all learned event preferences. The app will need to re-learn which events you typically skip or select." : {
+
+    },
+    "This will clear local data and re-download from iCloud. Your data is safe in the cloud." : {
+
+    },
+    "This will delete all your data stored in iCloud. Local data on this device will not be affected. Other devices will lose their synced data." : {
+
+    },
+    "This will permanently delete all data from this device. This cannot be undone." : {
+
+    },
+    "This will permanently delete all tasks and lists from this device. This cannot be undone." : {
+
+    },
+    "This will replace local data with data from iCloud. Any unsynced local changes will be lost." : {
+
+    },
+    "This will send a test request to %@. Your task data may be sent to external servers." : {
+
+    },
+    "Time" : {
+
+    },
+    "Time %lld" : {
+
+    },
+    "Time Block Preview" : {
+
+    },
+    "Time Period" : {
+
+    },
+    "Time Spent" : {
+
+    },
+    "Time Worked" : {
+
+    },
+    "Timer mode: %@" : {
+
+    },
+    "Timer: %@" : {
+
+    },
+    "Times" : {
+
+    },
+    "times per day" : {
+
+    },
+    "Title" : {
+
+    },
+    "To" : {
+
+    },
+    "Today" : {
+
+    },
+    "Today's Plan" : {
+
+    },
+    "Today's Priorities" : {
+
+    },
+    "Today's Schedule" : {
+
+    },
+    "Today's Tasks" : {
+
+    },
+    "Tomorrow" : {
+
+    },
+    "Tomorrow's priorities:" : {
+
+    },
+    "Track Today's Progress" : {
+
+    },
+    "Try Again" : {
+
+    },
+    "Try searching for" : {
+
+    },
+    "Un-apply suggestion" : {
+
+    },
+    "Undo" : {
+
+    },
+    "Unprocessed" : {
+
+    },
+    "Upcoming" : {
+
+    },
+    "Urgent" : {
+
+    },
+    "Use AI to extract tasks from this note" : {
+
+    },
+    "Usually skipped" : {
+
+    },
+    "Version" : {
+
+    },
+    "Version %@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "View" : {
+
+    },
+    "View Daily Summary" : {
+
+    },
+    "vs last %@" : {
+
+    },
+    "Week" : {
+
+    },
+    "What do these metrics mean?" : {
+
+    },
+    "What do you need to do?" : {
+
+    },
+    "Work %lld%%" : {
+
+    },
+    "Work Interval: %lld min" : {
+
+    },
+    "Yesterday" : {
+
+    },
+    "You" : {
+
+    },
+    "You have %lld task%@ planned for today" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You have %1$lld task%2$@ planned for today"
+          }
+        }
+      }
+    },
+    "You have %lld task%@ today:\n%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You have %1$lld task%2$@ today:\n%3$@%4$@"
+          }
+        }
+      }
+    },
+    "You have no tasks for today. Enjoy your free time!" : {
+
+    },
+    "You're All Set!" : {
+
+    },
+    "Your note has been processed" : {
+
+    },
+    "Your task data will be sent to external servers when using this provider." : {
+
+    }
+  },
   "version" : "1.0"
 }

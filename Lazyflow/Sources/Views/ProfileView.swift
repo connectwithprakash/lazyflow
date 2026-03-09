@@ -99,12 +99,23 @@ struct ProfileView: View {
 
     private var appInfoFooter: some View {
         VStack(spacing: DesignSystem.Spacing.sm) {
-            Image("AppIconPreview")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 60, height: 60)
-                .cornerRadius(DesignSystem.CornerRadius.medium)
-                .opacity(0.8)
+            if let icons = Bundle.main.object(forInfoDictionaryKey: "CFBundleIcons") as? [String: Any],
+               let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
+               let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
+               let iconName = iconFiles.last,
+               let uiImage = UIImage(named: iconName) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 60, height: 60)
+                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                    .opacity(0.8)
+            } else {
+                Image(systemName: "app.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(Color.Lazyflow.accent)
+                    .opacity(0.8)
+            }
 
             Text("Lazyflow")
                 .font(DesignSystem.Typography.headline)

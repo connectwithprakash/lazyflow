@@ -9,20 +9,19 @@ import LazyflowCore
 /// Uses fixed viewports (iPhone 13 Pro 375×812, iPad Pro 12.9" 1024×1366) so images
 /// are identical regardless of the local simulator or CI simulator.
 ///
-/// Reference images are recorded on CI to avoid cross-environment rendering
-/// differences between local macOS and CI runners. To re-record, either:
-/// - Set `isRecording = true` temporarily and run tests on CI
-/// - Set `SNAPSHOT_RECORD=true` env var when launching xcodebuild
+/// References are recorded on CI to match the CI rendering environment.
+/// Local mismatches are expected when Xcode versions differ.
+/// To re-record, trigger the "Re-record Snapshots" CI workflow.
 @MainActor
 class SnapshotTestCase: XCTestCase {
 
-    /// To regenerate reference images, uncomment `isRecording = true` below or
-    /// set the `SNAPSHOT_RECORD` env var. Commit images recorded on CI, not locally.
-    override func setUp() {
-        super.setUp()
-//        isRecording = true
-        if ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "true" {
-            isRecording = true
+    /// Wraps every test in `withSnapshotTesting` so the record mode applies
+    /// to all assertions. Set `SNAPSHOT_RECORD=true` env var to re-record.
+    override func invokeTest() {
+        let record: SnapshotTestingConfiguration.Record =
+            ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "true" ? .all : .missing
+        withSnapshotTesting(record: record) {
+            super.invokeTest()
         }
     }
 

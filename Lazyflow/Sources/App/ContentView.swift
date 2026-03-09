@@ -105,11 +105,17 @@ struct ContentView: View {
 
             // Quick Capture FAB — only on task-focused tabs (Today, Upcoming)
             if !focusCoordinator.isFocusPresented, (selectedTab == .today || selectedTab == .upcoming) {
-                QuickCaptureFAB { activeSheet = .quickCapture }
-                    .padding(.trailing, DesignSystem.Spacing.lg)
-                    .padding(.bottom, focusCoordinator.shouldShowPill ? 120 : 60)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .animation(.spring(response: 0.3), value: focusCoordinator.shouldShowPill)
+                GeometryReader { geometry in
+                    QuickCaptureFAB(
+                        action: { activeSheet = .quickCapture },
+                        containerHeight: geometry.size.height,
+                        containerWidth: geometry.size.width,
+                        safeAreaTop: geometry.safeAreaInsets.top,
+                        safeAreaBottom: geometry.safeAreaInsets.bottom,
+                        isFocusPillVisible: focusCoordinator.shouldShowPill
+                    )
+                }
+                .animation(.spring(response: 0.3), value: focusCoordinator.shouldShowPill)
             }
         }
         .fullScreenCover(isPresented: $focusCoordinator.isFocusPresented) {
