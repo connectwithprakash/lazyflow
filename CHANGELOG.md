@@ -5,6 +5,41 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0](https://github.com/connectwithprakash/lazyflow/compare/v1.9.0...v1.10.0) (2026-03-09)
+
+
+### Features
+
+* **a11y:** add accessibility labels and hints to all views ([#255](https://github.com/connectwithprakash/lazyflow/issues/255)) ([392f631](https://github.com/connectwithprakash/lazyflow/commit/392f631e88311b220068cd23cb00ad1c5710e700))
+* **arch:** extract LazyflowCore and LazyflowUI SPM packages ([#271](https://github.com/connectwithprakash/lazyflow/issues/271)) ([4d35189](https://github.com/connectwithprakash/lazyflow/commit/4d35189a86aad509fb9f478edfb4428269a9a7a7))
+* **aso:** optimize App Store metadata and website for v1.10 ([#272](https://github.com/connectwithprakash/lazyflow/issues/272)) ([5a33b18](https://github.com/connectwithprakash/lazyflow/commit/5a33b183c6b2bda786f410c13f159b3c47c27894))
+* **aso:** update marketing copy for v1.10 features ([#276](https://github.com/connectwithprakash/lazyflow/issues/276)) ([3e8bdde](https://github.com/connectwithprakash/lazyflow/commit/3e8bdde2f297be3e423ddb361a41a587a5ccee34))
+* **calendar:** add scheduled start/end time to tasks ([#224](https://github.com/connectwithprakash/lazyflow/issues/224)) ([257dee4](https://github.com/connectwithprakash/lazyflow/commit/257dee459358cc486911e6843228d0ad39db9577)), closes [#213](https://github.com/connectwithprakash/lazyflow/issues/213)
+* **calendar:** add two-way sync between tasks and calendar events ([#225](https://github.com/connectwithprakash/lazyflow/issues/225)) ([7a7c870](https://github.com/connectwithprakash/lazyflow/commit/7a7c870874ad2122c3bb5a42fe4f087d49e6c9ab))
+* **calendar:** sync recurring tasks as recurring calendar events ([#227](https://github.com/connectwithprakash/lazyflow/issues/227)) ([1f49136](https://github.com/connectwithprakash/lazyflow/commit/1f491368ff501f407382481416d23324adee60bd))
+* **capture:** add quick capture with persistent note inbox and AI task extraction ([#230](https://github.com/connectwithprakash/lazyflow/issues/230)) ([a0642b3](https://github.com/connectwithprakash/lazyflow/commit/a0642b3e48c31258810677719fceca8090e441c7))
+* **config:** add lightweight feature flag system with debug menu ([#262](https://github.com/connectwithprakash/lazyflow/issues/262)) ([546ea72](https://github.com/connectwithprakash/lazyflow/commit/546ea722cc86fa824a4abfef0643ba827b6c89cb))
+* **config:** centralize configuration constants and UserDefaults keys ([#254](https://github.com/connectwithprakash/lazyflow/issues/254)) ([7ed9dc4](https://github.com/connectwithprakash/lazyflow/commit/7ed9dc4d078e1f330fe4d705c5d3467c8332803c)), closes [#246](https://github.com/connectwithprakash/lazyflow/issues/246)
+* **data:** harden Core Data migration strategy and error handling ([#257](https://github.com/connectwithprakash/lazyflow/issues/257)) ([e2b05f2](https://github.com/connectwithprakash/lazyflow/commit/e2b05f2d97ef2776e777801ddf3cfbf19167c064))
+* **di:** extract service protocols for dependency injection ([#239](https://github.com/connectwithprakash/lazyflow/issues/239)) ([#269](https://github.com/connectwithprakash/lazyflow/issues/269)) ([456bc46](https://github.com/connectwithprakash/lazyflow/commit/456bc46d69f6e3c0b747f8d0cdb06c81f79ba1fb))
+* **focus:** add focus entry points, subtasks, Pomodoro timer, and session persistence ([#229](https://github.com/connectwithprakash/lazyflow/issues/229)) ([501b0f4](https://github.com/connectwithprakash/lazyflow/commit/501b0f4543a558491dd7499c39c11e8f9be11776))
+* **l10n:** add String Catalog for localization readiness ([#253](https://github.com/connectwithprakash/lazyflow/issues/253)) ([ff3697c](https://github.com/connectwithprakash/lazyflow/commit/ff3697c92d47d7d78ad89ec67f2fafba71765f16)), closes [#234](https://github.com/connectwithprakash/lazyflow/issues/234)
+* **monitoring:** add MetricKit for performance and crash monitoring ([#258](https://github.com/connectwithprakash/lazyflow/issues/258)) ([92ee8a1](https://github.com/connectwithprakash/lazyflow/commit/92ee8a1b10ac157a4019d05a901976dd35fec96a))
+* **observable:** migrate all ViewModels and services to @Observable ([#268](https://github.com/connectwithprakash/lazyflow/issues/268)) ([c9aa947](https://github.com/connectwithprakash/lazyflow/commit/c9aa9472149de9685545e15371cd62a4bca42aa2))
+* **privacy:** align privacy policy with external AI provider support ([#256](https://github.com/connectwithprakash/lazyflow/issues/256)) ([d461244](https://github.com/connectwithprakash/lazyflow/commit/d461244133fa9ef4de83cf3a50e558342cd81137))
+* **screenshots:** capture v1.10 screenshots for App Store and website ([#278](https://github.com/connectwithprakash/lazyflow/issues/278)) ([01c1f7b](https://github.com/connectwithprakash/lazyflow/commit/01c1f7b71b04b08c26feecf8b3720ed7ee4692b7))
+* **security:** add Data Protection, Keychain hardening, and security docs ([#259](https://github.com/connectwithprakash/lazyflow/issues/259)) ([ee09c51](https://github.com/connectwithprakash/lazyflow/commit/ee09c51f523b36ab3270259e4e170c30ac5f8dae))
+* **sync:** persistent history token merge and CloudKit sync monitoring ([#260](https://github.com/connectwithprakash/lazyflow/issues/260)) ([f1d4a2c](https://github.com/connectwithprakash/lazyflow/commit/f1d4a2c2da69eb711fe2482858b76910fd6a945c))
+* **test:** add snapshot tests for key screens ([#270](https://github.com/connectwithprakash/lazyflow/issues/270)) ([cb2f84d](https://github.com/connectwithprakash/lazyflow/commit/cb2f84da878f6796b0ea70063776313450169cf4))
+* **ui:** make Quick Capture FAB draggable along right edge ([#286](https://github.com/connectwithprakash/lazyflow/issues/286)) ([1f829b9](https://github.com/connectwithprakash/lazyflow/commit/1f829b9b1bedea75437146d90631a9766adcd285))
+* **views:** split large view files into focused modules ([#241](https://github.com/connectwithprakash/lazyflow/issues/241)) ([#267](https://github.com/connectwithprakash/lazyflow/issues/267)) ([77cf4ad](https://github.com/connectwithprakash/lazyflow/commit/77cf4adad59cfa81147ea991cce9392ddd0f72eb))
+
+
+### Bug Fixes
+
+* **ai:** check device capability before showing AI features ([#282](https://github.com/connectwithprakash/lazyflow/issues/282)) ([238dda4](https://github.com/connectwithprakash/lazyflow/commit/238dda42296d73db6ef476dc5dc87655e02ab549)), closes [#281](https://github.com/connectwithprakash/lazyflow/issues/281)
+* **calendar:** default to Day on iPhone and persist last-used view mode ([#223](https://github.com/connectwithprakash/lazyflow/issues/223)) ([d504f42](https://github.com/connectwithprakash/lazyflow/commit/d504f424013344808a16301b5d4d77bf08d46443)), closes [#206](https://github.com/connectwithprakash/lazyflow/issues/206)
+
 ## [1.9.0](https://github.com/connectwithprakash/lazyflow/compare/v1.8.0...v1.9.0) (2026-02-21)
 
 
