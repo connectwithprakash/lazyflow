@@ -175,6 +175,7 @@ platform :ios do
       submit_for_review: true,
       automatic_release: true,
       reject_if_possible: true,  # Cancel pending submission if exists
+      skip_app_version_update: true,  # Don't create version — TestFlight upload already creates it
       skip_binary_upload: true,
       skip_screenshots: false,
       overwrite_screenshots: true,
