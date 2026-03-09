@@ -115,7 +115,6 @@ struct ContentView: View {
                         isFocusPillVisible: focusCoordinator.shouldShowPill
                     )
                 }
-                .ignoresSafeArea()
                 .animation(.spring(response: 0.3), value: focusCoordinator.shouldShowPill)
             }
         }

@@ -48,59 +48,58 @@ struct QuickCaptureFAB: View {
     }
 
     var body: some View {
-        Button {
-            if !isDragging {
-                action()
+        Image(systemName: "pencil.line")
+            .font(.system(size: 22, weight: .semibold))
+            .foregroundColor(.white)
+            .frame(width: fabSize, height: fabSize)
+            .background(Color.Lazyflow.accent)
+            .clipShape(Circle())
+            .shadow(color: Color.Lazyflow.accent.opacity(0.3), radius: 8, x: 0, y: 4)
+            .contentShape(Circle())
+            .scaleEffect(isAppearing ? 1.0 : 0.5)
+            .opacity(isAppearing ? 1.0 : 0.0)
+            .position(
+                x: containerWidth - trailingMargin - fabSize / 2,
+                y: effectiveY + fabSize / 2
+            )
+            .gesture(
+                DragGesture(minimumDistance: 10)
+                    .updating($dragOffset) { value, state, _ in
+                        state = value.translation.height
+                    }
+                    .onChanged { _ in
+                        isDragging = true
+                    }
+                    .onEnded { value in
+                        let finalY = clamp(currentY + value.translation.height)
+                        savedYPosition = Double(finalY)
+                        // Delay resetting isDragging so the tap doesn't fire
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            isDragging = false
+                        }
+                    }
+            )
+            .onTapGesture {
+                if !isDragging {
+                    action()
+                }
             }
-        } label: {
-            Image(systemName: "pencil.line")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: fabSize, height: fabSize)
-                .background(Color.Lazyflow.accent)
-                .clipShape(Circle())
-                .shadow(color: Color.Lazyflow.accent.opacity(0.3), radius: 8, x: 0, y: 4)
-        }
-        .buttonStyle(.plain)
-        .scaleEffect(isAppearing ? 1.0 : 0.5)
-        .opacity(isAppearing ? 1.0 : 0.0)
-        .position(
-            x: containerWidth - trailingMargin - fabSize / 2,
-            y: effectiveY + fabSize / 2
-        )
-        .gesture(
-            DragGesture(minimumDistance: 10)
-                .updating($dragOffset) { value, state, _ in
-                    state = value.translation.height
+            .onAppear {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    isAppearing = true
                 }
-                .onChanged { _ in
-                    isDragging = true
-                }
-                .onEnded { value in
-                    let finalY = clamp(currentY + value.translation.height)
-                    savedYPosition = Double(finalY)
-                    // Delay resetting isDragging so the button tap doesn't fire
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        isDragging = false
+            }
+            .onChange(of: isFocusPillVisible) {
+                // Push FAB up if it would overlap the focus pill
+                if savedYPosition >= 0 {
+                    let clamped = clamp(CGFloat(savedYPosition))
+                    if clamped != CGFloat(savedYPosition) {
+                        savedYPosition = Double(clamped)
                     }
                 }
-        )
-        .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                isAppearing = true
             }
-        }
-        .onChange(of: isFocusPillVisible) {
-            // Push FAB up if it would overlap the focus pill
-            if savedYPosition >= 0 {
-                let clamped = clamp(CGFloat(savedYPosition))
-                if clamped != CGFloat(savedYPosition) {
-                    savedYPosition = Double(clamped)
-                }
-            }
-        }
-        .accessibilityLabel("Quick Capture")
-        .accessibilityHint("Opens a quick note for capturing thoughts. Drag to reposition.")
+            .accessibilityLabel("Quick Capture")
+            .accessibilityHint("Opens a quick note for capturing thoughts. Drag to reposition.")
     }
 }
 
@@ -115,6 +114,5 @@ struct QuickCaptureFAB: View {
             isFocusPillVisible: false
         )
     }
-    .ignoresSafeArea()
     .background(Color.adaptiveBackground)
 }
