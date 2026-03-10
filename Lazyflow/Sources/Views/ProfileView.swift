@@ -8,6 +8,7 @@ struct ProfileView: View {
     /// Navigation path for deep linking (optional, used on iPhone)
     @Binding var navigationPath: NavigationPath
     @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
 
     init(navigationPath: Binding<NavigationPath> = .constant(NavigationPath())) {
         _navigationPath = navigationPath
@@ -92,11 +93,13 @@ struct ProfileView: View {
                         Spacer(minLength: DesignSystem.Spacing.xxl)
                         appInfoFooter
                     }
+
+                    // MARK: - Search Field (bottom, iOS Settings style)
+                    searchField
                 }
                 .padding(DesignSystem.Spacing.lg)
             }
             .background(Color.adaptiveBackground)
-            .searchable(text: $searchText, prompt: "Search")
             .navigationTitle("Me")
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: ContentView.ProfileDestination.self) { destination in
@@ -123,6 +126,33 @@ struct ProfileView: View {
                 .textCase(.uppercase)
             Spacer()
         }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(Color.Lazyflow.textTertiary)
+
+            TextField("Search", text: $searchText)
+                .focused($isSearchFocused)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(Color.Lazyflow.textTertiary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, DesignSystem.Spacing.md)
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color.adaptiveSurface)
+        .cornerRadius(DesignSystem.CornerRadius.large)
+        .accessibilityIdentifier("me_search_field")
     }
 
     private var appInfoFooter: some View {

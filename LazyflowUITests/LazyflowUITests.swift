@@ -2946,14 +2946,12 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Activate search — swipe down to reveal the search bar
-        let firstElement = app.staticTexts["ORGANIZE"]
-        XCTAssertTrue(firstElement.waitForExistence(timeout: 2))
-        app.swipeDown()
+        // Scroll to bottom search field (iOS Settings style)
+        app.swipeUp()
         Thread.sleep(forTimeInterval: 0.5)
 
-        let searchField = app.searchFields.firstMatch
-        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should appear")
+        let searchField = app.textFields["Search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should appear at bottom")
         searchField.tap()
         searchField.typeText("calendar")
         Thread.sleep(forTimeInterval: 0.5)
@@ -2977,11 +2975,11 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Activate search
-        app.swipeDown()
+        // Scroll to bottom search field
+        app.swipeUp()
         Thread.sleep(forTimeInterval: 0.5)
 
-        let searchField = app.searchFields.firstMatch
+        let searchField = app.textFields["Search"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 3))
         searchField.tap()
         searchField.typeText("xyznonexistent")
@@ -3000,11 +2998,11 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Activate search
-        app.swipeDown()
+        // Scroll to bottom search field
+        app.swipeUp()
         Thread.sleep(forTimeInterval: 0.5)
 
-        let searchField = app.searchFields.firstMatch
+        let searchField = app.textFields["Search"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 3))
         searchField.tap()
         searchField.typeText("   ")
