@@ -149,7 +149,8 @@ platform :ios do
       skip_metadata: true,
       skip_screenshots: false,
       overwrite_screenshots: true,
-      screenshots_path: "./fastlane/screenshots"
+      screenshots_path: "./fastlane/screenshots",
+      force: true
     )
     UI.success("Screenshots uploaded successfully!")
   end
