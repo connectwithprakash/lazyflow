@@ -84,7 +84,6 @@ struct ContentView: View {
     /// Destinations within Profile/Me hub (for iPhone deep linking)
     enum ProfileDestination: Hashable {
         case lists
-        case settings
     }
 
     var body: some View {
@@ -104,7 +103,7 @@ struct ContentView: View {
             }
 
             // Quick Capture FAB — only on task-focused tabs (Today, Upcoming)
-            if !focusCoordinator.isFocusPresented, (selectedTab == .today || selectedTab == .upcoming) {
+            if !focusCoordinator.isFocusPresented, selectedTab == .today || selectedTab == .upcoming {
                 GeometryReader { geometry in
                     QuickCaptureFAB(
                         action: { activeSheet = .quickCapture },
@@ -138,7 +137,7 @@ struct ContentView: View {
                     profileNavigationPath.append(ProfileDestination.lists)
                 case .settings:
                     selectedTab = .me
-                    profileNavigationPath.append(ProfileDestination.settings)
+                    profileNavigationPath = NavigationPath()
                 default:
                     break
                 }
@@ -302,7 +301,9 @@ struct ContentView: View {
         case .lists:
             ListsView()
         case .settings:
-            SettingsView()
+            NavigationStack {
+                SettingsView()
+            }
         }
     }
 
@@ -396,9 +397,8 @@ struct ContentView: View {
             }
         case "settings":
             if isCompact {
-                // On iPhone, navigate to Me hub then push Settings
                 selectedTab = .me
-                profileNavigationPath.append(ProfileDestination.settings)
+                profileNavigationPath = NavigationPath()
             } else {
                 selectedTab = .settings
             }

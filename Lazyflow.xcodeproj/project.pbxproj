@@ -44,6 +44,7 @@
 		21D4D1580E6D6AB06DD5CBA4 /* BehavioralSignalsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE8F136C54F6451EEDEDE55 /* BehavioralSignalsTests.swift */; };
 		21E35B1DDF082CB86B456823 /* testPopulatedStateIPad.populated-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 541E1900342B4BE7746DC372 /* testPopulatedStateIPad.populated-ipad-light.png */; };
 		24A9C68A91F3A9952AA87921 /* testAccessibility.settings-xxxLarge.png in Resources */ = {isa = PBXBuildFile; fileRef = CAEDF43585D502B7655E5C98 /* testAccessibility.settings-xxxLarge.png */; };
+		25C9FE52A498914F3E9720C2 /* SettingsRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF49F0412CA017D17B1AA36C /* SettingsRoute.swift */; };
 		25F378DDF875DA57172D46F3 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB60CF3B399155250875EF8 /* RootView.swift */; };
 		274DB5A3A9D9CFAC1C06A0FB /* testReviewState.review-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 679E8C4D4B7984999331EFA3 /* testReviewState.review-dark.png */; };
 		28BE298984028EB3C3A4F728 /* testErrorState.error-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 8C30F3C17183D4184AAB2BD6 /* testErrorState.error-light.png */; };
@@ -560,6 +561,7 @@
 		CAEDF43585D502B7655E5C98 /* testAccessibility.settings-xxxLarge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testAccessibility.settings-xxxLarge.png"; sourceTree = "<group>"; };
 		CAF1C12B0A958E81385DFE2E /* BatchRescheduleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchRescheduleSheet.swift; sourceTree = "<group>"; };
 		CC11F669EE4AD1F4B8070D13 /* MetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsService.swift; sourceTree = "<group>"; };
+		CF49F0412CA017D17B1AA36C /* SettingsRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRoute.swift; sourceTree = "<group>"; };
 		CFFF7E86D0A6B05D7A3E8005 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		D02792F18772E41185C3AA44 /* SmartRescheduleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleService.swift; sourceTree = "<group>"; };
 		D3391545EB6E7A4277AF8D35 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
@@ -1244,6 +1246,7 @@
 				70C9574BBD3C644B02ED89C6 /* ModelSelectionView.swift */,
 				68F6F655942BC7C38A13050F /* NotificationSettingsView.swift */,
 				C21B88F1F7766BC778F7724B /* ProviderConfigurationSheet.swift */,
+				CF49F0412CA017D17B1AA36C /* SettingsRoute.swift */,
 				D46AF266277E9B0C6278A4B9 /* SettingsToggles.swift */,
 				274148AC3EAE7115E19779CD /* SettingsView.swift */,
 			);
@@ -1768,6 +1771,7 @@
 				25F378DDF875DA57172D46F3 /* RootView.swift in Sources */,
 				7823D0C83819A502BE009352 /* SearchView.swift in Sources */,
 				914ADBE5CEB8BE6BCB525A82 /* SelectedOptionChip.swift in Sources */,
+				25C9FE52A498914F3E9720C2 /* SettingsRoute.swift in Sources */,
 				612AF567E3B4C701F17C9C03 /* SettingsToggles.swift in Sources */,
 				20C9F5B8C8AAF7618FDE5FD1 /* SettingsView.swift in Sources */,
 				9B43D6068F9B88F8430A6CE7 /* SmartRescheduleService.swift in Sources */,

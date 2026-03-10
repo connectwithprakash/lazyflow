@@ -2,14 +2,24 @@ import SwiftUI
 import LazyflowCore
 import LazyflowUI
 
-/// Hub view for Me/Profile tab containing lists, categories, and settings
-/// Part of navigation restructure (Issue #110)
+/// Hub view for Me/Profile tab with inline organize and settings cards
+/// Part of navigation restructure (Issue #285)
 struct ProfileView: View {
     /// Navigation path for deep linking (optional, used on iPhone)
     @Binding var navigationPath: NavigationPath
+    @State private var searchText = ""
 
     init(navigationPath: Binding<NavigationPath> = .constant(NavigationPath())) {
         _navigationPath = navigationPath
+    }
+
+    private var trimmedSearch: String { searchText.trimmingCharacters(in: .whitespaces) }
+    private var isSearching: Bool { !trimmedSearch.isEmpty }
+
+    private var showLists: Bool { matchesSearch("Lists", "Organize your tasks") }
+    private var showCategories: Bool { matchesSearch("Categories", "Browse tasks by category") }
+    private var filteredRoutes: [SettingsRoute] {
+        SettingsRoute.allCases.filter { $0.matches(trimmedSearch) }
     }
 
     var body: some View {
@@ -17,73 +27,91 @@ struct ProfileView: View {
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.lg) {
                     // MARK: - Organize Section
-                    sectionHeader("Organize")
+                    if showLists || showCategories {
+                        sectionHeader("Organize")
 
-                    // Lists Card
-                    NavigationLink {
-                        ListsView()
-                    } label: {
-                        ProfileCard(
-                            icon: "folder.fill",
-                            iconColor: Color.Lazyflow.accent,
-                            title: "Lists",
-                            subtitle: "Organize your tasks"
-                        )
+                        if showLists {
+                            NavigationLink {
+                                ListsView()
+                            } label: {
+                                ProfileCard(
+                                    icon: "folder.fill",
+                                    iconColor: Color.Lazyflow.accent,
+                                    title: "Lists",
+                                    subtitle: "Organize your tasks"
+                                )
+                            }
+                            .accessibilityIdentifier("ListsCard")
+                            .accessibilityLabel("Lists: Organize your tasks")
+                        }
+
+                        if showCategories {
+                            NavigationLink {
+                                CategoriesView()
+                            } label: {
+                                ProfileCard(
+                                    icon: "tag.fill",
+                                    iconColor: .purple,
+                                    title: "Categories",
+                                    subtitle: "Browse tasks by category"
+                                )
+                            }
+                            .accessibilityIdentifier("CategoriesCard")
+                            .accessibilityLabel("Categories: Browse tasks by category")
+                        }
                     }
-                    .accessibilityIdentifier("ListsCard")
-                    .accessibilityLabel("Lists: Organize your tasks")
 
-                    // Categories Card
-                    NavigationLink {
-                        CategoriesView()
-                    } label: {
-                        ProfileCard(
-                            icon: "tag.fill",
-                            iconColor: .purple,
-                            title: "Categories",
-                            subtitle: "Browse tasks by category"
-                        )
+                    // MARK: - Settings Section
+                    if !filteredRoutes.isEmpty {
+                        sectionHeader("Settings")
+                            .padding(.top, DesignSystem.Spacing.sm)
+
+                        ForEach(filteredRoutes) { route in
+                            NavigationLink {
+                                route.destination
+                            } label: {
+                                ProfileCard(
+                                    icon: route.icon,
+                                    iconColor: route.iconColor,
+                                    title: route.title,
+                                    subtitle: route.subtitle
+                                )
+                            }
+                            .accessibilityIdentifier(route.accessibilityIdentifier)
+                            .accessibilityLabel("\(route.title): \(route.subtitle)")
+                        }
                     }
-                    .accessibilityIdentifier("CategoriesCard")
-                    .accessibilityLabel("Categories: Browse tasks by category")
 
-                    // MARK: - System Section
-                    sectionHeader("System")
-                        .padding(.top, DesignSystem.Spacing.sm)
-
-                    // Settings Card
-                    NavigationLink {
-                        SettingsView()
-                    } label: {
-                        ProfileCard(
-                            icon: "gear",
-                            iconColor: Color.Lazyflow.textSecondary,
-                            title: "Settings",
-                            subtitle: "Customize your experience"
-                        )
+                    // MARK: - Empty Search State
+                    if isSearching && !showLists && !showCategories && filteredRoutes.isEmpty {
+                        ContentUnavailableView.search(text: trimmedSearch)
                     }
-                    .accessibilityIdentifier("SettingsCard")
-                    .accessibilityLabel("Settings: Customize your experience")
 
-                    Spacer(minLength: DesignSystem.Spacing.xxl)
-
-                    // App info footer
-                    appInfoFooter
+                    // MARK: - App Footer
+                    if !isSearching {
+                        Spacer(minLength: DesignSystem.Spacing.xxl)
+                        appInfoFooter
+                    }
                 }
                 .padding(DesignSystem.Spacing.lg)
             }
             .background(Color.adaptiveBackground)
+            .searchable(text: $searchText, prompt: "Search")
             .navigationTitle("Me")
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: ContentView.ProfileDestination.self) { destination in
                 switch destination {
                 case .lists:
                     ListsView()
-                case .settings:
-                    SettingsView()
                 }
             }
         }
+    }
+
+    private func matchesSearch(_ title: String, _ subtitle: String) -> Bool {
+        guard !trimmedSearch.isEmpty else { return true }
+        return title.localizedCaseInsensitiveContains(trimmedSearch)
+            || subtitle.localizedCaseInsensitiveContains(trimmedSearch)
     }
 
     private func sectionHeader(_ title: String) -> some View {

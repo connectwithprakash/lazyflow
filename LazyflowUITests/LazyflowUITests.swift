@@ -161,7 +161,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         // Items accessible via Me hub
-        let meItems = ["Lists", "Categories", "Settings"]
+        let meItems = ["Lists", "Categories"]
         if meItems.contains(tabName) {
             let meTab = app.tabBars.buttons["Me"]
             guard meTab.exists && meTab.isHittable else { return }
@@ -170,6 +170,19 @@ final class LazyflowUITests: XCTestCase {
 
             // Find and tap the item in Me hub
             navigateToHubItem(tabName)
+            return
+        }
+
+        // Settings cards are now inline on Me tab — navigate to Me tab,
+        // then tap the specific settings card (e.g. "General")
+        if tabName == "Settings" {
+            let meTab = app.tabBars.buttons["Me"]
+            guard meTab.exists && meTab.isHittable else { return }
+            meTab.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Tap the first settings card (General) to reach SettingsView
+            navigateToHubItem("General")
             return
         }
     }
@@ -372,12 +385,12 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Verify Settings is accessible within Me hub
-        let settingsCard = app.staticTexts["Settings"]
-        XCTAssertTrue(settingsCard.waitForExistence(timeout: 2), "Settings should be in Me hub")
+        // Verify settings cards are inline on Me tab (flattened layout)
+        let generalCard = app.staticTexts["General"]
+        XCTAssertTrue(generalCard.waitForExistence(timeout: 2), "General settings card should be on Me tab")
 
-        // Tap to navigate to Settings
-        settingsCard.tap()
+        // Tap General card to navigate to Settings
+        generalCard.tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3), "Should navigate to Settings view")
     }
 
@@ -636,13 +649,13 @@ final class LazyflowUITests: XCTestCase {
                 XCTAssertNotEqual(tab.label, "")
             }
 
-            // Lists and Settings are under "Me" tab
+            // Lists and settings cards are inline under "Me" tab
             let meTab = app.tabBars.buttons["Me"]
             if meTab.exists {
                 meTab.tap()
-                // Verify Lists and Settings are accessible in Me hub
+                // Verify Lists and General settings card are accessible on Me tab
                 XCTAssertTrue(app.staticTexts["Lists"].waitForExistence(timeout: 2) ||
-                              app.staticTexts["Settings"].waitForExistence(timeout: 2))
+                              app.staticTexts["General"].waitForExistence(timeout: 2))
             }
         } else {
             // iPad: Check sidebar items (may be buttons, staticTexts, or cells)
