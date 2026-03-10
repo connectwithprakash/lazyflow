@@ -25,79 +25,84 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            ScrollView {
-                VStack(spacing: DesignSystem.Spacing.lg) {
-                    // MARK: - Organize Section
-                    if showLists || showCategories {
-                        sectionHeader("Organize")
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: DesignSystem.Spacing.lg) {
+                        // MARK: - Organize Section
+                        if showLists || showCategories {
+                            sectionHeader("Organize")
 
-                        if showLists {
-                            NavigationLink {
-                                ListsView()
-                            } label: {
-                                ProfileCard(
-                                    icon: "folder.fill",
-                                    iconColor: Color.Lazyflow.accent,
-                                    title: "Lists",
-                                    subtitle: "Organize your tasks"
-                                )
+                            if showLists {
+                                NavigationLink {
+                                    ListsView()
+                                } label: {
+                                    ProfileCard(
+                                        icon: "folder.fill",
+                                        iconColor: Color.Lazyflow.accent,
+                                        title: "Lists",
+                                        subtitle: "Organize your tasks"
+                                    )
+                                }
+                                .accessibilityIdentifier("ListsCard")
+                                .accessibilityLabel("Lists: Organize your tasks")
                             }
-                            .accessibilityIdentifier("ListsCard")
-                            .accessibilityLabel("Lists: Organize your tasks")
+
+                            if showCategories {
+                                NavigationLink {
+                                    CategoriesView()
+                                } label: {
+                                    ProfileCard(
+                                        icon: "tag.fill",
+                                        iconColor: .purple,
+                                        title: "Categories",
+                                        subtitle: "Browse tasks by category"
+                                    )
+                                }
+                                .accessibilityIdentifier("CategoriesCard")
+                                .accessibilityLabel("Categories: Browse tasks by category")
+                            }
                         }
 
-                        if showCategories {
-                            NavigationLink {
-                                CategoriesView()
-                            } label: {
-                                ProfileCard(
-                                    icon: "tag.fill",
-                                    iconColor: .purple,
-                                    title: "Categories",
-                                    subtitle: "Browse tasks by category"
-                                )
+                        // MARK: - Settings Section
+                        if !filteredRoutes.isEmpty {
+                            sectionHeader("Settings")
+                                .padding(.top, DesignSystem.Spacing.sm)
+
+                            ForEach(filteredRoutes) { route in
+                                NavigationLink {
+                                    route.destination
+                                } label: {
+                                    ProfileCard(
+                                        icon: route.icon,
+                                        iconColor: route.iconColor,
+                                        title: route.title,
+                                        subtitle: route.subtitle
+                                    )
+                                }
+                                .accessibilityIdentifier(route.accessibilityIdentifier)
+                                .accessibilityLabel("\(route.title): \(route.subtitle)")
                             }
-                            .accessibilityIdentifier("CategoriesCard")
-                            .accessibilityLabel("Categories: Browse tasks by category")
+                        }
+
+                        // MARK: - Empty Search State
+                        if isSearching && !showLists && !showCategories && filteredRoutes.isEmpty {
+                            ContentUnavailableView.search(text: trimmedSearch)
+                        }
+
+                        // MARK: - App Footer
+                        if !isSearching {
+                            Spacer(minLength: DesignSystem.Spacing.xxl)
+                            appInfoFooter
                         }
                     }
-
-                    // MARK: - Settings Section
-                    if !filteredRoutes.isEmpty {
-                        sectionHeader("Settings")
-                            .padding(.top, DesignSystem.Spacing.sm)
-
-                        ForEach(filteredRoutes) { route in
-                            NavigationLink {
-                                route.destination
-                            } label: {
-                                ProfileCard(
-                                    icon: route.icon,
-                                    iconColor: route.iconColor,
-                                    title: route.title,
-                                    subtitle: route.subtitle
-                                )
-                            }
-                            .accessibilityIdentifier(route.accessibilityIdentifier)
-                            .accessibilityLabel("\(route.title): \(route.subtitle)")
-                        }
-                    }
-
-                    // MARK: - Empty Search State
-                    if isSearching && !showLists && !showCategories && filteredRoutes.isEmpty {
-                        ContentUnavailableView.search(text: trimmedSearch)
-                    }
-
-                    // MARK: - App Footer
-                    if !isSearching {
-                        Spacer(minLength: DesignSystem.Spacing.xxl)
-                        appInfoFooter
-                    }
-
-                    // MARK: - Search Field (bottom, iOS Settings style)
-                    searchField
+                    .padding(DesignSystem.Spacing.lg)
                 }
-                .padding(DesignSystem.Spacing.lg)
+
+                // MARK: - Search Field (pinned bottom, iOS Settings style)
+                searchField
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.vertical, DesignSystem.Spacing.sm)
+                    .background(Color.adaptiveBackground)
             }
             .background(Color.adaptiveBackground)
             .navigationTitle("Me")
@@ -131,27 +136,37 @@ struct ProfileView: View {
     private var searchField: some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(Color.Lazyflow.textTertiary)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
 
             TextField("Search", text: $searchText)
                 .focused($isSearchFocused)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
+                .foregroundColor(.primary)
 
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(Color.Lazyflow.textTertiary)
+                        .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
+            } else {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
             }
         }
         .padding(.horizontal, DesignSystem.Spacing.md)
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .background(Color.adaptiveSurface)
-        .cornerRadius(DesignSystem.CornerRadius.large)
+        .padding(.vertical, 10)
+        .background(Color(UIColor.systemGray5).opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(UIColor.separator), lineWidth: 0.5)
+        )
         .accessibilityIdentifier("me_search_field")
     }
 

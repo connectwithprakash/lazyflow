@@ -2946,12 +2946,9 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Scroll to bottom search field (iOS Settings style)
-        app.swipeUp()
-        Thread.sleep(forTimeInterval: 0.5)
-
+        // Search field is always visible at bottom
         let searchField = app.textFields["Search"]
-        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should appear at bottom")
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should be visible at bottom")
         searchField.tap()
         searchField.typeText("calendar")
         Thread.sleep(forTimeInterval: 0.5)
@@ -2975,10 +2972,7 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Scroll to bottom search field
-        app.swipeUp()
-        Thread.sleep(forTimeInterval: 0.5)
-
+        // Search field is always visible at bottom
         let searchField = app.textFields["Search"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 3))
         searchField.tap()
@@ -2998,10 +2992,7 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Scroll to bottom search field
-        app.swipeUp()
-        Thread.sleep(forTimeInterval: 0.5)
-
+        // Search field is always visible at bottom
         let searchField = app.textFields["Search"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 3))
         searchField.tap()
