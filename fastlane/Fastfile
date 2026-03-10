@@ -166,7 +166,7 @@ platform :ios do
     # Read version from project.yml (source of truth) since Info.plist has a
     # static placeholder that only resolves at build time via MARKETING_VERSION
     require 'yaml'
-    project_config = YAML.load_file("project.yml")
+    project_config = YAML.load_file("../project.yml")
     version = project_config.dig("settings", "base", "MARKETING_VERSION").to_s
 
     UI.message("Submitting version #{version} (build #{build_number}) to App Store Review...")
