@@ -2888,4 +2888,133 @@ final class LazyflowUITests: XCTestCase {
         snap("12-walkthrough-complete")
     }
 
+    // MARK: - Flattened Settings (Me Tab)
+
+    func testMeTabShowsAllSettingsCards() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        let expectedTitles = ["General", "Notifications", "Productivity", "AI", "Data & About"]
+        for title in expectedTitles {
+            let card = app.staticTexts[title]
+            XCTAssertTrue(card.waitForExistence(timeout: 2), "\(title) settings card should be visible on Me tab")
+        }
+    }
+
+    func testMeTabShowsOrganizeAndSettingsSections() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        let organizeHeader = app.staticTexts["ORGANIZE"]
+        let settingsHeader = app.staticTexts["SETTINGS"]
+        XCTAssertTrue(organizeHeader.waitForExistence(timeout: 2), "ORGANIZE section header should be visible")
+        XCTAssertTrue(settingsHeader.waitForExistence(timeout: 2), "SETTINGS section header should be visible")
+    }
+
+    func testMeTabSettingsCardNavigatesToSettings() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        let generalCard = app.staticTexts["General"]
+        XCTAssertTrue(generalCard.waitForExistence(timeout: 2))
+        generalCard.tap()
+
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3), "Should navigate to Settings view")
+
+        // Navigate back
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3), "Should return to Me tab")
+    }
+
+    func testMeTabSearchFiltersCards() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Activate search — swipe down to reveal the search bar
+        let firstElement = app.staticTexts["ORGANIZE"]
+        XCTAssertTrue(firstElement.waitForExistence(timeout: 2))
+        app.swipeDown()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        let searchField = app.searchFields.firstMatch
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should appear")
+        searchField.tap()
+        searchField.typeText("calendar")
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Productivity subtitle contains "Calendar" — should be visible
+        let productivityCard = app.staticTexts["Productivity"]
+        XCTAssertTrue(productivityCard.waitForExistence(timeout: 2), "Productivity card should match 'calendar' search")
+
+        // Lists and Categories should be filtered out
+        let listsCard = app.staticTexts["Lists"]
+        let categoriesCard = app.staticTexts["Categories"]
+        XCTAssertFalse(listsCard.exists, "Lists should be hidden when searching 'calendar'")
+        XCTAssertFalse(categoriesCard.exists, "Categories should be hidden when searching 'calendar'")
+    }
+
+    func testMeTabSearchShowsEmptyState() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Activate search
+        app.swipeDown()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        let searchField = app.searchFields.firstMatch
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
+        searchField.tap()
+        searchField.typeText("xyznonexistent")
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // ContentUnavailableView.search shows "No Results" text
+        let noResults = app.staticTexts["No Results"]
+        XCTAssertTrue(noResults.waitForExistence(timeout: 2), "Empty state should appear for non-matching search")
+    }
+
+    func testMeTabSearchWhitespaceShowsAll() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Activate search
+        app.swipeDown()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        let searchField = app.searchFields.firstMatch
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
+        searchField.tap()
+        searchField.typeText("   ")
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // All cards should still be visible (whitespace-only treated as empty)
+        let generalCard = app.staticTexts["General"]
+        let listsCard = app.staticTexts["Lists"]
+        XCTAssertTrue(generalCard.waitForExistence(timeout: 2), "General card should be visible with whitespace search")
+        XCTAssertTrue(listsCard.waitForExistence(timeout: 2), "Lists card should be visible with whitespace search")
+    }
+
 }

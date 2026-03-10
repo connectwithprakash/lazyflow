@@ -33,6 +33,7 @@
 		16E9DC16AE2152CE57EBB496 /* testCompletedState.completed-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 8490BF5C2E77325E8C276CB5 /* testCompletedState.completed-light.png */; };
 		171B64FBCE3DA50E04986691 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91D0165AC85819BC73D64A2B /* HistoryViewModel.swift */; };
 		183D62A901C9051C958E1863 /* testExtractingStateIPad.extracting-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 2D5D3CACEBE4DCCBD956990A /* testExtractingStateIPad.extracting-ipad-dark.png */; };
+		1A56809FBBB76085BEE450FC /* SettingsRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E74011C257077692687DE64 /* SettingsRouteTests.swift */; };
 		1A794F33E3F2F1436A5C1690 /* LLMIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D08236382AB86632220B7E /* LLMIntegrationTests.swift */; };
 		1AEF9E445A28C5311FA7CB01 /* Lazyflow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 8B2FA8AC80A06886EF5CEFF0 /* Lazyflow.xcdatamodeld */; };
 		1CB4A86EDC6847F572905CC6 /* testWithDefaultDateIPad.withDefaultDate-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 7245D92EB31576FE87DBEF17 /* testWithDefaultDateIPad.withDefaultDate-ipad-dark.png */; };
@@ -421,6 +422,7 @@
 		4AF8442AA52B1DA00F88D2EB /* CalendarSyncServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncServiceTests.swift; sourceTree = "<group>"; };
 		4AFDFDC8E1286CDFF8F8700D /* CategoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryService.swift; sourceTree = "<group>"; };
 		4C2C9245E77C26925702BEF3 /* OpenResponsesProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenResponsesProvider.swift; sourceTree = "<group>"; };
+		4E74011C257077692687DE64 /* SettingsRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRouteTests.swift; sourceTree = "<group>"; };
 		4ECEA0861D2217E32782DC9A /* WatchEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchEmptyStateView.swift; sourceTree = "<group>"; };
 		4EE2A12E63283854053B42E0 /* testPopulatedState.populated-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testPopulatedState.populated-light.png"; sourceTree = "<group>"; };
 		513DDD161379E14998235D07 /* FocusModeIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeIntegrationTests.swift; sourceTree = "<group>"; };
@@ -874,6 +876,7 @@
 				77D478B921D188403235B517 /* QuickNoteServiceTests.swift */,
 				3D8DDB4423AAB1E6EB7F61A0 /* RecurringRuleTests.swift */,
 				733561F4C57F4B459DA8C1DF /* SecurityTests.swift */,
+				4E74011C257077692687DE64 /* SettingsRouteTests.swift */,
 				EF88D5A45529A957D9EA88B9 /* SmartRescheduleServiceTests.swift */,
 				2268C58F54537A0DCFC08992 /* SuggestionFeedbackTests.swift */,
 				2191176F2DC72BA5B861C6C8 /* TaskListServiceTests.swift */,
@@ -1638,6 +1641,7 @@
 				A028A92405D16F15FE6B963B /* QuickNoteServiceTests.swift in Sources */,
 				12F7B5C3E697A0FE4280330E /* RecurringRuleTests.swift in Sources */,
 				F49BDCAB611AE705EA473FD2 /* SecurityTests.swift in Sources */,
+				1A56809FBBB76085BEE450FC /* SettingsRouteTests.swift in Sources */,
 				F7588C5AE51FF4AD5B5C21F4 /* SettingsViewSnapshotTests.swift in Sources */,
 				5D1046464CCDBD9F90DE57E3 /* SmartRescheduleServiceTests.swift in Sources */,
 				29A933A9640F64E863981AD8 /* SnapshotFixtures.swift in Sources */,
