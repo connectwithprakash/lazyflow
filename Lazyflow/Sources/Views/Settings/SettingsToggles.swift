@@ -68,16 +68,6 @@ struct MorningBriefingNotificationToggle: View {
         formatHour(notificationHour)
     }
 
-    private func formatHour(_ hour: Int) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:00 a"
-        var components = DateComponents()
-        components.hour = hour
-        if let date = Calendar.current.date(from: components) {
-            return formatter.string(from: date)
-        }
-        return "\(hour):00"
-    }
 }
 
 // MARK: - Daily Summary Notification Toggle
@@ -130,16 +120,6 @@ struct DailySummaryNotificationToggle: View {
         formatHour(notificationHour)
     }
 
-    private func formatHour(_ hour: Int) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:00 a"
-        var components = DateComponents()
-        components.hour = hour
-        if let date = Calendar.current.date(from: components) {
-            return formatter.string(from: date)
-        }
-        return "\(hour):00"
-    }
 }
 
 // MARK: - Live Activity Toggle

@@ -77,12 +77,20 @@ enum SettingsRoute: String, CaseIterable, Identifiable {
     @ViewBuilder
     var destination: some View {
         switch self {
+        case .general:
+            GeneralSettingsView()
+        case .notifications:
+            BriefingsSettingsView()
+        case .productivity:
+            ProductivitySettingsView()
+        case .ai:
+            AISettingsView()
+        case .dataAbout:
+            DataAboutSettingsView()
         #if DEBUG
         case .developer:
             FeatureFlagsDebugView()
         #endif
-        default:
-            SettingsView()
         }
     }
 

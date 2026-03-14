@@ -20,7 +20,6 @@ struct BatchAnalysisResult: Identifiable {
 // MARK: - AI Settings View
 
 struct AISettingsView: View {
-    @Environment(\.dismiss) private var dismiss
     private var llmService = LLMService.shared
     private var taskService = TaskService.shared
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
@@ -35,7 +34,6 @@ struct AISettingsView: View {
     @State private var configProviderType: LLMProviderType?
 
     var body: some View {
-        NavigationStack {
             Form {
                 // Provider Selection Section
                 Section {
@@ -125,13 +123,6 @@ struct AISettingsView: View {
             }
             .navigationTitle("AI Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
             .sheet(isPresented: $showBatchReviewSheet) {
                 BatchAnalysisReviewSheet(
                     results: $batchResults,
@@ -141,7 +132,6 @@ struct AISettingsView: View {
             .sheet(item: $configProviderType) { providerType in
                 ProviderConfigurationSheet(providerType: providerType)
             }
-        }
     }
 
     // MARK: - Provider UI

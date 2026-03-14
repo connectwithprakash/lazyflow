@@ -301,9 +301,7 @@ struct ContentView: View {
         case .lists:
             ListsView()
         case .settings:
-            NavigationStack {
-                SettingsView()
-            }
+            ProfileView()
         }
     }
 
