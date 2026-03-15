@@ -31,6 +31,7 @@
         <attribute name="intradayCompletionsToday" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isCompleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isEventOwner" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="isSoftDeleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="lastIntradayCompletionDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lastSyncedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

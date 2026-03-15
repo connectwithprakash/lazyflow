@@ -285,7 +285,8 @@ final class CalendarService: ObservableObject, CalendarServiceProtocol {
             linkedEventID: event.eventIdentifier,
             scheduledStartTime: event.startDate,
             scheduledEndTime: event.endDate,
-            estimatedDuration: event.endDate.timeIntervalSince(event.startDate)
+            estimatedDuration: event.endDate.timeIntervalSince(event.startDate),
+            isEventOwner: false
         )
         return task
     }
@@ -298,7 +299,8 @@ final class CalendarService: ObservableObject, CalendarServiceProtocol {
             linkedEventID: calendarEvent.id,
             scheduledStartTime: calendarEvent.startDate,
             scheduledEndTime: calendarEvent.endDate,
-            estimatedDuration: calendarEvent.duration
+            estimatedDuration: calendarEvent.duration,
+            isEventOwner: false
         )
         return task
     }

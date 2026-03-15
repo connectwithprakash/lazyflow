@@ -85,7 +85,7 @@ protocol TaskServiceProtocol: AnyObject {
 
     // MARK: - Delete Operations
 
-    func deleteTask(_ task: Task, deleteLinkedEvent: Bool, allowUndo: Bool)
+    func deleteTask(_ task: Task, deleteLinkedEvent: Bool?, allowUndo: Bool)
     func commitPendingChanges()
     func discardPendingChanges()
     func archiveTask(_ task: Task)
@@ -169,7 +169,7 @@ extension TaskServiceProtocol {
         )
     }
 
-    func deleteTask(_ task: Task, deleteLinkedEvent: Bool = false, allowUndo: Bool = false) {
+    func deleteTask(_ task: Task, deleteLinkedEvent: Bool? = nil, allowUndo: Bool = false) {
         deleteTask(task, deleteLinkedEvent: deleteLinkedEvent, allowUndo: allowUndo)
     }
 
