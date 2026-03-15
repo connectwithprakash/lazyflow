@@ -249,7 +249,7 @@ final class MockTaskService: TaskServiceProtocol {
 
     // MARK: - Delete Operations
 
-    func deleteTask(_ task: Task, deleteLinkedEvent: Bool, allowUndo: Bool) {
+    func deleteTask(_ task: Task, deleteLinkedEvent: Bool?, allowUndo: Bool) {
         calls.append("deleteTask")
         tasks.removeAll { $0.id == task.id }
     }
