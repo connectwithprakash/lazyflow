@@ -294,6 +294,7 @@ final class TaskService: TaskServiceProtocol {
             entity.subtaskOrder = task.subtaskOrder
             entity.intradayCompletionsToday = Int16(task.intradayCompletionsToday)
             entity.lastIntradayCompletionDate = task.lastIntradayCompletionDate
+            entity.isEventOwner = task.isEventOwner
 
             // Update list relationship
             let oldListID = entity.list?.id
@@ -588,13 +589,21 @@ final class TaskService: TaskServiceProtocol {
 
     /// ID of task pending deletion (for undo support)
     private(set) var pendingDeleteTaskID: UUID?
+    /// Whether the pending soft-deleted task should have its linked calendar event deleted on commit
+    private var pendingDeleteLinkedEvent: Bool = false
+    /// Snapshot of the task pending deletion, used for deferred calendar event cleanup
+    private var pendingDeleteTask: Task?
 
     /// Delete a task using soft delete pattern
     /// - Parameters:
     ///   - task: The task to delete
-    ///   - deleteLinkedEvent: Whether to delete the linked calendar event
+    ///   - deleteLinkedEvent: Whether to delete the linked calendar event. Pass `nil` (default) to auto-resolve
+    ///     based on `task.isEventOwner` — owner tasks delete their events, non-owner tasks don't.
     ///   - allowUndo: If true, uses soft delete to allow undo. Call `commitPendingDelete()` after undo window closes.
-    func deleteTask(_ task: Task, deleteLinkedEvent: Bool = false, allowUndo: Bool = false) {
+    func deleteTask(_ task: Task, deleteLinkedEvent: Bool? = nil, allowUndo: Bool = false) {
+        // Resolve nil to task.isEventOwner: owner tasks delete their events, non-owner tasks don't
+        let shouldDeleteEvent = deleteLinkedEvent ?? task.isEventOwner
+
         let context = persistenceController.viewContext
         let request: NSFetchRequest<TaskEntity> = TaskEntity.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", task.id as CVarArg)
@@ -610,6 +619,9 @@ final class TaskService: TaskServiceProtocol {
                 entity.isSoftDeleted = true
                 entity.deletedAt = Date()
                 pendingDeleteTaskID = task.id
+                // Defer calendar event deletion until commit — undo must be able to restore fully
+                pendingDeleteLinkedEvent = shouldDeleteEvent
+                pendingDeleteTask = task
 
                 // Also soft-delete subtasks if this is a parent task
                 if let subtasks = entity.subtasks as? Set<TaskEntity> {
@@ -628,8 +640,8 @@ final class TaskService: TaskServiceProtocol {
             // Cancel any scheduled notifications
             notificationService.cancelTaskReminder(taskID: task.id)
 
-            // Delete linked calendar event if requested
-            if deleteLinkedEvent {
+            // Delete linked calendar event only for immediate (non-undo) deletes
+            if shouldDeleteEvent && !allowUndo {
                 deleteLinkedCalendarEvent(for: task)
             }
 
@@ -646,7 +658,7 @@ final class TaskService: TaskServiceProtocol {
     }
 
     /// Commit pending delete (call after undo window closes without undo)
-    /// This performs the actual hard delete of soft-deleted tasks
+    /// This performs the actual hard delete of soft-deleted tasks and deferred calendar event cleanup
     func commitPendingChanges() {
         guard let taskID = pendingDeleteTaskID else { return }
 
@@ -664,11 +676,19 @@ final class TaskService: TaskServiceProtocol {
             Logger.tasks.error("Failed to commit pending delete: \(error, privacy: .public)")
         }
 
+        // Delete linked calendar event now that the undo window has closed
+        if pendingDeleteLinkedEvent, let task = pendingDeleteTask {
+            deleteLinkedCalendarEvent(for: task)
+        }
+
         pendingDeleteTaskID = nil
+        pendingDeleteLinkedEvent = false
+        pendingDeleteTask = nil
     }
 
     /// Undo pending delete (call when user taps undo)
-    /// This restores soft-deleted tasks by clearing the soft delete flags
+    /// This restores soft-deleted tasks by clearing the soft delete flags.
+    /// Calendar event was never deleted during soft-delete, so no event restoration is needed.
     func discardPendingChanges() {
         guard let taskID = pendingDeleteTaskID else { return }
 
@@ -698,6 +718,8 @@ final class TaskService: TaskServiceProtocol {
         }
 
         pendingDeleteTaskID = nil
+        pendingDeleteLinkedEvent = false
+        pendingDeleteTask = nil
     }
 
     /// Delete linked calendar event for a task
@@ -1206,6 +1228,7 @@ extension TaskEntity {
             recurringRule: recurringRule,
             intradayCompletionsToday: Int(intradayCompletionsToday),
             lastIntradayCompletionDate: lastIntradayCompletionDate,
+            isEventOwner: isEventOwner,
             parentTaskID: parentTaskID,
             subtasks: subtaskModels,
             subtaskOrder: subtaskOrder

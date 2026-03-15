@@ -116,6 +116,8 @@ final class CalendarSyncService {
                 }
             } else if task.isCompleted, task.linkedEventID != nil {
                 handleCompletedTask(task)
+            } else if !task.isEligibleForAutoSync, !task.isCompleted, task.linkedEventID != nil {
+                handleIneligibleTask(task)
             }
         }
 
@@ -176,6 +178,12 @@ final class CalendarSyncService {
 
     /// Push task changes to its linked event
     private func pushUpdatesToEvent(for task: Task) {
+        // Non-owner tasks were created from calendar events — don't push changes back
+        guard task.isEventOwner else {
+            Logger.calendar.debug("CalendarSyncService: Skipping push for non-owner task '\(task.title, privacy: .private)'")
+            return
+        }
+
         guard let eventID = task.linkedEventID,
               let event = calendarService.event(withIdentifier: eventID) else { return }
 
@@ -242,6 +250,13 @@ final class CalendarSyncService {
 
     /// Handle completed task based on completion policy
     private func handleCompletedTask(_ task: Task) {
+        // Non-owner tasks were created from calendar events — just unlink without modifying the event
+        guard task.isEventOwner else {
+            Logger.calendar.debug("CalendarSyncService: Unlinking completed non-owner task '\(task.title, privacy: .private)'")
+            unlinkTask(task)
+            return
+        }
+
         let isRecurringWithSeries = task.recurringRule?.canMapToEKRecurrenceRule == true
 
         switch completionPolicy {
@@ -291,6 +306,46 @@ final class CalendarSyncService {
                 Logger.calendar.error("CalendarSyncService: Failed to delete event for completed task '\(task.title, privacy: .private)': \(error)")
             }
         }
+    }
+
+    /// Handle a linked task that is no longer eligible for sync
+    /// (e.g., dueDate, dueTime, or estimatedDuration was removed).
+    /// Deletes the orphaned event and unlinks the task.
+    private func handleIneligibleTask(_ task: Task) {
+        // Non-owner tasks were created from calendar events — just unlink without deleting the event
+        guard task.isEventOwner else {
+            Logger.calendar.debug("CalendarSyncService: Unlinking ineligible non-owner task '\(task.title, privacy: .private)'")
+            unlinkTask(task)
+            return
+        }
+
+        guard let eventID = task.linkedEventID,
+              let event = calendarService.event(withIdentifier: eventID) else {
+            // Event already gone — just unlink the task
+            unlinkTask(task)
+            return
+        }
+
+        do {
+            try calendarService.deleteEvent(event, span: .thisEvent)
+            Logger.calendar.info("CalendarSyncService: Deleted orphaned event for ineligible task '\(task.title, privacy: .private)'")
+        } catch {
+            Logger.calendar.error("CalendarSyncService: Failed to delete event for ineligible task '\(task.title, privacy: .private)': \(error)")
+        }
+
+        unlinkTask(task)
+        recentlyPushedTaskIDs[task.id] = Date()
+    }
+
+    /// Clear all calendar-link fields from a task
+    private func unlinkTask(_ task: Task) {
+        var updatedTask = task
+        updatedTask.linkedEventID = nil
+        updatedTask.calendarItemExternalIdentifier = nil
+        updatedTask.scheduledStartTime = nil
+        updatedTask.scheduledEndTime = nil
+        updatedTask.lastSyncedAt = Date()
+        taskService.updateTask(updatedTask)
     }
 
     // MARK: - Reverse Sync (Event → Task)

@@ -59,6 +59,10 @@ public struct Task: Identifiable, Codable, Equatable, Hashable, Sendable {
     public var intradayCompletionsToday: Int
     public var lastIntradayCompletionDate: Date?
 
+    // MARK: - Calendar Ownership
+    /// Whether this task owns its linked calendar event (true = task created the event, false = event existed first)
+    public var isEventOwner: Bool
+
     // MARK: - Subtask Support
     public var parentTaskID: UUID?
     public var subtasks: [Task]
@@ -181,6 +185,7 @@ public struct Task: Identifiable, Codable, Equatable, Hashable, Sendable {
         recurringRule: RecurringRule? = nil,
         intradayCompletionsToday: Int = 0,
         lastIntradayCompletionDate: Date? = nil,
+        isEventOwner: Bool = true,
         parentTaskID: UUID? = nil,
         subtasks: [Task] = [],
         subtaskOrder: Int32 = 0
@@ -211,6 +216,7 @@ public struct Task: Identifiable, Codable, Equatable, Hashable, Sendable {
         self.recurringRule = recurringRule
         self.intradayCompletionsToday = intradayCompletionsToday
         self.lastIntradayCompletionDate = lastIntradayCompletionDate
+        self.isEventOwner = isEventOwner
         self.parentTaskID = parentTaskID
         self.subtasks = subtasks
         self.subtaskOrder = subtaskOrder
@@ -244,6 +250,7 @@ public struct Task: Identifiable, Codable, Equatable, Hashable, Sendable {
         recurringRule: RecurringRule? = nil,
         intradayCompletionsToday: Int = 0,
         lastIntradayCompletionDate: Date? = nil,
+        isEventOwner: Bool = true,
         parentTaskID: UUID? = nil,
         subtasks: [Task] = [],
         subtaskOrder: Int32 = 0
@@ -275,6 +282,7 @@ public struct Task: Identifiable, Codable, Equatable, Hashable, Sendable {
             recurringRule: recurringRule,
             intradayCompletionsToday: intradayCompletionsToday,
             lastIntradayCompletionDate: lastIntradayCompletionDate,
+            isEventOwner: isEventOwner,
             parentTaskID: parentTaskID,
             subtasks: subtasks,
             subtaskOrder: subtaskOrder
