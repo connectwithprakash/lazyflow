@@ -2860,10 +2860,10 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        let organizeHeader = app.staticTexts["ORGANIZE"]
-        let settingsHeader = app.staticTexts["SETTINGS"]
-        XCTAssertTrue(organizeHeader.waitForExistence(timeout: 2), "ORGANIZE section header should be visible")
-        XCTAssertTrue(settingsHeader.waitForExistence(timeout: 2), "SETTINGS section header should be visible")
+        let organizeHeader = app.staticTexts.matching(identifier: "organize_section_header").firstMatch
+        let settingsHeader = app.staticTexts.matching(identifier: "settings_section_header").firstMatch
+        XCTAssertTrue(organizeHeader.waitForExistence(timeout: 3), "Organize section header should be visible")
+        XCTAssertTrue(settingsHeader.waitForExistence(timeout: 3), "Settings section header should be visible")
     }
 
     func testMeTabSettingsCardNavigatesToSettings() throws {
@@ -2926,9 +2926,9 @@ final class LazyflowUITests: XCTestCase {
         searchField.typeText("xyznonexistent")
         Thread.sleep(forTimeInterval: 0.5)
 
-        // ContentUnavailableView.search shows "No Results" text
-        let noResults = app.staticTexts["No Results"]
-        XCTAssertTrue(noResults.waitForExistence(timeout: 2), "Empty state should appear for non-matching search")
+        // ContentUnavailableView.search with accessibilityIdentifier
+        let emptyState = app.otherElements["search_empty_state"]
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 3), "Empty state should appear for non-matching search")
     }
 
     func testMeTabSearchWhitespaceShowsAll() throws {

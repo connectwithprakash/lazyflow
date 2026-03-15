@@ -86,6 +86,7 @@ struct ProfileView: View {
                     // MARK: - Empty Search State
                     if isSearching && !showLists && !showCategories && filteredRoutes.isEmpty {
                         ContentUnavailableView.search(text: trimmedSearch)
+                            .accessibilityIdentifier("search_empty_state")
                     }
 
                     // MARK: - App Footer
@@ -124,6 +125,7 @@ struct ProfileView: View {
                 .fontWeight(.semibold)
                 .foregroundColor(Color.Lazyflow.textSecondary)
                 .textCase(.uppercase)
+                .accessibilityIdentifier("\(title.lowercased())_section_header")
             Spacer()
         }
     }
