@@ -29,11 +29,9 @@ struct ProfileView: View {
         return SettingsSearchItem.allItems().filter { $0.matches(trimmedSearch) }
     }
 
-    /// Search items grouped by route, excluding routes already shown as cards
+    /// Search items grouped by route
     private var groupedSearchResults: [(route: SettingsRoute, items: [SettingsSearchItem])] {
-        let matchedCardRoutes = Set(filteredRoutes.map(\.id))
-        let deepItems = filteredSearchItems.filter { !matchedCardRoutes.contains($0.route.id) }
-        let grouped = Dictionary(grouping: deepItems, by: \.route)
+        let grouped = Dictionary(grouping: filteredSearchItems, by: \.route)
         return SettingsRoute.allCases.compactMap { route in
             guard let items = grouped[route], !items.isEmpty else { return nil }
             return (route: route, items: items)
@@ -41,7 +39,7 @@ struct ProfileView: View {
     }
 
     private var hasAnySearchResults: Bool {
-        showLists || showCategories || !filteredRoutes.isEmpty || !groupedSearchResults.isEmpty
+        showLists || showCategories || !groupedSearchResults.isEmpty
     }
 
     var body: some View {
@@ -84,7 +82,22 @@ struct ProfileView: View {
                     }
 
                     // MARK: - Settings Section
-                    if !filteredRoutes.isEmpty {
+                    if isSearching {
+                        // Deep search: show individual matching items
+                        ForEach(groupedSearchResults, id: \.route) { group in
+                            sectionHeader(group.route.title)
+                                .padding(.top, DesignSystem.Spacing.sm)
+
+                            ForEach(group.items) { item in
+                                NavigationLink {
+                                    group.route.destination(scrollToItemID: item.id)
+                                } label: {
+                                    SettingsSearchResultRow(item: item)
+                                }
+                            }
+                        }
+                    } else if !filteredRoutes.isEmpty {
+                        // Default: show settings cards
                         sectionHeader("Settings")
                             .padding(.top, DesignSystem.Spacing.sm)
 
@@ -101,22 +114,6 @@ struct ProfileView: View {
                             }
                             .accessibilityIdentifier(route.accessibilityIdentifier)
                             .accessibilityLabel("\(route.title): \(route.subtitle)")
-                        }
-                    }
-
-                    // MARK: - Deep Search Results
-                    if isSearching {
-                        ForEach(groupedSearchResults, id: \.route) { group in
-                            sectionHeader(group.route.title)
-                                .padding(.top, DesignSystem.Spacing.sm)
-
-                            ForEach(group.items) { item in
-                                NavigationLink {
-                                    group.route.destination(scrollToItemID: item.id)
-                                } label: {
-                                    SettingsSearchResultRow(item: item)
-                                }
-                            }
                         }
                     }
 
