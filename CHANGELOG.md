@@ -5,6 +5,24 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0](https://github.com/connectwithprakash/lazyflow/compare/v1.10.0...v1.11.0) (2026-03-15)
+
+
+### Features
+
+* **settings:** split monolithic SettingsView into dedicated group pages ([#288](https://github.com/connectwithprakash/lazyflow/issues/288)) ([e259462](https://github.com/connectwithprakash/lazyflow/commit/e2594629d66f27f5b51b75d988b1f1c824fcfbf5))
+
+
+### Bug Fixes
+
+* **fastlane:** add force flag to upload_screenshots lane ([65e0081](https://github.com/connectwithprakash/lazyflow/commit/65e00818d34e57b64859b89098e59a5958f76282))
+* **fastlane:** dynamically detect editable App Store version ([b13f71a](https://github.com/connectwithprakash/lazyflow/commit/b13f71a5a2652e7a68eda76fff2ef2963cb55a75))
+* **fastlane:** read version from project.yml instead of Info.plist ([1459185](https://github.com/connectwithprakash/lazyflow/commit/1459185299ab393ff2e3c5c1eab6b8e8f62a3af7))
+* **fastlane:** skip App Store version creation in submit_for_review ([834401e](https://github.com/connectwithprakash/lazyflow/commit/834401e80df3f642f2d9aee31faa3bd7e6575d43))
+* **fastlane:** skip IAP precheck in upload_screenshots lane ([a9fd69e](https://github.com/connectwithprakash/lazyflow/commit/a9fd69ea95b393838557d53e695992b422706337))
+* **fastlane:** use correct relative path for project.yml ([f6e5915](https://github.com/connectwithprakash/lazyflow/commit/f6e59154686153c3f9665f5f1fa0db50f46b6b60))
+* **sync:** add event ownership, undo-safe deletion, and ineligible task cleanup ([#289](https://github.com/connectwithprakash/lazyflow/issues/289)) ([21af08e](https://github.com/connectwithprakash/lazyflow/commit/21af08eccef8b2e1ce816c228ce0dc387b7c4d1d))
+
 ## [1.10.0](https://github.com/connectwithprakash/lazyflow/compare/v1.9.0...v1.10.0) (2026-03-09)
 
 
