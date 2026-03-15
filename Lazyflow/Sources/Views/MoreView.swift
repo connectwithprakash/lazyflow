@@ -79,7 +79,7 @@ struct MoreView: View {
 
                     // Settings Card
                     NavigationLink {
-                        SettingsView()
+                        GeneralSettingsView()
                     } label: {
                         MoreCard(
                             icon: "gear",

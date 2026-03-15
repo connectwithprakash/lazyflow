@@ -114,10 +114,13 @@ final class LazyflowUITests: XCTestCase {
     private func navigateToTab(_ tabName: String) {
         // iPad uses sidebar navigation - items are in a List with selection
         if UIDevice.current.userInterfaceIdiom == .pad {
+            // "Settings" sidebar now shows ProfileView hub; tap through to General
+            let sidebarTarget = (tabName == "Settings") ? "Settings" : tabName
+
             // Try multiple element types: button, staticText, cell
-            let sidebarButton = app.buttons[tabName]
-            let sidebarText = app.staticTexts[tabName]
-            let sidebarCell = app.cells.staticTexts[tabName]
+            let sidebarButton = app.buttons[sidebarTarget]
+            let sidebarText = app.staticTexts[sidebarTarget]
+            let sidebarCell = app.cells.staticTexts[sidebarTarget]
 
             if sidebarButton.waitForExistence(timeout: 3) && sidebarButton.isHittable {
                 sidebarButton.tap()
@@ -127,12 +130,17 @@ final class LazyflowUITests: XCTestCase {
                 sidebarCell.tap()
             } else {
                 // Fallback: try to find any element containing the tab name
-                let anyElement = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR identifier == %@", tabName, tabName)).firstMatch
+                let anyElement = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR identifier == %@", sidebarTarget, sidebarTarget)).firstMatch
                 if anyElement.waitForExistence(timeout: 3) && anyElement.isHittable {
                     anyElement.tap()
                 }
             }
             Thread.sleep(forTimeInterval: 0.5)
+
+            // Settings sidebar item shows ProfileView hub — tap General card
+            if tabName == "Settings" {
+                navigateToHubItem("General")
+            }
             return
         }
 
@@ -161,7 +169,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         // Items accessible via Me hub
-        let meItems = ["Lists", "Categories", "Settings"]
+        let meItems = ["Lists", "Categories"]
         if meItems.contains(tabName) {
             let meTab = app.tabBars.buttons["Me"]
             guard meTab.exists && meTab.isHittable else { return }
@@ -170,6 +178,19 @@ final class LazyflowUITests: XCTestCase {
 
             // Find and tap the item in Me hub
             navigateToHubItem(tabName)
+            return
+        }
+
+        // Settings cards are now inline on Me tab — navigate to Me tab,
+        // then tap the specific settings card (e.g. "General")
+        if tabName == "Settings" {
+            let meTab = app.tabBars.buttons["Me"]
+            guard meTab.exists && meTab.isHittable else { return }
+            meTab.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Tap the first settings card (General) to reach GeneralSettingsView
+            navigateToHubItem("General")
             return
         }
     }
@@ -372,13 +393,13 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Me")
         XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
 
-        // Verify Settings is accessible within Me hub
-        let settingsCard = app.staticTexts["Settings"]
-        XCTAssertTrue(settingsCard.waitForExistence(timeout: 2), "Settings should be in Me hub")
+        // Verify settings cards are inline on Me tab (flattened layout)
+        let generalCard = app.staticTexts["General"]
+        XCTAssertTrue(generalCard.waitForExistence(timeout: 2), "General settings card should be on Me tab")
 
-        // Tap to navigate to Settings
-        settingsCard.tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3), "Should navigate to Settings view")
+        // Tap General card to navigate to Settings
+        generalCard.tap()
+        XCTAssertTrue(app.navigationBars["General"].waitForExistence(timeout: 3), "Should navigate to General settings view")
     }
 
     // MARK: - Task Creation Tests
@@ -581,7 +602,7 @@ final class LazyflowUITests: XCTestCase {
         navigateToTab("Settings")
 
         // Wait for Settings navigation bar to appear
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["General"].waitForExistence(timeout: 3))
 
         // Verify key settings sections exist by checking their content
         // (Section headers may render differently across iOS versions)
@@ -608,7 +629,7 @@ final class LazyflowUITests: XCTestCase {
         }
 
         // Test passes if we got this far without crashing
-        XCTAssertTrue(app.navigationBars["Settings"].exists)
+        XCTAssertTrue(app.navigationBars["General"].exists)
     }
 
     // MARK: - Accessibility Tests
@@ -636,13 +657,13 @@ final class LazyflowUITests: XCTestCase {
                 XCTAssertNotEqual(tab.label, "")
             }
 
-            // Lists and Settings are under "Me" tab
+            // Lists and settings cards are inline under "Me" tab
             let meTab = app.tabBars.buttons["Me"]
             if meTab.exists {
                 meTab.tap()
-                // Verify Lists and Settings are accessible in Me hub
+                // Verify Lists and General settings card are accessible on Me tab
                 XCTAssertTrue(app.staticTexts["Lists"].waitForExistence(timeout: 2) ||
-                              app.staticTexts["Settings"].waitForExistence(timeout: 2))
+                              app.staticTexts["General"].waitForExistence(timeout: 2))
             }
         } else {
             // iPad: Check sidebar items (may be buttons, staticTexts, or cells)
@@ -771,7 +792,7 @@ final class LazyflowUITests: XCTestCase {
 
         // Test navigating to Settings
         navigateToTab("Settings")
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3), "Settings view should be shown")
+        XCTAssertTrue(app.navigationBars["General"].waitForExistence(timeout: 3), "Settings view should be shown")
     }
 
     func testIPadToolbarButtons() throws {
@@ -803,7 +824,7 @@ final class LazyflowUITests: XCTestCase {
 
         // Test navigation via hub tabs
         navigateToTab("Settings")  // Via Me hub
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.navigationBars["General"].waitForExistence(timeout: 2))
 
         navigateToTab("History")  // Via Insights hub
         XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 2))
@@ -825,20 +846,16 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Morning Briefing Tests
 
     func testMorningBriefingSettingsExist() throws {
-        navigateToTab("Settings")
+        // Morning Briefing settings are on the Notifications page
+        navigateToTab("Me")
+        navigateToHubItem("Notifications")
 
-        // Scroll to find Morning Briefing settings
-        let settingsTable = app.tables.firstMatch
-        if settingsTable.waitForExistence(timeout: 5) {
-            settingsTable.swipeUp()
-        }
-
-        // Look for Morning Briefing toggle in Daily Summary section
+        // Look for Morning Briefing toggle
         let morningToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Morning'")).firstMatch
         guard morningToggle.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Morning Briefing toggle not reachable in Settings")
+            throw XCTSkip("Morning Briefing toggle not reachable in Notifications settings")
         }
-        XCTAssertTrue(morningToggle.exists, "Morning briefing toggle should exist in settings")
+        XCTAssertTrue(morningToggle.exists, "Morning briefing toggle should exist in notifications settings")
     }
 
     func testMorningBriefingPromptCard() throws {
@@ -973,10 +990,12 @@ final class LazyflowUITests: XCTestCase {
     }
 
     func testMorningBriefingPromptToggle() throws {
-        navigateToTab("Settings")
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+        // Morning Briefing settings are on the Notifications page
+        navigateToTab("Me")
+        navigateToHubItem("Notifications")
+        XCTAssertTrue(app.navigationBars["Notifications"].waitForExistence(timeout: 3))
 
-        // First, look for the "Morning Briefing" section header to navigate there
+        // Look for the "Morning Briefing" section header
         let sectionHeader = app.staticTexts["Morning Briefing"]
 
         // Scroll to find the Morning Briefing section
@@ -1026,24 +1045,22 @@ final class LazyflowUITests: XCTestCase {
     // MARK: - Daily Summary Tests
 
     func testDailySummarySettingsExist() throws {
-        navigateToTab("Settings")
-
-        // Scroll to find Daily Summary section
-        let settingsTable = app.tables.firstMatch
-        if settingsTable.waitForExistence(timeout: 5) {
-            settingsTable.swipeUp()
-        }
+        // Daily Summary settings are on the Notifications page
+        navigateToTab("Me")
+        navigateToHubItem("Notifications")
 
         // Look for Daily Summary toggle
         let summaryToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Summary' OR label CONTAINS[c] 'Evening'")).firstMatch
         guard summaryToggle.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Daily Summary toggle not reachable in Settings")
+            throw XCTSkip("Daily Summary toggle not reachable in Notifications settings")
         }
-        XCTAssertTrue(summaryToggle.exists, "Daily summary toggle should exist in settings")
+        XCTAssertTrue(summaryToggle.exists, "Daily summary toggle should exist in notifications settings")
     }
 
     func testDailySummarySection() throws {
-        navigateToTab("Settings")
+        // Daily Summary settings are on the Notifications page
+        navigateToTab("Me")
+        navigateToHubItem("Notifications")
 
         // Use flexible predicate to find Evening Reminder toggle (more reliable across devices)
         let eveningToggle = app.switches.matching(NSPredicate(format: "identifier CONTAINS[c] 'Evening' OR label CONTAINS[c] 'Evening'")).firstMatch
@@ -1062,7 +1079,9 @@ final class LazyflowUITests: XCTestCase {
     }
 
     func testDailySummaryToggleInteraction() throws {
-        navigateToTab("Settings")
+        // Daily Summary settings are on the Notifications page
+        navigateToTab("Me")
+        navigateToHubItem("Notifications")
 
         // Use flexible predicate to find Evening Reminder toggle (more reliable across devices)
         let reminderToggle = app.switches.matching(NSPredicate(format: "identifier CONTAINS[c] 'Evening' OR label CONTAINS[c] 'Evening'")).firstMatch
@@ -1192,7 +1211,7 @@ final class LazyflowUITests: XCTestCase {
         _ = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'streak' OR label CONTAINS[c] 'day'")).firstMatch
         // Streak display may or may not exist depending on user's history
         // This test just verifies settings page loads properly
-        XCTAssertTrue(app.navigationBars["Settings"].exists)
+        XCTAssertTrue(app.navigationBars["General"].exists)
     }
 
     // MARK: - Calendar Integration Tests
@@ -1790,42 +1809,10 @@ final class LazyflowUITests: XCTestCase {
 
     /// Test navigating to AI Settings and verifying provider options exist
     func testAISettingsShowsProviders() throws {
-        navigateToTab("Settings")
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
-
-        // Find and tap AI Settings - try multiple element types
-        // The button has a Label("AI Settings", systemImage: "brain") inside
-        let aiButton = app.buttons["AI Settings"]
-        let aiCell = app.cells.containing(.staticText, identifier: "AI Settings").firstMatch
-        let aiStaticText = app.staticTexts["AI Settings"]
-
-        if aiButton.waitForExistence(timeout: 3) && aiButton.isHittable {
-            aiButton.tap()
-        } else if aiCell.waitForExistence(timeout: 2) && aiCell.isHittable {
-            aiCell.tap()
-        } else if aiStaticText.waitForExistence(timeout: 2) && aiStaticText.isHittable {
-            aiStaticText.tap()
-        } else {
-            // Try scrolling to find it (AI Features section may not be visible)
-            let settingsList = app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.tables.firstMatch
-            if settingsList.exists {
-                settingsList.swipeUp()
-                Thread.sleep(forTimeInterval: 0.5)
-            }
-
-            // Check again after scroll
-            if aiButton.waitForExistence(timeout: 2) && aiButton.isHittable {
-                aiButton.tap()
-            } else if aiStaticText.waitForExistence(timeout: 2) && aiStaticText.isHittable {
-                aiStaticText.tap()
-            } else {
-                throw XCTSkip("AI Settings button not found - may not be visible")
-            }
-        }
-
-        // Verify AI Settings sheet appears
-        let aiSettingsTitle = app.staticTexts["AI Settings"]
-        XCTAssertTrue(aiSettingsTitle.waitForExistence(timeout: 3), "AI Settings sheet should appear")
+        // AI Settings is now a dedicated page via the Me tab
+        navigateToTab("Me")
+        navigateToHubItem("AI")
+        XCTAssertTrue(app.navigationBars["AI Settings"].waitForExistence(timeout: 3))
 
         // Verify provider options exist
         let appleOption = app.staticTexts["Apple Intelligence"]
@@ -1835,42 +1822,15 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(appleOption.waitForExistence(timeout: 2), "Apple Intelligence option should exist")
         XCTAssertTrue(ollamaOption.exists, "Ollama option should exist")
         XCTAssertTrue(customOption.exists, "Custom Endpoint option should exist")
-
-        // Dismiss
-        let doneButton = app.buttons["Done"]
-        if doneButton.exists && doneButton.isHittable {
-            doneButton.tap()
-        }
     }
 
     /// Test configuring Ollama provider and selecting a model
     /// Requires Ollama to be running locally with models available
     func testOllamaModelSelection() throws {
-        navigateToTab("Settings")
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
-
-        // Open AI Settings - use the same pattern as testAISettingsShowsProviders
-        let aiButton = app.buttons["AI Settings"]
-        let aiStaticText = app.staticTexts["AI Settings"]
-
-        if !(aiButton.waitForExistence(timeout: 2) && aiButton.isHittable) &&
-           !(aiStaticText.waitForExistence(timeout: 1) && aiStaticText.isHittable) {
-            // Scroll to find AI Settings
-            let settingsList = app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.tables.firstMatch
-            if settingsList.exists {
-                settingsList.swipeUp()
-                Thread.sleep(forTimeInterval: 0.5)
-            }
-        }
-
-        if aiStaticText.waitForExistence(timeout: 2) && aiStaticText.isHittable {
-            aiStaticText.tap()
-        } else if aiButton.waitForExistence(timeout: 1) && aiButton.isHittable {
-            aiButton.tap()
-        } else {
-            throw XCTSkip("AI Settings button not found")
-        }
-        Thread.sleep(forTimeInterval: 0.5)
+        // AI Settings is now a dedicated page via the Me tab
+        navigateToTab("Me")
+        navigateToHubItem("AI")
+        XCTAssertTrue(app.navigationBars["AI Settings"].waitForExistence(timeout: 3))
 
         // Tap Configure for Ollama
         let configureButton = app.buttons.matching(NSPredicate(format: "label == 'Configure'")).element(boundBy: 0)
@@ -2873,6 +2833,124 @@ final class LazyflowUITests: XCTestCase {
 
         // Step 9 (FAB tab restriction) is verified by testQuickCaptureFABOnMultipleTabs
         snap("12-walkthrough-complete")
+    }
+
+    // MARK: - Flattened Settings (Me Tab)
+
+    func testMeTabShowsAllSettingsCards() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        let expectedTitles = ["General", "Notifications", "Productivity", "AI", "Data & About"]
+        for title in expectedTitles {
+            let card = app.staticTexts[title]
+            XCTAssertTrue(card.waitForExistence(timeout: 2), "\(title) settings card should be visible on Me tab")
+        }
+    }
+
+    func testMeTabShowsOrganizeAndSettingsSections() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        let organizeHeader = app.staticTexts.matching(identifier: "organize_section_header").firstMatch
+        let settingsHeader = app.staticTexts.matching(identifier: "settings_section_header").firstMatch
+        XCTAssertTrue(organizeHeader.waitForExistence(timeout: 3), "Organize section header should be visible")
+        XCTAssertTrue(settingsHeader.waitForExistence(timeout: 3), "Settings section header should be visible")
+    }
+
+    func testMeTabSettingsCardNavigatesToSettings() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        let generalCard = app.staticTexts["General"]
+        XCTAssertTrue(generalCard.waitForExistence(timeout: 2))
+        generalCard.tap()
+
+        XCTAssertTrue(app.navigationBars["General"].waitForExistence(timeout: 3), "Should navigate to General settings view")
+
+        // Navigate back
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3), "Should return to Me tab")
+    }
+
+    func testMeTabSearchFiltersCards() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Search field is always visible at bottom
+        let searchField = app.textFields["Search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Search field should be visible at bottom")
+        searchField.tap()
+        searchField.typeText("calendar")
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Productivity subtitle contains "Calendar" — should be visible
+        let productivityCard = app.staticTexts["Productivity"]
+        XCTAssertTrue(productivityCard.waitForExistence(timeout: 2), "Productivity card should match 'calendar' search")
+
+        // Lists and Categories should be filtered out
+        let listsCard = app.staticTexts["Lists"]
+        let categoriesCard = app.staticTexts["Categories"]
+        XCTAssertFalse(listsCard.exists, "Lists should be hidden when searching 'calendar'")
+        XCTAssertFalse(categoriesCard.exists, "Categories should be hidden when searching 'calendar'")
+    }
+
+    func testMeTabSearchShowsEmptyState() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Search field is always visible at bottom
+        let searchField = app.textFields["Search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
+        searchField.tap()
+        searchField.typeText("xyznonexistent")
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // ContentUnavailableView wrapped in VStack with accessibilityIdentifier
+        let emptyState = app.descendants(matching: .any).matching(identifier: "search_empty_state").firstMatch
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 3), "Empty state should appear for non-matching search")
+    }
+
+    func testMeTabSearchWhitespaceShowsAll() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test only runs on iPhone")
+        }
+
+        navigateToTab("Me")
+        XCTAssertTrue(app.navigationBars["Me"].waitForExistence(timeout: 3))
+
+        // Search field is always visible at bottom
+        let searchField = app.textFields["Search"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
+        searchField.tap()
+        searchField.typeText("   ")
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // All cards should still be visible (whitespace-only treated as empty)
+        let generalCard = app.staticTexts["General"]
+        let listsCard = app.staticTexts["Lists"]
+        XCTAssertTrue(generalCard.waitForExistence(timeout: 2), "General card should be visible with whitespace search")
+        XCTAssertTrue(listsCard.waitForExistence(timeout: 2), "Lists card should be visible with whitespace search")
     }
 
 }

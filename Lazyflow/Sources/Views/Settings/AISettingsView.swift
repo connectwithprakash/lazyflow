@@ -20,9 +20,10 @@ struct BatchAnalysisResult: Identifiable {
 // MARK: - AI Settings View
 
 struct AISettingsView: View {
-    @Environment(\.dismiss) private var dismiss
-    private var llmService = LLMService.shared
-    private var taskService = TaskService.shared
+    var scrollToItemID: String? = nil
+
+    private let llmService = LLMService.shared
+    private let taskService = TaskService.shared
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
     @AppStorage(AppConstants.StorageKey.aiEstimateDuration) private var aiEstimateDuration: Bool = true
     @AppStorage(AppConstants.StorageKey.aiSuggestPriority) private var aiSuggestPriority: Bool = true
@@ -35,7 +36,7 @@ struct AISettingsView: View {
     @State private var configProviderType: LLMProviderType?
 
     var body: some View {
-        NavigationStack {
+        ScrollViewReader { proxy in
             Form {
                 // Provider Selection Section
                 Section {
@@ -47,6 +48,7 @@ struct AISettingsView: View {
                 } footer: {
                     providerFooterText
                 }
+                .id("ai_provider")
 
                 // AI Features Section
                 Section("AI Features") {
@@ -78,6 +80,7 @@ struct AISettingsView: View {
                     }
                 }
                 .disabled(!llmService.isReady)
+                .id("ai_auto_suggest")
 
                 // Batch Analysis Section
                 Section {
@@ -122,16 +125,10 @@ struct AISettingsView: View {
                 } footer: {
                     Text("Automatically categorize and estimate duration for tasks without a category.")
                 }
+                .id("ai_batch_analysis")
             }
             .navigationTitle("AI Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
             .sheet(isPresented: $showBatchReviewSheet) {
                 BatchAnalysisReviewSheet(
                     results: $batchResults,
@@ -140,6 +137,13 @@ struct AISettingsView: View {
             }
             .sheet(item: $configProviderType) { providerType in
                 ProviderConfigurationSheet(providerType: providerType)
+            }
+            .onAppear {
+                if let itemID = scrollToItemID {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation { proxy.scrollTo(itemID, anchor: .center) }
+                    }
+                }
             }
         }
     }

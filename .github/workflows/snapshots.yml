@@ -41,18 +41,23 @@ jobs:
             xcrun simctl create "$DEVICE_NAME" "$DEVICE_TYPE_ID" "$RUNTIME"
           fi
 
+      - name: Delete Existing Snapshots
+        run: |
+          find LazyflowTests/Snapshots/__Snapshots__ -name '*.png' -delete
+          echo "Deleted existing snapshot references so .missing mode re-records them"
+
       - name: Re-record Snapshot References
         run: |
-          set -o pipefail
-          SNAPSHOT_RECORD=true xcodebuild test \
+          # With references deleted, the default .missing record mode will
+          # create fresh images.  Tests still "fail" (no reference to compare)
+          # so we allow non-zero exit.
+          xcodebuild test \
             -project Lazyflow.xcodeproj \
             -scheme Lazyflow \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -only-testing:LazyflowTests \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty
-          # Record mode tests always "fail" by design — check that build succeeded
-          # by verifying snapshot files were actually written
+            2>&1 | xcpretty || true
           if ! ls LazyflowTests/Snapshots/__Snapshots__/**/*.png &>/dev/null; then
             echo "::error::No snapshot files found — build may have failed"
             exit 1

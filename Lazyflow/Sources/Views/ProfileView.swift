@@ -2,14 +2,44 @@ import SwiftUI
 import LazyflowCore
 import LazyflowUI
 
-/// Hub view for Me/Profile tab containing lists, categories, and settings
-/// Part of navigation restructure (Issue #110)
+/// Hub view for Me/Profile tab with inline organize and settings cards
+/// Part of navigation restructure (Issue #285)
 struct ProfileView: View {
     /// Navigation path for deep linking (optional, used on iPhone)
     @Binding var navigationPath: NavigationPath
+    @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
 
     init(navigationPath: Binding<NavigationPath> = .constant(NavigationPath())) {
         _navigationPath = navigationPath
+    }
+
+    private var trimmedSearch: String { searchText.trimmingCharacters(in: .whitespaces) }
+    private var isSearching: Bool { !trimmedSearch.isEmpty }
+
+    private var showLists: Bool { matchesSearch("Lists", "Organize your tasks") }
+    private var showCategories: Bool { matchesSearch("Categories", "Browse tasks by category") }
+    private var filteredRoutes: [SettingsRoute] {
+        SettingsRoute.allCases.filter { $0.matches(trimmedSearch) }
+    }
+
+    /// Individual search items matching the query
+    private var filteredSearchItems: [SettingsSearchItem] {
+        guard isSearching else { return [] }
+        return SettingsSearchItem.allItems().filter { $0.matches(trimmedSearch) }
+    }
+
+    /// Search items grouped by route
+    private var groupedSearchResults: [(route: SettingsRoute, items: [SettingsSearchItem])] {
+        let grouped = Dictionary(grouping: filteredSearchItems, by: \.route)
+        return SettingsRoute.allCases.compactMap { route in
+            guard let items = grouped[route], !items.isEmpty else { return nil }
+            return (route: route, items: items)
+        }
+    }
+
+    private var hasAnySearchResults: Bool {
+        showLists || showCategories || !groupedSearchResults.isEmpty
     }
 
     var body: some View {
@@ -17,60 +47,95 @@ struct ProfileView: View {
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.lg) {
                     // MARK: - Organize Section
-                    sectionHeader("Organize")
+                    if showLists || showCategories {
+                        sectionHeader("Organize")
 
-                    // Lists Card
-                    NavigationLink {
-                        ListsView()
-                    } label: {
-                        ProfileCard(
-                            icon: "folder.fill",
-                            iconColor: Color.Lazyflow.accent,
-                            title: "Lists",
-                            subtitle: "Organize your tasks"
-                        )
+                        if showLists {
+                            NavigationLink {
+                                ListsView()
+                            } label: {
+                                ProfileCard(
+                                    icon: "folder.fill",
+                                    iconColor: Color.Lazyflow.accent,
+                                    title: "Lists",
+                                    subtitle: "Organize your tasks"
+                                )
+                            }
+                            .accessibilityIdentifier("ListsCard")
+                            .accessibilityLabel("Lists: Organize your tasks")
+                        }
+
+                        if showCategories {
+                            NavigationLink {
+                                CategoriesView()
+                            } label: {
+                                ProfileCard(
+                                    icon: "tag.fill",
+                                    iconColor: .purple,
+                                    title: "Categories",
+                                    subtitle: "Browse tasks by category"
+                                )
+                            }
+                            .accessibilityIdentifier("CategoriesCard")
+                            .accessibilityLabel("Categories: Browse tasks by category")
+                        }
                     }
-                    .accessibilityIdentifier("ListsCard")
-                    .accessibilityLabel("Lists: Organize your tasks")
 
-                    // Categories Card
-                    NavigationLink {
-                        CategoriesView()
-                    } label: {
-                        ProfileCard(
-                            icon: "tag.fill",
-                            iconColor: .purple,
-                            title: "Categories",
-                            subtitle: "Browse tasks by category"
-                        )
+                    // MARK: - Settings Section
+                    if isSearching {
+                        // Deep search: show individual matching items
+                        ForEach(groupedSearchResults, id: \.route) { group in
+                            sectionHeader(group.route.title)
+                                .padding(.top, DesignSystem.Spacing.sm)
+
+                            ForEach(group.items) { item in
+                                NavigationLink {
+                                    group.route.destination(scrollToItemID: item.id)
+                                } label: {
+                                    SettingsSearchResultRow(item: item)
+                                }
+                            }
+                        }
+                    } else if !filteredRoutes.isEmpty {
+                        // Default: show settings cards
+                        sectionHeader("Settings")
+                            .padding(.top, DesignSystem.Spacing.sm)
+
+                        ForEach(filteredRoutes) { route in
+                            NavigationLink {
+                                route.destination
+                            } label: {
+                                ProfileCard(
+                                    icon: route.icon,
+                                    iconColor: route.iconColor,
+                                    title: route.title,
+                                    subtitle: route.subtitle
+                                )
+                            }
+                            .accessibilityIdentifier(route.accessibilityIdentifier)
+                            .accessibilityLabel("\(route.title): \(route.subtitle)")
+                        }
                     }
-                    .accessibilityIdentifier("CategoriesCard")
-                    .accessibilityLabel("Categories: Browse tasks by category")
 
-                    // MARK: - System Section
-                    sectionHeader("System")
-                        .padding(.top, DesignSystem.Spacing.sm)
-
-                    // Settings Card
-                    NavigationLink {
-                        SettingsView()
-                    } label: {
-                        ProfileCard(
-                            icon: "gear",
-                            iconColor: Color.Lazyflow.textSecondary,
-                            title: "Settings",
-                            subtitle: "Customize your experience"
-                        )
+                    // MARK: - Empty Search State
+                    if isSearching && !hasAnySearchResults {
+                        VStack {
+                            ContentUnavailableView.search(text: trimmedSearch)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("search_empty_state")
                     }
-                    .accessibilityIdentifier("SettingsCard")
-                    .accessibilityLabel("Settings: Customize your experience")
 
-                    Spacer(minLength: DesignSystem.Spacing.xxl)
-
-                    // App info footer
-                    appInfoFooter
+                    // MARK: - App Footer
+                    if !isSearching {
+                        Spacer(minLength: DesignSystem.Spacing.xxl)
+                        appInfoFooter
+                    }
                 }
                 .padding(DesignSystem.Spacing.lg)
+            }
+            .safeAreaInset(edge: .bottom) {
+                searchField
             }
             .background(Color.adaptiveBackground)
             .navigationTitle("Me")
@@ -79,11 +144,15 @@ struct ProfileView: View {
                 switch destination {
                 case .lists:
                     ListsView()
-                case .settings:
-                    SettingsView()
                 }
             }
         }
+    }
+
+    private func matchesSearch(_ title: String, _ subtitle: String) -> Bool {
+        guard !trimmedSearch.isEmpty else { return true }
+        return title.localizedCaseInsensitiveContains(trimmedSearch)
+            || subtitle.localizedCaseInsensitiveContains(trimmedSearch)
     }
 
     private func sectionHeader(_ title: String) -> some View {
@@ -93,8 +162,68 @@ struct ProfileView: View {
                 .fontWeight(.semibold)
                 .foregroundColor(Color.Lazyflow.textSecondary)
                 .textCase(.uppercase)
+                .accessibilityIdentifier("\(title.lowercased())_section_header")
             Spacer()
         }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(Color.Lazyflow.textSecondary)
+
+                TextField("Search", text: $searchText)
+                    .font(DesignSystem.Typography.body)
+                    .textFieldStyle(.plain)
+                    .autocorrectionDisabled()
+                    .submitLabel(.search)
+                    .focused($isSearchFocused)
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color.Lazyflow.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(Color.Lazyflow.textSecondary)
+                }
+            }
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .frame(height: 36)
+            .background(
+                Capsule()
+                    .fill(.ultraThinMaterial)
+            )
+
+            if isSearchFocused {
+                Button("Cancel") {
+                    searchText = ""
+                    isSearchFocused = false
+                }
+                .font(DesignSystem.Typography.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(Color.Lazyflow.accent)
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .frame(height: 36)
+                .background(
+                    Capsule()
+                        .fill(.ultraThinMaterial)
+                )
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: isSearchFocused)
+        .padding(.horizontal, DesignSystem.Spacing.xl)
+        .padding(.bottom, DesignSystem.Spacing.lg)
+        .accessibilityIdentifier("me_search_field")
     }
 
     private var appInfoFooter: some View {
@@ -175,6 +304,42 @@ struct ProfileCard: View {
         .padding(DesignSystem.Spacing.md)
         .background(Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.large)
+    }
+}
+
+// MARK: - Search Result Row
+
+struct SettingsSearchResultRow: View {
+    let item: SettingsSearchItem
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            Image(systemName: item.route.icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(item.route.iconColor)
+                .frame(width: 32, height: 32)
+                .background(item.route.iconColor.opacity(0.1))
+                .cornerRadius(DesignSystem.CornerRadius.small)
+
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                Text(item.label)
+                    .font(DesignSystem.Typography.body)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+                Text(item.section)
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(Color.Lazyflow.textTertiary)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.md)
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color.adaptiveSurface)
+        .cornerRadius(DesignSystem.CornerRadius.medium)
     }
 }
 
