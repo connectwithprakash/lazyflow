@@ -4,6 +4,8 @@ import LazyflowCore
 import LazyflowUI
 
 struct DataAboutSettingsView: View {
+    var scrollToItemID: String? = nil
+
     @State private var showAbout = false
 
     // Data management state
@@ -89,6 +91,7 @@ struct DataAboutSettingsView: View {
     }
 
     var body: some View {
+        ScrollViewReader { proxy in
         Form {
             // MARK: - iCloud Sync Section
             Section {
@@ -134,6 +137,7 @@ struct DataAboutSettingsView: View {
                     Text("Enable to sync tasks across your Apple devices.")
                 }
             }
+            .id("data_icloud_sync")
 
             // MARK: - Data Overview Section
             Section("Storage") {
@@ -208,6 +212,7 @@ struct DataAboutSettingsView: View {
                     .foregroundColor(Color.Lazyflow.textPrimary)
                 }
             }
+            .id("data_storage")
 
             // MARK: - Danger Zone Section
             Section {
@@ -313,6 +318,7 @@ struct DataAboutSettingsView: View {
                     Text("Data is stored locally on this device only.")
                 }
             }
+            .id("data_clear_cache")
 
             // MARK: - About Section
             Section("About") {
@@ -338,12 +344,18 @@ struct DataAboutSettingsView: View {
                     Text("Terms of Service")
                 }
             }
+            .id("data_version")
         }
         .settingsFormWidth()
         .navigationTitle("Data & About")
         .sheet(isPresented: $showAbout) { AboutView() }
         .onAppear {
             refreshData()
+            if let itemID = scrollToItemID {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation { proxy.scrollTo(itemID, anchor: .center) }
+                }
+            }
         }
         // MARK: - Alerts
         .alert("Clear Local Cache?", isPresented: $showDeleteLocalConfirmation) {
@@ -393,6 +405,7 @@ struct DataAboutSettingsView: View {
             }
         } message: {
             Text("This will clear all learned event preferences. The app will need to re-learn which events you typically skip or select.")
+        }
         }
     }
 

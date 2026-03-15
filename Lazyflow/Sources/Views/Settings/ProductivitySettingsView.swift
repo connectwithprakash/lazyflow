@@ -3,10 +3,13 @@ import LazyflowCore
 import LazyflowUI
 
 struct ProductivitySettingsView: View {
+    var scrollToItemID: String? = nil
+
     @AppStorage(AppConstants.StorageKey.pomodoroWorkMinutes) private var pomodoroWorkMinutes: Double = AppConstants.Defaults.pomodoroWorkMinutes
     @AppStorage(AppConstants.StorageKey.pomodoroBreakMinutes) private var pomodoroBreakMinutes: Double = AppConstants.Defaults.pomodoroBreakMinutes
 
     var body: some View {
+        ScrollViewReader { proxy in
         Form {
             Section {
                 CalendarSyncToggle()
@@ -16,6 +19,7 @@ struct ProductivitySettingsView: View {
                 // swiftlint:disable:next line_length
                 Text("Eligible tasks (with date, time, and duration) are auto-synced to a dedicated Lazyflow calendar. Changes made in Apple Calendar sync back to your tasks.")
             }
+            .id("productivity_auto_sync")
 
             Section {
                 Toggle("Auto-Hide Frequently Skipped", isOn: Binding(
@@ -27,6 +31,7 @@ struct ProductivitySettingsView: View {
             } footer: {
                 Text("Events you consistently skip will be hidden by default. You can always reveal them.")
             }
+            .id("productivity_auto_hide")
 
             Section("Focus Mode") {
                 Stepper(
@@ -42,6 +47,7 @@ struct ProductivitySettingsView: View {
                     step: 1
                 )
             }
+            .id("productivity_work_interval")
 
             Section {
                 LiveActivityToggle()
@@ -50,8 +56,17 @@ struct ProductivitySettingsView: View {
             } footer: {
                 Text("Shows task progress on Lock Screen and Dynamic Island (iPhone 14+)")
             }
+            .id("productivity_live_activity")
         }
         .settingsFormWidth()
         .navigationTitle("Productivity")
+        .onAppear {
+            if let itemID = scrollToItemID {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation { proxy.scrollTo(itemID, anchor: .center) }
+                }
+            }
+        }
+        }
     }
 }

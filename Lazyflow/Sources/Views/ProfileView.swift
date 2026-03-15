@@ -23,6 +23,27 @@ struct ProfileView: View {
         SettingsRoute.allCases.filter { $0.matches(trimmedSearch) }
     }
 
+    /// Individual search items matching the query
+    private var filteredSearchItems: [SettingsSearchItem] {
+        guard isSearching else { return [] }
+        return SettingsSearchItem.allItems().filter { $0.matches(trimmedSearch) }
+    }
+
+    /// Search items grouped by route, excluding routes already shown as cards
+    private var groupedSearchResults: [(route: SettingsRoute, items: [SettingsSearchItem])] {
+        let matchedCardRoutes = Set(filteredRoutes.map(\.id))
+        let deepItems = filteredSearchItems.filter { !matchedCardRoutes.contains($0.route.id) }
+        let grouped = Dictionary(grouping: deepItems, by: \.route)
+        return SettingsRoute.allCases.compactMap { route in
+            guard let items = grouped[route], !items.isEmpty else { return nil }
+            return (route: route, items: items)
+        }
+    }
+
+    private var hasAnySearchResults: Bool {
+        showLists || showCategories || !filteredRoutes.isEmpty || !groupedSearchResults.isEmpty
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ScrollView {
@@ -83,8 +104,24 @@ struct ProfileView: View {
                         }
                     }
 
+                    // MARK: - Deep Search Results
+                    if isSearching {
+                        ForEach(groupedSearchResults, id: \.route) { group in
+                            sectionHeader(group.route.title)
+                                .padding(.top, DesignSystem.Spacing.sm)
+
+                            ForEach(group.items) { item in
+                                NavigationLink {
+                                    group.route.destination(scrollToItemID: item.id)
+                                } label: {
+                                    SettingsSearchResultRow(item: item)
+                                }
+                            }
+                        }
+                    }
+
                     // MARK: - Empty Search State
-                    if isSearching && !showLists && !showCategories && filteredRoutes.isEmpty {
+                    if isSearching && !hasAnySearchResults {
                         VStack {
                             ContentUnavailableView.search(text: trimmedSearch)
                         }
@@ -270,6 +307,42 @@ struct ProfileCard: View {
         .padding(DesignSystem.Spacing.md)
         .background(Color.adaptiveSurface)
         .cornerRadius(DesignSystem.CornerRadius.large)
+    }
+}
+
+// MARK: - Search Result Row
+
+struct SettingsSearchResultRow: View {
+    let item: SettingsSearchItem
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            Image(systemName: item.route.icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(item.route.iconColor)
+                .frame(width: 32, height: 32)
+                .background(item.route.iconColor.opacity(0.1))
+                .cornerRadius(DesignSystem.CornerRadius.small)
+
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                Text(item.label)
+                    .font(DesignSystem.Typography.body)
+                    .foregroundColor(Color.Lazyflow.textPrimary)
+                Text(item.section)
+                    .font(DesignSystem.Typography.caption1)
+                    .foregroundColor(Color.Lazyflow.textTertiary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(Color.Lazyflow.textTertiary)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.md)
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color.adaptiveSurface)
+        .cornerRadius(DesignSystem.CornerRadius.medium)
     }
 }
 

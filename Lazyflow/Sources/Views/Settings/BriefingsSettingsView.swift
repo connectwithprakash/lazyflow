@@ -3,11 +3,14 @@ import LazyflowCore
 import LazyflowUI
 
 struct BriefingsSettingsView: View {
+    var scrollToItemID: String? = nil
+
     @AppStorage(AppConstants.StorageKey.summaryPromptHour) private var summaryPromptHour: Int = AppConstants.Defaults.summaryPromptHour
     @State private var notificationsEnabled = false
     @State private var isCheckingPermission = true
 
     var body: some View {
+        ScrollViewReader { proxy in
         Form {
             Section {
                 MorningBriefingPromptToggle()
@@ -17,6 +20,7 @@ struct BriefingsSettingsView: View {
             } footer: {
                 Text("Get a prompt card on Today and optional notification to view your morning briefing. Access it anytime from More > Morning Briefing.")
             }
+            .id("notifications_morning_prompt")
 
             Section {
                 DailySummaryNotificationToggle()
@@ -31,6 +35,7 @@ struct BriefingsSettingsView: View {
             } footer: {
                 Text("Get a notification and prompt card to review your day. Access your summary anytime from More > Daily Summary.")
             }
+            .id("notifications_evening_reminder")
 
             Section("Notifications") {
                 if isCheckingPermission {
@@ -60,11 +65,20 @@ struct BriefingsSettingsView: View {
                     }
                 }
             }
+            .id("notifications_permission")
         }
         .settingsFormWidth()
         .navigationTitle("Notifications")
         .task {
             await checkNotificationPermission()
+        }
+        .onAppear {
+            if let itemID = scrollToItemID {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation { proxy.scrollTo(itemID, anchor: .center) }
+                }
+            }
+        }
         }
     }
 
