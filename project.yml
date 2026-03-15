@@ -117,6 +117,8 @@ targets:
     platform: iOS
     sources:
       - path: LazyflowTests
+        excludes:
+          - "**/__Snapshots__/**"
     dependencies:
       - target: Lazyflow
       - package: LazyflowCore

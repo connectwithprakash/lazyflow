@@ -8,9 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00FCF99113DE7C7D45EE56E3 /* ConflictDetectionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79878ECB4B8D1E2274BF2E3E /* ConflictDetectionServiceTests.swift */; };
-		01BD0743A67820593201D1F6 /* testReviewStateIPad.review-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 26BDF4596EF5E4C7E0EF2E13 /* testReviewStateIPad.review-ipad-dark.png */; };
 		04335B5E88FD631ABC7EB299 /* AddTaskView+QuickActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F92784C3FA1293F26239FF /* AddTaskView+QuickActions.swift */; };
-		0472326CEFBC32685B252800 /* testExtractingState.extracting-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = BA6E59F0D38F651425D3320C /* testExtractingState.extracting-dark.png */; };
 		04A18CE79E9725909F00B040 /* AddTaskViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92A459287E3406AF72557DB /* AddTaskViewSnapshotTests.swift */; };
 		05185394A6D0C02B02A34784 /* PersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60C69B3CE8945B251B42FDF /* PersistenceControllerTests.swift */; };
 		060FCFCAF48C8886212BD282 /* AppIcon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3C4824B59531F94012837CB8 /* AppIcon.svg */; };
@@ -24,50 +22,38 @@
 		108487C53DBB9CDF075AA36B /* FocusModeIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513DDD161379E14998235D07 /* FocusModeIntegrationTests.swift */; };
 		10BD944E6F15A52D43E67787 /* TaskViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A21AD04C5407E342830D9E /* TaskViewModel.swift */; };
 		10D9CF34CB611CE4597D93E5 /* AnalyticsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536D6481AFECBC651BA4CF75 /* AnalyticsServiceTests.swift */; };
-		10EE62D211CD01719BD742A8 /* testEmptyForm.emptyForm-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = A46274A00D723C7DBF150A53 /* testEmptyForm.emptyForm-dark.png */; };
 		10F5BB7743B0AA01DBA91646 /* LazyflowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3E800123B5D3F6A1E21F9B7C /* LazyflowCore */; };
 		12F7B5C3E697A0FE4280330E /* RecurringRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8DDB4423AAB1E6EB7F61A0 /* RecurringRuleTests.swift */; };
 		1332E186487C65027636259E /* TaskViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55CAA946FCF526BB2AFEAE68 /* TaskViewModelTests.swift */; };
 		13E9D197333A8203696DD6EE /* DailySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5F23987492CF9DBF92700E /* DailySummaryView.swift */; };
 		153E0E22C5DD57D0C9A7616E /* TodayViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36206C2E5AE5D6BC690C3D2 /* TodayViewSnapshotTests.swift */; };
-		16E9DC16AE2152CE57EBB496 /* testCompletedState.completed-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 8490BF5C2E77325E8C276CB5 /* testCompletedState.completed-light.png */; };
 		171B64FBCE3DA50E04986691 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91D0165AC85819BC73D64A2B /* HistoryViewModel.swift */; };
-		183D62A901C9051C958E1863 /* testExtractingStateIPad.extracting-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 2D5D3CACEBE4DCCBD956990A /* testExtractingStateIPad.extracting-ipad-dark.png */; };
 		1A56809FBBB76085BEE450FC /* SettingsRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E74011C257077692687DE64 /* SettingsRouteTests.swift */; };
 		1A794F33E3F2F1436A5C1690 /* LLMIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D08236382AB86632220B7E /* LLMIntegrationTests.swift */; };
 		1AEF9E445A28C5311FA7CB01 /* Lazyflow.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 8B2FA8AC80A06886EF5CEFF0 /* Lazyflow.xcdatamodeld */; };
-		1CB4A86EDC6847F572905CC6 /* testWithDefaultDateIPad.withDefaultDate-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 7245D92EB31576FE87DBEF17 /* testWithDefaultDateIPad.withDefaultDate-ipad-dark.png */; };
 		1D7E8E345D9D7605EC8B9503 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FD268CF434D2866A63A99A /* ContentView.swift */; };
 		1E5C56B72F82AF04D6630D3E /* QuickCaptureSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87A8C2C84CF7370318FA12E2 /* QuickCaptureSheet.swift */; };
 		202EB7356B6039A681D2C2E7 /* PlanYourDayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7D1E0FAD38B9ED42013D3D /* PlanYourDayViewModel.swift */; };
 		209BA1B6F191D44710C74DDE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C19F41E89A7D7A23F7315459 /* Assets.xcassets */; };
 		21D4D1580E6D6AB06DD5CBA4 /* BehavioralSignalsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE8F136C54F6451EEDEDE55 /* BehavioralSignalsTests.swift */; };
-		21E35B1DDF082CB86B456823 /* testPopulatedStateIPad.populated-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 541E1900342B4BE7746DC372 /* testPopulatedStateIPad.populated-ipad-light.png */; };
 		25C9FE52A498914F3E9720C2 /* SettingsRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF49F0412CA017D17B1AA36C /* SettingsRoute.swift */; };
 		25F378DDF875DA57172D46F3 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB60CF3B399155250875EF8 /* RootView.swift */; };
-		274DB5A3A9D9CFAC1C06A0FB /* testReviewState.review-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 679E8C4D4B7984999331EFA3 /* testReviewState.review-dark.png */; };
-		28BE298984028EB3C3A4F728 /* testErrorState.error-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 8C30F3C17183D4184AAB2BD6 /* testErrorState.error-light.png */; };
-		28C85B3A2888D468A6A1219A /* testAccessibility.addTask-accessibility3.png in Resources */ = {isa = PBXBuildFile; fileRef = 91B0312381E14BFD46089820 /* testAccessibility.addTask-accessibility3.png */; };
 		29A933A9640F64E863981AD8 /* SnapshotFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3521335822BFFE9EAE47BCA1 /* SnapshotFixtures.swift */; };
-		2C39BB8F28581710ED023E69 /* testAccessibility.addTask-xxxLarge.png in Resources */ = {isa = PBXBuildFile; fileRef = D35F06365B37A44FE6E12A3A /* testAccessibility.addTask-xxxLarge.png */; };
 		2CC65FBFB3E95D6F2E873F35 /* MockPersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F174C46E208A5278C042FC6 /* MockPersistenceController.swift */; };
 		2DFCDD189AB15C83B334E31A /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBF0524D133F7D5518CD670 /* TodayViewModel.swift */; };
 		2FCE06EE0F2C238D8DCF23B9 /* WatchDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5538583D82F287317C03CF42 /* WatchDataStore.swift */; };
 		31AF8D2F20C5E3CFCC2C0D4F /* BriefingsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5255042DEA67ACE0AF86FF16 /* BriefingsSettingsView.swift */; };
 		3228030B46230907FEB02843 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894FC3172D458DF3B827CE18 /* CalendarView.swift */; };
 		336EC5640E6D7E3C7AD80B30 /* MockCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DE1B6219486F130D8E6F8FE /* MockCalendarService.swift */; };
-		349B0DD24BC2D548680A3385 /* testErrorStateIPad.error-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 3B560800D296AB59E612E61C /* testErrorStateIPad.error-ipad-dark.png */; };
 		35855E194A9CFFBF8AA300AA /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BDFA6859BC13DEBC35D1CEF /* TaskRowView.swift */; };
 		3675F88BC68F1BA77BF9635F /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64508FE3566220E62129F09B /* MediumWidgetView.swift */; };
 		3879FECEFBD045E1B7BC52A7 /* LLMReorderingIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655421572BB2FCA6A8094E4E /* LLMReorderingIntegrationTests.swift */; };
 		392C364B24A7A749355B6E1B /* WidgetTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464273955722DB557CDC0BAD /* WidgetTask.swift */; };
 		397F3F00116B3309FE212F89 /* CustomCategoryEntity+DomainModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E00010BFEEB8CEBA96DD7D /* CustomCategoryEntity+DomainModel.swift */; };
 		3A7406E4C946A842FD3F1131 /* SubtaskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE9FE39B74BD2B3D0498C6A /* SubtaskDetailView.swift */; };
-		3BB5AE3AF44BE09549F4B374 /* testEditNoteModeIPad.editNote-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 10220AB44527B463DDF3233E /* testEditNoteModeIPad.editNote-ipad-dark.png */; };
 		3F4BB7EF1C64E431C12C89D3 /* DetectedDateBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6983AB27A93C65CB8D9371E2 /* DetectedDateBanner.swift */; };
 		3F7589E52ADEFEEE43965DF7 /* FocusSessionCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BAB12F3F0A16CCC1075A55 /* FocusSessionCoordinatorTests.swift */; };
 		40023B3568EA2B400E03A9E3 /* ListsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F8B47155C202D2CA845026 /* ListsViewModelTests.swift */; };
-		4155447D24AB7A673F254CE2 /* testErrorStateIPad.error-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 529521A96BD0B2673957C145 /* testErrorStateIPad.error-ipad-light.png */; };
 		41E409829A9D8B4971592326 /* CategoryServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 925FC88A302F5CC06835C2CA /* CategoryServiceProtocol.swift */; };
 		46E38AC2D3F84E4C255AFB77 /* QuickActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D121549295C26AB16F4B7AB /* QuickActionButton.swift */; };
 		47272E6F94D597DA2481FF37 /* TaskServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2A1BA3F316C06064B36EB8 /* TaskServiceTests.swift */; };
@@ -81,15 +67,11 @@
 		5576D58CCF1EE6F3D152EB91 /* AIQualityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AF479F9F479C7F6AD24212 /* AIQualityView.swift */; };
 		55D043F6F8063A39FF708981 /* DailySummaryCarryoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F44E5FAD747B2345B46B51A /* DailySummaryCarryoverTests.swift */; };
 		5740486A0D5FC08A3D6216C6 /* AIQualityViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9732C67059BB87D362CA70F /* AIQualityViewModel.swift */; };
-		57879ECEDC90F04B1509CE6A /* testErrorState.error-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = AC9F9D5090F4E81F958EA7D0 /* testErrorState.error-dark.png */; };
 		5842300702F2022D4BF5456F /* ReturnToFocusPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 533E55A97D44A884D6ABCF20 /* ReturnToFocusPill.swift */; };
 		584AEAA632B8FBA89C12CCFF /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3391545EB6E7A4277AF8D35 /* ListsView.swift */; };
-		588619CE28B78290D535FDDB /* testEditNoteMode.editNote-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 40439484CF5317D24673EEEC /* testEditNoteMode.editNote-dark.png */; };
 		58C6FD0390CB9AF1C9FFA86E /* GeneralSettingsSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A4A0CD8E0C903530190E05 /* GeneralSettingsSnapshotTests.swift */; };
 		59458963ACA0ED5B8963E1B1 /* LazyflowComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500B294690B749F58C76D79 /* LazyflowComplication.swift */; };
-		594975CC38F575F24B2DD316 /* testNewNoteMode.newNote-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 3BD61C058AF5333EB4B9F0C7 /* testNewNoteMode.newNote-light.png */; };
 		5A122869C596B62E2F84BD19 /* DataAboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9377ACBB4F6E9CD3D98DC7 /* DataAboutSettingsView.swift */; };
-		5C406F9D4F7AA4DEDC8E33C9 /* testWithDefaultDate.withDefaultDate-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B82FCF306255EF43830261E /* testWithDefaultDate.withDefaultDate-light.png */; };
 		5C5EE215C7F2A9322BB3B7E2 /* BatchAnalysisReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D8438736292D6096DEAD74 /* BatchAnalysisReviewSheet.swift */; };
 		5C8B310FDC4166428B8F113F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE8A0C85317637E68DD7F26 /* Assets.xcassets */; };
 		5D1046464CCDBD9F90DE57E3 /* SmartRescheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF88D5A45529A957D9EA88B9 /* SmartRescheduleServiceTests.swift */; };
@@ -100,7 +82,6 @@
 		5F8F6BF656CD0FFF7EED1FEA /* LLMReorderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A95EFA39CDEDF5A4065FEA6 /* LLMReorderingTests.swift */; };
 		60E1FE44588BBF17DBA5084E /* WatchEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECEA0861D2217E32782DC9A /* WatchEmptyStateView.swift */; };
 		6107F71C252CA942D9D34DA2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 788077E247AFA3412C836135 /* PrivacyInfo.xcprivacy */; };
-		61185F5DFF946B664C84D832 /* testEmptyForm.emptyForm-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 5C33F9BBCC655791BFF98C31 /* testEmptyForm.emptyForm-light.png */; };
 		612AF567E3B4C701F17C9C03 /* SettingsToggles.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46AF266277E9B0C6278A4B9 /* SettingsToggles.swift */; };
 		61F235426C9BE58ED35B8076 /* AddTaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63102C236D8E5D064181AA0 /* AddTaskView.swift */; };
 		6267CBCC9F24375D8D1C4F84 /* SettingsHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F99687C0DBD53BEAF1CF6EB /* SettingsHelpers.swift */; };
@@ -121,15 +102,11 @@
 		6D57A0A6FDF8FA8A2F637A9E /* UndoToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759DF447CB9E87A4077D9134 /* UndoToast.swift */; };
 		6E39A58F8F90922823A84561 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F5E2F5E1719886A81F9562 /* FeatureFlags.swift */; };
 		6FC1B87B18463CF203566DB1 /* GetTodayTasksIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3FB71AB248FDD9843E5449 /* GetTodayTasksIntent.swift */; };
-		7145A54EF90C825C4EE7E90E /* testExtractingState.extracting-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 250E1592139F7FC42C4A7989 /* testExtractingState.extracting-light.png */; };
 		71D3F2415A0C34966E6EB88C /* UpcomingViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9439C20B9DEEC87D4BDE59EC /* UpcomingViewSnapshotTests.swift */; };
-		726B7D82E659A9A13DAE1A9D /* testCompletedState.completed-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 5358531859D21A93CBE6EA57 /* testCompletedState.completed-dark.png */; };
 		738C0EF9D5999920D27633EC /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9CF8B88B573FE889545383 /* NotificationServiceTests.swift */; };
 		74F222D6BB7724A7A20F52D6 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27865BC616420F3596100C78 /* WatchConnectivityService.swift */; };
-		7581F8BC8921FA680370B83E /* testAccessibilityIPad.addTask-ipad-xxxLarge.png in Resources */ = {isa = PBXBuildFile; fileRef = AACF2ABE1625F872448F2026 /* testAccessibilityIPad.addTask-ipad-xxxLarge.png */; };
 		758570C26D66738EF70C0E28 /* NoteParsingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C832DE4062BD693977B3903 /* NoteParsingService.swift */; };
 		75E2CFDD7AED5028736C37F4 /* FeatureFlagsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A494646B2F2B5979C7F0597 /* FeatureFlagsTests.swift */; };
-		75FC5F65F16195CC4471B1B2 /* testEmptyFormIPad.emptyForm-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 21FA9A43C0F09C91F8F93685 /* testEmptyFormIPad.emptyForm-ipad-light.png */; };
 		7823D0C83819A502BE009352 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCEEDCCC7E90A6148060ACD /* SearchView.swift */; };
 		7854539DDD3E3BF1EBF4C63E /* MockBasedViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E705B71837EA2AEE86385 /* MockBasedViewModelTests.swift */; };
 		7910923F95010B898A909F3F /* LazyflowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8769C43782895FD84F8B04A /* LazyflowUITests.swift */; };
@@ -137,17 +114,13 @@
 		7AA339A5287006575B2A1921 /* ProductivitySettingsSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69C2D5E85AD593CCE284EFE8 /* ProductivitySettingsSnapshotTests.swift */; };
 		7B9D81831C2E2CB388575266 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F756D48912C32CE20259C1C /* LLMService.swift */; };
 		7CF5BB784B0299E1C584034A /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7094D9FEC23F82DAABC7C15 /* AISettingsView.swift */; };
-		7D66A765336F004ACE60ACEE /* testReviewStateIPad.review-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = A8BC5912EEB68B7EEFC12A5A /* testReviewStateIPad.review-ipad-light.png */; };
 		7D67DC8DFE777ACCCB8BAB0A /* CalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */; };
 		7D750FEC4EDCA6E251C15D9C /* LazyflowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 786BC39DE40325D0E8AA4415 /* LazyflowCore */; };
 		7DA39286A48480A61E66CCF0 /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF4C4543097EBF9234F97 /* WidgetDataStore.swift */; };
 		7E0ADF244612E9B65C2A5052 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35E2E44708E42B8789988F8D /* TodayView.swift */; };
 		7FA9390071FAFEF331CEB4FA /* PromptTemplatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DBD6476A3F8A043E9A1970 /* PromptTemplatesTests.swift */; };
-		80CAA6AEB1A51C0E26644774 /* testEmptyStateIPad.empty-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = B2FBD8A9AC1644689C3D43BD /* testEmptyStateIPad.empty-ipad-dark.png */; };
 		817598CAAB47B85A0E010F68 /* CreateTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE4810CD2553AFFD5304282 /* CreateTaskIntent.swift */; };
-		81779B69168CB7A9B023F18F /* testEmptyState.empty-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD1955F53DF4EB1FC7BB088 /* testEmptyState.empty-dark.png */; };
 		8225AC8314ECBEE21682818B /* LazyflowWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 155736724278218CAF5DFFA5 /* LazyflowWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		8352C6587D0F404BFC16EC82 /* testCompletedStateIPad.completed-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = C782917EE33A3A4587B827A4 /* testCompletedStateIPad.completed-ipad-dark.png */; };
 		835D54447423E5F93B0DDB86 /* ColorExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F21A0F5B6EA6B158DD1EEAD /* ColorExtensionsTests.swift */; };
 		84AC41F31D9B77784C40FB43 /* LazyflowWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18A003B1DA91B6D86F47C66 /* LazyflowWidgetBundle.swift */; };
 		84B8434A509139E294E46570 /* QuickCaptureReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C593D14155E39D449C4ED82 /* QuickCaptureReviewView.swift */; };
@@ -156,7 +129,6 @@
 		86A0AC3E3919E04E9FDF644F /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5F1B6EE407FE23ABF6186B /* DependencyContainer.swift */; };
 		8866988C5945766F87C8620D /* TaskActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28E22B96CFCEC9E8C7E4324F /* TaskActivityAttributes.swift */; };
 		887ACE65EDB00952579803B9 /* DatePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E649D1F69A38558B8CF539C8 /* DatePickerSheet.swift */; };
-		895F269A42EDBB96CD160B71 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC7184C5DFE9D9B8C260C4D4 /* DataManagementView.swift */; };
 		8992C76A6B46C2BCA0CC110C /* SubtaskExpansionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CB067111636537319C0A9F /* SubtaskExpansionHeader.swift */; };
 		89C5AA721859327B73862644 /* DailySummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B2071A23A13F5E9CB0EC8A /* DailySummaryService.swift */; };
 		8AC2370A648F531F5B8C3745 /* EventPreferenceLearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9677642FAF385A19C8ED2C87 /* EventPreferenceLearningService.swift */; };
@@ -179,14 +151,11 @@
 		9B43D6068F9B88F8430A6CE7 /* SmartRescheduleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02792F18772E41185C3AA44 /* SmartRescheduleService.swift */; };
 		9C48711EFBD089B3EBAEB7C0 /* EventPreferenceLearningServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68FC02D90A38A01F152672E3 /* EventPreferenceLearningServiceTests.swift */; };
 		9D5A72A541E7A731607690EE /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB72FB63D1752B0B54B7C9AF /* OnboardingView.swift */; };
-		9EAA596AA5E68B5463A394DC /* testEmptyFormIPad.emptyForm-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 3DF4DACA527EB34A246B1136 /* testEmptyFormIPad.emptyForm-ipad-dark.png */; };
 		A028A92405D16F15FE6B963B /* QuickNoteServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D478B921D188403235B517 /* QuickNoteServiceTests.swift */; };
 		A0709C4B108F2C4872AA5D15 /* ConflictDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795DC26627EBE7C54E1A28A1 /* ConflictDetectionService.swift */; };
 		A08B7128D2AF6A4C1812AF35 /* CategoryManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E9934CB199D7C915EAEE69 /* CategoryManagementView.swift */; };
 		A1920639E96CE06499173246 /* HistoryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4682DC1EE1661DFC28274E38 /* HistoryViewModelTests.swift */; };
-		A26AE03EAA059A0D525EFBE7 /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68F6F655942BC7C38A13050F /* NotificationSettingsView.swift */; };
 		A37BEF5C71086F6D0C44FA7F /* TimeProtectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF02478F016D0699521A1F95 /* TimeProtectionService.swift */; };
-		A3DB5AE12B098560B0F200B9 /* testEmptyStateIPad.empty-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = B3125186E467C08431B9A699 /* testEmptyStateIPad.empty-ipad-light.png */; };
 		A4A8024A16ED17E9D3E5BE32 /* FeatureFlagsDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC3D673360A0F1C8A502C1CC /* FeatureFlagsDebugView.swift */; };
 		A577CEF3EF4FE455742AFED8 /* QuickCaptureSheetSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF22BE7122E8943E7E2BD914 /* QuickCaptureSheetSnapshotTests.swift */; };
 		A58EA91216CC9AA0D8F7D20B /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789477963EC4335AC902E079 /* HistoryView.swift */; };
@@ -197,32 +166,24 @@
 		B05B8E42ADAD16E78065DF88 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C0477ADBA7929DC3A7753B3 /* ListDetailView.swift */; };
 		B069A22572C78AA07831114A /* AISuggestionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A621896626AEB8DBB77C08F /* AISuggestionsSheet.swift */; };
 		B091BE818FE6F64FB3752E78 /* RecurringOptionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9846C5A8C2774722BBDC3254 /* RecurringOptionsSheet.swift */; };
-		B0AE4BA841C6AE9D143192EF /* testPopulatedState.populated-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 084179C56EB43A09BCF5E20E /* testPopulatedState.populated-dark.png */; };
-		B215AC726DB9F3D565A1F0B0 /* testExtractingStateIPad.extracting-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 53FBE48C2878680E6CBA97CB /* testExtractingStateIPad.extracting-ipad-light.png */; };
 		B256AF5D03C6E6B01A36DBE0 /* CategoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFDFDC8E1286CDFF8F8700D /* CategoryService.swift */; };
 		B2C2DB2F195D96DE749D4C60 /* TodayView+NextUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32C176967767E3443A425981 /* TodayView+NextUp.swift */; };
-		B33F621BD8B981E9D99A49AE /* testPopulatedState.populated-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 4EE2A12E63283854053B42E0 /* testPopulatedState.populated-light.png */; };
 		B4BC64B3BE87CCB9AB332845 /* LazyflowUI in Frameworks */ = {isa = PBXBuildFile; productRef = BE25C737549A016232823079 /* LazyflowUI */; };
 		B56B7C7C4964997414BEBAC6 /* RecurringRuleEntity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95FFADDD9ADA948F8B90FD98 /* RecurringRuleEntity+Extensions.swift */; };
-		B652EC7309D97F5D9C85DCD8 /* testWithDefaultDate.withDefaultDate-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 331E758D50C6F9743FEA43DE /* testWithDefaultDate.withDefaultDate-dark.png */; };
 		B76DDD2453C689435C357B39 /* WatchTaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A0FCB4B915FD258190C3F4 /* WatchTaskRowView.swift */; };
 		BA63E3DE92E7FEA1D134E05E /* ListPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2B6403ADE58343EB3DF7D /* ListPickerSheet.swift */; };
 		BA97CDC383414CEF38D11C3E /* DateExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71BFA7F619FDE2E0A62829E /* DateExtensionsTests.swift */; };
 		BB5619A2ED2F0F8399801115 /* PrioritizationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C28D5A65078E06A1F29948 /* PrioritizationService.swift */; };
 		BC78DE81741B8AEC0C960DB9 /* LazyflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */; };
 		BF862F11A763C88933858321 /* SuggestionFeedbackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2268C58F54537A0DCFC08992 /* SuggestionFeedbackTests.swift */; };
-		C0C3F65069F870B61FC29D01 /* testPopulatedStateIPad.populated-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = D60BFC2A13C8E47F6EC1E708 /* testPopulatedStateIPad.populated-ipad-dark.png */; };
 		C0CEFEE1C77BEC254CA177C6 /* TodayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */; };
 		C0CF583DCD31284AE5781C26 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4FED1BAEBC8929BA6A99A8 /* LiveActivityManager.swift */; };
 		C1147D97B0F84A4125D9A6EA /* TaskCategoryBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58A296DF48A1FF478BBB34E /* TaskCategoryBadge.swift */; };
 		C20DC9A45258813472213101 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EDA02F17F284A77E160221A /* Assets.xcassets */; };
 		C30945FFB1894DD47C3D936B /* TaskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8210DCBCD9408BFE2E2B7407 /* TaskDetailView.swift */; };
 		C35869D6F3725BBE75434518 /* QuickCaptureReviewViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9F4849BDFD2A79CABE7D16 /* QuickCaptureReviewViewSnapshotTests.swift */; };
-		C373B56E0600F2D0C2F1776E /* testEmptyState.empty-light.png in Resources */ = {isa = PBXBuildFile; fileRef = FDB1459E67765B4133F80560 /* testEmptyState.empty-light.png */; };
-		C3962A92D900408D0EB3E7AF /* testNewNoteMode.newNote-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D0E5D80298920B37067B818 /* testNewNoteMode.newNote-dark.png */; };
 		C60DBE30D617146A56D68E05 /* NotificationServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DB91A81C150650F7773028 /* NotificationServiceProtocol.swift */; };
 		C648354E14CD8E8618EAB7E4 /* MockTaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924337B9D6C35BFC6AA2B67F /* MockTaskService.swift */; };
-		C68D1A477B72AB8D47FFB26E /* testReviewState.review-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 0207F92FEB64CB39B6CA41A8 /* testReviewState.review-light.png */; };
 		C7181E848A07181FD4DA40EB /* QuickNoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D2B34D07776F25B239EF8C /* QuickNoteService.swift */; };
 		C7FD2D27BF3309A6627092DA /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFF7E86D0A6B05D7A3E8005 /* InsightsView.swift */; };
 		CB213B794FC134AFADAF9B74 /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C52EFEED3427A4E73A166D /* SmallWidgetView.swift */; };
@@ -230,7 +191,6 @@
 		CC743E4C263CF8C6FA2F481B /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4105B773B04B8612DC35F5 /* WatchConnectivityService.swift */; };
 		CD4BE551397E10312AD534C6 /* DynamicIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002395269F0E8026C0A2A79D /* DynamicIslandView.swift */; };
 		CDA609A9355F3C12549F6556 /* UpcomingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F891A77BAC392674B76D2FB9 /* UpcomingView.swift */; };
-		D1B48BE5C555F047739D56C5 /* testWithDefaultDateIPad.withDefaultDate-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = EF369B3E171F06E9218CA491 /* testWithDefaultDateIPad.withDefaultDate-ipad-light.png */; };
 		D247AA2BB9D0EFC135D908F4 /* MoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2FB30BC0A133FB4090F724 /* MoreView.swift */; };
 		D2AF813DDBF6AC6A742B367A /* LLMServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EE2702720AFFFBC0B9707D9 /* LLMServiceProtocol.swift */; };
 		D381763B5C08E49FCAFB7997 /* WatchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446E889579D11D455A18E0E1 /* WatchViewModel.swift */; };
@@ -238,8 +198,6 @@
 		D4B99AC2D2A0B669607A2A71 /* PlanYourDayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D5EC9233D0E0BC7209ED6 /* PlanYourDayViewModelTests.swift */; };
 		D54BFD1488E02DF8B43B2B1C /* ProviderConfigurationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21B88F1F7766BC778F7724B /* ProviderConfigurationSheet.swift */; };
 		D80264DA66FF1386A28A1873 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0233412D63AEFF7D4A0AC9 /* ReminderService.swift */; };
-		D8C45ABD88910E614DDB7F61 /* testAccessibilityIPad.addTask-ipad-accessibility3.png in Resources */ = {isa = PBXBuildFile; fileRef = 634DBE6F0F87D0C370344B13 /* testAccessibilityIPad.addTask-ipad-accessibility3.png */; };
-		DC5890395DB78EC4F816AE6C /* testCompletedStateIPad.completed-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = EDF53428FB45C808277D7350 /* testCompletedStateIPad.completed-ipad-light.png */; };
 		DD387903AD3C6930FD4011C3 /* LazyflowCore in Frameworks */ = {isa = PBXBuildFile; productRef = B3B27806839BC46DC2A454A2 /* LazyflowCore */; };
 		DD64559CC21F6B0EC2415E05 /* MockLLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742CA6EE666BAF6D030CAC94 /* MockLLMService.swift */; };
 		DD9477FED0D0B491C3CDEE80 /* Notification+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E984DA67113CE647FA5CA2 /* Notification+Extensions.swift */; };
@@ -248,7 +206,6 @@
 		DFCC8606539F4F1A7FD457CB /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E77CB39EE072B67364A60FE /* AnalyticsService.swift */; };
 		E0451397008E55A90B754EAC /* BatchRescheduleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF1C12B0A958E81385DFE2E /* BatchRescheduleSheet.swift */; };
 		E065D881AA036A57B23EB557 /* QuickNotesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A8A740277E5A36199E5B8FB /* QuickNotesListView.swift */; };
-		E0B29ED50009A534555CCE0C /* testEditNoteMode.editNote-light.png in Resources */ = {isa = PBXBuildFile; fileRef = D9E0B4489CF41B4F419209E7 /* testEditNoteMode.editNote-light.png */; };
 		E152D2849C26CCA87BEFC6A0 /* TaskActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28E22B96CFCEC9E8C7E4324F /* TaskActivityAttributes.swift */; };
 		E1D806B72E12F6FB890CEC67 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09AE32EF0444EDF2CDB9D8A /* PersistenceController.swift */; };
 		E2348389624C78DAE63B632F /* CategoryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B80002E148BF3F059F003E /* CategoryServiceTests.swift */; };
@@ -257,7 +214,6 @@
 		E6EC612955C2E69E41CAC23D /* ModelSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C9574BBD3C644B02ED89C6 /* ModelSelectionView.swift */; };
 		E73307A439D617D22EE3D3A6 /* DataAboutSettingsSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D544FE84F11510FDE7E018 /* DataAboutSettingsSnapshotTests.swift */; };
 		E8AC7DC2C00557AD13CB32EC /* QuickNoteEntity+DomainModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8792FEC292A58CE79EF5DF73 /* QuickNoteEntity+DomainModel.swift */; };
-		E8B344CBA616C27CF8F41C13 /* testEditNoteModeIPad.editNote-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = F614679BCB69D46ADFC4F14B /* testEditNoteModeIPad.editNote-ipad-light.png */; };
 		E959E3130B3B3EF9F4459477 /* FocusSessionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBFF1FDA982F9BF5DB6429C3 /* FocusSessionCoordinator.swift */; };
 		EB90EC843C74EF6627FB1A31 /* CompleteTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7C039CEAFEC1DDD74B7E84 /* CompleteTaskIntent.swift */; };
 		EDAE3C708E1600C9D2D1A1C1 /* WatchTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68F731F96242074EDA7DF785 /* WatchTask.swift */; };
@@ -269,13 +225,11 @@
 		F36424258A454AA94CD67151 /* PlanYourDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6439D0F9A7CB5FB23D32A88A /* PlanYourDayView.swift */; };
 		F3DD5D78DA037DC32D7D4B4D /* LazyflowUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */; };
 		F49BDCAB611AE705EA473FD2 /* SecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733561F4C57F4B459DA8C1DF /* SecurityTests.swift */; };
-		F6B757417C34821478CC070B /* testNewNoteModeIPad.newNote-ipad-dark.png in Resources */ = {isa = PBXBuildFile; fileRef = EDA86CCF05C2775786558A50 /* testNewNoteModeIPad.newNote-ipad-dark.png */; };
 		F746777C9029FCD92722C4B0 /* CloudKitSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87F0D661D35CF15B12D6025 /* CloudKitSyncTests.swift */; };
 		F847E633D5AD71A505F65E36 /* LazyflowWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FA69873A99353C1F676B9595 /* QuickCaptureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F59BC74D9F97F78C3DC225 /* QuickCaptureViewModel.swift */; };
 		FAC027E5D1D747D10A908349 /* AIContextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 766E1ADEBDA6F3C3BF445A09 /* AIContextService.swift */; };
 		FC060EA4F92483CC24CD9F62 /* PersistenceControllerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C53B0666E707487BA33FD66 /* PersistenceControllerProtocol.swift */; };
-		FCAFFBFD512CBABCEC15A997 /* testNewNoteModeIPad.newNote-ipad-light.png in Resources */ = {isa = PBXBuildFile; fileRef = C4FF43282FEF230EF46D07E9 /* testNewNoteModeIPad.newNote-ipad-light.png */; };
 		FD56FCF2F09EA9046439B39A /* TaskTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD9381F83ADC609FB4E5790 /* TaskTimelineProvider.swift */; };
 		FED75A36AB181F97B5562181 /* ExpandableTaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7093DE3C5A54912EB3A2FB18 /* ExpandableTaskRowView.swift */; };
 		FF654F78B310DA4E37AFF9E7 /* QuickCaptureFAB.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B2205F92A5527BD1977DED /* QuickCaptureFAB.swift */; };
@@ -341,17 +295,13 @@
 /* Begin PBXFileReference section */
 		002395269F0E8026C0A2A79D /* DynamicIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicIslandView.swift; sourceTree = "<group>"; };
 		014D6195F06BFAE0D60A9ECC /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		0207F92FEB64CB39B6CA41A8 /* testReviewState.review-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testReviewState.review-light.png"; sourceTree = "<group>"; };
 		03A581B0280BBAEC4334B6BA /* TimeProtectionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProtectionServiceTests.swift; sourceTree = "<group>"; };
 		053D5EC9233D0E0BC7209ED6 /* PlanYourDayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanYourDayViewModelTests.swift; sourceTree = "<group>"; };
 		0591038D1708D936BA27AC44 /* NoteParsingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteParsingServiceTests.swift; sourceTree = "<group>"; };
-		084179C56EB43A09BCF5E20E /* testPopulatedState.populated-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testPopulatedState.populated-dark.png"; sourceTree = "<group>"; };
 		096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
-		0B82FCF306255EF43830261E /* testWithDefaultDate.withDefaultDate-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testWithDefaultDate.withDefaultDate-light.png"; sourceTree = "<group>"; };
 		0C5F23987492CF9DBF92700E /* DailySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryView.swift; sourceTree = "<group>"; };
 		0D0233412D63AEFF7D4A0AC9 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		0FFD252151F38D56B1B17808 /* LazyflowWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWidget.swift; sourceTree = "<group>"; };
-		10220AB44527B463DDF3233E /* testEditNoteModeIPad.editNote-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEditNoteModeIPad.editNote-ipad-dark.png"; sourceTree = "<group>"; };
 		14A21AD04C5407E342830D9E /* TaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModel.swift; sourceTree = "<group>"; };
 		155736724278218CAF5DFFA5 /* LazyflowWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LazyflowWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		169537748ED6579B8408A6E8 /* SelectedOptionChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectedOptionChip.swift; sourceTree = "<group>"; };
@@ -361,25 +311,20 @@
 		1DE1B6219486F130D8E6F8FE /* MockCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCalendarService.swift; sourceTree = "<group>"; };
 		1E1697B07262B98E80C57F73 /* MockNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNotificationService.swift; sourceTree = "<group>"; };
 		1EDA02F17F284A77E160221A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1FD1955F53DF4EB1FC7BB088 /* testEmptyState.empty-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyState.empty-dark.png"; sourceTree = "<group>"; };
 		1FE8A0C85317637E68DD7F26 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		20A00A1695EED140F9B2DF26 /* AddSubtaskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSubtaskSheet.swift; sourceTree = "<group>"; };
 		2191176F2DC72BA5B861C6C8 /* TaskListServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListServiceTests.swift; sourceTree = "<group>"; };
-		21FA9A43C0F09C91F8F93685 /* testEmptyFormIPad.emptyForm-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyFormIPad.emptyForm-ipad-light.png"; sourceTree = "<group>"; };
 		2268C58F54537A0DCFC08992 /* SuggestionFeedbackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionFeedbackTests.swift; sourceTree = "<group>"; };
 		22C28D5A65078E06A1F29948 /* PrioritizationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrioritizationService.swift; sourceTree = "<group>"; };
 		23CBFF4C390805F466570F08 /* LazyflowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowApp.swift; sourceTree = "<group>"; };
 		24A23799839226FBBF00C70F /* CalendarSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncService.swift; sourceTree = "<group>"; };
 		24D8438736292D6096DEAD74 /* BatchAnalysisReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchAnalysisReviewSheet.swift; sourceTree = "<group>"; };
-		250E1592139F7FC42C4A7989 /* testExtractingState.extracting-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testExtractingState.extracting-light.png"; sourceTree = "<group>"; };
-		26BDF4596EF5E4C7E0EF2E13 /* testReviewStateIPad.review-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testReviewStateIPad.review-ipad-dark.png"; sourceTree = "<group>"; };
 		26D4D375DA52768BEDBD4D49 /* CategoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesView.swift; sourceTree = "<group>"; };
 		270B1DD57CA77E2480568958 /* LargeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeWidgetView.swift; sourceTree = "<group>"; };
 		27865BC616420F3596100C78 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 		28E22B96CFCEC9E8C7E4324F /* TaskActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskActivityAttributes.swift; sourceTree = "<group>"; };
 		2950BA8ACF067780F4117B32 /* LockScreenLiveActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenLiveActivityView.swift; sourceTree = "<group>"; };
 		2A17401CC11FEE18E3134A02 /* TaskPriorityAppEnum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskPriorityAppEnum.swift; sourceTree = "<group>"; };
-		2D5D3CACEBE4DCCBD956990A /* testExtractingStateIPad.extracting-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testExtractingStateIPad.extracting-ipad-dark.png"; sourceTree = "<group>"; };
 		2E7C039CEAFEC1DDD74B7E84 /* CompleteTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteTaskIntent.swift; sourceTree = "<group>"; };
 		2F756D48912C32CE20259C1C /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
 		30E984DA67113CE647FA5CA2 /* Notification+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Notification+Extensions.swift"; sourceTree = "<group>"; };
@@ -388,24 +333,19 @@
 		32C176967767E3443A425981 /* TodayView+NextUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TodayView+NextUp.swift"; sourceTree = "<group>"; };
 		32C1D671B06C4132CCC73838 /* PromptTemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptTemplates.swift; sourceTree = "<group>"; };
 		32E9934CB199D7C915EAEE69 /* CategoryManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryManagementView.swift; sourceTree = "<group>"; };
-		331E758D50C6F9743FEA43DE /* testWithDefaultDate.withDefaultDate-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testWithDefaultDate.withDefaultDate-dark.png"; sourceTree = "<group>"; };
 		33A4A0CD8E0C903530190E05 /* GeneralSettingsSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsSnapshotTests.swift; sourceTree = "<group>"; };
 		34C7BF0359B1373B7432656A /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
 		3521335822BFFE9EAE47BCA1 /* SnapshotFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotFixtures.swift; sourceTree = "<group>"; };
 		35E2E44708E42B8789988F8D /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		3A494646B2F2B5979C7F0597 /* FeatureFlagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlagsTests.swift; sourceTree = "<group>"; };
-		3B560800D296AB59E612E61C /* testErrorStateIPad.error-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testErrorStateIPad.error-ipad-dark.png"; sourceTree = "<group>"; };
-		3BD61C058AF5333EB4B9F0C7 /* testNewNoteMode.newNote-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testNewNoteMode.newNote-light.png"; sourceTree = "<group>"; };
 		3C3FB71AB248FDD9843E5449 /* GetTodayTasksIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetTodayTasksIntent.swift; sourceTree = "<group>"; };
 		3C4824B59531F94012837CB8 /* AppIcon.svg */ = {isa = PBXFileReference; path = AppIcon.svg; sourceTree = "<group>"; };
 		3C53B0666E707487BA33FD66 /* PersistenceControllerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerProtocol.swift; sourceTree = "<group>"; };
 		3C93C081C7BC375FABB659E7 /* BriefingsSettingsSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BriefingsSettingsSnapshotTests.swift; sourceTree = "<group>"; };
 		3D5F1B6EE407FE23ABF6186B /* DependencyContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyContainer.swift; sourceTree = "<group>"; };
 		3D8DDB4423AAB1E6EB7F61A0 /* RecurringRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRuleTests.swift; sourceTree = "<group>"; };
-		3DF4DACA527EB34A246B1136 /* testEmptyFormIPad.emptyForm-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyFormIPad.emptyForm-ipad-dark.png"; sourceTree = "<group>"; };
 		3E77CB39EE072B67364A60FE /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		3EE2702720AFFFBC0B9707D9 /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
-		40439484CF5317D24673EEEC /* testEditNoteMode.editNote-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEditNoteMode.editNote-dark.png"; sourceTree = "<group>"; };
 		41B660391E9F4F54B3BD0799 /* Lazyflow 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Lazyflow 3.xcdatamodel"; sourceTree = "<group>"; };
 		41C52EFEED3427A4E73A166D /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
 		446E889579D11D455A18E0E1 /* WatchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViewModel.swift; sourceTree = "<group>"; };
@@ -419,40 +359,31 @@
 		4C2C9245E77C26925702BEF3 /* OpenResponsesProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenResponsesProvider.swift; sourceTree = "<group>"; };
 		4E74011C257077692687DE64 /* SettingsRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRouteTests.swift; sourceTree = "<group>"; };
 		4ECEA0861D2217E32782DC9A /* WatchEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchEmptyStateView.swift; sourceTree = "<group>"; };
-		4EE2A12E63283854053B42E0 /* testPopulatedState.populated-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testPopulatedState.populated-light.png"; sourceTree = "<group>"; };
 		4F99687C0DBD53BEAF1CF6EB /* SettingsHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHelpers.swift; sourceTree = "<group>"; };
 		513DDD161379E14998235D07 /* FocusModeIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeIntegrationTests.swift; sourceTree = "<group>"; };
 		520D2083114EE9998027CF09 /* AILearningServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILearningServiceTests.swift; sourceTree = "<group>"; };
 		5255042DEA67ACE0AF86FF16 /* BriefingsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BriefingsSettingsView.swift; sourceTree = "<group>"; };
-		529521A96BD0B2673957C145 /* testErrorStateIPad.error-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testErrorStateIPad.error-ipad-light.png"; sourceTree = "<group>"; };
 		533E55A97D44A884D6ABCF20 /* ReturnToFocusPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnToFocusPill.swift; sourceTree = "<group>"; };
-		5358531859D21A93CBE6EA57 /* testCompletedState.completed-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testCompletedState.completed-dark.png"; sourceTree = "<group>"; };
 		536D6481AFECBC651BA4CF75 /* AnalyticsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsServiceTests.swift; sourceTree = "<group>"; };
 		5374569A0EFD2E70AAE8FCE6 /* SubtaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtaskRowView.swift; sourceTree = "<group>"; };
-		53FBE48C2878680E6CBA97CB /* testExtractingStateIPad.extracting-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testExtractingStateIPad.extracting-ipad-light.png"; sourceTree = "<group>"; };
-		541E1900342B4BE7746DC372 /* testPopulatedStateIPad.populated-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testPopulatedStateIPad.populated-ipad-light.png"; sourceTree = "<group>"; };
 		5492628B3176A195B73EAB60 /* AIContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIContextTests.swift; sourceTree = "<group>"; };
 		5538583D82F287317C03CF42 /* WatchDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDataStore.swift; sourceTree = "<group>"; };
 		55B2205F92A5527BD1977DED /* QuickCaptureFAB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureFAB.swift; sourceTree = "<group>"; };
 		55CAA946FCF526BB2AFEAE68 /* TaskViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModelTests.swift; sourceTree = "<group>"; };
 		58AA3C10E509E6846176A858 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		58CB067111636537319C0A9F /* SubtaskExpansionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtaskExpansionHeader.swift; sourceTree = "<group>"; };
-		5C33F9BBCC655791BFF98C31 /* testEmptyForm.emptyForm-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyForm.emptyForm-light.png"; sourceTree = "<group>"; };
 		5C832DE4062BD693977B3903 /* NoteParsingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteParsingService.swift; sourceTree = "<group>"; };
 		5C9377ACBB4F6E9CD3D98DC7 /* DataAboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataAboutSettingsView.swift; sourceTree = "<group>"; };
 		5F44E5FAD747B2345B46B51A /* DailySummaryCarryoverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryCarryoverTests.swift; sourceTree = "<group>"; };
 		5FD94A2D660B93F6C3A2DB8A /* LazyflowShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowShortcuts.swift; sourceTree = "<group>"; };
 		61D544FE84F11510FDE7E018 /* DataAboutSettingsSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataAboutSettingsSnapshotTests.swift; sourceTree = "<group>"; };
 		61EC4AC29B50F17794EC5BF7 /* MorningBriefingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningBriefingView.swift; sourceTree = "<group>"; };
-		634DBE6F0F87D0C370344B13 /* testAccessibilityIPad.addTask-ipad-accessibility3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testAccessibilityIPad.addTask-ipad-accessibility3.png"; sourceTree = "<group>"; };
 		63AE12B89929F764DCED4335 /* SubtaskProgressBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtaskProgressBadge.swift; sourceTree = "<group>"; };
 		6439D0F9A7CB5FB23D32A88A /* PlanYourDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanYourDayView.swift; sourceTree = "<group>"; };
 		64508FE3566220E62129F09B /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
 		64ACDAAD27F979D21E30805C /* LazyflowCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LazyflowCore; path = Packages/LazyflowCore; sourceTree = SOURCE_ROOT; };
 		655421572BB2FCA6A8094E4E /* LLMReorderingIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMReorderingIntegrationTests.swift; sourceTree = "<group>"; };
 		66D08236382AB86632220B7E /* LLMIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMIntegrationTests.swift; sourceTree = "<group>"; };
-		679E8C4D4B7984999331EFA3 /* testReviewState.review-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testReviewState.review-dark.png"; sourceTree = "<group>"; };
-		68F6F655942BC7C38A13050F /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
 		68F731F96242074EDA7DF785 /* WatchTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTask.swift; sourceTree = "<group>"; };
 		68FC02D90A38A01F152672E3 /* EventPreferenceLearningServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPreferenceLearningServiceTests.swift; sourceTree = "<group>"; };
 		6983AB27A93C65CB8D9371E2 /* DetectedDateBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectedDateBanner.swift; sourceTree = "<group>"; };
@@ -462,7 +393,6 @@
 		6D121549295C26AB16F4B7AB /* QuickActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActionButton.swift; sourceTree = "<group>"; };
 		7093DE3C5A54912EB3A2FB18 /* ExpandableTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableTaskRowView.swift; sourceTree = "<group>"; };
 		70C9574BBD3C644B02ED89C6 /* ModelSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSelectionView.swift; sourceTree = "<group>"; };
-		7245D92EB31576FE87DBEF17 /* testWithDefaultDateIPad.withDefaultDate-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testWithDefaultDateIPad.withDefaultDate-ipad-dark.png"; sourceTree = "<group>"; };
 		72A0FCB4B915FD258190C3F4 /* WatchTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTaskRowView.swift; sourceTree = "<group>"; };
 		733561F4C57F4B459DA8C1DF /* SecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityTests.swift; sourceTree = "<group>"; };
 		742CA6EE666BAF6D030CAC94 /* MockLLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLLMService.swift; sourceTree = "<group>"; };
@@ -485,7 +415,6 @@
 		8210DCBCD9408BFE2E2B7407 /* TaskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDetailView.swift; sourceTree = "<group>"; };
 		83FD268CF434D2866A63A99A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		841994A33067F846C2F3A746 /* LazyflowWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWatchApp.swift; sourceTree = "<group>"; };
-		8490BF5C2E77325E8C276CB5 /* testCompletedState.completed-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testCompletedState.completed-light.png"; sourceTree = "<group>"; };
 		868AB7877C9C7AEA584AECC2 /* ListsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewModel.swift; sourceTree = "<group>"; };
 		87784A77AB4B29803E6D1A27 /* LazyflowTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LazyflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8792FEC292A58CE79EF5DF73 /* QuickNoteEntity+DomainModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QuickNoteEntity+DomainModel.swift"; sourceTree = "<group>"; };
@@ -496,13 +425,11 @@
 		8A95EFA39CDEDF5A4065FEA6 /* LLMReorderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMReorderingTests.swift; sourceTree = "<group>"; };
 		8AFC458A05A3D432E1B7775B /* CategoriesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesViewModel.swift; sourceTree = "<group>"; };
 		8BE9FE39B74BD2B3D0498C6A /* SubtaskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtaskDetailView.swift; sourceTree = "<group>"; };
-		8C30F3C17183D4184AAB2BD6 /* testErrorState.error-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testErrorState.error-light.png"; sourceTree = "<group>"; };
 		8C4D30BA7FAE100D0EE10C57 /* LazyflowUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LazyflowUI; path = Packages/LazyflowUI; sourceTree = SOURCE_ROOT; };
 		8DE4810CD2553AFFD5304282 /* CreateTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTaskIntent.swift; sourceTree = "<group>"; };
 		8EB60CF3B399155250875EF8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		8F2A1BA3F316C06064B36EB8 /* TaskServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskServiceTests.swift; sourceTree = "<group>"; };
 		91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		91B0312381E14BFD46089820 /* testAccessibility.addTask-accessibility3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testAccessibility.addTask-accessibility3.png"; sourceTree = "<group>"; };
 		91D0165AC85819BC73D64A2B /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		91D5774B664C61D71D16BA09 /* AppleFoundationModelsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleFoundationModelsProvider.swift; sourceTree = "<group>"; };
 		924337B9D6C35BFC6AA2B67F /* MockTaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockTaskService.swift; sourceTree = "<group>"; };
@@ -518,14 +445,12 @@
 		995E5EE728F68F1923B8D461 /* WatchTodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTodayView.swift; sourceTree = "<group>"; };
 		997A63E4A366BC218E1FAADD /* ReminderQuickOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderQuickOption.swift; sourceTree = "<group>"; };
 		9C2C6D7CF3D5DE85D39BCFD9 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-		9D0E5D80298920B37067B818 /* testNewNoteMode.newNote-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testNewNoteMode.newNote-dark.png"; sourceTree = "<group>"; };
 		9F21A0F5B6EA6B158DD1EEAD /* ColorExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtensionsTests.swift; sourceTree = "<group>"; };
 		A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowTests.swift; sourceTree = "<group>"; };
 		A0DAE68D1EFE62F41BBD6EF8 /* DurationPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationPickerSheet.swift; sourceTree = "<group>"; };
 		A18A003B1DA91B6D86F47C66 /* LazyflowWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWidgetBundle.swift; sourceTree = "<group>"; };
 		A36206C2E5AE5D6BC690C3D2 /* TodayViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewSnapshotTests.swift; sourceTree = "<group>"; };
 		A3DB91A81C150650F7773028 /* NotificationServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceProtocol.swift; sourceTree = "<group>"; };
-		A46274A00D723C7DBF150A53 /* testEmptyForm.emptyForm-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyForm.emptyForm-dark.png"; sourceTree = "<group>"; };
 		A500B294690B749F58C76D79 /* LazyflowComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowComplication.swift; sourceTree = "<group>"; };
 		A55AA2A84CA370C006976B2E /* OpenResponsesProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenResponsesProviderTests.swift; sourceTree = "<group>"; };
 		A60C69B3CE8945B251B42FDF /* PersistenceControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerTests.swift; sourceTree = "<group>"; };
@@ -534,15 +459,9 @@
 		A86E4AE86370BB8D002A6E8C /* WeekdayButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekdayButton.swift; sourceTree = "<group>"; };
 		A87E8C6CE81AAE400BCBDCC6 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		A87F0D661D35CF15B12D6025 /* CloudKitSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncTests.swift; sourceTree = "<group>"; };
-		A8BC5912EEB68B7EEFC12A5A /* testReviewStateIPad.review-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testReviewStateIPad.review-ipad-light.png"; sourceTree = "<group>"; };
 		AA64F742C04DFBDBF3CA43FA /* PrioritizationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrioritizationServiceTests.swift; sourceTree = "<group>"; };
-		AACF2ABE1625F872448F2026 /* testAccessibilityIPad.addTask-ipad-xxxLarge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testAccessibilityIPad.addTask-ipad-xxxLarge.png"; sourceTree = "<group>"; };
-		AC9F9D5090F4E81F958EA7D0 /* testErrorState.error-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testErrorState.error-dark.png"; sourceTree = "<group>"; };
 		B2F8B47155C202D2CA845026 /* ListsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewModelTests.swift; sourceTree = "<group>"; };
-		B2FBD8A9AC1644689C3D43BD /* testEmptyStateIPad.empty-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyStateIPad.empty-ipad-dark.png"; sourceTree = "<group>"; };
-		B3125186E467C08431B9A699 /* testEmptyStateIPad.empty-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyStateIPad.empty-ipad-light.png"; sourceTree = "<group>"; };
 		B735F06C865E6CFB0FDA5628 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
-		BA6E59F0D38F651425D3320C /* testExtractingState.extracting-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testExtractingState.extracting-dark.png"; sourceTree = "<group>"; };
 		BA9491C5FB87F5A97BA893FF /* LazyflowWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LazyflowWidget.entitlements; sourceTree = "<group>"; };
 		BB5A71AF7AFA2B09D4613E33 /* WidgetDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataStore.swift; sourceTree = "<group>"; };
 		BB72FB63D1752B0B54B7C9AF /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -551,10 +470,8 @@
 		C21B88F1F7766BC778F7724B /* ProviderConfigurationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConfigurationSheet.swift; sourceTree = "<group>"; };
 		C4A1EEFCCBC1CCF49E093ABC /* CalendarServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarServiceProtocol.swift; sourceTree = "<group>"; };
 		C4D151D004342B54F47D7954 /* FocusModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeView.swift; sourceTree = "<group>"; };
-		C4FF43282FEF230EF46D07E9 /* testNewNoteModeIPad.newNote-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testNewNoteModeIPad.newNote-ipad-light.png"; sourceTree = "<group>"; };
 		C58A296DF48A1FF478BBB34E /* TaskCategoryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCategoryBadge.swift; sourceTree = "<group>"; };
 		C73A4C25CB347B06CCF457E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		C782917EE33A3A4587B827A4 /* testCompletedStateIPad.completed-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testCompletedStateIPad.completed-ipad-dark.png"; sourceTree = "<group>"; };
 		C93EBD505C5414F7455490AF /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		C94A51F5646A3AF94E7D3C0E /* DurationChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationChip.swift; sourceTree = "<group>"; };
 		C9A2B6403ADE58343EB3DF7D /* ListPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListPickerSheet.swift; sourceTree = "<group>"; };
@@ -565,13 +482,10 @@
 		CFFF7E86D0A6B05D7A3E8005 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		D02792F18772E41185C3AA44 /* SmartRescheduleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleService.swift; sourceTree = "<group>"; };
 		D3391545EB6E7A4277AF8D35 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
-		D35F06365B37A44FE6E12A3A /* testAccessibility.addTask-xxxLarge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testAccessibility.addTask-xxxLarge.png"; sourceTree = "<group>"; };
 		D46AF266277E9B0C6278A4B9 /* SettingsToggles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsToggles.swift; sourceTree = "<group>"; };
 		D54995645C2EE5455A31488E /* Lazyflow.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Lazyflow.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D60BFC2A13C8E47F6EC1E708 /* testPopulatedStateIPad.populated-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testPopulatedStateIPad.populated-ipad-dark.png"; sourceTree = "<group>"; };
 		D63102C236D8E5D064181AA0 /* AddTaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskView.swift; sourceTree = "<group>"; };
 		D7BAB12F3F0A16CCC1075A55 /* FocusSessionCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionCoordinatorTests.swift; sourceTree = "<group>"; };
-		D9E0B4489CF41B4F419209E7 /* testEditNoteMode.editNote-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEditNoteMode.editNote-light.png"; sourceTree = "<group>"; };
 		D9EA2BF6794DBB1AD8720E5E /* LLMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProvider.swift; sourceTree = "<group>"; };
 		DA9F4849BDFD2A79CABE7D16 /* QuickCaptureReviewViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureReviewViewSnapshotTests.swift; sourceTree = "<group>"; };
 		DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
@@ -585,19 +499,14 @@
 		E92A459287E3406AF72557DB /* AddTaskViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskViewSnapshotTests.swift; sourceTree = "<group>"; };
 		EBF525091379ECC783681A7A /* SuggestionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionCard.swift; sourceTree = "<group>"; };
 		EC3D673360A0F1C8A502C1CC /* FeatureFlagsDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlagsDebugView.swift; sourceTree = "<group>"; };
-		EC7184C5DFE9D9B8C260C4D4 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
 		ECAAAC76A8693B0402E639B2 /* ProductivitySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductivitySettingsView.swift; sourceTree = "<group>"; };
-		EDA86CCF05C2775786558A50 /* testNewNoteModeIPad.newNote-ipad-dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testNewNoteModeIPad.newNote-ipad-dark.png"; sourceTree = "<group>"; };
-		EDF53428FB45C808277D7350 /* testCompletedStateIPad.completed-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testCompletedStateIPad.completed-ipad-light.png"; sourceTree = "<group>"; };
 		EF02478F016D0699521A1F95 /* TimeProtectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProtectionService.swift; sourceTree = "<group>"; };
 		EF22BE7122E8943E7E2BD914 /* QuickCaptureSheetSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureSheetSnapshotTests.swift; sourceTree = "<group>"; };
-		EF369B3E171F06E9218CA491 /* testWithDefaultDateIPad.withDefaultDate-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testWithDefaultDateIPad.withDefaultDate-ipad-light.png"; sourceTree = "<group>"; };
 		EF88D5A45529A957D9EA88B9 /* SmartRescheduleServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleServiceTests.swift; sourceTree = "<group>"; };
 		EFE8F136C54F6451EEDEDE55 /* BehavioralSignalsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehavioralSignalsTests.swift; sourceTree = "<group>"; };
 		F09AE32EF0444EDF2CDB9D8A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		F1B80002E148BF3F059F003E /* CategoryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryServiceTests.swift; sourceTree = "<group>"; };
 		F5AFFDDD49FBA474AFF7B535 /* Lazyflow 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Lazyflow 2.xcdatamodel"; sourceTree = "<group>"; };
-		F614679BCB69D46ADFC4F14B /* testEditNoteModeIPad.editNote-ipad-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEditNoteModeIPad.editNote-ipad-light.png"; sourceTree = "<group>"; };
 		F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryServiceTests.swift; sourceTree = "<group>"; };
 		F729BB9BDF9430A95176FDD8 /* LazyflowUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LazyflowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7998EC5C8F9350EB5F5DBC4 /* SnapshotTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestCase.swift; sourceTree = "<group>"; };
@@ -610,7 +519,6 @@
 		FCCEEDCCC7E90A6148060ACD /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		FD2FB30BC0A133FB4090F724 /* MoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreView.swift; sourceTree = "<group>"; };
 		FD7D1E0FAD38B9ED42013D3D /* PlanYourDayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanYourDayViewModel.swift; sourceTree = "<group>"; };
-		FDB1459E67765B4133F80560 /* testEmptyState.empty-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "testEmptyState.empty-light.png"; sourceTree = "<group>"; };
 		FDD9381F83ADC609FB4E5790 /* TaskTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskTimelineProvider.swift; sourceTree = "<group>"; };
 		FEA6E85B014FF9813EF3522A /* LazyflowLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowLiveActivity.swift; sourceTree = "<group>"; };
 		FF47B84AFF5CEB15B6BCCDA9 /* LazyflowWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LazyflowWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -680,7 +588,6 @@
 		137A052BB7B4806B942BEFFD /* Snapshots */ = {
 			isa = PBXGroup;
 			children = (
-				3E57E1A47CDFFD087B2C0765 /* __Snapshots__ */,
 				E92A459287E3406AF72557DB /* AddTaskViewSnapshotTests.swift */,
 				3C93C081C7BC375FABB659E7 /* BriefingsSettingsSnapshotTests.swift */,
 				61D544FE84F11510FDE7E018 /* DataAboutSettingsSnapshotTests.swift */,
@@ -723,17 +630,6 @@
 				841994A33067F846C2F3A746 /* LazyflowWatchApp.swift */,
 			);
 			path = App;
-			sourceTree = "<group>";
-		};
-		3E57E1A47CDFFD087B2C0765 /* __Snapshots__ */ = {
-			isa = PBXGroup;
-			children = (
-				7BD068AA116C753D1AA54A6A /* AddTaskViewSnapshotTests */,
-				BBD0A386D581AC1031604892 /* QuickCaptureReviewViewSnapshotTests */,
-				9A8C3DAFF396A29E1AF516C3 /* QuickCaptureSheetSnapshotTests */,
-				8155C2D6AB1FE2327767950F /* UpcomingViewSnapshotTests */,
-			);
-			path = __Snapshots__;
 			sourceTree = "<group>";
 		};
 		44BADD85CAF36E2B426946B0 = {
@@ -962,40 +858,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		7BD068AA116C753D1AA54A6A /* AddTaskViewSnapshotTests */ = {
-			isa = PBXGroup;
-			children = (
-				91B0312381E14BFD46089820 /* testAccessibility.addTask-accessibility3.png */,
-				D35F06365B37A44FE6E12A3A /* testAccessibility.addTask-xxxLarge.png */,
-				634DBE6F0F87D0C370344B13 /* testAccessibilityIPad.addTask-ipad-accessibility3.png */,
-				AACF2ABE1625F872448F2026 /* testAccessibilityIPad.addTask-ipad-xxxLarge.png */,
-				A46274A00D723C7DBF150A53 /* testEmptyForm.emptyForm-dark.png */,
-				5C33F9BBCC655791BFF98C31 /* testEmptyForm.emptyForm-light.png */,
-				3DF4DACA527EB34A246B1136 /* testEmptyFormIPad.emptyForm-ipad-dark.png */,
-				21FA9A43C0F09C91F8F93685 /* testEmptyFormIPad.emptyForm-ipad-light.png */,
-				331E758D50C6F9743FEA43DE /* testWithDefaultDate.withDefaultDate-dark.png */,
-				0B82FCF306255EF43830261E /* testWithDefaultDate.withDefaultDate-light.png */,
-				7245D92EB31576FE87DBEF17 /* testWithDefaultDateIPad.withDefaultDate-ipad-dark.png */,
-				EF369B3E171F06E9218CA491 /* testWithDefaultDateIPad.withDefaultDate-ipad-light.png */,
-			);
-			path = AddTaskViewSnapshotTests;
-			sourceTree = "<group>";
-		};
-		8155C2D6AB1FE2327767950F /* UpcomingViewSnapshotTests */ = {
-			isa = PBXGroup;
-			children = (
-				1FD1955F53DF4EB1FC7BB088 /* testEmptyState.empty-dark.png */,
-				FDB1459E67765B4133F80560 /* testEmptyState.empty-light.png */,
-				B2FBD8A9AC1644689C3D43BD /* testEmptyStateIPad.empty-ipad-dark.png */,
-				B3125186E467C08431B9A699 /* testEmptyStateIPad.empty-ipad-light.png */,
-				084179C56EB43A09BCF5E20E /* testPopulatedState.populated-dark.png */,
-				4EE2A12E63283854053B42E0 /* testPopulatedState.populated-light.png */,
-				D60BFC2A13C8E47F6EC1E708 /* testPopulatedStateIPad.populated-ipad-dark.png */,
-				541E1900342B4BE7746DC372 /* testPopulatedStateIPad.populated-ipad-light.png */,
-			);
-			path = UpcomingViewSnapshotTests;
-			sourceTree = "<group>";
-		};
 		82A66FCD5B9998987CCB991D /* AI */ = {
 			isa = PBXGroup;
 			children = (
@@ -1022,21 +884,6 @@
 			);
 			name = Sources;
 			path = Lazyflow/Sources;
-			sourceTree = "<group>";
-		};
-		9A8C3DAFF396A29E1AF516C3 /* QuickCaptureSheetSnapshotTests */ = {
-			isa = PBXGroup;
-			children = (
-				40439484CF5317D24673EEEC /* testEditNoteMode.editNote-dark.png */,
-				D9E0B4489CF41B4F419209E7 /* testEditNoteMode.editNote-light.png */,
-				10220AB44527B463DDF3233E /* testEditNoteModeIPad.editNote-ipad-dark.png */,
-				F614679BCB69D46ADFC4F14B /* testEditNoteModeIPad.editNote-ipad-light.png */,
-				9D0E5D80298920B37067B818 /* testNewNoteMode.newNote-dark.png */,
-				3BD61C058AF5333EB4B9F0C7 /* testNewNoteMode.newNote-light.png */,
-				EDA86CCF05C2775786558A50 /* testNewNoteModeIPad.newNote-ipad-dark.png */,
-				C4FF43282FEF230EF46D07E9 /* testNewNoteModeIPad.newNote-ipad-light.png */,
-			);
-			path = QuickCaptureSheetSnapshotTests;
 			sourceTree = "<group>";
 		};
 		9BE49A93CE52AD9BDD77DE03 /* App */ = {
@@ -1100,29 +947,6 @@
 				7E4DB6E37FAD1A7800B64028 /* PrivacyInfo.xcprivacy */,
 			);
 			path = LazyflowWidget;
-			sourceTree = "<group>";
-		};
-		BBD0A386D581AC1031604892 /* QuickCaptureReviewViewSnapshotTests */ = {
-			isa = PBXGroup;
-			children = (
-				5358531859D21A93CBE6EA57 /* testCompletedState.completed-dark.png */,
-				8490BF5C2E77325E8C276CB5 /* testCompletedState.completed-light.png */,
-				C782917EE33A3A4587B827A4 /* testCompletedStateIPad.completed-ipad-dark.png */,
-				EDF53428FB45C808277D7350 /* testCompletedStateIPad.completed-ipad-light.png */,
-				AC9F9D5090F4E81F958EA7D0 /* testErrorState.error-dark.png */,
-				8C30F3C17183D4184AAB2BD6 /* testErrorState.error-light.png */,
-				3B560800D296AB59E612E61C /* testErrorStateIPad.error-ipad-dark.png */,
-				529521A96BD0B2673957C145 /* testErrorStateIPad.error-ipad-light.png */,
-				BA6E59F0D38F651425D3320C /* testExtractingState.extracting-dark.png */,
-				250E1592139F7FC42C4A7989 /* testExtractingState.extracting-light.png */,
-				2D5D3CACEBE4DCCBD956990A /* testExtractingStateIPad.extracting-ipad-dark.png */,
-				53FBE48C2878680E6CBA97CB /* testExtractingStateIPad.extracting-ipad-light.png */,
-				679E8C4D4B7984999331EFA3 /* testReviewState.review-dark.png */,
-				0207F92FEB64CB39B6CA41A8 /* testReviewState.review-light.png */,
-				26BDF4596EF5E4C7E0EF2E13 /* testReviewStateIPad.review-ipad-dark.png */,
-				A8BC5912EEB68B7EEFC12A5A /* testReviewStateIPad.review-ipad-light.png */,
-			);
-			path = QuickCaptureReviewViewSnapshotTests;
 			sourceTree = "<group>";
 		};
 		BC30C788825C8D51E87ECCA3 /* Views */ = {
@@ -1232,10 +1056,8 @@
 				24D8438736292D6096DEAD74 /* BatchAnalysisReviewSheet.swift */,
 				5255042DEA67ACE0AF86FF16 /* BriefingsSettingsView.swift */,
 				5C9377ACBB4F6E9CD3D98DC7 /* DataAboutSettingsView.swift */,
-				EC7184C5DFE9D9B8C260C4D4 /* DataManagementView.swift */,
 				B735F06C865E6CFB0FDA5628 /* GeneralSettingsView.swift */,
 				70C9574BBD3C644B02ED89C6 /* ModelSelectionView.swift */,
-				68F6F655942BC7C38A13050F /* NotificationSettingsView.swift */,
 				ECAAAC76A8693B0402E639B2 /* ProductivitySettingsView.swift */,
 				C21B88F1F7766BC778F7724B /* ProviderConfigurationSheet.swift */,
 				4F99687C0DBD53BEAF1CF6EB /* SettingsHelpers.swift */,
@@ -1329,7 +1151,6 @@
 			buildConfigurationList = 63DF054E5C0FA736B9DC0954 /* Build configuration list for PBXNativeTarget "LazyflowTests" */;
 			buildPhases = (
 				89385556554EC947B10700B1 /* Sources */,
-				AFACA5C2BC27AA276DD2106D /* Resources */,
 				0B2A3993D40911C89CE77A81 /* Frameworks */,
 			);
 			buildRules = (
@@ -1468,57 +1289,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C20DC9A45258813472213101 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		AFACA5C2BC27AA276DD2106D /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				28C85B3A2888D468A6A1219A /* testAccessibility.addTask-accessibility3.png in Resources */,
-				2C39BB8F28581710ED023E69 /* testAccessibility.addTask-xxxLarge.png in Resources */,
-				D8C45ABD88910E614DDB7F61 /* testAccessibilityIPad.addTask-ipad-accessibility3.png in Resources */,
-				7581F8BC8921FA680370B83E /* testAccessibilityIPad.addTask-ipad-xxxLarge.png in Resources */,
-				726B7D82E659A9A13DAE1A9D /* testCompletedState.completed-dark.png in Resources */,
-				16E9DC16AE2152CE57EBB496 /* testCompletedState.completed-light.png in Resources */,
-				8352C6587D0F404BFC16EC82 /* testCompletedStateIPad.completed-ipad-dark.png in Resources */,
-				DC5890395DB78EC4F816AE6C /* testCompletedStateIPad.completed-ipad-light.png in Resources */,
-				588619CE28B78290D535FDDB /* testEditNoteMode.editNote-dark.png in Resources */,
-				E0B29ED50009A534555CCE0C /* testEditNoteMode.editNote-light.png in Resources */,
-				3BB5AE3AF44BE09549F4B374 /* testEditNoteModeIPad.editNote-ipad-dark.png in Resources */,
-				E8B344CBA616C27CF8F41C13 /* testEditNoteModeIPad.editNote-ipad-light.png in Resources */,
-				10EE62D211CD01719BD742A8 /* testEmptyForm.emptyForm-dark.png in Resources */,
-				61185F5DFF946B664C84D832 /* testEmptyForm.emptyForm-light.png in Resources */,
-				9EAA596AA5E68B5463A394DC /* testEmptyFormIPad.emptyForm-ipad-dark.png in Resources */,
-				75FC5F65F16195CC4471B1B2 /* testEmptyFormIPad.emptyForm-ipad-light.png in Resources */,
-				81779B69168CB7A9B023F18F /* testEmptyState.empty-dark.png in Resources */,
-				C373B56E0600F2D0C2F1776E /* testEmptyState.empty-light.png in Resources */,
-				80CAA6AEB1A51C0E26644774 /* testEmptyStateIPad.empty-ipad-dark.png in Resources */,
-				A3DB5AE12B098560B0F200B9 /* testEmptyStateIPad.empty-ipad-light.png in Resources */,
-				57879ECEDC90F04B1509CE6A /* testErrorState.error-dark.png in Resources */,
-				28BE298984028EB3C3A4F728 /* testErrorState.error-light.png in Resources */,
-				349B0DD24BC2D548680A3385 /* testErrorStateIPad.error-ipad-dark.png in Resources */,
-				4155447D24AB7A673F254CE2 /* testErrorStateIPad.error-ipad-light.png in Resources */,
-				0472326CEFBC32685B252800 /* testExtractingState.extracting-dark.png in Resources */,
-				7145A54EF90C825C4EE7E90E /* testExtractingState.extracting-light.png in Resources */,
-				183D62A901C9051C958E1863 /* testExtractingStateIPad.extracting-ipad-dark.png in Resources */,
-				B215AC726DB9F3D565A1F0B0 /* testExtractingStateIPad.extracting-ipad-light.png in Resources */,
-				C3962A92D900408D0EB3E7AF /* testNewNoteMode.newNote-dark.png in Resources */,
-				594975CC38F575F24B2DD316 /* testNewNoteMode.newNote-light.png in Resources */,
-				F6B757417C34821478CC070B /* testNewNoteModeIPad.newNote-ipad-dark.png in Resources */,
-				FCAFFBFD512CBABCEC15A997 /* testNewNoteModeIPad.newNote-ipad-light.png in Resources */,
-				B0AE4BA841C6AE9D143192EF /* testPopulatedState.populated-dark.png in Resources */,
-				B33F621BD8B981E9D99A49AE /* testPopulatedState.populated-light.png in Resources */,
-				C0C3F65069F870B61FC29D01 /* testPopulatedStateIPad.populated-ipad-dark.png in Resources */,
-				21E35B1DDF082CB86B456823 /* testPopulatedStateIPad.populated-ipad-light.png in Resources */,
-				274DB5A3A9D9CFAC1C06A0FB /* testReviewState.review-dark.png in Resources */,
-				C68D1A477B72AB8D47FFB26E /* testReviewState.review-light.png in Resources */,
-				01BD0743A67820593201D1F6 /* testReviewStateIPad.review-ipad-dark.png in Resources */,
-				7D66A765336F004ACE60ACEE /* testReviewStateIPad.review-ipad-light.png in Resources */,
-				B652EC7309D97F5D9C85DCD8 /* testWithDefaultDate.withDefaultDate-dark.png in Resources */,
-				5C406F9D4F7AA4DEDC8E33C9 /* testWithDefaultDate.withDefaultDate-light.png in Resources */,
-				1CB4A86EDC6847F572905CC6 /* testWithDefaultDateIPad.withDefaultDate-ipad-dark.png in Resources */,
-				D1B48BE5C555F047739D56C5 /* testWithDefaultDateIPad.withDefaultDate-ipad-light.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1698,7 +1468,6 @@
 				89C5AA721859327B73862644 /* DailySummaryService.swift in Sources */,
 				13E9D197333A8203696DD6EE /* DailySummaryView.swift in Sources */,
 				5A122869C596B62E2F84BD19 /* DataAboutSettingsView.swift in Sources */,
-				895F269A42EDBB96CD160B71 /* DataManagementView.swift in Sources */,
 				887ACE65EDB00952579803B9 /* DatePickerSheet.swift in Sources */,
 				86A0AC3E3919E04E9FDF644F /* DependencyContainer.swift in Sources */,
 				3F4BB7EF1C64E431C12C89D3 /* DetectedDateBanner.swift in Sources */,
@@ -1734,7 +1503,6 @@
 				DD9477FED0D0B491C3CDEE80 /* Notification+Extensions.swift in Sources */,
 				4B8FBFDD3F89F43BF36A288B /* NotificationService.swift in Sources */,
 				C60DBE30D617146A56D68E05 /* NotificationServiceProtocol.swift in Sources */,
-				A26AE03EAA059A0D525EFBE7 /* NotificationSettingsView.swift in Sources */,
 				9D5A72A541E7A731607690EE /* OnboardingView.swift in Sources */,
 				6787DEE500007DA44BB563D8 /* OpenResponsesProvider.swift in Sources */,
 				E1D806B72E12F6FB890CEC67 /* PersistenceController.swift in Sources */,

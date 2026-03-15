@@ -247,7 +247,7 @@ Large views are split into focused files:
 
 - **TodayView** → `TodayView.swift`, `TodayView+NextUp.swift`, `TodayView+Sections.swift`, plus sheets (`BatchRescheduleSheet`, `ConflictResolutionSheet`)
 - **AddTaskView** → `AddTaskView.swift`, `AddTaskView+QuickActions.swift`, plus pickers (`DatePickerSheet`, `ListPickerSheet`)
-- **SettingsView** → `SettingsView.swift`, `SettingsToggles.swift`, `AISettingsView.swift`, `NotificationSettingsView.swift`, `DataManagementView.swift`, `AboutView.swift`
+- **SettingsView** → `SettingsView.swift`, `SettingsToggles.swift`, `AISettingsView.swift`, `DataAboutSettingsView.swift`, `BriefingsSettingsView.swift`, `AboutView.swift`
 
 ## Build System
 
