@@ -2926,8 +2926,8 @@ final class LazyflowUITests: XCTestCase {
         searchField.typeText("xyznonexistent")
         Thread.sleep(forTimeInterval: 0.5)
 
-        // ContentUnavailableView.search with accessibilityIdentifier
-        let emptyState = app.otherElements["search_empty_state"]
+        // ContentUnavailableView wrapped in VStack with accessibilityIdentifier
+        let emptyState = app.descendants(matching: .any).matching(identifier: "search_empty_state").firstMatch
         XCTAssertTrue(emptyState.waitForExistence(timeout: 3), "Empty state should appear for non-matching search")
     }
 

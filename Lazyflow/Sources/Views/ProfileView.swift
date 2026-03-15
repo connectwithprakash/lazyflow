@@ -85,8 +85,11 @@ struct ProfileView: View {
 
                     // MARK: - Empty Search State
                     if isSearching && !showLists && !showCategories && filteredRoutes.isEmpty {
-                        ContentUnavailableView.search(text: trimmedSearch)
-                            .accessibilityIdentifier("search_empty_state")
+                        VStack {
+                            ContentUnavailableView.search(text: trimmedSearch)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("search_empty_state")
                     }
 
                     // MARK: - App Footer
