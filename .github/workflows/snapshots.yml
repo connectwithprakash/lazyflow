@@ -43,16 +43,17 @@ jobs:
 
       - name: Re-record Snapshot References
         run: |
-          set -o pipefail
+          # Record mode tests always "fail" by design (swift-snapshot-testing
+          # records the image then fails so you know to re-run).  We allow
+          # the test command to exit non-zero and verify success by checking
+          # that snapshot files were actually written.
           SNAPSHOT_RECORD=true xcodebuild test \
             -project Lazyflow.xcodeproj \
             -scheme Lazyflow \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -only-testing:LazyflowTests \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty
-          # Record mode tests always "fail" by design — check that build succeeded
-          # by verifying snapshot files were actually written
+            2>&1 | xcpretty || true
           if ! ls LazyflowTests/Snapshots/__Snapshots__/**/*.png &>/dev/null; then
             echo "::error::No snapshot files found — build may have failed"
             exit 1
