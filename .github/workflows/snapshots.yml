@@ -42,12 +42,14 @@ jobs:
           fi
 
       - name: Re-record Snapshot References
+        env:
+          SNAPSHOT_RECORD: "true"
         run: |
           # Record mode tests always "fail" by design (swift-snapshot-testing
           # records the image then fails so you know to re-run).  We allow
           # the test command to exit non-zero and verify success by checking
           # that snapshot files were actually written.
-          SNAPSHOT_RECORD=true xcodebuild test \
+          xcodebuild test \
             -project Lazyflow.xcodeproj \
             -scheme Lazyflow \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
