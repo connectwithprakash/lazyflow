@@ -43,7 +43,7 @@ struct CalendarView: View {
                 .task { await viewModel.requestAccessIfNeeded() }
                 .sheet(isPresented: $showingTimeBlockSheet) {
                     if let task = pendingTask, let dropTime = pendingDropTime {
-                        TimeBlockSheet(task: task, startTime: dropTime) { startTime, duration in
+                        CalendarTimeBlockSheet(task: task, startTime: dropTime) { startTime, duration in
                             createTimeBlock(for: task, startTime: startTime, duration: duration)
                         }
                     }
@@ -73,7 +73,7 @@ struct CalendarView: View {
                     .task { await viewModel.requestAccessIfNeeded() }
                     .sheet(isPresented: $showingTimeBlockSheet) {
                         if let task = pendingTask, let dropTime = pendingDropTime {
-                            TimeBlockSheet(task: task, startTime: dropTime) { startTime, duration in
+                            CalendarTimeBlockSheet(task: task, startTime: dropTime) { startTime, duration in
                                 createTimeBlock(for: task, startTime: startTime, duration: duration)
                             }
                         }
@@ -191,7 +191,7 @@ struct CalendarView: View {
         self
             .sheet(isPresented: $showingTimeBlockSheet) {
                 if let task = pendingTask, let dropTime = pendingDropTime {
-                    TimeBlockSheet(
+                    CalendarTimeBlockSheet(
                         task: task,
                         startTime: dropTime,
                         onConfirm: { startTime, duration in
@@ -1193,7 +1193,7 @@ struct DayHeader: View {
 
 // MARK: - Time Block Sheet
 
-struct TimeBlockSheet: View {
+struct CalendarTimeBlockSheet: View {
     let task: Task
     let startTime: Date
     let onConfirm: (Date, TimeInterval) -> Void
@@ -1509,7 +1509,7 @@ extension Calendar {
 }
 
 #Preview("Time Block Sheet") {
-    TimeBlockSheet(
+    CalendarTimeBlockSheet(
         task: Task.sample,
         startTime: Date(),
         onConfirm: { _, _ in }

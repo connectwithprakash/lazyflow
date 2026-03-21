@@ -44,7 +44,7 @@ struct UpcomingView: View {
                     }
                 }
                 .sheet(item: $taskToSchedule) { task in
-                    TimeBlockSheet(
+                    CalendarTimeBlockSheet(
                         task: task,
                         startTime: defaultScheduleTime(),
                         onConfirm: { startTime, duration in
@@ -75,7 +75,7 @@ struct UpcomingView: View {
                         }
                     }
                     .sheet(item: $taskToSchedule) { task in
-                        TimeBlockSheet(
+                        CalendarTimeBlockSheet(
                             task: task,
                             startTime: defaultScheduleTime(),
                             onConfirm: { startTime, duration in

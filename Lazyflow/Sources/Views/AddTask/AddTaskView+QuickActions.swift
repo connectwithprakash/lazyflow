@@ -41,7 +41,37 @@ extension AddTaskView {
                 }
             }
 
-            // Row 2: Priority, Category, List
+            // Row 2: Time Block, Remind, Repeat
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                QuickActionButton(
+                    icon: "timer",
+                    title: timeBlockButtonTitle,
+                    isSelected: addTaskViewModel.hasDueTime || addTaskViewModel.estimatedDuration != nil,
+                    color: Color.Lazyflow.accent
+                ) {
+                    showTimeBlockSheet = true
+                }
+
+                QuickActionButton(
+                    icon: addTaskViewModel.hasReminder ? "bell.fill" : "bell",
+                    title: addTaskViewModel.hasReminder ? formatReminderTime(addTaskViewModel.reminderDate) : "Remind",
+                    isSelected: addTaskViewModel.hasReminder,
+                    color: Color.Lazyflow.info
+                ) {
+                    showReminderSheet = true
+                }
+
+                QuickActionButton(
+                    icon: "repeat",
+                    title: addTaskViewModel.isRecurring ? recurringDisplayTitle : "Repeat",
+                    isSelected: addTaskViewModel.isRecurring,
+                    color: Color.Lazyflow.info
+                ) {
+                    showRecurringSheet = true
+                }
+            }
+
+            // Row 3: Priority, Category, List
             HStack(spacing: DesignSystem.Spacing.sm) {
                 // Priority
                 Menu {
@@ -101,36 +131,6 @@ extension AddTaskView {
                     color: Color.Lazyflow.textTertiary
                 ) {
                     showListPicker = true
-                }
-            }
-
-            // Row 3: Reminder, Duration, Repeat
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                QuickActionButton(
-                    icon: addTaskViewModel.hasReminder ? "bell.fill" : "bell",
-                    title: addTaskViewModel.hasReminder ? formatReminderTime(addTaskViewModel.reminderDate) : "Remind",
-                    isSelected: addTaskViewModel.hasReminder,
-                    color: Color.Lazyflow.info
-                ) {
-                    showReminderSheet = true
-                }
-
-                QuickActionButton(
-                    icon: "clock",
-                    title: addTaskViewModel.estimatedDuration != nil ? formatDuration(addTaskViewModel.estimatedDuration!) : "Duration",
-                    isSelected: addTaskViewModel.estimatedDuration != nil,
-                    color: Color.Lazyflow.accent
-                ) {
-                    showDurationSheet = true
-                }
-
-                QuickActionButton(
-                    icon: "repeat",
-                    title: addTaskViewModel.isRecurring ? recurringDisplayTitle : "Repeat",
-                    isSelected: addTaskViewModel.isRecurring,
-                    color: Color.Lazyflow.info
-                ) {
-                    showRecurringSheet = true
                 }
             }
         }
@@ -276,12 +276,16 @@ extension AddTaskView {
                     )
                 }
 
-                if let duration = addTaskViewModel.estimatedDuration {
+                if addTaskViewModel.hasDueTime || addTaskViewModel.estimatedDuration != nil {
                     SelectedOptionChip(
-                        icon: "clock",
-                        title: formatDuration(duration),
+                        icon: "timer",
+                        title: timeBlockChipTitle,
                         color: Color.Lazyflow.accent,
-                        onRemove: { addTaskViewModel.estimatedDuration = nil }
+                        onRemove: {
+                            addTaskViewModel.hasDueTime = false
+                            addTaskViewModel.dueTime = nil
+                            addTaskViewModel.estimatedDuration = nil
+                        }
                     )
                 }
 

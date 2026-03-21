@@ -99,7 +99,7 @@ struct TodayView: View {
             }
         }
         .sheet(item: $taskToSchedule) { task in
-            TimeBlockSheet(
+            CalendarTimeBlockSheet(
                 task: task,
                 startTime: defaultScheduleTime(),
                 onConfirm: { startTime, duration in

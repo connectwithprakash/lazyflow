@@ -14,6 +14,7 @@ struct AddTaskView: View {
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
 
     @State var showDatePicker = false
+    @State var showTimeBlockSheet = false
     @State var showListPicker = false
     @State var showAISuggestions = false
     @State var aiAnalysis: TaskAnalysis?
@@ -22,7 +23,6 @@ struct AddTaskView: View {
     @State var pendingSubtasks: [String] = []
     @State var showAddSubtaskField = false
     @State var newSubtaskTitle = ""
-    @State var showDurationSheet = false
     @State var showRecurringSheet = false
     @State var showReminderSheet = false
 
@@ -184,11 +184,19 @@ struct AddTaskView: View {
             .sheet(isPresented: $showDatePicker) {
                 DatePickerSheet(
                     selectedDate: $viewModel.dueDate,
+                    hasDate: $viewModel.hasDueDate
+                )
+                .presentationDetents([.medium, .large])
+            }
+            .sheet(isPresented: $showTimeBlockSheet) {
+                TimeBlockSheet(
+                    selectedDate: $viewModel.dueDate,
                     hasDate: $viewModel.hasDueDate,
                     selectedTime: $viewModel.dueTime,
-                    hasTime: $viewModel.hasDueTime
+                    hasTime: $viewModel.hasDueTime,
+                    estimatedDuration: $viewModel.estimatedDuration
                 )
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $showListPicker) {
                 ListPickerSheet(
@@ -196,10 +204,6 @@ struct AddTaskView: View {
                     lists: listService.lists
                 )
                 .presentationDetents([.medium])
-            }
-            .sheet(isPresented: $showDurationSheet) {
-                DurationPickerSheet(estimatedDuration: $viewModel.estimatedDuration)
-                    .presentationDetents([.medium])
             }
             .sheet(isPresented: $showRecurringSheet) {
                 RecurringOptionsSheet(viewModel: viewModel)
@@ -479,23 +483,45 @@ struct AddTaskView: View {
 
     var dateButtonTitle: String {
         guard viewModel.hasDueDate, let date = viewModel.dueDate else { return "Date" }
-        if viewModel.hasDueTime, let time = viewModel.dueTime {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            return "\(date.shortFormatted) \(tf.string(from: time))"
-        }
         return date.shortFormatted
     }
 
+    var timeBlockButtonTitle: String {
+        let hasTime = viewModel.hasDueTime
+        let hasDuration = viewModel.estimatedDuration != nil
+
+        if hasTime, let time = viewModel.dueTime, hasDuration, let duration = viewModel.estimatedDuration {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(tf.string(from: time)) · \(formatDuration(duration))"
+        } else if hasTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return tf.string(from: time)
+        } else if hasDuration, let duration = viewModel.estimatedDuration {
+            return formatDuration(duration)
+        }
+        return "Time Block"
+    }
+
     func dateChipTitle(date: Date) -> String {
+        return date.relativeFormatted
+    }
+
+    var timeBlockChipTitle: String {
+        var parts: [String] = []
         if viewModel.hasDueTime, let time = viewModel.dueTime {
             let tf = DateFormatter()
             tf.timeStyle = .short
             tf.dateStyle = .none
-            return "\(date.relativeFormatted) \(tf.string(from: time))"
+            parts.append(tf.string(from: time))
         }
-        return date.relativeFormatted
+        if let duration = viewModel.estimatedDuration {
+            parts.append(formatDuration(duration))
+        }
+        return parts.joined(separator: " · ")
     }
 
     var selectedListName: String {

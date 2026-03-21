@@ -23,8 +23,8 @@ struct TaskDetailView: View {
 
     // Sheet states
     @State private var showDatePicker = false
+    @State private var showTimeBlockSheet = false
     @State private var showListPicker = false
-    @State private var showDurationSheet = false
     @State private var showRecurringSheet = false
     @State private var showReminderSheet = false
 
@@ -185,11 +185,19 @@ struct TaskDetailView: View {
             .sheet(isPresented: $showDatePicker) {
                 DatePickerSheet(
                     selectedDate: $viewModel.dueDate,
+                    hasDate: $viewModel.hasDueDate
+                )
+                .presentationDetents([.medium, .large])
+            }
+            .sheet(isPresented: $showTimeBlockSheet) {
+                TimeBlockSheet(
+                    selectedDate: $viewModel.dueDate,
                     hasDate: $viewModel.hasDueDate,
                     selectedTime: $viewModel.dueTime,
-                    hasTime: $viewModel.hasDueTime
+                    hasTime: $viewModel.hasDueTime,
+                    estimatedDuration: $viewModel.estimatedDuration
                 )
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $showListPicker) {
                 ListPickerSheet(
@@ -197,10 +205,6 @@ struct TaskDetailView: View {
                     lists: listService.lists
                 )
                 .presentationDetents([.medium])
-            }
-            .sheet(isPresented: $showDurationSheet) {
-                DurationPickerSheet(estimatedDuration: $viewModel.estimatedDuration)
-                    .presentationDetents([.medium])
             }
             .sheet(isPresented: $showRecurringSheet) {
                 RecurringOptionsSheet(viewModel: viewModel)
@@ -321,7 +325,37 @@ struct TaskDetailView: View {
                 }
             }
 
-            // Row 2: Priority, Category, List
+            // Row 2: Time Block, Remind, Repeat
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                QuickActionButton(
+                    icon: "timer",
+                    title: timeBlockButtonTitle,
+                    isSelected: viewModel.hasDueTime || viewModel.estimatedDuration != nil,
+                    color: Color.Lazyflow.accent
+                ) {
+                    showTimeBlockSheet = true
+                }
+
+                QuickActionButton(
+                    icon: viewModel.hasReminder ? "bell.fill" : "bell",
+                    title: viewModel.hasReminder ? formatReminderTime(viewModel.reminderDate) : "Remind",
+                    isSelected: viewModel.hasReminder,
+                    color: Color.Lazyflow.info
+                ) {
+                    showReminderSheet = true
+                }
+
+                QuickActionButton(
+                    icon: "repeat",
+                    title: viewModel.isRecurring ? recurringDisplayTitle : "Repeat",
+                    isSelected: viewModel.isRecurring,
+                    color: Color.Lazyflow.info
+                ) {
+                    showRecurringSheet = true
+                }
+            }
+
+            // Row 3: Priority, Category, List
             HStack(spacing: DesignSystem.Spacing.sm) {
                 // Priority
                 Menu {
@@ -381,36 +415,6 @@ struct TaskDetailView: View {
                     color: Color.Lazyflow.textTertiary
                 ) {
                     showListPicker = true
-                }
-            }
-
-            // Row 3: Reminder, Duration, Repeat
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                QuickActionButton(
-                    icon: viewModel.hasReminder ? "bell.fill" : "bell",
-                    title: viewModel.hasReminder ? formatReminderTime(viewModel.reminderDate) : "Remind",
-                    isSelected: viewModel.hasReminder,
-                    color: Color.Lazyflow.info
-                ) {
-                    showReminderSheet = true
-                }
-
-                QuickActionButton(
-                    icon: "clock",
-                    title: durationDisplayTitle,
-                    isSelected: viewModel.estimatedDuration != nil,
-                    color: Color.Lazyflow.accent
-                ) {
-                    showDurationSheet = true
-                }
-
-                QuickActionButton(
-                    icon: "repeat",
-                    title: viewModel.isRecurring ? recurringDisplayTitle : "Repeat",
-                    isSelected: viewModel.isRecurring,
-                    color: Color.Lazyflow.info
-                ) {
-                    showRecurringSheet = true
                 }
             }
         }
@@ -520,7 +524,7 @@ struct TaskDetailView: View {
     private var hasSelectedOptions: Bool {
         viewModel.hasDueDate || viewModel.priority != .none || viewModel.hasReminder ||
         viewModel.hasCategorySelected || viewModel.estimatedDuration != nil ||
-        viewModel.isRecurring
+        viewModel.hasDueTime || viewModel.isRecurring
     }
 
     private var selectedOptionsView: some View {
@@ -553,12 +557,16 @@ struct TaskDetailView: View {
                     )
                 }
 
-                if let duration = viewModel.estimatedDuration {
+                if viewModel.hasDueTime || viewModel.estimatedDuration != nil {
                     SelectedOptionChip(
-                        icon: "clock",
-                        title: formatDuration(duration),
+                        icon: "timer",
+                        title: timeBlockChipTitle,
                         color: Color.Lazyflow.accent,
-                        onRemove: { viewModel.estimatedDuration = nil }
+                        onRemove: {
+                            viewModel.hasDueTime = false
+                            viewModel.dueTime = nil
+                            viewModel.estimatedDuration = nil
+                        }
                     )
                 }
 
@@ -587,22 +595,10 @@ struct TaskDetailView: View {
 
     private var dateButtonTitle: String {
         guard viewModel.hasDueDate, let date = viewModel.dueDate else { return "Date" }
-        if viewModel.hasDueTime, let time = viewModel.dueTime {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            return "\(date.shortFormatted) \(tf.string(from: time))"
-        }
         return date.shortFormatted
     }
 
     private func dateChipTitle(date: Date) -> String {
-        if viewModel.hasDueTime, let time = viewModel.dueTime {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            return "\(date.relativeFormatted) \(tf.string(from: time))"
-        }
         return date.relativeFormatted
     }
 
@@ -638,11 +634,37 @@ struct TaskDetailView: View {
         return viewModel.category.color
     }
 
-    private var durationDisplayTitle: String {
-        if let duration = viewModel.estimatedDuration {
+    private var timeBlockButtonTitle: String {
+        let hasTime = viewModel.hasDueTime
+        let hasDuration = viewModel.estimatedDuration != nil
+        if hasTime, let time = viewModel.dueTime, hasDuration, let duration = viewModel.estimatedDuration {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return "\(tf.string(from: time)) · \(formatDuration(duration))"
+        } else if hasTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            return tf.string(from: time)
+        } else if hasDuration, let duration = viewModel.estimatedDuration {
             return formatDuration(duration)
         }
-        return "Duration"
+        return "Time Block"
+    }
+
+    private var timeBlockChipTitle: String {
+        var parts: [String] = []
+        if viewModel.hasDueTime, let time = viewModel.dueTime {
+            let tf = DateFormatter()
+            tf.timeStyle = .short
+            tf.dateStyle = .none
+            parts.append(tf.string(from: time))
+        }
+        if let duration = viewModel.estimatedDuration {
+            parts.append(formatDuration(duration))
+        }
+        return parts.joined(separator: " · ")
     }
 
     private var recurringDisplayTitle: String {
