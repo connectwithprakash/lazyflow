@@ -8,18 +8,8 @@ extension AddTaskView {
 
     var quickActionsGrid: some View {
         VStack(spacing: DesignSystem.Spacing.sm) {
-            // Row 1: Date options
+            // Row 1: Today, Date, Time
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Due Date picker
-                QuickActionButton(
-                    icon: "calendar",
-                    title: dateButtonTitle,
-                    isSelected: addTaskViewModel.hasDueDate,
-                    color: Color.Lazyflow.accent
-                ) {
-                    showDatePicker = true
-                }
-
                 // Today quick action
                 QuickActionButton(
                     icon: "star",
@@ -30,49 +20,39 @@ extension AddTaskView {
                     addTaskViewModel.setDueToday()
                 }
 
-                // Tomorrow quick action
+                // Due Date picker
                 QuickActionButton(
-                    icon: "sunrise",
-                    title: "Tomorrow",
-                    isSelected: addTaskViewModel.dueDate?.isTomorrow == true,
-                    color: Color.Lazyflow.priorityMedium
-                ) {
-                    addTaskViewModel.setDueTomorrow()
-                }
-            }
-
-            // Row 2: Time Block, Remind, Repeat
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                QuickActionButton(
-                    icon: "timer",
-                    title: timeBlockButtonTitle,
-                    isSelected: addTaskViewModel.hasDueTime || addTaskViewModel.estimatedDuration != nil,
+                    icon: "calendar",
+                    title: dateButtonTitle,
+                    isSelected: addTaskViewModel.hasDueDate,
                     color: Color.Lazyflow.accent
                 ) {
-                    showTimeBlockSheet = true
+                    showDatePicker = true
                 }
 
+                // Time
                 QuickActionButton(
-                    icon: addTaskViewModel.hasReminder ? "bell.fill" : "bell",
-                    title: addTaskViewModel.hasReminder ? formatReminderTime(addTaskViewModel.reminderDate) : "Remind",
-                    isSelected: addTaskViewModel.hasReminder,
-                    color: Color.Lazyflow.info
+                    icon: "clock",
+                    title: timeButtonTitle,
+                    isSelected: addTaskViewModel.hasDueTime,
+                    color: Color.Lazyflow.accent
                 ) {
-                    showReminderSheet = true
-                }
-
-                QuickActionButton(
-                    icon: "repeat",
-                    title: addTaskViewModel.isRecurring ? recurringDisplayTitle : "Repeat",
-                    isSelected: addTaskViewModel.isRecurring,
-                    color: Color.Lazyflow.info
-                ) {
-                    showRecurringSheet = true
+                    showTimeSheet = true
                 }
             }
 
-            // Row 3: Priority, Category, List
+            // Row 2: Duration, Priority, Category
             HStack(spacing: DesignSystem.Spacing.sm) {
+                // Duration
+                QuickActionButton(
+                    icon: "timer",
+                    title: durationButtonTitle,
+                    isSelected: addTaskViewModel.estimatedDuration != nil,
+                    color: Color.Lazyflow.accent
+                ) {
+                    showDurationSheet = true
+                }
+
                 // Priority
                 Menu {
                     ForEach(Priority.allCases) { priority in
@@ -122,7 +102,10 @@ extension AddTaskView {
                         color: categoryDisplayColor
                     )
                 }
+            }
 
+            // Row 3: List, Remind, Repeat
+            HStack(spacing: DesignSystem.Spacing.sm) {
                 // List
                 QuickActionButton(
                     icon: "folder",
@@ -131,6 +114,26 @@ extension AddTaskView {
                     color: Color.Lazyflow.textTertiary
                 ) {
                     showListPicker = true
+                }
+
+                // Remind
+                QuickActionButton(
+                    icon: addTaskViewModel.hasReminder ? "bell.fill" : "bell",
+                    title: addTaskViewModel.hasReminder ? formatReminderTime(addTaskViewModel.reminderDate) : "Remind",
+                    isSelected: addTaskViewModel.hasReminder,
+                    color: Color.Lazyflow.info
+                ) {
+                    showReminderSheet = true
+                }
+
+                // Repeat
+                QuickActionButton(
+                    icon: "repeat",
+                    title: addTaskViewModel.isRecurring ? recurringDisplayTitle : "Repeat",
+                    isSelected: addTaskViewModel.isRecurring,
+                    color: Color.Lazyflow.info
+                ) {
+                    showRecurringSheet = true
                 }
             }
         }
@@ -276,14 +279,24 @@ extension AddTaskView {
                     )
                 }
 
-                if addTaskViewModel.hasDueTime || addTaskViewModel.estimatedDuration != nil {
+                if addTaskViewModel.hasDueTime {
                     SelectedOptionChip(
-                        icon: "timer",
-                        title: timeBlockChipTitle,
+                        icon: "clock",
+                        title: timeChipTitle,
                         color: Color.Lazyflow.accent,
                         onRemove: {
                             addTaskViewModel.hasDueTime = false
                             addTaskViewModel.dueTime = nil
+                        }
+                    )
+                }
+
+                if addTaskViewModel.estimatedDuration != nil {
+                    SelectedOptionChip(
+                        icon: "timer",
+                        title: formatDuration(addTaskViewModel.estimatedDuration!),
+                        color: Color.Lazyflow.accent,
+                        onRemove: {
                             addTaskViewModel.estimatedDuration = nil
                         }
                     )

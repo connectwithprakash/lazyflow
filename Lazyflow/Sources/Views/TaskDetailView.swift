@@ -23,7 +23,8 @@ struct TaskDetailView: View {
 
     // Sheet states
     @State private var showDatePicker = false
-    @State private var showTimeBlockSheet = false
+    @State private var showTimeSheet = false
+    @State private var showDurationSheet = false
     @State private var showListPicker = false
     @State private var showRecurringSheet = false
     @State private var showReminderSheet = false
@@ -189,15 +190,18 @@ struct TaskDetailView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
-            .sheet(isPresented: $showTimeBlockSheet) {
+            .sheet(isPresented: $showTimeSheet) {
                 TimeBlockSheet(
                     selectedDate: $viewModel.dueDate,
                     hasDate: $viewModel.hasDueDate,
                     selectedTime: $viewModel.dueTime,
-                    hasTime: $viewModel.hasDueTime,
-                    estimatedDuration: $viewModel.estimatedDuration
+                    hasTime: $viewModel.hasDueTime
                 )
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.height(380)])
+            }
+            .sheet(isPresented: $showDurationSheet) {
+                DurationPickerSheet(estimatedDuration: $viewModel.estimatedDuration)
+                    .presentationDetents([.height(380)])
             }
             .sheet(isPresented: $showListPicker) {
                 ListPickerSheet(
@@ -292,18 +296,8 @@ struct TaskDetailView: View {
 
     private var quickActionsGrid: some View {
         VStack(spacing: DesignSystem.Spacing.sm) {
-            // Row 1: Date options
+            // Row 1: Today, Date, Time
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Due Date picker
-                QuickActionButton(
-                    icon: "calendar",
-                    title: dateButtonTitle,
-                    isSelected: viewModel.hasDueDate,
-                    color: Color.Lazyflow.accent
-                ) {
-                    showDatePicker = true
-                }
-
                 // Today quick action
                 QuickActionButton(
                     icon: "star",
@@ -314,49 +308,39 @@ struct TaskDetailView: View {
                     viewModel.setDueToday()
                 }
 
-                // Tomorrow quick action
+                // Due Date picker
                 QuickActionButton(
-                    icon: "sunrise",
-                    title: "Tomorrow",
-                    isSelected: viewModel.dueDate?.isTomorrow == true,
-                    color: Color.Lazyflow.priorityMedium
-                ) {
-                    viewModel.setDueTomorrow()
-                }
-            }
-
-            // Row 2: Time Block, Remind, Repeat
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                QuickActionButton(
-                    icon: "timer",
-                    title: timeBlockButtonTitle,
-                    isSelected: viewModel.hasDueTime || viewModel.estimatedDuration != nil,
+                    icon: "calendar",
+                    title: dateButtonTitle,
+                    isSelected: viewModel.hasDueDate,
                     color: Color.Lazyflow.accent
                 ) {
-                    showTimeBlockSheet = true
+                    showDatePicker = true
                 }
 
+                // Time
                 QuickActionButton(
-                    icon: viewModel.hasReminder ? "bell.fill" : "bell",
-                    title: viewModel.hasReminder ? formatReminderTime(viewModel.reminderDate) : "Remind",
-                    isSelected: viewModel.hasReminder,
-                    color: Color.Lazyflow.info
+                    icon: "clock",
+                    title: timeButtonTitle,
+                    isSelected: viewModel.hasDueTime,
+                    color: Color.Lazyflow.accent
                 ) {
-                    showReminderSheet = true
-                }
-
-                QuickActionButton(
-                    icon: "repeat",
-                    title: viewModel.isRecurring ? recurringDisplayTitle : "Repeat",
-                    isSelected: viewModel.isRecurring,
-                    color: Color.Lazyflow.info
-                ) {
-                    showRecurringSheet = true
+                    showTimeSheet = true
                 }
             }
 
-            // Row 3: Priority, Category, List
+            // Row 2: Duration, Priority, Category
             HStack(spacing: DesignSystem.Spacing.sm) {
+                // Duration
+                QuickActionButton(
+                    icon: "timer",
+                    title: durationButtonTitle,
+                    isSelected: viewModel.estimatedDuration != nil,
+                    color: Color.Lazyflow.accent
+                ) {
+                    showDurationSheet = true
+                }
+
                 // Priority
                 Menu {
                     ForEach(Priority.allCases) { priority in
@@ -406,7 +390,10 @@ struct TaskDetailView: View {
                         color: categoryDisplayColor
                     )
                 }
+            }
 
+            // Row 3: List, Remind, Repeat
+            HStack(spacing: DesignSystem.Spacing.sm) {
                 // List
                 QuickActionButton(
                     icon: "folder",
@@ -415,6 +402,26 @@ struct TaskDetailView: View {
                     color: Color.Lazyflow.textTertiary
                 ) {
                     showListPicker = true
+                }
+
+                // Remind
+                QuickActionButton(
+                    icon: viewModel.hasReminder ? "bell.fill" : "bell",
+                    title: viewModel.hasReminder ? formatReminderTime(viewModel.reminderDate) : "Remind",
+                    isSelected: viewModel.hasReminder,
+                    color: Color.Lazyflow.info
+                ) {
+                    showReminderSheet = true
+                }
+
+                // Repeat
+                QuickActionButton(
+                    icon: "repeat",
+                    title: viewModel.isRecurring ? recurringDisplayTitle : "Repeat",
+                    isSelected: viewModel.isRecurring,
+                    color: Color.Lazyflow.info
+                ) {
+                    showRecurringSheet = true
                 }
             }
         }
@@ -557,14 +564,24 @@ struct TaskDetailView: View {
                     )
                 }
 
-                if viewModel.hasDueTime || viewModel.estimatedDuration != nil {
+                if viewModel.hasDueTime {
                     SelectedOptionChip(
-                        icon: "timer",
-                        title: timeBlockChipTitle,
+                        icon: "clock",
+                        title: timeChipTitle,
                         color: Color.Lazyflow.accent,
                         onRemove: {
                             viewModel.hasDueTime = false
                             viewModel.dueTime = nil
+                        }
+                    )
+                }
+
+                if viewModel.estimatedDuration != nil {
+                    SelectedOptionChip(
+                        icon: "timer",
+                        title: formatDuration(viewModel.estimatedDuration!),
+                        color: Color.Lazyflow.accent,
+                        onRemove: {
                             viewModel.estimatedDuration = nil
                         }
                     )
@@ -634,37 +651,23 @@ struct TaskDetailView: View {
         return viewModel.category.color
     }
 
-    private var timeBlockButtonTitle: String {
-        let hasTime = viewModel.hasDueTime
-        let hasDuration = viewModel.estimatedDuration != nil
-        if hasTime, let time = viewModel.dueTime, hasDuration, let duration = viewModel.estimatedDuration {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            return "\(tf.string(from: time)) · \(formatDuration(duration))"
-        } else if hasTime, let time = viewModel.dueTime {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            return tf.string(from: time)
-        } else if hasDuration, let duration = viewModel.estimatedDuration {
-            return formatDuration(duration)
-        }
-        return "Time Block"
+    private var timeButtonTitle: String {
+        guard viewModel.hasDueTime, let time = viewModel.dueTime else { return "Time" }
+        let tf = DateFormatter()
+        tf.dateFormat = "h:mm a"
+        return tf.string(from: time)
     }
 
-    private var timeBlockChipTitle: String {
-        var parts: [String] = []
-        if viewModel.hasDueTime, let time = viewModel.dueTime {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            parts.append(tf.string(from: time))
-        }
-        if let duration = viewModel.estimatedDuration {
-            parts.append(formatDuration(duration))
-        }
-        return parts.joined(separator: " · ")
+    private var durationButtonTitle: String {
+        guard let duration = viewModel.estimatedDuration else { return "Duration" }
+        return formatDuration(duration)
+    }
+
+    private var timeChipTitle: String {
+        guard viewModel.hasDueTime, let time = viewModel.dueTime else { return "" }
+        let tf = DateFormatter()
+        tf.dateFormat = "h:mm a"
+        return tf.string(from: time)
     }
 
     private var recurringDisplayTitle: String {

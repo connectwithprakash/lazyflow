@@ -14,7 +14,8 @@ struct AddTaskView: View {
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
 
     @State var showDatePicker = false
-    @State var showTimeBlockSheet = false
+    @State var showTimeSheet = false
+    @State var showDurationSheet = false
     @State var showListPicker = false
     @State var showAISuggestions = false
     @State var aiAnalysis: TaskAnalysis?
@@ -188,15 +189,18 @@ struct AddTaskView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
-            .sheet(isPresented: $showTimeBlockSheet) {
+            .sheet(isPresented: $showTimeSheet) {
                 TimeBlockSheet(
                     selectedDate: $viewModel.dueDate,
                     hasDate: $viewModel.hasDueDate,
                     selectedTime: $viewModel.dueTime,
-                    hasTime: $viewModel.hasDueTime,
-                    estimatedDuration: $viewModel.estimatedDuration
+                    hasTime: $viewModel.hasDueTime
                 )
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.height(380)])
+            }
+            .sheet(isPresented: $showDurationSheet) {
+                DurationPickerSheet(estimatedDuration: $viewModel.estimatedDuration)
+                    .presentationDetents([.height(380)])
             }
             .sheet(isPresented: $showListPicker) {
                 ListPickerSheet(
@@ -486,42 +490,27 @@ struct AddTaskView: View {
         return date.shortFormatted
     }
 
-    var timeBlockButtonTitle: String {
-        let hasTime = viewModel.hasDueTime
-        let hasDuration = viewModel.estimatedDuration != nil
+    var timeButtonTitle: String {
+        guard viewModel.hasDueTime, let time = viewModel.dueTime else { return "Time" }
+        let tf = DateFormatter()
+        tf.dateFormat = "h:mm a"
+        return tf.string(from: time)
+    }
 
-        if hasTime, let time = viewModel.dueTime, hasDuration, let duration = viewModel.estimatedDuration {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            return "\(tf.string(from: time)) · \(formatDuration(duration))"
-        } else if hasTime, let time = viewModel.dueTime {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            return tf.string(from: time)
-        } else if hasDuration, let duration = viewModel.estimatedDuration {
-            return formatDuration(duration)
-        }
-        return "Time Block"
+    var durationButtonTitle: String {
+        guard let duration = viewModel.estimatedDuration else { return "Duration" }
+        return formatDuration(duration)
     }
 
     func dateChipTitle(date: Date) -> String {
         return date.relativeFormatted
     }
 
-    var timeBlockChipTitle: String {
-        var parts: [String] = []
-        if viewModel.hasDueTime, let time = viewModel.dueTime {
-            let tf = DateFormatter()
-            tf.timeStyle = .short
-            tf.dateStyle = .none
-            parts.append(tf.string(from: time))
-        }
-        if let duration = viewModel.estimatedDuration {
-            parts.append(formatDuration(duration))
-        }
-        return parts.joined(separator: " · ")
+    var timeChipTitle: String {
+        guard viewModel.hasDueTime, let time = viewModel.dueTime else { return "" }
+        let tf = DateFormatter()
+        tf.dateFormat = "h:mm a"
+        return tf.string(from: time)
     }
 
     var selectedListName: String {
