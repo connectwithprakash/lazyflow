@@ -529,14 +529,28 @@ final class PrioritizationService {
 
         // Extract behavioral signals and pass as context (nil on cold start or no signals)
         let signals = BehavioralSignals.extract(from: suggestionFeedback, completionPatterns: completionPatterns)
-        let behaviorContext: String? = {
-            let prompt = signals.toPromptString()
-            return prompt.isEmpty ? nil : prompt
-        }()
+        let candidateTasks = Array(sortedTasks.prefix(10))
+        var contextParts: [String] = []
+
+        let behaviorPrompt = signals.toPromptString()
+        if !behaviorPrompt.isEmpty {
+            contextParts.append(behaviorPrompt)
+        }
+
+        // Relationship groups among the same candidates the LLM will order,
+        // so it can reason about clusters instead of isolated tasks (#152).
+        if FeatureFlags.shared.isEnabled(.aiRelationshipContext),
+           let groupsSection = TaskRelationshipGrouper.promptSection(
+               for: TaskRelationshipGrouper.groups(for: candidateTasks)
+           ) {
+            contextParts.append(groupsSection)
+        }
+
+        let behaviorContext = contextParts.isEmpty ? nil : contextParts.joined(separator: "\n\n")
 
         do {
             return try await llmService.suggestTaskOrder(
-                tasks: Array(sortedTasks.prefix(10)),
+                tasks: candidateTasks,
                 behaviorContext: behaviorContext
             )
         } catch {
