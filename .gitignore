@@ -68,3 +68,6 @@ Secrets.swift
 
 # Agent artifacts (contexts, eval workspaces, analysis)
 .agents/
+
+# graphify knowledge-graph outputs (generated)
+graphify-out/
