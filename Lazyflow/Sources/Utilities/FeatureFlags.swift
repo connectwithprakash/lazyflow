@@ -30,6 +30,7 @@ final class FeatureFlags {
         case aiSuggestPriority = "ai_suggest_priority"
         case aiTaskExtraction = "ai_task_extraction"
         case aiRelationshipContext = "ai_relationship_context"
+        case knowledgeGraph = "knowledge_graph"
 
         // Productivity Features
         case quickCapture = "quick_capture"
@@ -50,6 +51,7 @@ final class FeatureFlags {
             case .aiSuggestPriority: return "AI Priority Suggestion"
             case .aiTaskExtraction: return "AI Task Extraction"
             case .aiRelationshipContext: return "Related Task Context"
+            case .knowledgeGraph: return "Knowledge Graph"
             case .quickCapture: return "Quick Capture"
             case .focusMode: return "Focus Mode"
             case .morningBriefing: return "Morning Briefing"
@@ -66,6 +68,7 @@ final class FeatureFlags {
             case .aiSuggestPriority: return "AI-powered priority suggestions"
             case .aiTaskExtraction: return "Extract tasks from quick capture notes"
             case .aiRelationshipContext: return "Group related tasks to improve AI ordering"
+            case .knowledgeGraph: return "On-device knowledge graph for AI context (experimental)"
             case .quickCapture: return "Quick note capture from anywhere"
             case .focusMode: return "Focus timer and distraction blocking"
             case .morningBriefing: return "Morning task briefing card"
@@ -83,6 +86,7 @@ final class FeatureFlags {
             case .aiSuggestPriority: return true
             case .aiTaskExtraction: return true
             case .aiRelationshipContext: return true
+            case .knowledgeGraph: return false
             case .quickCapture: return true
             case .focusMode: return true
             case .morningBriefing: return true
@@ -96,7 +100,7 @@ final class FeatureFlags {
         var group: Group {
             switch self {
             case .aiAutoSuggest, .aiEstimateDuration, .aiSuggestPriority, .aiTaskExtraction,
-                 .aiRelationshipContext:
+                 .aiRelationshipContext, .knowledgeGraph:
                 return .ai
             case .quickCapture, .focusMode, .morningBriefing, .dailySummary:
                 return .productivity

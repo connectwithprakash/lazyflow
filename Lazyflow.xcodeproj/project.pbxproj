@@ -189,6 +189,7 @@
 		84AC41F31D9B77784C40FB43 /* LazyflowWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18A003B1DA91B6D86F47C66 /* LazyflowWidgetBundle.swift */; };
 		84B8434A509139E294E46570 /* QuickCaptureReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C593D14155E39D449C4ED82 /* QuickCaptureReviewView.swift */; };
 		84B9FAA6C2AA0387D83D18B1 /* DailySummaryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */; };
+		861DACE55C1BB797760EE959 /* KnowledgeGraphStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE82DDB4FFFA30E14FA2E5B /* KnowledgeGraphStoreTests.swift */; };
 		862913623CCD1F913F3387AE /* 0ed8d1c6357b7568eeab448f2ebd43082fab821885cf23d49c075e1687d32efe.json in Resources */ = {isa = PBXBuildFile; fileRef = FCE8C49B76D55819D0CA23E3 /* 0ed8d1c6357b7568eeab448f2ebd43082fab821885cf23d49c075e1687d32efe.json */; };
 		868C5108CBC9EEC25ABE4CE7 /* ListsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 868AB7877C9C7AEA584AECC2 /* ListsViewModel.swift */; };
 		86A0AC3E3919E04E9FDF644F /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5F1B6EE407FE23ABF6186B /* DependencyContainer.swift */; };
@@ -362,6 +363,7 @@
 		FDB75DF5451A8ADD902BE8BA /* caf695a87239800d3828f1022dea1862aef6687f3499460e27684b4121896ef0.json in Resources */ = {isa = PBXBuildFile; fileRef = 353B32B18DB8B455075EF002 /* caf695a87239800d3828f1022dea1862aef6687f3499460e27684b4121896ef0.json */; };
 		FDBA79D8DBD8BF2A00D21B44 /* d43e11d6246252dd5160fdc095fdd06860463527d1146f180df016c6e35510f2.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A5827F8CA9B92EA51761FD8 /* d43e11d6246252dd5160fdc095fdd06860463527d1146f180df016c6e35510f2.json */; };
 		FED75A36AB181F97B5562181 /* ExpandableTaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7093DE3C5A54912EB3A2FB18 /* ExpandableTaskRowView.swift */; };
+		FF33033CA9ED30CAC98D011C /* KnowledgeGraphStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB30938A6C231751E74AEE00 /* KnowledgeGraphStore.swift */; };
 		FF3BEAFF8FCAA50B0D8A4211 /* ef7874da36c1da4a33e0fbb310ac8fc8c4121a1a1f8e5f903f18ed0e620ab822.json in Resources */ = {isa = PBXBuildFile; fileRef = 4BC820C6A54E2C7330A22B6C /* ef7874da36c1da4a33e0fbb310ac8fc8c4121a1a1f8e5f903f18ed0e620ab822.json */; };
 		FF654F78B310DA4E37AFF9E7 /* QuickCaptureFAB.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B2205F92A5527BD1977DED /* QuickCaptureFAB.swift */; };
 		FFD3DC357E1ABB2FE5666857 /* 89a60ea42d371da0261104727848b29f10c2a920601bd179ce6803b92c72786a.json in Resources */ = {isa = PBXBuildFile; fileRef = A9342D1BCE975A8CFFB1DD45 /* 89a60ea42d371da0261104727848b29f10c2a920601bd179ce6803b92c72786a.json */; };
@@ -573,6 +575,7 @@
 		64ACDAAD27F979D21E30805C /* LazyflowCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LazyflowCore; path = Packages/LazyflowCore; sourceTree = SOURCE_ROOT; };
 		6508146124BEEA13D4445972 /* 2d1723f6dc97921b869e670407d5d5ab65309fc27d238f271b80ee747e168cf7.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2d1723f6dc97921b869e670407d5d5ab65309fc27d238f271b80ee747e168cf7.json; sourceTree = "<group>"; };
 		655421572BB2FCA6A8094E4E /* LLMReorderingIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMReorderingIntegrationTests.swift; sourceTree = "<group>"; };
+		66405A341353D381CABF0079 /* Lazyflow 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Lazyflow 4.xcdatamodel"; sourceTree = "<group>"; };
 		66D08236382AB86632220B7E /* LLMIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMIntegrationTests.swift; sourceTree = "<group>"; };
 		66D55925386E260C845EA898 /* 3a87e3ac6d690b97250f227c9b54f17717e5267392e129f979ab0eaf01c83462.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 3a87e3ac6d690b97250f227c9b54f17717e5267392e129f979ab0eaf01c83462.json; sourceTree = "<group>"; };
 		6740EC44C90C525D148ECBFE /* 61362b94843dab1c0f92e20352003faedcf9492450866588f22c6cb0366cc7de.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 61362b94843dab1c0f92e20352003faedcf9492450866588f22c6cb0366cc7de.json; sourceTree = "<group>"; };
@@ -730,6 +733,7 @@
 		DA16BF06E210FD7FAC2F0CDA /* 8a23f0cd0715a29993389e3dcd91db51b382ff22eec5abdbbab2d43f7920c4da.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 8a23f0cd0715a29993389e3dcd91db51b382ff22eec5abdbbab2d43f7920c4da.json; sourceTree = "<group>"; };
 		DA9F4849BDFD2A79CABE7D16 /* QuickCaptureReviewViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureReviewViewSnapshotTests.swift; sourceTree = "<group>"; };
 		DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
+		DB30938A6C231751E74AEE00 /* KnowledgeGraphStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeGraphStore.swift; sourceTree = "<group>"; };
 		DBFF1FDA982F9BF5DB6429C3 /* FocusSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionCoordinator.swift; sourceTree = "<group>"; };
 		DFA0BFF6611F312856ABF8C5 /* 311e653deb3c925ef0b8274dc3739fce599c7d6d9ba1dd8d16e20158067b7fdb.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 311e653deb3c925ef0b8274dc3739fce599c7d6d9ba1dd8d16e20158067b7fdb.json; sourceTree = "<group>"; };
 		DFCBA4358EB10FBC9F95046B /* 8bb822d8b29d558539b706658e5753b7ebe4a4500eab32072c923da404b4f43c.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 8bb822d8b29d558539b706658e5753b7ebe4a4500eab32072c923da404b4f43c.json; sourceTree = "<group>"; };
@@ -753,6 +757,7 @@
 		EC3D673360A0F1C8A502C1CC /* FeatureFlagsDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlagsDebugView.swift; sourceTree = "<group>"; };
 		ECAAAC76A8693B0402E639B2 /* ProductivitySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductivitySettingsView.swift; sourceTree = "<group>"; };
 		ED292EAF5D670D6FA673F256 /* 969ca9cf6b8b8c0d6c26e15003367a88d9adb78de0e6c3667526c327869fd850.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 969ca9cf6b8b8c0d6c26e15003367a88d9adb78de0e6c3667526c327869fd850.json; sourceTree = "<group>"; };
+		EDE82DDB4FFFA30E14FA2E5B /* KnowledgeGraphStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeGraphStoreTests.swift; sourceTree = "<group>"; };
 		EF02478F016D0699521A1F95 /* TimeProtectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProtectionService.swift; sourceTree = "<group>"; };
 		EF22BE7122E8943E7E2BD914 /* QuickCaptureSheetSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureSheetSnapshotTests.swift; sourceTree = "<group>"; };
 		EF88D5A45529A957D9EA88B9 /* SmartRescheduleServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleServiceTests.swift; sourceTree = "<group>"; };
@@ -1021,6 +1026,7 @@
 				513DDD161379E14998235D07 /* FocusModeIntegrationTests.swift */,
 				D7BAB12F3F0A16CCC1075A55 /* FocusSessionCoordinatorTests.swift */,
 				4682DC1EE1661DFC28274E38 /* HistoryViewModelTests.swift */,
+				EDE82DDB4FFFA30E14FA2E5B /* KnowledgeGraphStoreTests.swift */,
 				A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */,
 				B2F8B47155C202D2CA845026 /* ListsViewModelTests.swift */,
 				66D08236382AB86632220B7E /* LLMIntegrationTests.swift */,
@@ -1142,6 +1148,7 @@
 		82A66FCD5B9998987CCB991D /* AI */ = {
 			isa = PBXGroup;
 			children = (
+				F579EFAA0A4FB41C6698D6BD /* KnowledgeGraph */,
 				166F9BD804327CDD4977E7C1 /* LLM */,
 				766E1ADEBDA6F3C3BF445A09 /* AIContextService.swift */,
 				95F6607E1E65BF26BDD3899A /* AILearningService.swift */,
@@ -1316,6 +1323,14 @@
 				446E889579D11D455A18E0E1 /* WatchViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		F579EFAA0A4FB41C6698D6BD /* KnowledgeGraph */ = {
+			isa = PBXGroup;
+			children = (
+				DB30938A6C231751E74AEE00 /* KnowledgeGraphStore.swift */,
+			);
+			path = KnowledgeGraph;
 			sourceTree = "<group>";
 		};
 		F8394D3B9C096A7CB7219A59 /* cache */ = {
@@ -1928,6 +1943,7 @@
 				3F7589E52ADEFEEE43965DF7 /* FocusSessionCoordinatorTests.swift in Sources */,
 				58C6FD0390CB9AF1C9FFA86E /* GeneralSettingsSnapshotTests.swift in Sources */,
 				A1920639E96CE06499173246 /* HistoryViewModelTests.swift in Sources */,
+				861DACE55C1BB797760EE959 /* KnowledgeGraphStoreTests.swift in Sources */,
 				1A794F33E3F2F1436A5C1690 /* LLMIntegrationTests.swift in Sources */,
 				3879FECEFBD045E1B7BC52A7 /* LLMReorderingIntegrationTests.swift in Sources */,
 				5F8F6BF656CD0FFF7EED1FEA /* LLMReorderingTests.swift in Sources */,
@@ -2042,6 +2058,7 @@
 				A58EA91216CC9AA0D8F7D20B /* HistoryView.swift in Sources */,
 				171B64FBCE3DA50E04986691 /* HistoryViewModel.swift in Sources */,
 				C7FD2D27BF3309A6627092DA /* InsightsView.swift in Sources */,
+				FF33033CA9ED30CAC98D011C /* KnowledgeGraphStore.swift in Sources */,
 				06F5CEF222A90606174956F9 /* LLMProvider.swift in Sources */,
 				7B9D81831C2E2CB388575266 /* LLMService.swift in Sources */,
 				D2AF813DDBF6AC6A742B367A /* LLMServiceProtocol.swift in Sources */,
@@ -2590,9 +2607,10 @@
 			children = (
 				F5AFFDDD49FBA474AFF7B535 /* Lazyflow 2.xcdatamodel */,
 				41B660391E9F4F54B3BD0799 /* Lazyflow 3.xcdatamodel */,
+				66405A341353D381CABF0079 /* Lazyflow 4.xcdatamodel */,
 				96B4790C4DFDF82098E35533 /* Lazyflow.xcdatamodel */,
 			);
-			currentVersion = 41B660391E9F4F54B3BD0799 /* Lazyflow 3.xcdatamodel */;
+			currentVersion = 66405A341353D381CABF0079 /* Lazyflow 4.xcdatamodel */;
 			path = Lazyflow.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
