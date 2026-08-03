@@ -154,12 +154,12 @@ final class KnowledgeGraphIngestionService {
             // 2. Pairwise co-occurrence edges (deterministic order, capped)
             let sortedKeys = keys.sorted()
             var pairCount = 0
-            outer: for i in 0..<sortedKeys.count {
-                for j in (i + 1)..<sortedKeys.count {
+            outer: for firstIndex in 0..<sortedKeys.count {
+                for secondIndex in (firstIndex + 1)..<sortedKeys.count {
                     guard pairCount < Self.maxCoOccurrencePairs else { break outer }
                     _ = try await store.upsertEdge(
-                        sourceKey: sortedKeys[i],
-                        targetKey: sortedKeys[j],
+                        sourceKey: sortedKeys[firstIndex],
+                        targetKey: sortedKeys[secondIndex],
                         relation: .coOccursWith,
                         at: date
                     )
