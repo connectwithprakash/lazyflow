@@ -69,6 +69,11 @@ final class KnowledgeGraphIngestionService {
     /// Cap on tasks ingested during backfill
     static let backfillTaskLimit = 200
 
+    /// Guards against concurrent backfills (launch hook racing the settings
+    /// toggle). Evidence dedup makes overlap harmless for correctness, but
+    /// running twice is still wasted work.
+    private var isBackfilling = false
+
     /// One-time backfill of recent existing tasks after the user enables the
     /// feature. Guarded by a UserDefaults marker; safe to call on every launch.
     func backfillIfNeeded(now: Date = Date()) async {
@@ -81,6 +86,12 @@ final class KnowledgeGraphIngestionService {
             Logger.ai.debug("KG: backfill skipped — already completed")
             return
         }
+        guard !isBackfilling else {
+            Logger.ai.debug("KG: backfill skipped — already running")
+            return
+        }
+        isBackfilling = true
+        defer { isBackfilling = false }
 
         await backfill(tasks: TaskService.shared.tasks, now: now)
         UserDefaults.standard.set(true, forKey: marker)
@@ -104,8 +115,11 @@ final class KnowledgeGraphIngestionService {
 
     /// Drop provenance rows for a deleted task. Nodes and edges stay —
     /// recency weighting handles staleness; deletion doesn't rewrite history.
+    ///
+    /// Deliberately NOT gated on `isEnabled`: cleanup of past ingestion must
+    /// run even after the user turns the feature off, or deleted tasks'
+    /// snippets would be retained for a feature they opted out of.
     func removeEvidence(forTaskID taskID: UUID) async {
-        guard isEnabled() else { return }
         do {
             try await store.deleteEvidence(forTaskID: taskID)
         } catch {
@@ -122,19 +136,42 @@ final class KnowledgeGraphIngestionService {
         categoryName: String?,
         at date: Date
     ) async {
-        let entities = EntityExtractionService.extract(
-            from: text,
-            knownProjects: knownProjects(),
-            knownTopics: knownTopics()
-        )
+        // Extraction is CPU-bound NLP — keep it off the main actor
+        let projects = knownProjects()
+        let topics = knownTopics()
+        let entities = await _Concurrency.Task.detached(priority: .utility) {
+            EntityExtractionService.extract(from: text, knownProjects: projects, knownTopics: topics)
+        }.value
         guard !entities.isEmpty else { return }
 
         let snippet = String(text.prefix(120))
 
         do {
-            // 1. Upsert entity nodes + evidence
+            // Each source (task/note) may credit a node or edge only ONCE —
+            // otherwise every updateTask (completion toggles, drags, calendar
+            // syncs) inflates counts/weights and grows evidence without bound.
+            // This also makes backfill and re-ingestion idempotent.
+            let priorEvidence: [KnowledgeEvidence]
+            if let sourceTaskID {
+                priorEvidence = try await store.evidence(forTaskID: sourceTaskID)
+            } else if let sourceNoteID {
+                priorEvidence = try await store.evidence(forNoteID: sourceNoteID)
+            } else {
+                priorEvidence = []
+            }
+            let creditedNodeIDs = Set(priorEvidence.compactMap(\.nodeID))
+            let creditedEdgeIDs = Set(priorEvidence.compactMap(\.edgeID))
+            var wroteAnything = false
+
+            // 1. Upsert entity nodes + evidence (skip nodes this source already credited)
             var keys: [String] = []
             for entity in entities {
+                let key = KnowledgeKey.normalize(entity.name)
+                if let existing = try await store.node(forKey: key),
+                   creditedNodeIDs.contains(existing.id) {
+                    keys.append(existing.normalizedKey)
+                    continue
+                }
                 let node = try await store.upsertNode(
                     displayName: entity.name,
                     type: entity.type,
@@ -149,48 +186,99 @@ final class KnowledgeGraphIngestionService {
                     snippet: snippet,
                     at: date
                 )
+                wroteAnything = true
             }
 
-            // 2. Pairwise co-occurrence edges (deterministic order, capped)
+            // 2. Pairwise co-occurrence edges (deterministic order, capped,
+            //    each pair credited once per source)
             let sortedKeys = keys.sorted()
             var pairCount = 0
             outer: for firstIndex in 0..<sortedKeys.count {
                 for secondIndex in (firstIndex + 1)..<sortedKeys.count {
                     guard pairCount < Self.maxCoOccurrencePairs else { break outer }
-                    _ = try await store.upsertEdge(
+                    pairCount += 1
+                    let reinforced = try await reinforceEdge(
                         sourceKey: sortedKeys[firstIndex],
                         targetKey: sortedKeys[secondIndex],
                         relation: .coOccursWith,
+                        creditedEdgeIDs: creditedEdgeIDs,
+                        sourceTaskID: sourceTaskID,
+                        sourceNoteID: sourceNoteID,
                         at: date
                     )
-                    pairCount += 1
+                    wroteAnything = wroteAnything || reinforced
                 }
             }
 
             // 3. Category as a topic node, entities belong to it
             if let categoryName {
-                let categoryNode = try await store.upsertNode(
-                    displayName: categoryName,
-                    type: .topic,
-                    confidence: 1.0,
-                    at: date
-                )
+                let categoryKey = KnowledgeKey.normalize(categoryName)
+                let categoryCredited = try await store.node(forKey: categoryKey)
+                    .map { creditedNodeIDs.contains($0.id) } ?? false
+                let categoryNode: KnowledgeNode
+                if categoryCredited, let existing = try await store.node(forKey: categoryKey) {
+                    categoryNode = existing
+                } else {
+                    categoryNode = try await store.upsertNode(
+                        displayName: categoryName,
+                        type: .topic,
+                        confidence: 1.0,
+                        at: date
+                    )
+                    wroteAnything = true
+                }
                 for key in sortedKeys where key != categoryNode.normalizedKey {
-                    _ = try await store.upsertEdge(
+                    let reinforced = try await reinforceEdge(
                         sourceKey: key,
                         targetKey: categoryNode.normalizedKey,
                         relation: .belongsTo,
+                        creditedEdgeIDs: creditedEdgeIDs,
+                        sourceTaskID: sourceTaskID,
+                        sourceNoteID: sourceNoteID,
                         at: date
                     )
+                    wroteAnything = wroteAnything || reinforced
                 }
             }
 
             // New facts invalidate the retrieval snapshot
-            GraphRetrievalService.shared.invalidate()
-
-            Logger.ai.debug("KG: ingested \(entities.count) entities from \(sourceTaskID != nil ? "task" : "note")")
+            if wroteAnything {
+                GraphRetrievalService.shared.invalidate()
+                Logger.ai.debug("KG: ingested \(entities.count) entities from \(sourceTaskID != nil ? "task" : "note")")
+            }
         } catch {
             Logger.ai.error("KG: ingestion failed: \(error)")
         }
+    }
+
+    /// Upsert an edge and record edge evidence — unless this source already
+    /// credited the edge. Returns true when a write happened.
+    private func reinforceEdge(
+        sourceKey: String,
+        targetKey: String,
+        relation: KnowledgeRelationType,
+        creditedEdgeIDs: Set<UUID>,
+        sourceTaskID: UUID?,
+        sourceNoteID: UUID?,
+        at date: Date
+    ) async throws -> Bool {
+        let edgeKey = KnowledgeKey.edgeKey(source: sourceKey, relation: relation, target: targetKey)
+        if let existing = try await store.edge(forKey: edgeKey),
+           creditedEdgeIDs.contains(existing.id) {
+            return false
+        }
+        let edge = try await store.upsertEdge(
+            sourceKey: sourceKey,
+            targetKey: targetKey,
+            relation: relation,
+            at: date
+        )
+        _ = try await store.addEvidence(
+            edgeID: edge.id,
+            sourceTaskID: sourceTaskID,
+            sourceNoteID: sourceNoteID,
+            at: date
+        )
+        return true
     }
 }

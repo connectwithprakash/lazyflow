@@ -927,6 +927,11 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
             try? FileManager.default.removeItem(at: ckAssetsURL)
         }
 
+        // The knowledge graph store is local-only — unlike user data it cannot
+        // re-download from CloudKit. Reset the backfill marker so the graph
+        // rebuilds from the re-synced tasks instead of staying empty forever.
+        UserDefaults.standard.removeObject(forKey: AppConstants.StorageKey.knowledgeGraphBackfillDone)
+
         // Re-add the stores with the same descriptions (preserves CloudKit options)
         let semaphore = DispatchSemaphore(value: 0)
         var loadError: Error?

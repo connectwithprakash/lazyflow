@@ -352,12 +352,23 @@ final class DailySummaryService {
 
     /// Knowledge-graph context seeded from task titles (#152). Nil unless the
     /// flag is enabled and the graph knows something relevant — fail-open.
+    /// Seeds include the user's list/category names, which NLTagger alone
+    /// misses in short lowercase titles.
     private func knowledgeGraphContext(seedText: String) async -> String? {
-        guard await MainActor.run(body: { KnowledgeGraphIngestionService.isActive }) else {
-            return nil
+        let gate: (active: Bool, projects: [String], topics: [String]) = await MainActor.run {
+            (
+                KnowledgeGraphIngestionService.isActive,
+                TaskListService.shared.lists.map(\.name),
+                CategoryService.shared.categories.map(\.name)
+            )
         }
+        guard gate.active else { return nil }
         await GraphRetrievalService.shared.refreshIfStale()
-        return GraphRetrievalService.shared.contextSection(for: seedText)
+        return GraphRetrievalService.shared.contextSection(
+            for: seedText,
+            knownProjects: gate.projects,
+            knownTopics: gate.topics
+        )
     }
 
     /// Build context string respecting token budget, prioritizing higher-priority sections

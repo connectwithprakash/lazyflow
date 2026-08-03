@@ -17,7 +17,16 @@ class SnapshotTestCase: XCTestCase {
 
     /// Wraps every test in `withSnapshotTesting` so the record mode applies
     /// to all assertions. Set `SNAPSHOT_RECORD=true` env var to re-record.
+    ///
+    /// Also resets the app's persisted UserDefaults first: snapshot fixtures
+    /// render views that read real defaults (theme, toggles), and UI test
+    /// runs on the same simulator leave arbitrary values behind (e.g. an
+    /// appearance test persisting Theme=Dark). Without the reset, snapshot
+    /// results depend on whichever test suite ran last.
     override func invokeTest() {
+        if let bundleID = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleID)
+        }
         let record: SnapshotTestingConfiguration.Record =
             ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "true" ? .all : .missing
         withSnapshotTesting(record: record) {

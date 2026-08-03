@@ -139,6 +139,79 @@ final class KnowledgeGraphIngestionServiceTests: XCTestCase {
         XCTAssertEqual(counts.nodes, 0)
     }
 
+    // MARK: - Re-ingestion Dedup (adversarial review B3)
+
+    func testReingestSameTask_DoesNotInflateCountsOrEvidence() async throws {
+        let target = task("Meet Sarah Johnson at Microsoft")
+
+        await service.ingest(task: target)
+        await service.ingest(task: target) // e.g. completion toggle re-fires updateTask
+        await service.ingest(task: target) // e.g. calendar sync re-fires updateTask
+
+        let nodes = try await store.fetchAllNodes()
+        let microsoft = try XCTUnwrap(nodes.first { $0.normalizedKey == "microsoft" })
+        XCTAssertEqual(microsoft.mentionCount, 1, "Same source must credit a node once")
+
+        let edges = try await store.fetchAllEdges()
+        XCTAssertEqual(edges.count, 1)
+        XCTAssertEqual(edges[0].weight, 1, accuracy: 0.0001, "Same source must credit an edge once")
+
+        let evidence = try await store.evidence(forTaskID: target.id)
+        // One row per node + one per edge — not multiplied by re-ingestions
+        XCTAssertEqual(evidence.count, 3)
+    }
+
+    func testDistinctTasks_StillReinforce() async throws {
+        await service.ingest(task: task("Send the invoice to Microsoft"))
+        await service.ingest(task: task("Send the contract to Microsoft"))
+
+        let nodes = try await store.fetchAllNodes()
+        let microsoft = try XCTUnwrap(nodes.first { $0.normalizedKey == "microsoft" })
+        XCTAssertEqual(microsoft.mentionCount, 2, "Distinct sources must each credit the node")
+    }
+
+    // MARK: - Evidence Cleanup (adversarial review B4)
+
+    func testRemoveEvidence_WorksEvenWhenFeatureDisabled() async throws {
+        let target = task("Send the invoice to Microsoft")
+        await service.ingest(task: target)
+
+        // User turns the feature off, THEN deletes the task
+        let disabled = KnowledgeGraphIngestionService(
+            store: store,
+            isEnabled: { false },
+            knownProjects: { [] },
+            knownTopics: { [] }
+        )
+        await disabled.removeEvidence(forTaskID: target.id)
+
+        let remaining = try await store.evidence(forTaskID: target.id)
+        XCTAssertTrue(remaining.isEmpty, "Cleanup must not be gated on the feature toggle")
+    }
+
+    // MARK: - Backfill Recency (adversarial review B2)
+
+    func testBackfill_NewestFirstOrder_KeepsNewestLastSeenAt() async throws {
+        let now = Date()
+        let old = now.addingTimeInterval(-40 * 86_400)
+        let fresh = LazyflowCore.Task(title: "Send the invoice to Microsoft", createdAt: now, updatedAt: now)
+        let stale = LazyflowCore.Task(title: "Send the contract to Microsoft", createdAt: old, updatedAt: old)
+
+        // Backfill ingests newest-first — lastSeenAt must not regress to `old`
+        await service.backfill(tasks: [fresh, stale], now: now)
+
+        let nodes = try await store.fetchAllNodes()
+        let microsoft = try XCTUnwrap(nodes.first { $0.normalizedKey == "microsoft" })
+        XCTAssertEqual(
+            microsoft.lastSeenAt.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 1,
+            "lastSeenAt must keep the newest mention, not the last-ingested one"
+        )
+        XCTAssertEqual(
+            microsoft.firstSeenAt.timeIntervalSince1970, old.timeIntervalSince1970, accuracy: 1,
+            "firstSeenAt must keep the oldest mention"
+        )
+    }
+
     // MARK: - Backfill
 
     func testBackfill_IngestsOnlyRecentTasks() async throws {

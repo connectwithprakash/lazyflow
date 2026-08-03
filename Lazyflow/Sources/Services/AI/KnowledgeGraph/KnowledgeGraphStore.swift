@@ -45,7 +45,10 @@ final class KnowledgeGraphStore: @unchecked Sendable {
                 ?? Self.makeNodeEntity(key: key, displayName: displayName, type: type, date: date, in: context)
 
             entity.mentionCount += 1
-            entity.lastSeenAt = date
+            // Monotonic timestamps: out-of-order ingestion (backfill runs
+            // newest-first) must never regress recency or advance first-seen
+            entity.lastSeenAt = max(entity.lastSeenAt ?? .distantPast, date)
+            entity.firstSeenAt = min(entity.firstSeenAt ?? .distantFuture, date)
             entity.salience += salienceBoost
             entity.confidence = max(entity.confidence, confidence)
 
@@ -116,13 +119,21 @@ final class KnowledgeGraphStore: @unchecked Sendable {
             entity.evidenceCount += 1
             entity.weight += weightDelta
             entity.confidence = max(entity.confidence, confidence)
-            entity.lastSeenAt = date
+            // Monotonic (see upsertNode): backfill ingests newest-first
+            entity.lastSeenAt = max(entity.lastSeenAt ?? .distantPast, date)
 
             try context.save()
             guard let edge = Self.domainEdge(from: entity) else {
                 throw KnowledgeGraphStoreError.missingEndpoint(edgeKey)
             }
             return edge
+        }
+    }
+
+    /// Fetch a single edge by its deterministic edge key
+    func edge(forKey key: String) async throws -> KnowledgeEdge? {
+        try await context.perform { [context] in
+            try Self.fetchEdgeEntity(forKey: key, in: context).flatMap(Self.domainEdge(from:))
         }
     }
 
@@ -175,6 +186,15 @@ final class KnowledgeGraphStore: @unchecked Sendable {
         try await context.perform { [context] in
             let request = KnowledgeEvidenceEntity.fetchRequest()
             request.predicate = NSPredicate(format: "sourceTaskID == %@", taskID as CVarArg)
+            return try context.fetch(request).map(Self.domainEvidence(from:))
+        }
+    }
+
+    /// Evidence recorded for a given source note
+    func evidence(forNoteID noteID: UUID) async throws -> [KnowledgeEvidence] {
+        try await context.perform { [context] in
+            let request = KnowledgeEvidenceEntity.fetchRequest()
+            request.predicate = NSPredicate(format: "sourceNoteID == %@", noteID as CVarArg)
             return try context.fetch(request).map(Self.domainEvidence(from:))
         }
     }

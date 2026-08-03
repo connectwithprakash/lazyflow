@@ -71,6 +71,22 @@ final class GraphRetrievalServiceTests: XCTestCase {
         }
     }
 
+    // Adversarial review B1: lowercase short titles defeat NLTagger; the
+    // user's own list/category names must seed retrieval
+    func testContextSection_LowercaseTitleSeededByKnownProjectName() async throws {
+        _ = try await store.upsertNode(displayName: "Acme", type: .project)
+        _ = try await store.upsertNode(displayName: "Sarah Johnson", type: .person)
+        _ = try await store.upsertEdge(sourceKey: "acme", targetKey: "johnson sarah", relation: .coOccursWith)
+        await retrieval.refresh()
+
+        // NLTagger finds nothing in this title...
+        XCTAssertNil(retrieval.contextSection(for: "update acme deck"))
+        // ...but the gazetteer does
+        let section = retrieval.contextSection(for: "update acme deck", knownProjects: ["Acme"])
+        XCTAssertNotNil(section)
+        XCTAssertTrue(try XCTUnwrap(section).contains("Sarah Johnson"))
+    }
+
     func testRefreshIfStale_PicksUpNewData() async throws {
         await retrieval.refresh()
         XCTAssertNil(retrieval.contextSection(for: "Send the invoice to Microsoft"))

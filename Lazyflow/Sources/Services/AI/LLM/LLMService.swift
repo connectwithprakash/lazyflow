@@ -184,26 +184,37 @@ final class LLMService: LLMServiceProtocol {
 
     /// Get complete analysis for a task
     func analyzeTask(_ task: Task) async throws -> TaskAnalysis {
-        var prompt = buildFullAnalysisPrompt(task: task)
-
-        // Knowledge-graph context for entities in this task (#152, fail-open)
-        if let graphSection = await Self.knowledgeGraphSection(for: task) {
-            prompt += "\n\n" + graphSection
-        }
+        // Knowledge-graph context for entities in this task (#152, fail-open).
+        // Injected via learningContext so it lands with the other context,
+        // BEFORE the few-shot examples — appending after them would place it
+        // where the model expects to start responding.
+        let graphSection = await Self.knowledgeGraphSection(for: task)
+        let prompt = buildFullAnalysisPrompt(task: task, graphContext: graphSection)
 
         let response = try await sendRequest(prompt: prompt)
         return parseFullAnalysisResponse(response)
     }
 
     /// Graph context for a task's entities, nil unless the flag is on and
-    /// the graph knows something relevant
+    /// the graph knows something relevant. Seeds the retrieval with the
+    /// user's own list/category names — NLTagger alone misses the lowercase,
+    /// short titles those names appear in.
     private static func knowledgeGraphSection(for task: Task) async -> String? {
-        guard await MainActor.run(body: { KnowledgeGraphIngestionService.isActive }) else {
-            return nil
+        let gate: (active: Bool, projects: [String], topics: [String]) = await MainActor.run {
+            (
+                KnowledgeGraphIngestionService.isActive,
+                TaskListService.shared.lists.map(\.name),
+                CategoryService.shared.categories.map(\.name)
+            )
         }
+        guard gate.active else { return nil }
         await GraphRetrievalService.shared.refreshIfStale()
         let text = [task.title, task.notes ?? ""].joined(separator: "\n")
-        return GraphRetrievalService.shared.contextSection(for: text)
+        return GraphRetrievalService.shared.contextSection(
+            for: text,
+            knownProjects: gate.projects,
+            knownTopics: gate.topics
+        )
     }
 
     // MARK: - Raw Completion
@@ -252,13 +263,18 @@ final class LLMService: LLMServiceProtocol {
         return PromptTemplates.buildTaskOrderingPrompt(tasks: taskData, userBehaviorContext: behaviorContext)
     }
 
-    private func buildFullAnalysisPrompt(task: Task) -> String {
+    private func buildFullAnalysisPrompt(task: Task, graphContext: String? = nil) -> String {
         // Get unified context from AIContextService
         let context = AIContextService.shared.buildContext(for: task)
 
+        var learningContext = context.toPromptString()
+        if let graphContext, !graphContext.isEmpty {
+            learningContext += "\n\n" + graphContext
+        }
+
         return PromptTemplates.buildFullAnalysisPrompt(
             task: task,
-            learningContext: context.toPromptString(),
+            learningContext: learningContext,
             customCategories: context.customCategories
         )
     }
