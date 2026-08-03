@@ -546,6 +546,15 @@ final class PrioritizationService {
             contextParts.append(groupsSection)
         }
 
+        // Persistent knowledge-graph context seeded from the candidates (#152)
+        if FeatureFlags.shared.isEnabled(.knowledgeGraph) {
+            await GraphRetrievalService.shared.refreshIfStale()
+            let combinedTitles = candidateTasks.map(\.title).joined(separator: "\n")
+            if let graphSection = GraphRetrievalService.shared.contextSection(for: combinedTitles) {
+                contextParts.append(graphSection)
+            }
+        }
+
         let behaviorContext = contextParts.isEmpty ? nil : contextParts.joined(separator: "\n\n")
 
         do {

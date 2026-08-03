@@ -184,9 +184,26 @@ final class LLMService: LLMServiceProtocol {
 
     /// Get complete analysis for a task
     func analyzeTask(_ task: Task) async throws -> TaskAnalysis {
-        let prompt = buildFullAnalysisPrompt(task: task)
+        var prompt = buildFullAnalysisPrompt(task: task)
+
+        // Knowledge-graph context for entities in this task (#152, fail-open)
+        if let graphSection = await Self.knowledgeGraphSection(for: task) {
+            prompt += "\n\n" + graphSection
+        }
+
         let response = try await sendRequest(prompt: prompt)
         return parseFullAnalysisResponse(response)
+    }
+
+    /// Graph context for a task's entities, nil unless the flag is on and
+    /// the graph knows something relevant
+    private static func knowledgeGraphSection(for task: Task) async -> String? {
+        guard await MainActor.run(body: { FeatureFlags.shared.isEnabled(.knowledgeGraph) }) else {
+            return nil
+        }
+        await GraphRetrievalService.shared.refreshIfStale()
+        let text = [task.title, task.notes ?? ""].joined(separator: "\n")
+        return GraphRetrievalService.shared.contextSection(for: text)
     }
 
     // MARK: - Raw Completion

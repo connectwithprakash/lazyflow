@@ -137,6 +137,9 @@ final class KnowledgeGraphIngestionService {
                 }
             }
 
+            // New facts invalidate the retrieval snapshot
+            GraphRetrievalService.shared.invalidate()
+
             Logger.ai.debug("KG: ingested \(entities.count) entities from \(sourceTaskID != nil ? "task" : "note")")
         } catch {
             Logger.ai.error("KG: ingestion failed: \(error)")

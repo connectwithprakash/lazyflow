@@ -158,7 +158,10 @@ final class DailySummaryService {
             .map { "- \($0.title) (\($0.category.displayName))" }
             .joined(separator: "\n")
 
-        let enrichedContext = buildEnrichedAIContext(for: .dailySummary)
+        let graphContext = await knowledgeGraphContext(
+            seedText: data.completedTasks.map(\.title).joined(separator: "\n")
+        )
+        let enrichedContext = buildEnrichedAIContext(for: .dailySummary, graphContext: graphContext)
 
         // Detect first-day user (no previous productive days)
         let isFirstDay = streakData.totalProductiveDays == 0 && streakData.lastProductiveDate == nil
@@ -278,8 +281,13 @@ final class DailySummaryService {
     /// Build enriched AI context from user learning data for prompt injection
     /// - Parameter type: The type of prompt (daily summary or morning briefing)
     /// - Returns: Context string clamped to token budget, or empty if insufficient quality
-    func buildEnrichedAIContext(for type: AIPromptContextType) -> String {
+    func buildEnrichedAIContext(for type: AIPromptContextType, graphContext: String? = nil) -> String {
         var sections: [(priority: Int, content: String)] = []
+
+        // Priority 4: knowledge-graph connections (computed at async call sites, #152)
+        if let graphContext, !graphContext.isEmpty {
+            sections.append((4, graphContext))
+        }
 
         // Prioritize sections based on context type:
         // - Morning briefing: duration accuracy is more important (planning the day ahead)
@@ -340,6 +348,16 @@ final class DailySummaryService {
 
         // Build final context with token budget
         return buildContextWithBudget(sections: sections)
+    }
+
+    /// Knowledge-graph context seeded from task titles (#152). Nil unless the
+    /// flag is enabled and the graph knows something relevant — fail-open.
+    private func knowledgeGraphContext(seedText: String) async -> String? {
+        guard await MainActor.run(body: { FeatureFlags.shared.isEnabled(.knowledgeGraph) }) else {
+            return nil
+        }
+        await GraphRetrievalService.shared.refreshIfStale()
+        return GraphRetrievalService.shared.contextSection(for: seedText)
     }
 
     /// Build context string respecting token budget, prioritizing higher-priority sections
@@ -991,7 +1009,10 @@ final class DailySummaryService {
             scheduleContext = scheduleLines.joined(separator: "\n")
         }
 
-        let enrichedContext = buildEnrichedAIContext(for: .morningBriefing)
+        let graphContext = await knowledgeGraphContext(
+            seedText: data.todayTasks.map(\.title).joined(separator: "\n")
+        )
+        let enrichedContext = buildEnrichedAIContext(for: .morningBriefing, graphContext: graphContext)
 
         // Detect first-day user (no previous productive days)
         let isFirstDay = streakData.totalProductiveDays == 0 && streakData.lastProductiveDate == nil
