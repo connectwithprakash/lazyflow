@@ -1208,6 +1208,23 @@ When `UIAccessibility.isReduceMotionEnabled`:
 
 ---
 
+## Knowledge Graph (v1.11+)
+
+### Enabling
+1. Me tab → Settings → AI → **Experimental** section
+2. Toggle **Knowledge Graph** on
+3. A one-time background backfill ingests the last 90 days of tasks (bounded to 200)
+4. From then on, saving a task or quick note extracts people/organizations/places plus the user's own list/category names into the on-device graph
+
+### Effect
+- AI task ordering, task analysis, Daily Summary, and Morning Briefing prompts gain a "Known connections" section when the graph has relevant context
+- Everything is processed and stored on-device (`Lazyflow-Graph.sqlite`, never synced)
+
+### Resetting
+1. Me tab → Settings → Data & About → Danger Zone → **Reset Knowledge Graph**
+2. Confirmation alert explains tasks are unaffected
+3. Graph is wiped; backfill re-runs next time the feature is enabled
+
 ## Version History
 
 See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.
