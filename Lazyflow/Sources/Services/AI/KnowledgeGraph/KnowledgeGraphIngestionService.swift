@@ -46,19 +46,48 @@ final class KnowledgeGraphIngestionService {
 
     // MARK: - Ingestion
 
+    /// Serializes ingestion: the per-source dedup is a read-check-write
+    /// sequence across multiple store operations, which is only safe when
+    /// ingests run one at a time. Concurrent fire-and-forget hooks (rapid
+    /// updateTask calls, calendar sync fan-out) chain here instead of racing.
+    private var ingestionChain: _Concurrency.Task<Void, Never>?
+
     /// Ingest a task's title and notes into the graph
     func ingest(task: Task, at date: Date = Date()) async {
         guard isEnabled() else { return }
 
         let text = [task.title, task.notes ?? ""].joined(separator: "\n")
         let categoryName = task.category == .uncategorized ? nil : task.category.displayName
-        await ingest(text: text, sourceTaskID: task.id, sourceNoteID: nil, categoryName: categoryName, at: date)
+        await enqueueIngest(text: text, sourceTaskID: task.id, sourceNoteID: nil, categoryName: categoryName, at: date)
     }
 
     /// Ingest a quick note's text into the graph
     func ingest(note: QuickNote, at date: Date = Date()) async {
         guard isEnabled() else { return }
-        await ingest(text: note.text, sourceTaskID: nil, sourceNoteID: note.id, categoryName: nil, at: date)
+        await enqueueIngest(text: note.text, sourceTaskID: nil, sourceNoteID: note.id, categoryName: nil, at: date)
+    }
+
+    /// Run one ingest after all previously enqueued ones have finished
+    private func enqueueIngest(
+        text: String,
+        sourceTaskID: UUID?,
+        sourceNoteID: UUID?,
+        categoryName: String?,
+        at date: Date
+    ) async {
+        let previous = ingestionChain
+        let task = _Concurrency.Task { @MainActor [weak self] in
+            await previous?.value
+            await self?.ingest(
+                text: text,
+                sourceTaskID: sourceTaskID,
+                sourceNoteID: sourceNoteID,
+                categoryName: categoryName,
+                at: date
+            )
+        }
+        ingestionChain = task
+        await task.value
     }
 
     // MARK: - Backfill
@@ -93,7 +122,17 @@ final class KnowledgeGraphIngestionService {
         isBackfilling = true
         defer { isBackfilling = false }
 
-        await backfill(tasks: TaskService.shared.tasks, now: now)
+        let tasks = TaskService.shared.tasks
+        await backfill(tasks: tasks, now: now)
+
+        // Only mark complete when there was something to process — a launch
+        // racing initial CloudKit sync can see an empty task list, and must
+        // not permanently record an empty backfill as done. (Re-running a
+        // trivial backfill until tasks exist is cheap and idempotent.)
+        guard !tasks.isEmpty else {
+            Logger.ai.debug("KG: backfill deferred — no tasks loaded yet")
+            return
+        }
         UserDefaults.standard.set(true, forKey: marker)
         Logger.ai.info("KG: backfill completed")
     }
@@ -213,16 +252,24 @@ final class KnowledgeGraphIngestionService {
             // 3. Category as a topic node, entities belong to it
             if let categoryName {
                 let categoryKey = KnowledgeKey.normalize(categoryName)
-                let categoryCredited = try await store.node(forKey: categoryKey)
-                    .map { creditedNodeIDs.contains($0.id) } ?? false
+                let existingCategory = try await store.node(forKey: categoryKey)
                 let categoryNode: KnowledgeNode
-                if categoryCredited, let existing = try await store.node(forKey: categoryKey) {
-                    categoryNode = existing
+                if let existingCategory, creditedNodeIDs.contains(existingCategory.id) {
+                    categoryNode = existingCategory
                 } else {
                     categoryNode = try await store.upsertNode(
                         displayName: categoryName,
                         type: .topic,
                         confidence: 1.0,
+                        at: date
+                    )
+                    // Evidence for the category node too — without it the
+                    // credited check above never fires and the node inflates
+                    // on every re-ingest of the same task
+                    _ = try await store.addEvidence(
+                        nodeID: categoryNode.id,
+                        sourceTaskID: sourceTaskID,
+                        sourceNoteID: sourceNoteID,
                         at: date
                     )
                     wroteAnything = true

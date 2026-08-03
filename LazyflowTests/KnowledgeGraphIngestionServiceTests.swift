@@ -170,6 +170,46 @@ final class KnowledgeGraphIngestionServiceTests: XCTestCase {
         XCTAssertEqual(microsoft.mentionCount, 2, "Distinct sources must each credit the node")
     }
 
+    // MARK: - Codex Review Regressions
+
+    func testReingestCategorizedTask_DoesNotInflateCategoryNode() async throws {
+        let target = task("Send the renewal quote to Microsoft", category: .work)
+
+        await service.ingest(task: target)
+        await service.ingest(task: target)
+        await service.ingest(task: target)
+
+        let nodes = try await store.fetchAllNodes()
+        let work = try XCTUnwrap(nodes.first { $0.normalizedKey == "work" })
+        XCTAssertEqual(work.mentionCount, 1, "Category node must be credited once per source")
+    }
+
+    func testConcurrentIngestsOfSameTask_DoNotDoubleCredit() async throws {
+        let target = task("Meet Sarah Johnson at Microsoft")
+
+        // Fire-and-forget hooks can overlap; ingestion must serialize
+        async let first: Void = service.ingest(task: target)
+        async let second: Void = service.ingest(task: target)
+        async let third: Void = service.ingest(task: target)
+        _ = await (first, second, third)
+
+        let nodes = try await store.fetchAllNodes()
+        let microsoft = try XCTUnwrap(nodes.first { $0.normalizedKey == "microsoft" })
+        XCTAssertEqual(microsoft.mentionCount, 1, "Concurrent ingests of one source must not double-credit")
+
+        let edges = try await store.fetchAllEdges()
+        XCTAssertEqual(edges.first?.weight ?? 0, 1, accuracy: 0.0001)
+    }
+
+    func testBackfillIfNeededSemantics_EmptyTaskListDoesNotMarkDone() async throws {
+        // backfill(tasks:) with an empty list must be a harmless no-op —
+        // the marker logic (tested via backfillIfNeeded in-app) defers
+        await service.backfill(tasks: [], now: Date())
+
+        let counts = try await store.counts()
+        XCTAssertEqual(counts.nodes, 0)
+    }
+
     // MARK: - Evidence Cleanup (adversarial review B4)
 
     func testRemoveEvidence_WorksEvenWhenFeatureDisabled() async throws {

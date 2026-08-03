@@ -644,6 +644,12 @@ final class TaskService: TaskServiceProtocol {
             } else {
                 // Hard delete: remove from database immediately
                 context.delete(entity)
+
+                // Immediate deletes bypass commitPendingChanges — drop graph
+                // provenance here so snippets don't outlive the task (#152)
+                _Concurrency.Task { @MainActor [taskID = task.id] in
+                    await KnowledgeGraphIngestionService.shared.removeEvidence(forTaskID: taskID)
+                }
             }
 
             persistenceController.save()

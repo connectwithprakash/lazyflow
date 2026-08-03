@@ -929,8 +929,11 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
 
         // The knowledge graph store is local-only — unlike user data it cannot
         // re-download from CloudKit. Reset the backfill marker so the graph
-        // rebuilds from the re-synced tasks instead of staying empty forever.
+        // rebuilds from the re-synced tasks instead of staying empty forever,
+        // and drop the in-memory retrieval snapshot so stale pre-clear facts
+        // stop being served immediately.
         UserDefaults.standard.removeObject(forKey: AppConstants.StorageKey.knowledgeGraphBackfillDone)
+        GraphRetrievalService.shared.invalidate()
 
         // Re-add the stores with the same descriptions (preserves CloudKit options)
         let semaphore = DispatchSemaphore(value: 0)
