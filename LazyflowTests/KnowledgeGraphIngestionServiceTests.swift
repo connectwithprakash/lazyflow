@@ -139,6 +139,41 @@ final class KnowledgeGraphIngestionServiceTests: XCTestCase {
         XCTAssertEqual(counts.nodes, 0)
     }
 
+    // MARK: - Backfill
+
+    func testBackfill_IngestsOnlyRecentTasks() async throws {
+        let now = Date()
+        let recent = task("Send the invoice to Microsoft")
+        var stale = task("Meet Sarah Johnson for coffee")
+        stale = LazyflowCore.Task(
+            id: stale.id,
+            title: stale.title,
+            createdAt: now.addingTimeInterval(-120 * 86_400),
+            updatedAt: now.addingTimeInterval(-120 * 86_400)
+        )
+
+        await service.backfill(tasks: [recent, stale], now: now)
+
+        let nodes = try await store.fetchAllNodes()
+        let keys = Set(nodes.map(\.normalizedKey))
+        XCTAssertTrue(keys.contains("microsoft"))
+        XCTAssertFalse(keys.contains("johnson sarah"), "Tasks older than the horizon must be skipped")
+    }
+
+    func testBackfill_FlagDisabled_IsNoOp() async throws {
+        let gated = KnowledgeGraphIngestionService(
+            store: store,
+            isEnabled: { false },
+            knownProjects: { [] },
+            knownTopics: { [] }
+        )
+
+        await gated.backfill(tasks: [task("Send the invoice to Microsoft")])
+
+        let counts = try await store.counts()
+        XCTAssertEqual(counts.nodes, 0)
+    }
+
     // MARK: - Task Deletion
 
     func testRemoveEvidence_ForDeletedTask_RemovesOnlyThatTasksEvidence() async throws {

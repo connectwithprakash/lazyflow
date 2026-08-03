@@ -25,9 +25,16 @@ final class KnowledgeGraphIngestionService {
     /// pathological texts producing O(n²) edge writes.
     private static let maxCoOccurrencePairs = 10
 
+    /// Effective gate: the feature-flag kill-switch AND the user's opt-in
+    /// toggle in AI Settings must both be on
+    static var isActive: Bool {
+        FeatureFlags.shared.isEnabled(.knowledgeGraph)
+            && UserDefaults.standard.bool(forKey: AppConstants.StorageKey.knowledgeGraphEnabled)
+    }
+
     init(
         store: KnowledgeGraphStore = .shared,
-        isEnabled: @escaping @MainActor () -> Bool = { FeatureFlags.shared.isEnabled(.knowledgeGraph) },
+        isEnabled: @escaping @MainActor () -> Bool = { KnowledgeGraphIngestionService.isActive },
         knownProjects: @escaping @MainActor () -> [String] = { TaskListService.shared.lists.map(\.name) },
         knownTopics: @escaping @MainActor () -> [String] = { CategoryService.shared.categories.map(\.name) }
     ) {
@@ -52,6 +59,47 @@ final class KnowledgeGraphIngestionService {
     func ingest(note: QuickNote, at date: Date = Date()) async {
         guard isEnabled() else { return }
         await ingest(text: note.text, sourceTaskID: nil, sourceNoteID: note.id, categoryName: nil, at: date)
+    }
+
+    // MARK: - Backfill
+
+    /// Bounded look-back for the one-time backfill (days)
+    static let backfillHorizonDays = 90.0
+
+    /// Cap on tasks ingested during backfill
+    static let backfillTaskLimit = 200
+
+    /// One-time backfill of recent existing tasks after the user enables the
+    /// feature. Guarded by a UserDefaults marker; safe to call on every launch.
+    func backfillIfNeeded(now: Date = Date()) async {
+        guard isEnabled() else {
+            Logger.ai.debug("KG: backfill skipped — feature not active")
+            return
+        }
+        let marker = AppConstants.StorageKey.knowledgeGraphBackfillDone
+        guard !UserDefaults.standard.bool(forKey: marker) else {
+            Logger.ai.debug("KG: backfill skipped — already completed")
+            return
+        }
+
+        await backfill(tasks: TaskService.shared.tasks, now: now)
+        UserDefaults.standard.set(true, forKey: marker)
+        Logger.ai.info("KG: backfill completed")
+    }
+
+    /// Ingest tasks created/updated within the backfill horizon (bounded)
+    func backfill(tasks: [Task], now: Date = Date()) async {
+        guard isEnabled() else { return }
+        let cutoff = now.addingTimeInterval(-Self.backfillHorizonDays * 86_400)
+        let recent = tasks
+            .filter { max($0.createdAt, $0.updatedAt) >= cutoff && !$0.isArchived }
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .prefix(Self.backfillTaskLimit)
+
+        Logger.ai.info("KG: backfilling \(recent.count) recent tasks")
+        for task in recent {
+            await ingest(task: task, at: max(task.createdAt, task.updatedAt))
+        }
     }
 
     /// Drop provenance rows for a deleted task. Nodes and edges stay —

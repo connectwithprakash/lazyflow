@@ -198,7 +198,7 @@ final class LLMService: LLMServiceProtocol {
     /// Graph context for a task's entities, nil unless the flag is on and
     /// the graph knows something relevant
     private static func knowledgeGraphSection(for task: Task) async -> String? {
-        guard await MainActor.run(body: { FeatureFlags.shared.isEnabled(.knowledgeGraph) }) else {
+        guard await MainActor.run(body: { KnowledgeGraphIngestionService.isActive }) else {
             return nil
         }
         await GraphRetrievalService.shared.refreshIfStale()

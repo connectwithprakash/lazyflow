@@ -547,7 +547,7 @@ final class PrioritizationService {
         }
 
         // Persistent knowledge-graph context seeded from the candidates (#152)
-        if FeatureFlags.shared.isEnabled(.knowledgeGraph) {
+        if KnowledgeGraphIngestionService.isActive {
             await GraphRetrievalService.shared.refreshIfStale()
             let combinedTitles = candidateTasks.map(\.title).joined(separator: "\n")
             if let graphSection = GraphRetrievalService.shared.contextSection(for: combinedTitles) {

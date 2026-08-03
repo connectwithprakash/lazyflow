@@ -86,7 +86,9 @@ final class FeatureFlags {
             case .aiSuggestPriority: return true
             case .aiTaskExtraction: return true
             case .aiRelationshipContext: return true
-            case .knowledgeGraph: return false
+            // Kill-switch: ships on, but the feature also requires the user's
+            // opt-in toggle in AI Settings (knowledgeGraphEnabled)
+            case .knowledgeGraph: return true
             case .quickCapture: return true
             case .focusMode: return true
             case .morningBriefing: return true

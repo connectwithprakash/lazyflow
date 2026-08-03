@@ -353,7 +353,7 @@ final class DailySummaryService {
     /// Knowledge-graph context seeded from task titles (#152). Nil unless the
     /// flag is enabled and the graph knows something relevant — fail-open.
     private func knowledgeGraphContext(seedText: String) async -> String? {
-        guard await MainActor.run(body: { FeatureFlags.shared.isEnabled(.knowledgeGraph) }) else {
+        guard await MainActor.run(body: { KnowledgeGraphIngestionService.isActive }) else {
             return nil
         }
         await GraphRetrievalService.shared.refreshIfStale()

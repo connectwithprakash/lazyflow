@@ -21,6 +21,8 @@ public enum AppConstants {
         public static let aiEstimateDuration = "aiEstimateDuration"
         public static let aiSuggestPriority = "aiSuggestPriority"
         public static let llmProvider = "llm_provider"
+        public static let knowledgeGraphEnabled = "knowledgeGraphEnabled"
+        public static let knowledgeGraphBackfillDone = "knowledgeGraphBackfillDone"
 
         // Notifications & Scheduling
         public static let defaultReminderTime = "defaultReminderTime"
