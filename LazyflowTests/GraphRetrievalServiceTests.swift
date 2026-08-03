@@ -40,7 +40,7 @@ final class GraphRetrievalServiceTests: XCTestCase {
         try await seedGraph()
         await retrieval.refresh()
 
-        let section = retrieval.contextSection(for: "Send the invoice to Microsoft")
+        let section = retrieval.contextSection(for: "Send the invoice to Microsoft", knownProjects: ["Microsoft"])
 
         let unwrapped = try XCTUnwrap(section)
         XCTAssertTrue(unwrapped.contains("Microsoft"))
@@ -64,7 +64,7 @@ final class GraphRetrievalServiceTests: XCTestCase {
         try await seedGraph()
         await retrieval.refresh()
 
-        let section = retrieval.contextSection(for: "Send the invoice to Microsoft", maxCharacters: 120)
+        let section = retrieval.contextSection(for: "Send the invoice to Microsoft", knownProjects: ["Microsoft"], maxCharacters: 120)
 
         if let section {
             XCTAssertLessThanOrEqual(section.count, 120)
@@ -95,6 +95,6 @@ final class GraphRetrievalServiceTests: XCTestCase {
         retrieval.invalidate()
         await retrieval.refreshIfStale()
 
-        XCTAssertNotNil(retrieval.contextSection(for: "Send the invoice to Microsoft"))
+        XCTAssertNotNil(retrieval.contextSection(for: "Send the invoice to Microsoft", knownProjects: ["Microsoft"]))
     }
 }
