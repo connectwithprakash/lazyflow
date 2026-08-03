@@ -179,6 +179,19 @@ final class KnowledgeGraphStore: @unchecked Sendable {
         }
     }
 
+    /// Delete all evidence rows recorded for a source task (task deletion)
+    func deleteEvidence(forTaskID taskID: UUID) async throws {
+        try await context.perform { [context] in
+            let request = KnowledgeEvidenceEntity.fetchRequest()
+            request.predicate = NSPredicate(format: "sourceTaskID == %@", taskID as CVarArg)
+            request.includesPropertyValues = false
+            for object in try context.fetch(request) {
+                context.delete(object)
+            }
+            try context.save()
+        }
+    }
+
     // MARK: - Maintenance
 
     /// Counts for diagnostics and tests

@@ -255,6 +255,12 @@ final class TaskService: TaskServiceProtocol {
 
         let task = entity.toDomainModel()
         fetchAllTasks()
+
+        // Feed the knowledge graph (no-op unless the flag is enabled, #152)
+        _Concurrency.Task { @MainActor in
+            await KnowledgeGraphIngestionService.shared.ingest(task: task)
+        }
+
         return task
     }
 
@@ -344,6 +350,11 @@ final class TaskService: TaskServiceProtocol {
             syncTaskToCalendar(task)
 
             fetchAllTasks()
+
+            // Re-ingest updated content into the knowledge graph (#152)
+            _Concurrency.Task { @MainActor in
+                await KnowledgeGraphIngestionService.shared.ingest(task: task)
+            }
         } catch {
             self.error = error
             Logger.tasks.error("Failed to update task: \(error, privacy: .public)")
@@ -679,6 +690,11 @@ final class TaskService: TaskServiceProtocol {
         // Delete linked calendar event now that the undo window has closed
         if pendingDeleteLinkedEvent, let task = pendingDeleteTask {
             deleteLinkedCalendarEvent(for: task)
+        }
+
+        // Drop graph provenance now that the delete is final (#152)
+        _Concurrency.Task { @MainActor [taskID] in
+            await KnowledgeGraphIngestionService.shared.removeEvidence(forTaskID: taskID)
         }
 
         pendingDeleteTaskID = nil

@@ -10,6 +10,7 @@
 		00138FC35B0518E64DBF128F /* ee578f245251de5619864fc69350b19c8ba503c08eedc8747eef443bb6081890.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A28268F07849EA510F3B65D /* ee578f245251de5619864fc69350b19c8ba503c08eedc8747eef443bb6081890.json */; };
 		0069AA228C76E5645EA71A67 /* 530e8e1e4fd79f93771b56c7ac5dee5a292686b853c0d8e8af1ce039533afcb0.json in Resources */ = {isa = PBXBuildFile; fileRef = 2D3E55025F17B7EA7B8DB2A7 /* 530e8e1e4fd79f93771b56c7ac5dee5a292686b853c0d8e8af1ce039533afcb0.json */; };
 		00FCF99113DE7C7D45EE56E3 /* ConflictDetectionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79878ECB4B8D1E2274BF2E3E /* ConflictDetectionServiceTests.swift */; };
+		024ADEF4AE5E82F3784D9B4F /* EntityExtractionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD65693F4EF160953694DF5 /* EntityExtractionServiceTests.swift */; };
 		036B76D36501076561C45E3E /* d8227d0c521bb1e4426922f226f2ef5547cc28fc53695f8be47f0d78fc326a3e.json in Resources */ = {isa = PBXBuildFile; fileRef = F894A97B6FD091A6B2F75423 /* d8227d0c521bb1e4426922f226f2ef5547cc28fc53695f8be47f0d78fc326a3e.json */; };
 		04335B5E88FD631ABC7EB299 /* AddTaskView+QuickActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F92784C3FA1293F26239FF /* AddTaskView+QuickActions.swift */; };
 		04A18CE79E9725909F00B040 /* AddTaskViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92A459287E3406AF72557DB /* AddTaskViewSnapshotTests.swift */; };
@@ -103,7 +104,9 @@
 		4EE6D95816F6610B84DBDB2A /* ab49a116e983de31de84b6dd3c0b7b6e4219e0f60b594e2001f8af68ded27554.json in Resources */ = {isa = PBXBuildFile; fileRef = F7806A7A0FD2E9D446C3EC81 /* ab49a116e983de31de84b6dd3c0b7b6e4219e0f60b594e2001f8af68ded27554.json */; };
 		4F6545C69E5CBF63A98555BA /* SnapshotTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7998EC5C8F9350EB5F5DBC4 /* SnapshotTestCase.swift */; };
 		515720032804E2B2B9103D81 /* f330d0a8346ace0ee16b9278e95e6b7272e5b3c33622cb33f674ff3d38c25e47.json in Resources */ = {isa = PBXBuildFile; fileRef = 13ABD8FC0ABCA15649ACD24A /* f330d0a8346ace0ee16b9278e95e6b7272e5b3c33622cb33f674ff3d38c25e47.json */; };
+		51E9A275536BACBB7BCAA014 /* KnowledgeGraphIngestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D885B2D709E43423A1496ED /* KnowledgeGraphIngestionService.swift */; };
 		52149AC1E3331B882FE81FFE /* faae9fabb9fceedaf187f52d6675bccab1c516cf2d8e867f7d2137403b70ea50.json in Resources */ = {isa = PBXBuildFile; fileRef = 8E8312E7B601FF6F88E0FFEA /* faae9fabb9fceedaf187f52d6675bccab1c516cf2d8e867f7d2137403b70ea50.json */; };
+		533546F3749B2B9198410769 /* EntityExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD6CEAF41D0C771E08AF51D /* EntityExtractionService.swift */; };
 		5351A6CE0D001AAFAA9A4A7F /* 7c98b396d87f85a7f888f3abbb41f4164a0e07e140e6f5d28fda63212128e609.json in Resources */ = {isa = PBXBuildFile; fileRef = CD522A88706C522A3ECB2EEE /* 7c98b396d87f85a7f888f3abbb41f4164a0e07e140e6f5d28fda63212128e609.json */; };
 		5434D968E8B13AD51AD4B6F7 /* 311e653deb3c925ef0b8274dc3739fce599c7d6d9ba1dd8d16e20158067b7fdb.json in Resources */ = {isa = PBXBuildFile; fileRef = DFA0BFF6611F312856ABF8C5 /* 311e653deb3c925ef0b8274dc3739fce599c7d6d9ba1dd8d16e20158067b7fdb.json */; };
 		546AB39771158C72F79E1DB2 /* TimeProtectionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A581B0280BBAEC4334B6BA /* TimeProtectionServiceTests.swift */; };
@@ -237,6 +240,7 @@
 		A08B7128D2AF6A4C1812AF35 /* CategoryManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E9934CB199D7C915EAEE69 /* CategoryManagementView.swift */; };
 		A1920639E96CE06499173246 /* HistoryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4682DC1EE1661DFC28274E38 /* HistoryViewModelTests.swift */; };
 		A2110DE7CD7A7B665CBC1F41 /* c831b998262b221ebfffbe185e3e77abaf1584b25bcd3f2b21baf2d2f7042b40.json in Resources */ = {isa = PBXBuildFile; fileRef = 3F5608E6380AEB1CD8ABC240 /* c831b998262b221ebfffbe185e3e77abaf1584b25bcd3f2b21baf2d2f7042b40.json */; };
+		A2E8BDEF02235B7812F41BFA /* KnowledgeGraphIngestionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70DE0A62CC88A63FA542436D /* KnowledgeGraphIngestionServiceTests.swift */; };
 		A37BEF5C71086F6D0C44FA7F /* TimeProtectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF02478F016D0699521A1F95 /* TimeProtectionService.swift */; };
 		A4A8024A16ED17E9D3E5BE32 /* FeatureFlagsDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC3D673360A0F1C8A502C1CC /* FeatureFlagsDebugView.swift */; };
 		A577CEF3EF4FE455742AFED8 /* QuickCaptureSheetSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF22BE7122E8943E7E2BD914 /* QuickCaptureSheetSnapshotTests.swift */; };
@@ -593,6 +597,7 @@
 		7093DE3C5A54912EB3A2FB18 /* ExpandableTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableTaskRowView.swift; sourceTree = "<group>"; };
 		70BFC91E50D1D0272A051347 /* 3a76626d8df2d9bb54a1c927fcb655424f76ceaa62eaaeafaa53d85fe26bbf40.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 3a76626d8df2d9bb54a1c927fcb655424f76ceaa62eaaeafaa53d85fe26bbf40.json; sourceTree = "<group>"; };
 		70C9574BBD3C644B02ED89C6 /* ModelSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSelectionView.swift; sourceTree = "<group>"; };
+		70DE0A62CC88A63FA542436D /* KnowledgeGraphIngestionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeGraphIngestionServiceTests.swift; sourceTree = "<group>"; };
 		71468424EE028719BF581C91 /* 01c4fce5000a341933d6db43c41dca1a718ba1c6bc4c8d6a6b4e3ab76b911c9f.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 01c4fce5000a341933d6db43c41dca1a718ba1c6bc4c8d6a6b4e3ab76b911c9f.json; sourceTree = "<group>"; };
 		7252D4D1307F6147262F83D7 /* 9c70fd6f45cfcb936a6497ad7c27f6e378518b34667922e47f9780bd163dc63d.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 9c70fd6f45cfcb936a6497ad7c27f6e378518b34667922e47f9780bd163dc63d.json; sourceTree = "<group>"; };
 		72A0FCB4B915FD258190C3F4 /* WatchTaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTaskRowView.swift; sourceTree = "<group>"; };
@@ -638,6 +643,8 @@
 		8AFC458A05A3D432E1B7775B /* CategoriesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesViewModel.swift; sourceTree = "<group>"; };
 		8BE9FE39B74BD2B3D0498C6A /* SubtaskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtaskDetailView.swift; sourceTree = "<group>"; };
 		8C4D30BA7FAE100D0EE10C57 /* LazyflowUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LazyflowUI; path = Packages/LazyflowUI; sourceTree = SOURCE_ROOT; };
+		8CD6CEAF41D0C771E08AF51D /* EntityExtractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityExtractionService.swift; sourceTree = "<group>"; };
+		8D885B2D709E43423A1496ED /* KnowledgeGraphIngestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeGraphIngestionService.swift; sourceTree = "<group>"; };
 		8DE4810CD2553AFFD5304282 /* CreateTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTaskIntent.swift; sourceTree = "<group>"; };
 		8E8312E7B601FF6F88E0FFEA /* faae9fabb9fceedaf187f52d6675bccab1c516cf2d8e867f7d2137403b70ea50.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = faae9fabb9fceedaf187f52d6675bccab1c516cf2d8e867f7d2137403b70ea50.json; sourceTree = "<group>"; };
 		8E88C605FFAD11E0DE00EA4C /* 9842d38783fb6b685f980a63978eaaebe9f721dc567e8ca18fa7de94b5589fe2.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 9842d38783fb6b685f980a63978eaaebe9f721dc567e8ca18fa7de94b5589fe2.json; sourceTree = "<group>"; };
@@ -695,6 +702,7 @@
 		BB72FB63D1752B0B54B7C9AF /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		BD4105B773B04B8612DC35F5 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 		BEC9304331BD504C56556E68 /* e69f986eb72c2b0189e932e530ba588462daf231205f28db97ef49316781405a.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = e69f986eb72c2b0189e932e530ba588462daf231205f28db97ef49316781405a.json; sourceTree = "<group>"; };
+		BFD65693F4EF160953694DF5 /* EntityExtractionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityExtractionServiceTests.swift; sourceTree = "<group>"; };
 		C19F41E89A7D7A23F7315459 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C21B88F1F7766BC778F7724B /* ProviderConfigurationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConfigurationSheet.swift; sourceTree = "<group>"; };
 		C4A1EEFCCBC1CCF49E093ABC /* CalendarServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarServiceProtocol.swift; sourceTree = "<group>"; };
@@ -1021,11 +1029,13 @@
 				5F44E5FAD747B2345B46B51A /* DailySummaryCarryoverTests.swift */,
 				F65D128C9CC4A66B9423CDF0 /* DailySummaryServiceTests.swift */,
 				E71BFA7F619FDE2E0A62829E /* DateExtensionsTests.swift */,
+				BFD65693F4EF160953694DF5 /* EntityExtractionServiceTests.swift */,
 				68FC02D90A38A01F152672E3 /* EventPreferenceLearningServiceTests.swift */,
 				3A494646B2F2B5979C7F0597 /* FeatureFlagsTests.swift */,
 				513DDD161379E14998235D07 /* FocusModeIntegrationTests.swift */,
 				D7BAB12F3F0A16CCC1075A55 /* FocusSessionCoordinatorTests.swift */,
 				4682DC1EE1661DFC28274E38 /* HistoryViewModelTests.swift */,
+				70DE0A62CC88A63FA542436D /* KnowledgeGraphIngestionServiceTests.swift */,
 				EDE82DDB4FFFA30E14FA2E5B /* KnowledgeGraphStoreTests.swift */,
 				A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */,
 				B2F8B47155C202D2CA845026 /* ListsViewModelTests.swift */,
@@ -1328,6 +1338,8 @@
 		F579EFAA0A4FB41C6698D6BD /* KnowledgeGraph */ = {
 			isa = PBXGroup;
 			children = (
+				8CD6CEAF41D0C771E08AF51D /* EntityExtractionService.swift */,
+				8D885B2D709E43423A1496ED /* KnowledgeGraphIngestionService.swift */,
 				DB30938A6C231751E74AEE00 /* KnowledgeGraphStore.swift */,
 			);
 			path = KnowledgeGraph;
@@ -1937,12 +1949,14 @@
 				84B9FAA6C2AA0387D83D18B1 /* DailySummaryServiceTests.swift in Sources */,
 				E73307A439D617D22EE3D3A6 /* DataAboutSettingsSnapshotTests.swift in Sources */,
 				BA97CDC383414CEF38D11C3E /* DateExtensionsTests.swift in Sources */,
+				024ADEF4AE5E82F3784D9B4F /* EntityExtractionServiceTests.swift in Sources */,
 				9C48711EFBD089B3EBAEB7C0 /* EventPreferenceLearningServiceTests.swift in Sources */,
 				75E2CFDD7AED5028736C37F4 /* FeatureFlagsTests.swift in Sources */,
 				108487C53DBB9CDF075AA36B /* FocusModeIntegrationTests.swift in Sources */,
 				3F7589E52ADEFEEE43965DF7 /* FocusSessionCoordinatorTests.swift in Sources */,
 				58C6FD0390CB9AF1C9FFA86E /* GeneralSettingsSnapshotTests.swift in Sources */,
 				A1920639E96CE06499173246 /* HistoryViewModelTests.swift in Sources */,
+				A2E8BDEF02235B7812F41BFA /* KnowledgeGraphIngestionServiceTests.swift in Sources */,
 				861DACE55C1BB797760EE959 /* KnowledgeGraphStoreTests.swift in Sources */,
 				1A794F33E3F2F1436A5C1690 /* LLMIntegrationTests.swift in Sources */,
 				3879FECEFBD045E1B7BC52A7 /* LLMReorderingIntegrationTests.swift in Sources */,
@@ -2047,6 +2061,7 @@
 				3F4BB7EF1C64E431C12C89D3 /* DetectedDateBanner.swift in Sources */,
 				AE18C49AC2237E66DF4C1A51 /* DurationChip.swift in Sources */,
 				5E870ED939E90BCE35ED618B /* DurationPickerSheet.swift in Sources */,
+				533546F3749B2B9198410769 /* EntityExtractionService.swift in Sources */,
 				8AC2370A648F531F5B8C3745 /* EventPreferenceLearningService.swift in Sources */,
 				FED75A36AB181F97B5562181 /* ExpandableTaskRowView.swift in Sources */,
 				6E39A58F8F90922823A84561 /* FeatureFlags.swift in Sources */,
@@ -2058,6 +2073,7 @@
 				A58EA91216CC9AA0D8F7D20B /* HistoryView.swift in Sources */,
 				171B64FBCE3DA50E04986691 /* HistoryViewModel.swift in Sources */,
 				C7FD2D27BF3309A6627092DA /* InsightsView.swift in Sources */,
+				51E9A275536BACBB7BCAA014 /* KnowledgeGraphIngestionService.swift in Sources */,
 				FF33033CA9ED30CAC98D011C /* KnowledgeGraphStore.swift in Sources */,
 				06F5CEF222A90606174956F9 /* LLMProvider.swift in Sources */,
 				7B9D81831C2E2CB388575266 /* LLMService.swift in Sources */,

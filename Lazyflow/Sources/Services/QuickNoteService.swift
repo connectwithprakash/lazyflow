@@ -92,6 +92,12 @@ final class QuickNoteService {
 
         let note = QuickNote(entity: entity)
         fetchAllNotes()
+
+        // Feed the knowledge graph (no-op unless the flag is enabled, #152)
+        _Concurrency.Task { @MainActor in
+            await KnowledgeGraphIngestionService.shared.ingest(note: note)
+        }
+
         return note
     }
 
