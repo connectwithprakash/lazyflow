@@ -57,6 +57,7 @@
 		3F7589E52ADEFEEE43965DF7 /* FocusSessionCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BAB12F3F0A16CCC1075A55 /* FocusSessionCoordinatorTests.swift */; };
 		40023B3568EA2B400E03A9E3 /* ListsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F8B47155C202D2CA845026 /* ListsViewModelTests.swift */; };
 		41E409829A9D8B4971592326 /* CategoryServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 925FC88A302F5CC06835C2CA /* CategoryServiceProtocol.swift */; };
+		4569804F37DE65AE106B9152 /* ScreenshotCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1286EEB5FB85B07BB4DD94 /* ScreenshotCaptureTests.swift */; };
 		46E38AC2D3F84E4C255AFB77 /* QuickActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D121549295C26AB16F4B7AB /* QuickActionButton.swift */; };
 		47272E6F94D597DA2481FF37 /* TaskServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2A1BA3F316C06064B36EB8 /* TaskServiceTests.swift */; };
 		4884FDF6305640157B5BEA77 /* MorningBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61EC4AC29B50F17794EC5BF7 /* MorningBriefingView.swift */; };
@@ -514,6 +515,7 @@
 		DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
 		DB30938A6C231751E74AEE00 /* KnowledgeGraphStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeGraphStore.swift; sourceTree = "<group>"; };
 		DBFF1FDA982F9BF5DB6429C3 /* FocusSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionCoordinator.swift; sourceTree = "<group>"; };
+		DC1286EEB5FB85B07BB4DD94 /* ScreenshotCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotCaptureTests.swift; sourceTree = "<group>"; };
 		E42E7BB474065EDF44330E69 /* ReminderPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderPickerSheet.swift; sourceTree = "<group>"; };
 		E649D1F69A38558B8CF539C8 /* DatePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerSheet.swift; sourceTree = "<group>"; };
 		E7094D9FEC23F82DAABC7C15 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
@@ -1146,6 +1148,7 @@
 			children = (
 				F8769C43782895FD84F8B04A /* LazyflowUITests.swift */,
 				91A7F26D3A80E8998C96A1F2 /* LazyflowUITestsLaunchTests.swift */,
+				DC1286EEB5FB85B07BB4DD94 /* ScreenshotCaptureTests.swift */,
 			);
 			path = LazyflowUITests;
 			sourceTree = "<group>";
@@ -1626,6 +1629,7 @@
 			files = (
 				7910923F95010B898A909F3F /* LazyflowUITests.swift in Sources */,
 				F3DD5D78DA037DC32D7D4B4D /* LazyflowUITestsLaunchTests.swift in Sources */,
+				4569804F37DE65AE106B9152 /* ScreenshotCaptureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
