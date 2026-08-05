@@ -529,14 +529,43 @@ final class PrioritizationService {
 
         // Extract behavioral signals and pass as context (nil on cold start or no signals)
         let signals = BehavioralSignals.extract(from: suggestionFeedback, completionPatterns: completionPatterns)
-        let behaviorContext: String? = {
-            let prompt = signals.toPromptString()
-            return prompt.isEmpty ? nil : prompt
-        }()
+        let candidateTasks = Array(sortedTasks.prefix(10))
+        var contextParts: [String] = []
+
+        let behaviorPrompt = signals.toPromptString()
+        if !behaviorPrompt.isEmpty {
+            contextParts.append(behaviorPrompt)
+        }
+
+        // Relationship groups among the same candidates the LLM will order,
+        // so it can reason about clusters instead of isolated tasks (#152).
+        if FeatureFlags.shared.isEnabled(.aiRelationshipContext),
+           let groupsSection = TaskRelationshipGrouper.promptSection(
+               for: TaskRelationshipGrouper.groups(for: candidateTasks)
+           ) {
+            contextParts.append(groupsSection)
+        }
+
+        // Persistent knowledge-graph context seeded from the candidates (#152).
+        // Seeds include the user's list/category names — NLTagger alone
+        // misses them in short lowercase titles.
+        if KnowledgeGraphIngestionService.isActive {
+            await GraphRetrievalService.shared.refreshIfStale()
+            let combinedTitles = candidateTasks.map(\.title).joined(separator: "\n")
+            if let graphSection = GraphRetrievalService.shared.contextSection(
+                for: combinedTitles,
+                knownProjects: TaskListService.shared.lists.map(\.name),
+                knownTopics: CategoryService.shared.categories.map(\.name)
+            ) {
+                contextParts.append(graphSection)
+            }
+        }
+
+        let behaviorContext = contextParts.isEmpty ? nil : contextParts.joined(separator: "\n\n")
 
         do {
             return try await llmService.suggestTaskOrder(
-                tasks: Array(sortedTasks.prefix(10)),
+                tasks: candidateTasks,
                 behaviorContext: behaviorContext
             )
         } catch {

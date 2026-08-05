@@ -721,7 +721,8 @@ final class OpenResponsesProviderTests: XCTestCase {
     /// Test actual call to Ollama Open Responses endpoint
     /// Requires: Ollama running locally with gemma2:2b model
     func testOllamaIntegration_LiveCall() async throws {
-        // Check if Ollama is running
+        // Check if Ollama is running AND has the specific model this test uses —
+        // a running Ollama without gemma2:2b must skip, not fail
         let tagsURL = URL(string: "http://localhost:11434/api/tags")!
         do {
             let (data, _) = try await URLSession.shared.data(from: tagsURL)
@@ -730,6 +731,12 @@ final class OpenResponsesProviderTests: XCTestCase {
                   !models.isEmpty else {
                 throw XCTSkip("Ollama not running or no models available")
             }
+            let modelNames = models.compactMap { $0["name"] as? String }
+            guard modelNames.contains(where: { $0.hasPrefix("gemma2:2b") }) else {
+                throw XCTSkip("Ollama running but gemma2:2b not pulled (available: \(modelNames.joined(separator: ", ")))")
+            }
+        } catch let skip as XCTSkip {
+            throw skip
         } catch {
             throw XCTSkip("Ollama not available: \(error.localizedDescription)")
         }

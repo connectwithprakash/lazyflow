@@ -47,7 +47,7 @@ Anyone who:
 
 ### Current & Upcoming
 
-- **v1.11.0** (planned): To be defined
+- **v1.11.0** (in progress): Knowledge Graph — opt-in on-device GraphRAG connecting tasks by people, projects, and topics (#152): NLTagger entity extraction with user-vocabulary gazetteer, local-only second Core Data store, personalized-PageRank retrieval injected into task ordering, task analysis, Daily Summary, and Morning Briefing; related-task grouping context for AI ordering; UI test suite repaired after picker redesign
 
 See [CHANGELOG.md](../../CHANGELOG.md) for detailed release history.
 

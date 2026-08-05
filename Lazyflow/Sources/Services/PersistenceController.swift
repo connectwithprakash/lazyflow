@@ -77,6 +77,14 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
     /// CloudKit container identifier
     private static let cloudKitContainerIdentifier = "iCloud.com.lazyflow.app"
 
+    /// Model configuration containing user data entities (synced via CloudKit)
+    static let cloudConfigurationName = "Cloud"
+
+    /// Model configuration containing knowledge graph entities (device-local only).
+    /// The graph is derived data — rebuildable from synced tasks/notes — so it
+    /// never travels through CloudKit (#152).
+    static let graphConfigurationName = "LocalGraph"
+
     /// UserDefaults key for iCloud sync preference
     private static let iCloudSyncEnabledKey = AppConstants.StorageKey.iCloudSyncEnabled
 
@@ -117,15 +125,9 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
             return
         }
 
-        guard let storeDescription = container.persistentStoreDescriptions.first,
-              let storeURL = storeDescription.url else {
-            Logger.persistence.error("Could not find store description")
-            return
-        }
-
         let coordinator = container.persistentStoreCoordinator
 
-        // Remove current store
+        // Remove current stores (user data + local graph)
         for store in coordinator.persistentStores {
             do {
                 try coordinator.remove(store)
@@ -135,42 +137,30 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
             }
         }
 
-        // Create new store description with updated CloudKit settings
-        let newDescription = NSPersistentStoreDescription(url: storeURL)
-        newDescription.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
-        newDescription.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
-        newDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        newDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-        newDescription.setOption(
-            FileProtectionType.completeUnlessOpen as NSObject,
-            forKey: NSPersistentStoreFileProtectionKey
-        )
+        // Rebuild both descriptions; only the cloud store's CloudKit options change
+        let cloudKitEnabled = Self.isICloudSyncEnabled && Self.isICloudAvailable
+        Logger.sync.info("Reloading store with CloudKit sync \(cloudKitEnabled ? "ENABLED" : "DISABLED", privacy: .public)")
 
-        // Configure CloudKit based on current preference
-        if Self.isICloudSyncEnabled && Self.isICloudAvailable {
-            let cloudKitOptions = NSPersistentCloudKitContainerOptions(
-                containerIdentifier: Self.cloudKitContainerIdentifier
-            )
-            newDescription.cloudKitContainerOptions = cloudKitOptions
-            Logger.sync.info("Reloading store with CloudKit sync ENABLED")
-        } else {
-            newDescription.cloudKitContainerOptions = nil
-            Logger.sync.info("Reloading store with CloudKit sync DISABLED")
-        }
-
-        // Re-add the store with new settings
-        container.persistentStoreDescriptions = [newDescription]
+        let newDescriptions = [
+            Self.makeCloudStoreDescription(cloudKitEnabled: cloudKitEnabled),
+            Self.makeGraphStoreDescription()
+        ]
+        container.persistentStoreDescriptions = newDescriptions
 
         let semaphore = DispatchSemaphore(value: 0)
         var loadError: Error?
 
-        coordinator.addPersistentStore(with: newDescription) { _, error in
-            loadError = error
-            semaphore.signal()
+        for description in newDescriptions {
+            coordinator.addPersistentStore(with: description) { _, error in
+                if let error { loadError = error }
+                semaphore.signal()
+            }
         }
 
-        // Wait for store to load
-        _ = semaphore.wait(timeout: .now() + 10)
+        // Wait for all stores to load
+        for _ in 0..<newDescriptions.count {
+            _ = semaphore.wait(timeout: .now() + 10)
+        }
 
         if let error = loadError {
             Logger.persistence.error("Failed to reload store: \(error)")
@@ -347,57 +337,30 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
         container = NSPersistentCloudKitContainer(name: "Lazyflow")
 
         if inMemory {
-            container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+            // Two in-memory stores mirror the on-disk Cloud/LocalGraph split so
+            // tests exercise the same configuration routing as production
+            container.persistentStoreDescriptions = [
+                Self.makeInMemoryDescription(configuration: Self.cloudConfigurationName),
+                Self.makeInMemoryDescription(configuration: Self.graphConfigurationName)
+            ]
         } else {
-            // Use shared App Groups container for widget access
-            // Fall back to default location if App Groups not available
-            let storeURL: URL
-            if let appGroupURL = FileManager.default
-                .containerURL(forSecurityApplicationGroupIdentifier: Self.appGroupIdentifier)?
-                .appendingPathComponent("Lazyflow.sqlite") {
-                storeURL = appGroupURL
-                Logger.persistence.debug("Using App Groups container: \(appGroupURL.path)")
-            } else {
-                // Fallback to default Core Data location
-                let defaultURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                    .appendingPathComponent("Lazyflow.sqlite")
-                storeURL = defaultURL
-                Logger.persistence.warning("App Groups not available, using default location: \(defaultURL.path)")
-            }
-
-            let description = NSPersistentStoreDescription(url: storeURL)
-
-            // Enable lightweight migration to handle model version changes automatically
-            description.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
-            description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
-
-            // Enable persistent history tracking for CloudKit sync
-            description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-            description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-
-            // Encrypt Core Data store when device is locked
-            description.setOption(
-                FileProtectionType.completeUnlessOpen as NSObject,
-                forKey: NSPersistentStoreFileProtectionKey
-            )
-
             // Configure CloudKit sync only if enabled and iCloud is available
             // Check both the parameter and user preference
             let shouldEnableCloudKit = enableCloudKit && Self.isICloudSyncEnabled && Self.isICloudAvailable
             if shouldEnableCloudKit {
-                let cloudKitOptions = NSPersistentCloudKitContainerOptions(
-                    containerIdentifier: Self.cloudKitContainerIdentifier
-                )
-                description.cloudKitContainerOptions = cloudKitOptions
                 Logger.sync.info("CloudKit sync enabled - user preference: enabled, iCloud: available")
             } else {
                 Logger.sync.info("CloudKit sync disabled - user preference: \(Self.isICloudSyncEnabled, privacy: .public), iCloud available: \(Self.isICloudAvailable, privacy: .public)")
             }
 
-            container.persistentStoreDescriptions = [description]
+            container.persistentStoreDescriptions = [
+                Self.makeCloudStoreDescription(cloudKitEnabled: shouldEnableCloudKit),
+                Self.makeGraphStoreDescription()
+            ]
         }
 
-        // Use semaphore to wait for store to load (sync initialization)
+        // Use semaphore to wait for all stores to load (sync initialization)
+        let expectedStoreCount = container.persistentStoreDescriptions.count
         let semaphore = DispatchSemaphore(value: 0)
         var loadError: Error?
 
@@ -412,9 +375,9 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
             semaphore.signal()
         }
 
-        // Wait for store to load (with timeout)
+        // Wait for every store to load (with timeout)
         let timeout = DispatchTime.now() + .seconds(Int(AppConstants.Timing.cloudKitTimeout))
-        if semaphore.wait(timeout: timeout) == .timedOut {
+        for _ in 0..<expectedStoreCount where semaphore.wait(timeout: timeout) == .timedOut {
             Logger.persistence.warning("Warning: Persistent store loading timed out")
         }
 
@@ -428,6 +391,85 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
         }
 
         isLoaded = loadError == nil
+    }
+
+    // MARK: - Store Descriptions
+
+    /// Directory holding the SQLite stores (App Group container, or Application
+    /// Support as fallback when App Groups are unavailable)
+    private static func storeDirectoryURL() -> URL {
+        if let appGroupURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) {
+            Logger.persistence.debug("Using App Groups container: \(appGroupURL.path)")
+            return appGroupURL
+        }
+        let defaultURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        Logger.persistence.warning("App Groups not available, using default location: \(defaultURL.path)")
+        return defaultURL
+    }
+
+    /// URL of the CloudKit-synced user data store
+    static func cloudStoreURL() -> URL {
+        storeDirectoryURL().appendingPathComponent("Lazyflow.sqlite")
+    }
+
+    /// URL of the device-local knowledge graph store
+    static func graphStoreURL() -> URL {
+        storeDirectoryURL().appendingPathComponent("Lazyflow-Graph.sqlite")
+    }
+
+    /// Description for the user data store, optionally attached to CloudKit
+    static func makeCloudStoreDescription(cloudKitEnabled: Bool) -> NSPersistentStoreDescription {
+        let description = NSPersistentStoreDescription(url: cloudStoreURL())
+        description.configuration = cloudConfigurationName
+
+        // Enable lightweight migration to handle model version changes automatically
+        description.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+        description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
+
+        // Enable persistent history tracking for CloudKit sync
+        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        // Encrypt Core Data store when device is locked
+        description.setOption(
+            FileProtectionType.completeUnlessOpen as NSObject,
+            forKey: NSPersistentStoreFileProtectionKey
+        )
+
+        if cloudKitEnabled {
+            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: cloudKitContainerIdentifier
+            )
+        }
+        return description
+    }
+
+    /// Description for the local-only knowledge graph store — never gets
+    /// CloudKit options. History tracking stays on so history fetches across
+    /// the coordinator behave uniformly.
+    static func makeGraphStoreDescription() -> NSPersistentStoreDescription {
+        let description = NSPersistentStoreDescription(url: graphStoreURL())
+        description.configuration = graphConfigurationName
+        description.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+        description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
+        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        description.setOption(
+            FileProtectionType.completeUnlessOpen as NSObject,
+            forKey: NSPersistentStoreFileProtectionKey
+        )
+        return description
+    }
+
+    /// In-memory description for tests/previews, one per model configuration.
+    /// Distinct fake URLs keep the coordinator from treating them as one store.
+    private static func makeInMemoryDescription(configuration: String) -> NSPersistentStoreDescription {
+        let description = NSPersistentStoreDescription(
+            url: URL(fileURLWithPath: "/dev/null/\(configuration)")
+        )
+        description.type = NSInMemoryStoreType
+        description.configuration = configuration
+        return description
     }
 
     /// Configure the viewContext settings (must be called on main thread)
@@ -847,9 +889,9 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
             return
         }
 
-        guard let storeDescription = container.persistentStoreDescriptions.first,
-              let storeURL = storeDescription.url else {
-            Logger.persistence.error("Could not find store URL")
+        let storeDescriptions = container.persistentStoreDescriptions
+        guard !storeDescriptions.isEmpty else {
+            Logger.persistence.error("Could not find store descriptions")
             return
         }
 
@@ -865,35 +907,51 @@ final class PersistenceController: @unchecked Sendable, PersistenceControllerPro
             }
         }
 
-        // Delete the SQLite files
-        let sqliteFiles = [
-            storeURL,
-            storeURL.appendingPathExtension("shm"),
-            storeURL.appendingPathExtension("wal"),
-            storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"),
-            storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal")
-        ]
-
-        for fileURL in sqliteFiles {
-            try? FileManager.default.removeItem(at: fileURL)
+        // Delete the SQLite file sets for every store (user data + local graph)
+        for storeURL in storeDescriptions.compactMap(\.url) {
+            let sqliteFiles = [
+                storeURL,
+                storeURL.appendingPathExtension("shm"),
+                storeURL.appendingPathExtension("wal"),
+                storeURL.deletingPathExtension().appendingPathExtension("sqlite-shm"),
+                storeURL.deletingPathExtension().appendingPathExtension("sqlite-wal")
+            ]
+            for fileURL in sqliteFiles {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
         }
 
         // Also delete the ckAssets folder if it exists (CloudKit cached assets)
-        let ckAssetsURL = storeURL.deletingLastPathComponent().appendingPathComponent("ckAssets")
-        try? FileManager.default.removeItem(at: ckAssetsURL)
+        if let anyStoreURL = storeDescriptions.compactMap(\.url).first {
+            let ckAssetsURL = anyStoreURL.deletingLastPathComponent().appendingPathComponent("ckAssets")
+            try? FileManager.default.removeItem(at: ckAssetsURL)
+        }
 
-        // Re-add the store with the same description (preserves CloudKit options)
+        // The knowledge graph store is local-only — unlike user data it cannot
+        // re-download from CloudKit. Reset the backfill marker so the graph
+        // rebuilds from the re-synced tasks instead of staying empty forever,
+        // and drop the in-memory retrieval snapshot so stale pre-clear facts
+        // stop being served immediately.
+        UserDefaults.standard.removeObject(forKey: AppConstants.StorageKey.knowledgeGraphBackfillDone)
+        GraphRetrievalService.shared.invalidate()
+
+        // Re-add the stores with the same descriptions (preserves CloudKit options)
         let semaphore = DispatchSemaphore(value: 0)
         var loadError: Error?
 
-        coordinator.addPersistentStore(with: storeDescription) { _, error in
-            loadError = error
-            semaphore.signal()
+        for description in storeDescriptions {
+            coordinator.addPersistentStore(with: description) { _, error in
+                if let error { loadError = error }
+                semaphore.signal()
+            }
         }
 
-        // Wait for store to load
-        let result = semaphore.wait(timeout: .now() + 10)
-        if result == .timedOut {
+        // Wait for all stores to load
+        var timedOut = false
+        for _ in 0..<storeDescriptions.count where semaphore.wait(timeout: .now() + 10) == .timedOut {
+            timedOut = true
+        }
+        if timedOut {
             Logger.persistence.error("Store reload timed out")
         } else if let error = loadError {
             Logger.persistence.error("Failed to re-add store: \(error)")

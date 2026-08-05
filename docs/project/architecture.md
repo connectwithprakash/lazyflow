@@ -134,6 +134,9 @@ Services are singletons managing specific domains:
 - **LiveActivityManager** — Lock Screen Live Activity and Dynamic Island
 - **AnalyticsService** — Local productivity analytics
 - **WatchConnectivityService** — Apple Watch sync
+- **KnowledgeGraphStore** — Persistence for the on-device knowledge graph (nodes/edges/evidence)
+- **KnowledgeGraphIngestionService** — Extracts entities from tasks/notes into the graph (flag-gated)
+- **GraphRetrievalService** — Snapshot-based GraphRAG retrieval for AI prompt context
 
 ### Feature Flags
 
@@ -183,9 +186,12 @@ Usage: `Logger.tasks.info("Task completed: \(task.title)")`. All `print()` calls
 
 ### Core Data
 
-- **Model:** `Lazyflow.xcdatamodeld` with lightweight migration support
-- **Entities:** Task (with subtasks, scheduled times, recurring rules, calendar event links), QuickNote, Category, TaskList
-- **Stack:** `PersistenceController` manages `NSPersistentCloudKitContainer`
+- **Model:** `Lazyflow.xcdatamodeld` with lightweight migration support (current: v4)
+- **Entities:** Task (with subtasks, scheduled times, recurring rules, calendar event links), QuickNote, Category, TaskList, KnowledgeNode/Edge/Evidence (graph)
+- **Stack:** `PersistenceController` manages `NSPersistentCloudKitContainer` with **two stores**:
+  - `Lazyflow.sqlite` (`Cloud` configuration) — user data, syncs via CloudKit
+  - `Lazyflow-Graph.sqlite` (`LocalGraph` configuration) — knowledge graph, device-local only, never syncs
+- **Cross-store references:** Graph evidence links to tasks/notes by UUID (CloudKit forbids cross-store relationships)
 - **Migration:** Hardened strategy with version detection, error handling, and fallback to clean store
 
 ### CloudKit Sync
@@ -208,6 +214,26 @@ Usage: `Logger.tasks.info("Task completed: \(task.title)")`. All `print()` calls
 - **Provider abstraction:** `LLMServiceProtocol` with pluggable implementations
 - **Features:** Task prioritization, Morning Briefing generation, Daily Summary, Quick Capture task extraction, automatic categorization
 - **Privacy:** On-device by default; external providers are opt-in with clear disclosure
+
+### Knowledge Graph (GraphRAG, #152)
+
+Opt-in, fully on-device graph connecting tasks by people, projects, and topics:
+
+```
+Task/Note saved ─► EntityExtractionService ─► KnowledgeGraphStore ─► GraphIndex (in-memory)
+                   (NLTagger NER + user's       (LocalGraph store,     recency-weighted
+                    list/category names          UUID evidence          personalized PageRank
+                    as gazetteer)                provenance)                 │
+                                                                            ▼
+                                                              top triples grouped by subject
+                                                              → learningContext in AI prompts
+```
+
+- **Extraction:** Deterministic tier-1 (NLTagger person/org/place + known-name matching); no LLM calls on the write path
+- **Retrieval:** Wholesale fetch into an in-memory adjacency index; exact personalized PageRank (damping 0.5) — never traverses Core Data relationships
+- **Injection points:** AI task ordering, task analysis, Daily Summary, Morning Briefing — all through existing `learningContext:` parameters, budget-clamped
+- **Gating:** `knowledgeGraph` feature flag (kill-switch) AND user opt-in toggle in AI Settings; fail-open to flat context when empty/disabled
+- **Lifecycle:** One-time 90-day backfill on enable; Reset Knowledge Graph action in Data & About
 
 ## Testing
 

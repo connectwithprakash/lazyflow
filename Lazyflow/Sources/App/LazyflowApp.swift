@@ -20,6 +20,10 @@ struct LazyflowApp: App {
                 .onOpenURL { url in
                     handleDeepLink(url)
                 }
+                .task {
+                    // One-time knowledge graph backfill (no-op unless enabled, #152)
+                    await KnowledgeGraphIngestionService.shared.backfillIfNeeded()
+                }
         }
         .commands {
             // Keyboard shortcuts for iPad

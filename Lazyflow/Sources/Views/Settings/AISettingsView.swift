@@ -27,6 +27,7 @@ struct AISettingsView: View {
     @AppStorage(AppConstants.StorageKey.aiAutoSuggest) private var aiAutoSuggest: Bool = true
     @AppStorage(AppConstants.StorageKey.aiEstimateDuration) private var aiEstimateDuration: Bool = true
     @AppStorage(AppConstants.StorageKey.aiSuggestPriority) private var aiSuggestPriority: Bool = true
+    @AppStorage(AppConstants.StorageKey.knowledgeGraphEnabled) private var knowledgeGraphEnabled: Bool = false
 
     @State private var isBatchAnalyzing = false
     @State private var batchAnalysisProgress: Int = 0
@@ -81,6 +82,29 @@ struct AISettingsView: View {
                 }
                 .disabled(!llmService.isReady)
                 .id("ai_auto_suggest")
+
+                // Knowledge Graph Section (#152)
+                Section {
+                    Toggle(isOn: $knowledgeGraphEnabled) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Knowledge Graph")
+                            Text("Connect related tasks by people, projects, and topics")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                    }
+                    .onChange(of: knowledgeGraphEnabled) { _, enabled in
+                        guard enabled else { return }
+                        _Concurrency.Task {
+                            await KnowledgeGraphIngestionService.shared.backfillIfNeeded()
+                        }
+                    }
+                } header: {
+                    Text("Experimental")
+                } footer: {
+                    Text("Builds a private graph of people, projects, and topics from your tasks to improve AI suggestions. Processed and stored entirely on this device — never synced or uploaded.")
+                }
+                .id("knowledge_graph")
 
                 // Batch Analysis Section
                 Section {

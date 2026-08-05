@@ -15,7 +15,8 @@ extension AddTaskView {
                     icon: "star",
                     title: "Today",
                     isSelected: addTaskViewModel.dueDate?.isToday == true,
-                    color: Color.Lazyflow.warning
+                    color: Color.Lazyflow.warning,
+                    accessibilityID: "addTask.chip.today"
                 ) {
                     addTaskViewModel.setDueToday()
                 }
@@ -25,7 +26,8 @@ extension AddTaskView {
                     icon: "calendar",
                     title: dateButtonTitle,
                     isSelected: addTaskViewModel.hasDueDate,
-                    color: Color.Lazyflow.accent
+                    color: Color.Lazyflow.accent,
+                    accessibilityID: "addTask.chip.date"
                 ) {
                     showDatePicker = true
                 }
@@ -35,7 +37,8 @@ extension AddTaskView {
                     icon: "clock",
                     title: timeButtonTitle,
                     isSelected: addTaskViewModel.hasDueTime,
-                    color: Color.Lazyflow.accent
+                    color: Color.Lazyflow.accent,
+                    accessibilityID: "addTask.chip.time"
                 ) {
                     showTimeSheet = true
                 }

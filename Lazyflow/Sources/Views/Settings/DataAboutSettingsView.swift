@@ -21,6 +21,7 @@ struct DataAboutSettingsView: View {
     @State private var showDeleteLocalConfirmation = false
     @State private var showDeleteEverywhereConfirmation = false
     @State private var showDeleteCloudOnlyConfirmation = false
+    @State private var showResetKnowledgeGraphConfirmation = false
     @State private var showResyncConfirmation = false
     @State private var showResetEventPreferencesConfirmation = false
 
@@ -300,6 +301,22 @@ struct DataAboutSettingsView: View {
                         Spacer()
                     }
                 }
+
+                Button(role: .destructive) {
+                    showResetKnowledgeGraphConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "point.3.connected.trianglepath.dotted")
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Reset Knowledge Graph")
+                            Text("Deletes the on-device task connection graph")
+                                .font(DesignSystem.Typography.caption1)
+                                .foregroundColor(Color.Lazyflow.textSecondary)
+                        }
+                        Spacer()
+                    }
+                }
             } header: {
                 Text("Danger Zone")
             } footer: {
@@ -358,6 +375,18 @@ struct DataAboutSettingsView: View {
             }
         }
         // MARK: - Alerts
+        .alert("Reset Knowledge Graph?", isPresented: $showResetKnowledgeGraphConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                _Concurrency.Task {
+                    try? await KnowledgeGraphStore.shared.deleteAllGraphData()
+                    GraphRetrievalService.shared.invalidate()
+                    UserDefaults.standard.set(false, forKey: AppConstants.StorageKey.knowledgeGraphBackfillDone)
+                }
+            }
+        } message: {
+            Text("Deletes all learned task connections on this device. Your tasks are not affected. The graph rebuilds from new activity, or via backfill when re-enabled.")
+        }
         .alert("Clear Local Cache?", isPresented: $showDeleteLocalConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Clear Cache", role: .destructive) {

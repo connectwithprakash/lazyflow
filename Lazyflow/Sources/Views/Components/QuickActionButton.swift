@@ -7,6 +7,9 @@ struct QuickActionButton: View {
     let title: String
     let isSelected: Bool
     let color: Color
+    /// Stable identifier for UI tests (labels alone can collide, e.g. the
+    /// "Today" chip vs the "Today" tab bar item)
+    var accessibilityID: String?
     let action: () -> Void
 
     var body: some View {
@@ -14,6 +17,7 @@ struct QuickActionButton: View {
             QuickActionButtonContent(icon: icon, title: title, isSelected: isSelected, color: color)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityIdentifier(accessibilityID ?? "")
     }
 }
 

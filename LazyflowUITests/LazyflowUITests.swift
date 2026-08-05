@@ -105,6 +105,26 @@ final class LazyflowUITests: XCTestCase {
         }
     }
 
+    /// Find a task row by title. TaskRowView composes an accessibility label
+    /// ("<title>, due today, ..."), so exact staticText matching fails —
+    /// match any element whose label contains the title instead.
+    private func taskRowElement(_ title: String) -> XCUIElement {
+        app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", title))
+            .firstMatch
+    }
+
+    /// Set the new task's due date to today via the Row-1 quick chip.
+    /// The chip carries the `addTask.chip.today` identifier so it never
+    /// collides with the "Today" tab bar item. (The old "Tomorrow" quick
+    /// button was removed in the #290 picker redesign.)
+    private func setDueToday() {
+        let todayChip = app.buttons["addTask.chip.today"]
+        XCTAssertTrue(todayChip.waitForExistence(timeout: 3), "Today quick chip should exist in New Task")
+        todayChip.tap()
+        Thread.sleep(forTimeInterval: 0.3) // Allow selection state to update
+    }
+
     /// Navigate to a tab or a view accessible via hub tabs.
     /// Direct tabs: Today, Calendar, Upcoming, Insights, Me
     /// Via Insights hub: History, Morning Briefing, Daily Summary
@@ -425,12 +445,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Test Task from UI Test")
 
-        // Set due date to Tomorrow so task appears in Upcoming view
-        // (Avoid "Today" button confusion with tab bar)
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Tap Add button in navigation bar (not the subtask Add button)
         let navBar = app.navigationBars["New Task"]
@@ -438,11 +454,8 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
-        // Navigate to Upcoming to see the task
-        navigateToTab("Upcoming")
-
-        // Verify task appears in list (increased timeout for physical device reliability)
-        XCTAssertTrue(app.staticTexts["Test Task from UI Test"].waitForExistence(timeout: 5))
+        // Sheet dismisses back to Today, where the due-today task appears
+        XCTAssertTrue(taskRowElement("Test Task from UI Test").waitForExistence(timeout: 5))
     }
 
     func testAddTaskWithDueDate() throws {
@@ -453,11 +466,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Task with due date")
 
-        // Tap "Tomorrow" button to set due date
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Add the task via navigation bar button (not subtask Add button)
         let navBar = app.navigationBars["New Task"]
@@ -465,11 +475,8 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
-        // Navigate to Upcoming to see the task (since due date is tomorrow)
-        navigateToTab("Upcoming")
-
-        // Verify task appears in Upcoming
-        XCTAssertTrue(app.staticTexts["Task with due date"].waitForExistence(timeout: 3))
+        // Verify task appears in Today (its due date is today)
+        XCTAssertTrue(taskRowElement("Task with due date").waitForExistence(timeout: 3))
     }
 
     // MARK: - Task Completion Tests
@@ -483,11 +490,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Task to complete")
 
-        // Use "Tomorrow" button to avoid "Today" tab bar collision
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Add the task via navigation bar button
         let navBar = app.navigationBars["New Task"]
@@ -495,12 +499,9 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
-        // Navigate to Upcoming to see the task (since we used Tomorrow)
-        navigateToTab("Upcoming")
-
-        // Wait for task to appear
-        let taskText = app.staticTexts["Task to complete"]
-        XCTAssertTrue(taskText.waitForExistence(timeout: 2))
+        // Task appears in Today (its due date is today)
+        let taskText = taskRowElement("Task to complete")
+        XCTAssertTrue(taskText.waitForExistence(timeout: 3))
 
         // Find and tap the checkbox
         // The checkbox should be near the task text
@@ -708,12 +709,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Task to push")
 
-        // Set due date to Tomorrow so task appears in Upcoming view
-        // (Avoid "Today" button confusion with tab bar)
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Add the task via navigation bar button
         let navBar = app.navigationBars["New Task"]
@@ -721,11 +718,8 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
-        // Navigate to Upcoming to see the task
-        navigateToTab("Upcoming")
-
-        // Task should appear (increased timeout for physical device reliability)
-        XCTAssertTrue(app.staticTexts["Task to push"].waitForExistence(timeout: 5))
+        // Task appears in Today (increased timeout for physical device reliability)
+        XCTAssertTrue(taskRowElement("Task to push").waitForExistence(timeout: 5))
     }
 
     // MARK: - Performance Tests
@@ -1332,11 +1326,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Task for Subtask Test")
 
-        // Set due date to Tomorrow
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Tap the navigation bar Add button (not the subtask Add button)
         let navBar = app.navigationBars["New Task"]
@@ -1344,11 +1335,8 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
-        // Navigate to Upcoming to see the task
-        navigateToTab("Upcoming")
-
-        // Wait for task to appear
-        let taskText = app.staticTexts["Task for Subtask Test"]
+        // Task appears in Today (its due date is today)
+        let taskText = taskRowElement("Task for Subtask Test")
         XCTAssertTrue(taskText.waitForExistence(timeout: 5))
 
         // Tap on the task to open detail view
@@ -1390,11 +1378,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Task with Subtasks Detail")
 
-        // Set due date to Tomorrow
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Tap the navigation bar Add button (not the subtask Add button)
         let navBar = app.navigationBars["New Task"]
@@ -1402,11 +1387,8 @@ final class LazyflowUITests: XCTestCase {
         XCTAssertTrue(addButton.waitForExistence(timeout: 2))
         addButton.tap()
 
-        // Navigate to Upcoming to see the task
-        navigateToTab("Upcoming")
-
-        // Wait for task to appear
-        let taskText = app.staticTexts["Task with Subtasks Detail"]
+        // Task appears in Today (its due date is today)
+        let taskText = taskRowElement("Task with Subtasks Detail")
         XCTAssertTrue(taskText.waitForExistence(timeout: 5))
 
         // Tap on the task to open detail view
@@ -1526,11 +1508,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Parent Task")
 
-        // Set due date to Tomorrow
-        let tomorrowButton = app.buttons["Tomorrow"]
-        XCTAssertTrue(tomorrowButton.waitForExistence(timeout: 3), "Tomorrow button should exist")
-        tomorrowButton.tap()
-        Thread.sleep(forTimeInterval: 0.3) // Allow UI to update
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Add a subtask (avoid scrolling - swipes dismiss sheets)
         let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus.circle'")).firstMatch
@@ -1561,13 +1540,9 @@ final class LazyflowUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.5)
         XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 3), "Should return to Today view after saving")
 
-        // Navigate to Upcoming to verify
-        navigateToTab("Upcoming")
-        Thread.sleep(forTimeInterval: 1.0) // Allow view to load and fetch data
-
-        // Verify task appears - using longer timeout for potential data fetch delay
-        let taskText = app.staticTexts["Parent Task"].firstMatch
-        XCTAssertTrue(taskText.waitForExistence(timeout: 8), "Task with subtask should appear in Upcoming view")
+        // Verify task appears in Today - longer timeout for potential data fetch delay
+        let taskText = taskRowElement("Parent Task")
+        XCTAssertTrue(taskText.waitForExistence(timeout: 8), "Task with subtask should appear in Today view")
     }
 
     // MARK: - AddTaskView Grid Layout Tests (#140)
@@ -1581,13 +1556,14 @@ final class LazyflowUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
 
-        // Row 1: Date, Today, Tomorrow
-        let calendarButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'calendar' OR label CONTAINS[c] 'Feb' OR label CONTAINS[c] 'Jan' OR label CONTAINS[c] 'Mar'")).firstMatch
-        let todayButton = app.buttons["Today"]
-        let tomorrowButton = app.buttons["Tomorrow"]
+        // Row 1: Today, Date, Time (post-#290 picker redesign)
+        let todayChip = app.buttons["addTask.chip.today"]
+        let dateChip = app.buttons["addTask.chip.date"]
+        let timeChip = app.buttons["addTask.chip.time"]
 
-        XCTAssertTrue(todayButton.waitForExistence(timeout: 3), "Today button should exist in Row 1")
-        XCTAssertTrue(tomorrowButton.exists, "Tomorrow button should exist in Row 1")
+        XCTAssertTrue(todayChip.waitForExistence(timeout: 3), "Today chip should exist in Row 1")
+        XCTAssertTrue(dateChip.exists, "Date chip should exist in Row 1")
+        XCTAssertTrue(timeChip.exists, "Time chip should exist in Row 1")
 
         // Row 2: Priority, Category, List
         let priorityButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Priority'")).firstMatch
@@ -1623,18 +1599,15 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Grid Test Task")
 
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         let navBar = app.navigationBars["New Task"]
         navBar.buttons["Add"].tap()
         Thread.sleep(forTimeInterval: 1.0)
 
-        // Navigate to Upcoming to find the task
-        navigateToTab("Upcoming")
-        let taskText = app.staticTexts["Grid Test Task"]
+        // Task appears in Today (its due date is today)
+        let taskText = taskRowElement("Grid Test Task")
         XCTAssertTrue(taskText.waitForExistence(timeout: 5))
         taskText.tap()
 
@@ -1707,26 +1680,21 @@ final class LazyflowUITests: XCTestCase {
         app.buttons["Add task"].tap()
         XCTAssertTrue(app.navigationBars["New Task"].waitForExistence(timeout: 3))
 
-        // Set a due date via Tomorrow button (avoids "Today" tab bar collision)
-        let tomorrowButton = app.buttons["Tomorrow"]
-        XCTAssertTrue(tomorrowButton.waitForExistence(timeout: 3))
-        tomorrowButton.tap()
+        // Set a due date via the Today quick chip (stable identifier)
+        setDueToday()
+
+        // A selected-option chip with a Remove affordance must appear.
+        // Asserting on the Remove button (not the "Today" text) avoids
+        // colliding with the tab bar / nav title behind the sheet.
+        let removeButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remove'")).firstMatch
+        XCTAssertTrue(removeButton.waitForExistence(timeout: 3), "Selected-option chip with Remove should appear")
+
+        removeButton.tap()
         Thread.sleep(forTimeInterval: 0.5)
 
-        // Verify a chip with "Tomorrow" text appears in selected options
-        let tomorrowChip = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Tomorrow'")).firstMatch
-        XCTAssertTrue(tomorrowChip.waitForExistence(timeout: 3), "Tomorrow chip should appear in selected options")
-
-        // Find and tap the remove button for the date chip
-        let removeButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remove'")).firstMatch
-        if removeButton.waitForExistence(timeout: 3) && removeButton.isHittable {
-            removeButton.tap()
-            Thread.sleep(forTimeInterval: 0.5)
-
-            // Verify chip is removed
-            let removedChip = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Tomorrow'")).firstMatch
-            // After removal, the "Tomorrow" text should only exist as the quick action button, not as a chip
-        }
+        // Verify the chip is removed (no Remove affordances left)
+        let removeButtonsAfter = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remove'"))
+        XCTAssertEqual(removeButtonsAfter.count, 0, "Chip should be removed after tapping Remove")
 
         // Cancel
         app.buttons["Cancel"].tap()
@@ -1744,10 +1712,8 @@ final class LazyflowUITests: XCTestCase {
         titleField.tap()
         titleField.typeText("Subtask Delete Test")
 
-        let tomorrowButton = app.buttons["Tomorrow"]
-        if tomorrowButton.exists && tomorrowButton.isHittable {
-            tomorrowButton.tap()
-        }
+        // Set due date to today via the quick chip
+        setDueToday()
 
         // Add a subtask
         let addSubtaskButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS[c] 'plus.circle'")).firstMatch
@@ -1771,9 +1737,8 @@ final class LazyflowUITests: XCTestCase {
         navBar.buttons["Add"].tap()
         Thread.sleep(forTimeInterval: 1.0)
 
-        // Navigate to Upcoming and open the task
-        navigateToTab("Upcoming")
-        let taskText = app.staticTexts["Subtask Delete Test"]
+        // Task appears in Today; open it
+        let taskText = taskRowElement("Subtask Delete Test")
         XCTAssertTrue(taskText.waitForExistence(timeout: 5))
         taskText.tap()
 
