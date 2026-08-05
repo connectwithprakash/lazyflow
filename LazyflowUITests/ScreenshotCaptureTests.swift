@@ -2,10 +2,12 @@ import XCTest
 
 /// Captures design-gallery screenshots of the Knowledge Graph UI (#152).
 ///
-/// Not part of the functional suite — run on demand per appearance:
+/// Not part of the functional suite — skipped unless explicitly enabled.
+/// Run on demand per appearance:
 /// ```
 /// xcrun simctl ui booted appearance light   # or dark
-/// xcodebuild test ... -only-testing:LazyflowUITests/ScreenshotCaptureTests
+/// TEST_RUNNER_CAPTURE_SCREENSHOTS=1 xcodebuild test ... \
+///   -only-testing:LazyflowUITests/ScreenshotCaptureTests
 /// ```
 /// Attachments are exported from the result bundle via
 /// `xcresulttool export attachments` into docs/site/assets/screenshots/.
@@ -13,6 +15,10 @@ final class ScreenshotCaptureTests: XCTestCase {
     private var app: XCUIApplication!
 
     override func setUpWithError() throws {
+        try XCTSkipUnless(
+            ProcessInfo.processInfo.environment["CAPTURE_SCREENSHOTS"] == "1",
+            "On-demand capture utility — set CAPTURE_SCREENSHOTS=1 to run"
+        )
         continueAfterFailure = false
         // Gallery screenshots are portrait; the simulator may be left rotated
         XCUIDevice.shared.orientation = .portrait
