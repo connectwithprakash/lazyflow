@@ -60,6 +60,67 @@ final class ScreenshotCaptureTests: XCTestCase {
         attach("knowledge-graph-reset")
     }
 
+    /// Landscape audit for #297: rotate, walk the main surfaces, attach a
+    /// screenshot of each. Not a pass/fail test — a survey tool.
+    func testAuditLandscapeScreens() throws {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Diagnostic: does the window actually adopt landscape dimensions?
+        let window = app.windows.firstMatch
+        print("AUDIT device orientation: \(XCUIDevice.shared.orientation.rawValue)")
+        print("AUDIT window frame: \(window.frame)")
+        print("AUDIT app frame: \(app.frame)")
+
+        // Tabs
+        for tab in ["Today", "Calendar", "Upcoming", "Insights", "Me"] {
+            let button = app.tabBars.buttons[tab]
+            if button.waitForExistence(timeout: 3) {
+                button.tap()
+                Thread.sleep(forTimeInterval: 0.8)
+                attach("landscape-\(tab.lowercased())")
+            }
+        }
+
+        // Add Task sheet
+        app.tabBars.buttons["Today"].tap()
+        Thread.sleep(forTimeInterval: 0.5)
+        let addButton = app.buttons["Add task"]
+        if addButton.waitForExistence(timeout: 3) && addButton.isHittable {
+            addButton.tap()
+            Thread.sleep(forTimeInterval: 0.8)
+            attach("landscape-add-task")
+            let cancel = app.buttons["Cancel"]
+            if cancel.exists && cancel.isHittable { cancel.tap() }
+        }
+
+        // Settings leaf page (representative Form)
+        app.tabBars.buttons["Me"].tap()
+        Thread.sleep(forTimeInterval: 0.5)
+        tapHubItem("AI")
+        Thread.sleep(forTimeInterval: 0.8)
+        attach("landscape-ai-settings")
+
+        XCUIDevice.shared.orientation = .portrait
+    }
+
+    /// Control experiment (#297): does Safari rotate under the same harness?
+    /// Distinguishes "Lazyflow refuses rotation" from "simulator/harness
+    /// rotation is broken".
+    func testAuditControlSafariRotation() throws {
+        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+        safari.launch()
+        _ = safari.wait(for: .runningForeground, timeout: 10)
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        Thread.sleep(forTimeInterval: 1.5)
+        print("AUDIT safari window frame: \(safari.windows.firstMatch.frame)")
+
+        XCUIDevice.shared.orientation = .portrait
+        Thread.sleep(forTimeInterval: 1.0)
+        safari.terminate()
+    }
+
     // MARK: - Helpers
 
     private func attach(_ name: String) {

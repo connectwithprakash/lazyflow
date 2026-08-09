@@ -7,7 +7,12 @@ import LazyflowUI
 /// Includes collapsible subtasks/notes panels and Pomodoro timer mode.
 struct FocusModeView: View {
     @Environment(FocusSessionCoordinator.self) private var coordinator
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     private var taskService = TaskService.shared
+
+    /// Landscape on iPhone (compact height): ring stays left, actions move
+    /// into a right-hand column instead of stretching full-width (#297)
+    private var isCompactHeight: Bool { verticalSizeClass == .compact }
 
     @State private var showSuccess = false
     @State private var showSwitchSheet = false
@@ -75,40 +80,57 @@ struct FocusModeView: View {
         VStack(spacing: 0) {
             topBar(task)
 
-            GeometryReader { geometry in
-                ScrollView {
-                    VStack(spacing: 0) {
-                        Spacer(minLength: DesignSystem.Spacing.xl)
+            if isCompactHeight {
+                // Landscape: timer block left, action column right
+                HStack(spacing: 0) {
+                    timerScrollArea(task)
 
-                        // Center block: title + ring grouped
-                        VStack(spacing: 0) {
-                            taskTitleArea(task)
-                            timerRing(task)
-                        }
-
-                        // Subtasks panel (collapsed by default)
-                        if task.hasSubtasks {
-                            subtasksPanel(task)
-                        }
-
-                        // Notes panel (collapsed by default)
-                        if let notes = task.notes, !notes.isEmpty {
-                            notesPanel(notes)
-                        }
-
-                        Spacer(minLength: DesignSystem.Spacing.xl)
-                    }
-                    .frame(minHeight: geometry.size.height)
+                    actionBar(task)
+                        .frame(width: 300)
+                        .frame(maxHeight: .infinity)
                 }
-                .scrollIndicators(.hidden)
-            }
+            } else {
+                // Portrait: timer block above full-width action bar
+                timerScrollArea(task)
 
-            actionBar(task)
+                actionBar(task)
+            }
         }
         .sheet(isPresented: $showTaskDetail) {
             NavigationStack {
                 TaskDetailView(task: task)
             }
+        }
+    }
+
+    /// Scrollable center block: title + ring + collapsible panels
+    private func timerScrollArea(_ task: Task) -> some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: isCompactHeight ? DesignSystem.Spacing.sm : DesignSystem.Spacing.xl)
+
+                    // Center block: title + ring grouped
+                    VStack(spacing: 0) {
+                        taskTitleArea(task)
+                        timerRing(task)
+                    }
+
+                    // Subtasks panel (collapsed by default)
+                    if task.hasSubtasks {
+                        subtasksPanel(task)
+                    }
+
+                    // Notes panel (collapsed by default)
+                    if let notes = task.notes, !notes.isEmpty {
+                        notesPanel(notes)
+                    }
+
+                    Spacer(minLength: isCompactHeight ? DesignSystem.Spacing.sm : DesignSystem.Spacing.xl)
+                }
+                .frame(minHeight: geometry.size.height)
+            }
+            .scrollIndicators(.hidden)
         }
     }
 
@@ -218,9 +240,10 @@ struct FocusModeView: View {
         return parts.joined(separator: " · ")
     }
 
-    // MARK: - Timer Ring (240pt, 6pt stroke)
+    // MARK: - Timer Ring (240pt portrait / 170pt landscape, 6pt stroke)
 
-    private let ringSize: CGFloat = 240
+    private var ringSize: CGFloat { isCompactHeight ? 170 : 240 }
+    private var timerFontSize: CGFloat { isCompactHeight ? 38 : 52 }
     private let ringStrokeWidth: CGFloat = 6
 
     private func timerRing(_ task: Task) -> some View {
@@ -275,7 +298,7 @@ struct FocusModeView: View {
                 // Timer text inside ring
                 VStack(spacing: 10) {
                     Text(timerDisplayString(for: task))
-                        .font(.system(size: 52, weight: .light))
+                        .font(.system(size: timerFontSize, weight: .light))
                         .monospacedDigit()
                         .foregroundColor(.white.opacity(0.95))
                         .tracking(-2)

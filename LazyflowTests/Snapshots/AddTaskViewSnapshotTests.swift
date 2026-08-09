@@ -21,6 +21,11 @@ final class AddTaskViewSnapshotTests: SnapshotTestCase {
         assertAccessibilitySnapshot(of: view, named: "addTask")
     }
 
+    func testLandscape() {
+        let view = AddTaskView(defaultDueDate: SnapshotFixtures.fixedNow)
+        assertLandscapeSnapshot(of: view, named: "addTask")
+    }
+
     // MARK: - iPad
 
     func testEmptyFormIPad() {

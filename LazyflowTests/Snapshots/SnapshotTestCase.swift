@@ -80,6 +80,39 @@ class SnapshotTestCase: XCTestCase {
         )
     }
 
+    /// Snapshot a view in iPhone landscape (compact-height size class, #297).
+    /// Renders at landscape dimensions directly — no device rotation involved,
+    /// so results are deterministic on any runner.
+    func assertLandscapeSnapshot<V: View>(
+        of view: V,
+        named name: String,
+        precision: Float = 0.99,
+        perceptualPrecision: Float = 0.98,
+        file: StaticString = #file,
+        testName: String = #function,
+        line: UInt = #line
+    ) {
+        guard !isIPad else { return }
+
+        assertSnapshot(
+            of: UIHostingController(rootView: view.environment(\.colorScheme, .light)),
+            as: .image(on: .iPhone13Pro(.landscape), precision: precision, perceptualPrecision: perceptualPrecision),
+            named: "\(name)-landscape-light",
+            file: file,
+            testName: testName,
+            line: line
+        )
+
+        assertSnapshot(
+            of: UIHostingController(rootView: view.environment(\.colorScheme, .dark)),
+            as: .image(on: .iPhone13Pro(.landscape), precision: precision, perceptualPrecision: perceptualPrecision),
+            named: "\(name)-landscape-dark",
+            file: file,
+            testName: testName,
+            line: line
+        )
+    }
+
     /// Snapshot a view at two Dynamic Type sizes for accessibility testing.
     func assertAccessibilitySnapshot<V: View>(
         of view: V,
