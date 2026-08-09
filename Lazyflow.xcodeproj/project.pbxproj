@@ -47,6 +47,7 @@
 		31AF8D2F20C5E3CFCC2C0D4F /* BriefingsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5255042DEA67ACE0AF86FF16 /* BriefingsSettingsView.swift */; };
 		3228030B46230907FEB02843 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894FC3172D458DF3B827CE18 /* CalendarView.swift */; };
 		336EC5640E6D7E3C7AD80B30 /* MockCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DE1B6219486F130D8E6F8FE /* MockCalendarService.swift */; };
+		342F75720AE077D991B28B95 /* FocusModeSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F2DFE8FED471A28E4295593 /* FocusModeSnapshotTests.swift */; };
 		35855E194A9CFFBF8AA300AA /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BDFA6859BC13DEBC35D1CEF /* TaskRowView.swift */; };
 		3675F88BC68F1BA77BF9635F /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64508FE3566220E62129F09B /* MediumWidgetView.swift */; };
 		3879FECEFBD045E1B7BC52A7 /* LLMReorderingIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655421572BB2FCA6A8094E4E /* LLMReorderingIntegrationTests.swift */; };
@@ -186,6 +187,7 @@
 		BB5619A2ED2F0F8399801115 /* PrioritizationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C28D5A65078E06A1F29948 /* PrioritizationService.swift */; };
 		BC78DE81741B8AEC0C960DB9 /* LazyflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00631BB3A9CD2DB5B490B3C /* LazyflowTests.swift */; };
 		BF862F11A763C88933858321 /* SuggestionFeedbackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2268C58F54537A0DCFC08992 /* SuggestionFeedbackTests.swift */; };
+		BF8CD69FF1548735D7A6BFEB /* OnboardingSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF56E6BED9A014E60F0ACAC0 /* OnboardingSnapshotTests.swift */; };
 		C0CEFEE1C77BEC254CA177C6 /* TodayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABAFF913D8A63B63AEC3B55 /* TodayViewModelTests.swift */; };
 		C0CF583DCD31284AE5781C26 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4FED1BAEBC8929BA6A99A8 /* LiveActivityManager.swift */; };
 		C1147D97B0F84A4125D9A6EA /* TaskCategoryBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58A296DF48A1FF478BBB34E /* TaskCategoryBadge.swift */; };
@@ -314,6 +316,7 @@
 		096EFDF418F8EAC7F82275D6 /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
 		0C5F23987492CF9DBF92700E /* DailySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryView.swift; sourceTree = "<group>"; };
 		0D0233412D63AEFF7D4A0AC9 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
+		0F2DFE8FED471A28E4295593 /* FocusModeSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeSnapshotTests.swift; sourceTree = "<group>"; };
 		0FFD252151F38D56B1B17808 /* LazyflowWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyflowWidget.swift; sourceTree = "<group>"; };
 		138135CFF0C3657787243E5C /* GraphIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphIndexTests.swift; sourceTree = "<group>"; };
 		14A21AD04C5407E342830D9E /* TaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModel.swift; sourceTree = "<group>"; };
@@ -529,6 +532,7 @@
 		EDE82DDB4FFFA30E14FA2E5B /* KnowledgeGraphStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeGraphStoreTests.swift; sourceTree = "<group>"; };
 		EF02478F016D0699521A1F95 /* TimeProtectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProtectionService.swift; sourceTree = "<group>"; };
 		EF22BE7122E8943E7E2BD914 /* QuickCaptureSheetSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureSheetSnapshotTests.swift; sourceTree = "<group>"; };
+		EF56E6BED9A014E60F0ACAC0 /* OnboardingSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSnapshotTests.swift; sourceTree = "<group>"; };
 		EF88D5A45529A957D9EA88B9 /* SmartRescheduleServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRescheduleServiceTests.swift; sourceTree = "<group>"; };
 		EFE8F136C54F6451EEDEDE55 /* BehavioralSignalsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehavioralSignalsTests.swift; sourceTree = "<group>"; };
 		F09AE32EF0444EDF2CDB9D8A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
@@ -618,7 +622,9 @@
 				E92A459287E3406AF72557DB /* AddTaskViewSnapshotTests.swift */,
 				3C93C081C7BC375FABB659E7 /* BriefingsSettingsSnapshotTests.swift */,
 				61D544FE84F11510FDE7E018 /* DataAboutSettingsSnapshotTests.swift */,
+				0F2DFE8FED471A28E4295593 /* FocusModeSnapshotTests.swift */,
 				33A4A0CD8E0C903530190E05 /* GeneralSettingsSnapshotTests.swift */,
+				EF56E6BED9A014E60F0ACAC0 /* OnboardingSnapshotTests.swift */,
 				69C2D5E85AD593CCE284EFE8 /* ProductivitySettingsSnapshotTests.swift */,
 				DA9F4849BDFD2A79CABE7D16 /* QuickCaptureReviewViewSnapshotTests.swift */,
 				EF22BE7122E8943E7E2BD914 /* QuickCaptureSheetSnapshotTests.swift */,
@@ -1417,6 +1423,7 @@
 				9C48711EFBD089B3EBAEB7C0 /* EventPreferenceLearningServiceTests.swift in Sources */,
 				75E2CFDD7AED5028736C37F4 /* FeatureFlagsTests.swift in Sources */,
 				108487C53DBB9CDF075AA36B /* FocusModeIntegrationTests.swift in Sources */,
+				342F75720AE077D991B28B95 /* FocusModeSnapshotTests.swift in Sources */,
 				3F7589E52ADEFEEE43965DF7 /* FocusSessionCoordinatorTests.swift in Sources */,
 				58C6FD0390CB9AF1C9FFA86E /* GeneralSettingsSnapshotTests.swift in Sources */,
 				6C01AD80FC10A447AE2987F8 /* GraphIndexTests.swift in Sources */,
@@ -1438,6 +1445,7 @@
 				C648354E14CD8E8618EAB7E4 /* MockTaskService.swift in Sources */,
 				4A83188A9824BFD6D54C5C1D /* NoteParsingServiceTests.swift in Sources */,
 				738C0EF9D5999920D27633EC /* NotificationServiceTests.swift in Sources */,
+				BF8CD69FF1548735D7A6BFEB /* OnboardingSnapshotTests.swift in Sources */,
 				654D4B4BCCB24BA01328FCAC /* OpenResponsesProviderTests.swift in Sources */,
 				05185394A6D0C02B02A34784 /* PersistenceControllerTests.swift in Sources */,
 				D4B99AC2D2A0B669607A2A71 /* PlanYourDayViewModelTests.swift in Sources */,

@@ -125,14 +125,26 @@ private struct OnboardingPage {
 
 private struct OnboardingPageView: View {
     let page: OnboardingPage
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
+        // Fixed stack when it fits (portrait); scrolls in compact height
+        // (iPhone landscape) instead of clipping (#297)
+        ViewThatFits(in: .vertical) {
+            pageContent
+            ScrollView(showsIndicators: false) {
+                pageContent
+            }
+        }
+    }
+
+    private var pageContent: some View {
         VStack(spacing: 24) {
             // Icon
             Image(systemName: page.icon)
-                .font(.system(size: 80))
+                .font(.system(size: verticalSizeClass == .compact ? 48 : 80))
                 .foregroundColor(page.accentColor)
-                .padding(.bottom, 16)
+                .padding(.bottom, verticalSizeClass == .compact ? 4 : 16)
 
             // Title
             Text(page.title)
@@ -157,14 +169,32 @@ private struct PermissionsPageView: View {
     @Binding var calendarGranted: Bool
     @Binding var notificationsGranted: Bool
     @State private var hasCheckedPermissions = false
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
+        // Fixed stack when it fits (portrait); scrolls in compact height
+        // (iPhone landscape) — this page is the tallest and clips there (#297)
+        ViewThatFits(in: .vertical) {
+            pageContent
+            ScrollView(showsIndicators: false) {
+                pageContent
+            }
+        }
+        .onAppear {
+            // Only check permissions once to avoid lag when swiping back and forth
+            guard !hasCheckedPermissions else { return }
+            hasCheckedPermissions = true
+            checkExistingPermissions()
+        }
+    }
+
+    private var pageContent: some View {
         VStack(spacing: 24) {
             // Icon
             Image(systemName: "bell.badge.fill")
-                .font(.system(size: 80))
+                .font(.system(size: verticalSizeClass == .compact ? 48 : 80))
                 .foregroundColor(.orange)
-                .padding(.bottom, 16)
+                .padding(.bottom, verticalSizeClass == .compact ? 4 : 16)
 
             // Title
             Text("Plan Your Day")
@@ -205,12 +235,6 @@ private struct PermissionsPageView: View {
             .padding(.top, 16)
         }
         .padding()
-        .onAppear {
-            // Only check permissions once to avoid lag when swiping back and forth
-            guard !hasCheckedPermissions else { return }
-            hasCheckedPermissions = true
-            checkExistingPermissions()
-        }
     }
 
     private func checkExistingPermissions() {
