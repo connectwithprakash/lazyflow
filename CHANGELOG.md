@@ -5,6 +5,13 @@ All notable changes to Lazyflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1](https://github.com/connectwithprakash/lazyflow/compare/v1.11.0...v1.11.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **ci:** version bump rides the release PR instead of post-release push ([#300](https://github.com/connectwithprakash/lazyflow/issues/300)) ([28db25d](https://github.com/connectwithprakash/lazyflow/commit/28db25daedde2c600486f673326b6c7659369597))
+
 ## [1.11.0](https://github.com/connectwithprakash/lazyflow/compare/v1.10.0...v1.11.0) (2026-08-09)
 
 
