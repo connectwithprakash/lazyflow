@@ -1,25 +1,17 @@
-What's New in v1.10
+What's New in v1.11
 
-Quick Capture
-• Jot down rough notes and let AI extract structured tasks
-• Draggable capture button — move it out of the way of swipe actions
+Knowledge Graph (Experimental)
+• Lazyflow can now connect your tasks by the people, projects, and topics they share
+• Smarter "what's next" suggestions and briefings that understand related work
+• Entirely on your device — nothing is uploaded. Opt in from Settings → AI
 
-Focus Mode
-• Pomodoro timer with configurable work and break intervals
-• Subtasks and notes panel inside Focus Mode
-• Sessions persist across app restarts
+Better Everyday Flow
+• Redesigned date and time pickers when adding tasks
+• Settings reorganized into focused, easier-to-navigate pages
+• Focus Mode and onboarding now adapt properly to landscape
 
-Calendar Integration
-• Two-way sync between tasks and calendar events
-• Set scheduled start and end times for event-like planning
-• Recurring tasks sync as recurring calendar events
+Calendar Sync
+• Smarter two-way sync with safer deletion handling
 
-Accessibility & Polish
-• Accessibility labels and hints on all views
-• Day view default on iPhone with persistent view mode
-• AI features now check device capability before appearing
-
-Under the Hood
-• Improved iCloud sync reliability and conflict resolution
-• Hardened Core Data migration and error handling
-• Performance and crash monitoring with MetricKit
+Bug Fixes
+• Various fixes and stability improvements
