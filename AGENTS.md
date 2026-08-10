@@ -134,6 +134,17 @@ When blocked:
 - Validate edge cases and error states
 - Use subagents (Task tool) for parallel exploration and complex research
 
+## E2E Binding Slot Answers
+
+Explicit answers for end-to-end workflow agents (binding ladder rung 1) where inference was previously required:
+
+- **Type binding:** `ios-release-please` (fingerprint: `project.yml` + `.release-please-manifest.json` + `fastlane/`)
+- **Eval capability:** none — the unit + snapshot + UI test suites are the verification gate
+- **Snapshot canon:** reference images are CI-recorded (trigger the "Re-record Snapshots" workflow); local renderer diffs are cosmetic — never re-record locally for the repo
+- **Tracker transitions:** GitHub Issues carry open/closed only; in-progress ≙ assignee + linked branch, in-review ≙ open PR with `Closes #`, verified ≙ closing comment with release-verification evidence
+- **Live verification:** simulator first (`simctl` + subsystem `com.lazyflow.app` logs); physical device for rotation, Apple Intelligence hardware, and permission flows; TestFlight build for release-grade proof
+- **Enforcement inventory:** PreToolUse hooks in `.claude/hooks/` (protected files, dangerous commands); branch protection requires `build-and-test` + `check-metadata`; release gate = `scripts/check-release-metadata.sh` on release branches; autonomy boundaries = Escalation Policy above
+
 ## References
 
 - Architecture: `docs/project/architecture.md`
