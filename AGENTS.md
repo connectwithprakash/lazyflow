@@ -96,13 +96,18 @@ Milestone-based release lifecycle with Release Please:
 Issues in milestone (e.g., v1.8)
   → Feature branches per issue → PRs merged to main
     → Release Please auto-creates/updates release PR
-      → Developer merges Release Please PR (decision point 1)
-        → CI: GitHub Release + tag + version bump + TestFlight build
-          → Developer updates promotional_text.txt (decision point 2)
-            → Developer triggers App Store workflow (decision point 3)
+      → On the release branch: run bump-version.sh + generate-release-notes.sh,
+        polish notes, commit (check-metadata BLOCKS the merge without this)
+        → Developer merges Release Please PR (decision point 1)
+          → CI: GitHub Release + tag + TestFlight build
+            → Developer updates promotional_text.txt (decision point 2)
+              → Developer triggers App Store workflow (decision point 3)
 ```
 
 Three human decisions in the entire pipeline. Everything else is automated.
+Note: bot pushes never trigger CI (GITHUB_TOKEN recursion guard) — after
+Release Please updates its branch, required checks need an authored commit
+(the bump/notes commit above serves this purpose).
 
 ## Multi-Agent Setup
 

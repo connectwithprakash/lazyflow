@@ -51,19 +51,17 @@ jobs:
           gh release edit "$TAG" --title "$NEW_TITLE"
           echo "Updated release title to: $NEW_TITLE"
 
-      - name: Update version across project
-        run: ./scripts/bump-version.sh ${{ needs.release-please.outputs.version }}
-
-      - name: Generate App Store release notes from CHANGELOG
-        run: ./scripts/generate-release-notes.sh ${{ needs.release-please.outputs.version }}
-
-      - name: Commit version update
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "chore: bump iOS version to ${{ needs.release-please.outputs.version }}"
-          git push
+      # NOTE: the version bump and App Store release notes are NOT applied
+      # here anymore. Branch protection (correctly) rejects this job's direct
+      # push to main (GH006, seen live on v1.11.0), and a bot push couldn't
+      # trigger checks anyway. Instead, both must be committed to the
+      # release-please branch BEFORE merging — the check-metadata required
+      # check enforces this (scripts/check-release-metadata.sh validates
+      # release notes AND MARKETING_VERSION). Run on the release branch:
+      #   ./scripts/bump-version.sh <version>
+      #   ./scripts/generate-release-notes.sh <version>   # then polish by hand
+      # This also fixes a latent ordering bug: TestFlight used to build BEFORE
+      # the bump landed, shipping the old marketing version.
 
   testflight:
     needs: [release-please, post-release]

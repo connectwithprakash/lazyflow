@@ -62,6 +62,19 @@ check_file() {
 check_file "fastlane/metadata/en-US/release_notes.txt"   "release_notes.txt"
 check_file "fastlane/metadata/en-US/testflight_notes.txt" "testflight_notes.txt"
 
+# The version bump must ride the release PR: the Release workflow cannot
+# push it to main afterward (branch protection rejects bot pushes), and
+# TestFlight builds from the merge commit — so MARKETING_VERSION must
+# already be correct here.
+if grep -q "MARKETING_VERSION: ${VERSION}" project.yml; then
+    echo -e "${GREEN}PASS${NC} project.yml MARKETING_VERSION is ${VERSION}"
+else
+    CURRENT=$(grep "MARKETING_VERSION:" project.yml | head -1 | awk '{print $2}')
+    echo -e "${RED}FAIL${NC} project.yml MARKETING_VERSION is ${CURRENT}, expected ${VERSION}"
+    echo -e "${YELLOW}     Run ./scripts/bump-version.sh ${VERSION} and commit to the release branch.${NC}"
+    FAILED=1
+fi
+
 echo ""
 if [ "$FAILED" -ne 0 ]; then
     echo -e "${RED}Release metadata is stale. Update the files above for v${VERSION} and push to the release branch.${NC}"
